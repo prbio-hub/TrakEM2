@@ -173,7 +173,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				return nodes;
 			}
 			// Else, just the active layer, if any
-			final Set<Node<T>> nodeSet = node_layer_map.get(active_layer);
+			final Set<Node<T>> nodeSet = node_layer_map.get(active_layer);			
 			return null == nodeSet? null : new HashSet<Node<T>>(nodeSet);
 		}
 	}
@@ -1054,7 +1054,9 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		Node<T> nd = null;
 		for (final Node<T> node : nodes) {
 			final float dist = Math.abs(node.x - lx) + Math.abs(node.y - ly);
-			if (dist < min_dist) {
+			//actyc select only nodes with active confi
+			//if (dist < min_dist && 10 == (int)node.getConfidence()) {
+			if (dist < min_dist ) {
 				min_dist = dist;
 				nd = node;
 			}
@@ -1608,7 +1610,9 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 					//Node<T> nearest = findNearestEndNode(x_pl, y_pl, layer); // at least the root exists, so it has to find a node, any node
 					// append new child; inherits radius from parent
 					found = createNewNode(x_pl, y_pl, layer, nearest);
-					addNode(nearest, found, Node.MAX_EDGE_CONFIDENCE);
+					//actyc: new node get confidence of parent node
+					//addNode(nearest, found, Node.MAX_EDGE_CONFIDENCE);
+					addNode(nearest, found, nearest.getConfidence());
 					setActive(found);
 					repaint(true, layer);
 				}

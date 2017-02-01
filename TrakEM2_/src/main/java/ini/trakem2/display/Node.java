@@ -35,7 +35,8 @@ import ini.trakem2.utils.Utils;
 /** Can only have one parent, so there aren't cyclic graphs. */
 public abstract class Node<T> implements Taggable {
 	/** Maximum possible confidence in an edge (ranges from 0 to 5, inclusive).*/
-	static public final byte MAX_EDGE_CONFIDENCE = 5;
+	//actyc:changed maximum to 10
+	static public final byte MAX_EDGE_CONFIDENCE = 10;
 
 	protected Node<T> parent = null;
 	public Node<T> getParent() { return parent; }

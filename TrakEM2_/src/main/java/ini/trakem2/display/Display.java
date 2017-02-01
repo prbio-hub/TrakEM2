@@ -930,6 +930,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		this.scroll_filter_options = makeScrollPane(this.filter_options);
 		this.scroll_filter_options.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		this.addTab("Live filter", this.scroll_filter_options);
+		
+		//actyc: Test tab 10
+		this.filter_options = createExtendedOptionPanel();
+		this.scroll_filter_options = makeScrollPane(this.filter_options);
+		this.scroll_filter_options.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		this.addTab("Extended Options", this.scroll_filter_options);
 
 		this.ht_tabs = new Hashtable<Class<?>,RollingPanel>();
 		this.ht_tabs.put(Patch.class, panel_patches);
@@ -6947,6 +6953,49 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		fop.addNumericField("max slope:", filter_clahe_max_slope, 2, new OptionPanel.FloatSetter(this, "filter_clahe_max_slope", reaction, 0, Integer.MAX_VALUE));
 		return fop;
 	}
+	
+    //actyc: new Panel to add more functionality
+    private OptionPanel createExtendedOptionPanel() {
+        final OptionPanel eop = new OptionPanel();
+//		final Runnable reaction = new Runnable() {
+//			@Override
+//            public void run() {
+//				RhizoAddons.copyTreeLine();
+//			}
+//		};
+        //eop.addMessage("Copy Options:");
+        eop.addButton("Copy Treelines", new OptionPanel.ButtonSetter(this, "filter_enabled", new Runnable() {
+            @Override
+            public void run() {
+                RhizoAddons.copyTreeLine();
+            }
+        }));
+        //change to predefined colors [old]
+        eop.addMessage("assign color:");
+        eop.addButton("update", new OptionPanel.ButtonSetter(this, "filter_enabled", new Runnable() {
+            @Override
+            public void run() {
+                RhizoAddons.applyCorrespondigColor();
+            }
+        }));
+        //open color chooser
+        eop.addButton("colors", new OptionPanel.ButtonSetter(this, "filter_enabled", new Runnable() {
+            @Override
+            public void run() {
+                RhizoAddons.changeColor();
+            }
+        }));
+        eop.addButton("visibility", new OptionPanel.ButtonSetter(this, "filter_enabled", new Runnable() {
+            @Override
+            public void run() {
+                RhizoAddons.setVisibility();
+            }
+        }));
+        //add Short cuts
+        RhizoAddons.shortyForTreeLine(eop);
+        RhizoAddons.shortyForTreeLine(panel_zdispl);
+        return eop;
+    }
 
 	protected Image applyFilters(final Image img) {
 		if (!filter_enabled) return img;

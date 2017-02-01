@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -79,6 +80,8 @@ public class OptionPanel extends JPanel {
 
 	private List<JTextField> numeric_fields = new ArrayList<JTextField>();
 	private List<JCheckBox> checkboxes = new ArrayList<JCheckBox>();
+	//actyc: Button Stuff
+	private List<JButton> buttons = new ArrayList<JButton>();
 	private List<JComboBox> choices = new ArrayList<JComboBox>();
 	private List<Component> all = new ArrayList<Component>();
 	private HashMap<Component,Setter> setters = new HashMap<Component,Setter>();
@@ -178,6 +181,16 @@ public class OptionPanel extends JPanel {
 		cb.addActionListener(tl);
 		return cb;
 	}
+	//actyc: new button typ
+	public JButton addButton(String label, Setter setter) {
+		addLabel(label);
+		JButton b = new JButton();
+		buttons.add(b);
+		all.add(b);
+		addField(b, setter);
+		b.addActionListener(tl);
+		return b;
+	}
 
 	public JComboBox addChoice(String label, String[] items, int selected) {
 		return addChoice(label, items, selected, null);
@@ -214,6 +227,12 @@ public class OptionPanel extends JPanel {
 	public boolean getCheckbox(int index) throws Exception {
 		check(checkboxes, index);
 		return checkboxes.get(index).isSelected();
+	}
+	//actyc: stuff for the button
+	/** May throw IllegalArgumentException */
+	public boolean getButton(int index) throws Exception {
+		check(buttons, index);
+		return buttons.get(index).isSelected();
 	}
 
 	public List<JComboBox> getChoices() {
@@ -365,6 +384,18 @@ public class OptionPanel extends JPanel {
 		}
 		public Object getValue(Component source) {
 			return ((JCheckBox)source).isSelected();
+		}
+	}
+	//actyc: Button Setter
+	static public class ButtonSetter extends Setter {
+		public ButtonSetter(Object ob, String field) {
+			super(ob, field);
+		}
+		public ButtonSetter(Object ob, String field, Runnable reaction) {
+			super(ob, field, reaction);
+		}
+		public Object getValue(Component source) {
+			return true;
 		}
 	}
 
