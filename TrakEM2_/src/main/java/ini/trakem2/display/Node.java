@@ -194,7 +194,7 @@ public abstract class Node<T> implements Taggable {
 			final boolean with_confidence_boxes, final boolean with_data,
 			Color above, Color below) {
 		// The fact that this method is called indicates that this node is to be painted and by definition is inside the Set to_paint.
-
+				
 		final double actZ = active_layer.getZ();
 		final double thisZ = this.la.getZ();
 		final Color node_color;

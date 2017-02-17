@@ -350,6 +350,7 @@ public class Treeline extends Tree<Float> {
 			g.fill(shape);
 			g.setComposite(c);
 			g.draw(shape); // in Tree's composite mode (such as an alpha)
+			
 		}
 
 		/** Expects @param a in local coords. */

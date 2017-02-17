@@ -34,10 +34,10 @@ import ini.trakem2.tree.DNDTree;
 import ini.trakem2.tree.ProjectThing;
 import ini.trakem2.tree.ProjectTree;
 import ini.trakem2.utils.*;
-import java.awt.Rectangle;
-import java.util.Collection;
+import java.util.Enumeration;
 
 public class RhizoAddons {
+	static boolean test = true;
 	static boolean[] treeLineAlphas={true,true,true,true,true,true,true,true,true,true};
         static boolean ini =false;
         static Hashtable<Byte, Color> confidencColors = new Hashtable<Byte, Color>();
@@ -99,11 +99,17 @@ public class RhizoAddons {
 					copy.clearState();
 					copy.updateCache();
 					currentLayerSet.add(copy);
-					ctree.getProject().getProjectTree().addSibling(ctree, copy);
+					ctree.getProject().getProjectTree().addSibling(ctree, copy);					
+					//get the parent connector; if non exists a new will be create
 					Connector parentConnector = RhizoAddons.getRightPC(ctree,copy);
-                                        parentConnector.addTarget(copy.getRoot().getX(), copy.getRoot().getY(), copy.getRoot().getLayer().getId(),3F);
+					//the copy of the treeline gets its own linke to the connector 
+					Node<Float> conRoot = parentConnector.getRoot();
+                                        //parentConnector.addTarget(copy.getRoot().getX(), copy.getRoot().getY(), copy.getRoot().getLayer().getId(),3F);
+					parentConnector.addNode(conRoot, new ConnectorNode(conRoot.getX(), conRoot.getY(), copy.getRoot().getLayer(),3F), Node.MAX_EDGE_CONFIDENCE);
                                         parentConnector.getRoot().setData(3F);
+					parentConnector.clearState();
                                         parentConnector.updateCache();
+					
                                         Utils.log2("Connector: " + parentConnector.getTitle()+ " target(s): " + parentConnector.getTargets());
 
 				} catch (Exception e) {
@@ -243,12 +249,14 @@ public class RhizoAddons {
 	    			Display.clearSelection();
 	    			Project project =display.getProject();	    			
 	    			ProjectTree currentTree = project.getProjectTree();
-	    			ProjectThing parent = (ProjectThing) project.getRootProjectThing().findChildrenOfTypeR("roots").toArray()[0];
-	    			String childType = "treeline";
-	    			//catch things
-	    			if (!parent.canHaveAsChild(childType)) {
-	    				Utils.log("The type '" + parent.getType() + "' cannot have as child the type '" + childType + "'");
-	    			}
+				//try to find if there is ProjectThing that can contain the new treeline
+				ProjectThing parent;
+				parent = RhizoAddons.findParentAllowing("treeline", project);
+				//inform user if no ProjectThing is found
+				if(parent == null){
+				    Utils.showMessage("no project thing found that is capable of holding treelines");
+				    return;
+				}
 	    			//make new treeline
 	    			ProjectThing pt= parent.createChild("treeline");
                                 pt.setTitle(pt.getUniqueIdentifier());
@@ -262,34 +270,90 @@ public class RhizoAddons {
 	    obj.getActionMap().put("bla",blaAction);
 	}
 	
+	private static ProjectThing findParentAllowing(String type,Project project){
+	   Enumeration enum_nodes;
+	    enum_nodes = project.getProjectTree().getRoot().depthFirstEnumeration();
+	    while(enum_nodes.hasMoreElements()){
+		DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) enum_nodes.nextElement();
+		ProjectThing currentProjectThing = (ProjectThing) currentNode.getUserObject();
+		if(currentProjectThing.canHaveAsChild(type)){
+		    return currentProjectThing;
+		}
+	    }
+	    return null;
+	}
+	
     //get the right parent connector 
-    private static Connector getRightPC(Treeline ptree, Treeline ctree) {
+    private static Connector getRightPC(Treeline ptree, Treeline ctree) throws Exception {
         List<Connector>[] conLists = null;
         Connector pCon;
         Layer pLayer = ptree.getRoot().getLayer();
         Node<Float> pTreeRoot = ptree.getRoot();
-        Rectangle rec = new Rectangle((int) pTreeRoot.getX() - 5, (int) pTreeRoot.getY() - 5, 10, 10);
-        Collection<Displayable> currentFound = pLayer.find(rec);
-        Utils.log("foundObj: " + currentFound);
-        Utils.log2("foundObj: " + currentFound);
-//        try {
-//            Displayable[] foundObje = (Displayable[]) currentFound.toArray();
-//            Utils.log("foundObj: " + foundObje);
-//        Utils.log2("foundObj: " + foundObje);
-//
-//        } catch (Exception e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-        //check if a connector exists
+
+	
+	List<Connector>[] ConLists;
+	ConLists = ptree.findConnectors();
+		                        Utils.log("Incommings: "+ ConLists[0].toString());
+					Utils.log("Outgoings: "+ ConLists[1].toString());
+					Utils.log("Incommings: "+ ConLists[0]);
+					Utils.log("Outgoings: "+ ConLists[1]);
+	//if incomming list ist not empty aka there is a connector starting at the parentTreeline 
+	if(ConLists[0].isEmpty() == false){
+	    //get the connector and everything is fine
+	    pCon=ConLists[0].get(0);
+	    return pCon;
+	}
+	//if outgoing list ist not empty aka there is a connector ending at the parentTreeline 
+	if(ConLists[1].isEmpty() == false){
+	    //get the connector and everything is fine
+	    pCon=ConLists[1].get(0);
+	    return pCon;
+	}
+	//if were are here there was no connector; so make a new one
         Project project = Display.getFront().getProject();
         pCon = project.getProjectTree().tryAddNewConnector(ptree, false);
         Node<Float> newRoot = pCon.newNode(pTreeRoot.getX(), pTreeRoot.getY(), pTreeRoot.getLayer(), null);
         pCon.addNode(null, newRoot, pTreeRoot.getConfidence());
         pCon.setRoot(newRoot);
-        pCon.setTitle(ptree.getTitle() + "_connector");
+        //pCon.setTitle(ptree.getTitle() + "_connector");
         pCon.setAffineTransform(ptree.getAffineTransform());
-        return pCon;
+        return pCon;   
+    }
+
+    
+    
+    public static void test(){
+	RhizoAddons.test = !RhizoAddons.test;
+        Utils.log("Aktueller Zustand: "+ RhizoAddons.test);
+	Display display = Display.getFront();
+	RhizoAddons.applyCorrespondigColor();
+		// Layer frontLayer = Display.getFrontLayer();
+		Layer currentLayer = display.getLayer();
+		LayerSet currentLayerSet = currentLayer.getParent();
+		currentLayerSet.updateLayerTree();
+		// determine next layer
+		Layer nextLayer = currentLayerSet.getLayer(currentLayer.getZ() + 1);
+		if (nextLayer == null) {
+			//Utils.showMessage("Es existiert kein weiterer Layer auf den kopiert werden kann");
+			return;
+		}
+		ArrayList<Displayable> trees = currentLayerSet.get(Treeline.class);
+		
+		for (Displayable cObj : trees) {
+			Treeline ctree = (Treeline) cObj;
+			Utils.log2("current Tree first Layer: " + ctree.getFirstLayer());
+			if (ctree.getFirstLayer() == currentLayer) {
+				try {
+				    //ctree.repaint();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+
+			}
+
+		}
     }
 	
 	

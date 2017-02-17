@@ -243,6 +243,19 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				final ArrayList<Runnable> tags_tasks = new ArrayList<Runnable>();
 
 				for (final Node<T> nd : nodes) {
+					//actyc: injection for visibility
+					if(nd.getConfidence() == (byte) 9 && RhizoAddons.test){
+					    //continue;
+					    //g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.1F));
+					    int red = nd.getColor().getRed();
+					    int green = nd.getColor().getGreen();
+					    int blue = nd.getColor().getBlue();
+					    int myalpha = 100;
+					    Utils.log2("Farbe is: "+red+","+green+","+blue+","+myalpha);
+					    Color newCol = new Color(red,green,blue,myalpha);
+					    nd.setColor(newCol);
+					}
+					
 					final Runnable task = nd.paint(g, active_layer, active, srcRect, magnification, nodes, this, to_screen, with_arrows, with_tags, layer_set.paint_edge_confidence_boxes, true, above, below);
 					if (null != task) tags_tasks.add(task);
 					if (nd == marked) {

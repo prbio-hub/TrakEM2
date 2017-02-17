@@ -6994,6 +6994,13 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
         //add Short cuts
         RhizoAddons.shortyForTreeLine(eop);
         RhizoAddons.shortyForTreeLine(panel_zdispl);
+	
+	eop.addButton("testButton", new OptionPanel.ButtonSetter(this, "filter_enabled", new Runnable() {
+            @Override
+            public void run() {
+                RhizoAddons.test();
+            }
+        }));
         return eop;
     }
 
