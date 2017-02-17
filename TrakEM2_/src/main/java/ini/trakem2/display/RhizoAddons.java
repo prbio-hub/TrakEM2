@@ -6,6 +6,10 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -27,6 +31,9 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
+import org.apache.xmlbeans.XmlException;
+
+import de.unihalle.informatik.MiToBo_xml.*;
 
 import ini.trakem2.Project;
 import ini.trakem2.display.Connector.ConnectorNode;
@@ -346,7 +353,7 @@ public class RhizoAddons {
 				try {
 				    //ctree.repaint();
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
+					// TODO Auto-generated catch block 
 					e.printStackTrace();
 				}
 
@@ -356,7 +363,102 @@ public class RhizoAddons {
 		}
     }
 	
+    ///////////////////////
+    // aeekz Tino
+    
+    public static void writeMTBXML(String filename)
+	{
+//		try 
+//		{
+//			BufferedWriter bw = new BufferedWriter(new FileWriter(filename+".xml"));
+//			MTBXMLRootSetDocument xmlRootSetDocument = MTBXMLRootSetDocument.Factory.newInstance();
+//			MTBXMLRootSetType xmlRootSet = xmlRootSetDocument.addNewMTBXMLRootSet();
+//			
+//			MTBXMLRootType root = MTBXMLRootType.Factory.newInstance();
+//			MTBXMLRootSegmentType rootSegment = MTBXMLRootSegmentType.Factory.newInstance();
+//			MTBXMLRootSegmentPointType rootSegmentPoint = MTBXMLRootSegmentPointType.Factory.newInstance();
+//			rootSegmentPoint.setX(10);
+//			rootSegmentPoint.setY(20);
+//			rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING);
+//			
+//			rootSegment.setStartPoint(rootSegmentPoint);
+//			root.setRootSegmentsArray(new MTBXMLRootSegmentType[]{rootSegment});
+//			
+//			MTBXMLRootType[] xmlRootsArray = new MTBXMLRootType[]{root};
+			
+			
+//			MTBXMLRootSegmentType test = null;
+//			test.setType(MTBXMLRootSegmentStatusType.LIVING);
+			
+//			Display display = Display.getFront();
+//			Layer currentLayer = display.getLayer();
+//			LayerSet currentLayerSet = currentLayer.getParent(); 
+//			
+//			ArrayList<Displayable> treelines = currentLayerSet.get(Treeline.class);
+//			MTBXMLRootType[] rootSetArray = new MTBXMLRootType[treelines.size()];
+			
+//			Utils.log("test: " + treelines.size());
+//			Utils.log2("test: " + treelines.size());
+			
+//			for(int i = 0; i < treelines.size(); i++)
+//			{
+//				Treeline currentTreeline = (Treeline) treelines.get(i);
+//				rootSetArray[i] = treelineToXMLType(currentTreeline, i);
+//			}
+
+//			xmlRootSet.setRootsArray(xmlRootsArray);
+//			bw.write(xmlRootSetDocument.toString());
+//			bw.close();
+//		} 
+//		catch (IOException e) 
+//		{
+//			Utils.log(e.getMessage());
+//		}
+	}
 	
-    // huhu axel
+	private static MTBXMLRootType treelineToXMLType(Treeline treeline, int id)
+	{
+		MTBXMLRootType xmlRoot = MTBXMLRootType.Factory.newInstance();
+		
+		/*
+		 * traverse treeline and create MTBXMLRootSegmentTypes for xmlRoot.setRootSegmentsArray
+		 * 
+		 */
+		
+		return xmlRoot;
+	}
 	
+	public static void readMTBXML(String filename)
+	{
+		File file = new File(filename + ".xml");
+		
+		try 
+		{
+			MTBXMLRootSetDocument xmlRootSetDocument = MTBXMLRootSetDocument.Factory.parse(file);
+			MTBXMLRootSetType xmlRootSet  = xmlRootSetDocument.getMTBXMLRootSet();
+			MTBXMLRootType[] xmlRootsArray = xmlRootSet.getRootsArray();
+			
+			for(int i = 0; i < xmlRootsArray.length; i++)
+			{
+//				Treeline treeline = new Treeline(Display.getFront().getActive().getProject(), null);
+				
+				/*
+				 * create and draw treelines
+				 * extra method?
+				 * 
+				 */
+			}
+		} 
+		catch (XmlException e) 
+		{
+			Utils.log(e.getMessage());
+		} 
+		catch (IOException e) 
+		{
+			Utils.log(e.getMessage());
+		}
+		
+	}
+
+
 }
