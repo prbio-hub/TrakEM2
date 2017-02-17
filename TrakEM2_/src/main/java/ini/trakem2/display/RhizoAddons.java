@@ -323,6 +323,7 @@ public class RhizoAddons {
     
     
     public static void test(){
+        //test kommentar fuer git
 	RhizoAddons.test = !RhizoAddons.test;
         Utils.log("Aktueller Zustand: "+ RhizoAddons.test);
 	Display display = Display.getFront();
