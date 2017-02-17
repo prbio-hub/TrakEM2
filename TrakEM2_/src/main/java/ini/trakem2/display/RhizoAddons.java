@@ -322,7 +322,7 @@ public class RhizoAddons {
 
     
     
-    public static void testbla(){
+    public static void test(){
 	RhizoAddons.test = !RhizoAddons.test;
         Utils.log("Aktueller Zustand: "+ RhizoAddons.test);
 	Display display = Display.getFront();
@@ -357,5 +357,6 @@ public class RhizoAddons {
     }
 	
 	
+    // huhu axel
 	
 }
