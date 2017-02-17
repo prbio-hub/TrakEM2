@@ -322,7 +322,7 @@ public class RhizoAddons {
 
     
     
-    public static void test(){
+    public static void testHuhu(){
         //test kommentar fuer git
 	RhizoAddons.test = !RhizoAddons.test;
         Utils.log("Aktueller Zustand: "+ RhizoAddons.test);
