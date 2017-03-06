@@ -2194,6 +2194,24 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		//Utils.log("Display.choose: x,y " + x_p + "," + y_p);
 		final ArrayList<Displayable> al = new ArrayList<Displayable>(layer.find(x_p, y_p, true));
 		al.addAll(layer.getParent().findZDisplayables(layer, x_p, y_p, true)); // only visible ones
+		
+		//actyc: remove those trees that contain a non clickable node at xp und yp
+		ArrayList<Displayable> alternatedList = new ArrayList<Displayable>();
+		for (Displayable displayable : al) {
+			if(displayable.getClass()==Treeline.class){
+				Treeline currentTreeline = (Treeline) displayable;
+				double transX = x_p -currentTreeline.getAffineTransform().getTranslateX();
+				double transY = y_p -currentTreeline.getAffineTransform().getTranslateY();
+				Node<Float> nearestNode = currentTreeline.findNearestNode((float)transX,(float) transY, layer);
+				//Utils.log(nearestNode);
+				if(RhizoAddons.treeLineClickable[(int)nearestNode.getConfidence()]==false){
+					alternatedList.add(displayable);
+				}				
+			}
+		}
+		al.removeAll(alternatedList);
+		//
+		
 		if (al.isEmpty()) {
 			final Displayable act = this.active;
 			selection.clear();
@@ -6954,6 +6972,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		return fop;
 	}
 	
+	private boolean dummy = false;
     //actyc: new Panel to add more functionality
     private OptionPanel createExtendedOptionPanel() {
         final OptionPanel eop = new OptionPanel();
@@ -6964,43 +6983,43 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 //			}
 //		};
         //eop.addMessage("Copy Options:");
-        eop.addButton("Copy Treelines", new OptionPanel.ButtonSetter(this, "filter_enabled", new Runnable() {
+        RhizoAddons.init();
+        //add Short cuts
+        RhizoAddons.shortyForTreeLine(this.getTabbedPane());
+        //RhizoAddons.shortyForTreeLine(eop);
+        //RhizoAddons.shortyForTreeLine(panel_zdispl);
+        
+        eop.addButton("Copy Treelines", new OptionPanel.ButtonSetter(this, "dummy", new Runnable() {
             @Override
             public void run() {
                 RhizoAddons.copyTreeLine();
             }
         }));
         //change to predefined colors [old]
-        eop.addMessage("assign color:");
-        eop.addButton("update", new OptionPanel.ButtonSetter(this, "filter_enabled", new Runnable() {
+        eop.addButton("update", new OptionPanel.ButtonSetter(this, "dummy", new Runnable() {
             @Override
             public void run() {
-                RhizoAddons.applyCorrespondigColor();
+                RhizoAddons.applyCorrespondingColor();
             }
         }));
-        //open color chooser
-        eop.addButton("colors", new OptionPanel.ButtonSetter(this, "filter_enabled", new Runnable() {
-            @Override
-            public void run() {
-                RhizoAddons.changeColor();
-            }
-        }));
-        eop.addButton("visibility", new OptionPanel.ButtonSetter(this, "filter_enabled", new Runnable() {
+        eop.addButton("visibility", new OptionPanel.ButtonSetter(this, "dummy", new Runnable() {
             @Override
             public void run() {
                 RhizoAddons.setVisibility();
             }
         }));
-        //add Short cuts
-        RhizoAddons.shortyForTreeLine(eop);
-        RhizoAddons.shortyForTreeLine(panel_zdispl);
-	
-	eop.addButton("testButton", new OptionPanel.ButtonSetter(this, "filter_enabled", new Runnable() {
+        eop.addButton("testButton", new OptionPanel.ButtonSetter(this, "dummy", new Runnable() {
             @Override
             public void run() {
                 RhizoAddons.test();
             }
         }));
+		eop.addButton("writeMTBXML", new OptionPanel.ButtonSetter(this, "dummy", new Runnable() {
+        @Override
+        public void run() {
+            RhizoAddons.writeMTBXML();
+        }
+    }));
         return eop;
     }
 
