@@ -41,6 +41,7 @@ import ini.trakem2.display.Patch;
 import ini.trakem2.display.Pipe;
 import ini.trakem2.display.Polyline;
 import ini.trakem2.display.Profile;
+import ini.trakem2.display.RhizoAddons;
 import ini.trakem2.display.Stack;
 import ini.trakem2.display.Treeline;
 import ini.trakem2.display.YesNoDialog;
@@ -647,7 +648,8 @@ public class Project extends DBObject {
 		}
 		
 		project.restartAutosaving();
-
+		//actyc: ready to load
+		RhizoAddons.readyToLoad=true;
 		return project;
 	}
 
@@ -1155,6 +1157,7 @@ public class Project extends DBObject {
 			if (!ht_unique_tt.containsKey("ball")) ht_unique_tt.put("ball", new TemplateThing("ball"));
 			if (!ht_unique_tt.containsKey("area_list")) ht_unique_tt.put("area_list", new TemplateThing("area_list"));
 			if (!ht_unique_tt.containsKey("dissector")) ht_unique_tt.put("dissector", new TemplateThing("dissector"));
+			//actyc: explo. possible injection point to add new Items to the TemplateList
 			// this should be done automagically by querying the classes in the package ... but java can't do that without peeking into the .jar .class files. Buh.
 
 			TemplateThing project_tt = ht_unique_tt.remove("project");

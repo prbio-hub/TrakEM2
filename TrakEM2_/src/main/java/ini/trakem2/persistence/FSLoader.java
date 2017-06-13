@@ -45,6 +45,7 @@ import ini.trakem2.display.Displayable;
 import ini.trakem2.display.Layer;
 import ini.trakem2.display.MipMapImage;
 import ini.trakem2.display.Patch;
+import ini.trakem2.display.RhizoAddons;
 import ini.trakem2.display.Stack;
 import ini.trakem2.imaging.FloatProcessorT2;
 import ini.trakem2.imaging.P;
@@ -326,6 +327,9 @@ public final class FSLoader extends Loader {
 		}
 		// else, good
 		crashDetector();
+		//actyc: start the load thread
+		RhizoAddons.addonLoader(new File(path));
+
 		return data;
 	}
 

@@ -30,10 +30,12 @@ import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Event;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
@@ -94,6 +96,7 @@ import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 import javax.swing.DefaultBoundedRangeModel;
+import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -932,8 +935,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		this.addTab("Live filter", this.scroll_filter_options);
 		
 		//actyc: Test tab 10
-		this.filter_options = createExtendedOptionPanel();
-		this.scroll_filter_options = makeScrollPane(this.filter_options);
+//		this.filter_options = createExtendedOptionPanel();
+		this.scroll_filter_options = makeScrollPane(createExtendedOptionPanel());
 		this.scroll_filter_options.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		this.addTab("Extended Options", this.scroll_filter_options);
 
@@ -1226,7 +1229,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				final AffineTransform aff = new AffineTransform();
 				aff.translate(-size*Toolbar.TEXT, size-1);
 				((Graphics2D)g).setTransform(aff);
-				for (; i<18; i++) {
+				//actyc i<18 to i<19 to add the new tool to the trakkem toolbar
+				for (; i<19; i++) {
 					drawButton.invoke(toolbar, g, i);
 				}
 				gr.drawImage(bi, 0, 0, null);
@@ -1249,17 +1253,47 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			}
 		}
 		*/
+		//actyc: should be the right place to get a mouse interaction in trackem's toolbar
 		@Override
         public void mousePressed(final MouseEvent me) {
 			int x = me.getX();
 			int y = me.getY();
-			if (y > size) {
-				if (x > size * 7) return; // off limits
-				x += size * 9;
-				y -= size;
-			} else {
-				if (x > size * 9) return; // off limits
+			//Utils.log("size is: "+size+" |x is: "+x+" |y is: "+y);
+			//actyc: rewrite the following for a more general approach
+			int[] toolsPerLine = {9,8};
+			int numberOfLines = 2;
+			//check if y value is valid
+			int yTool = y/size;
+			if(yTool>numberOfLines){
+				Utils.log("Y not fine "+yTool);
+				return;
 			}
+			//so we are in a valid line
+			//check if x value is valid
+			int xTool = (x/size)+1;
+			if(xTool>toolsPerLine[yTool]){
+				Utils.log("X not fine "+xTool);
+				return;
+			}
+			//so x and y is valid
+			//ijToolbar is in a single row so we have to reorganize these cords
+			//Utils.log("xTool is: "+xTool+" |yTool is: "+yTool);
+
+			//fix for the gap
+			if(yTool>0 && xTool>3) xTool= (x-(3*size)-(size/3))/size+4;
+			
+			x= xTool*size-(size/2)+(size*9*yTool);
+			y= (size/2);
+
+			
+			//Utils.log("Finalx is: "+x+" Finaly is: "+y);
+//			if (y > size) {
+//				if (x > size * 7) return; // off limits
+//				x += size * 9;
+//				y -= size;
+//			} else {
+//				if (x > size * 9) return; // off limits
+//			}
 			/*
 			if (Utils.isPopupTrigger(me)) {
 				if (x >= size && x <= size * 2 && y >= 0 && y <= size) {
@@ -3390,6 +3424,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F10, 0, true));
 		item = new JMenuItem("Pen"); item.addActionListener(new SetToolListener(ProjectToolbar.PEN)); menu.add(item);
 		item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F11, 0, true));
+		//actyc: add CON Tool
+		item = new JMenuItem("Con"); item.addActionListener(new SetToolListener(ProjectToolbar.CON)); menu.add(item);
+		item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0, true));
 
 		popup.add(menu);
 
@@ -4677,8 +4714,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     public void actionPerformed(final ActionEvent ae) {
 		dispatcher.exec(new Runnable() { @Override
         public void run() {
-
+		
+		// actyc aeekz
+			
+			
 		final String command = ae.getActionCommand();
+		
 		if (command.startsWith("Job")) {
 			if (Utils.checkYN("Really cancel job?")) {
 				project.getLoader().quitJob(command);
@@ -6244,7 +6285,28 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			gd.showDialog();
 			if (gd.wasCanceled()) return;
 			project.setProperty(AreaUtils.always_interpolate_areas_with_distance_map, gd.getNextBoolean() ? "true" : null);
-		} else {
+		} 
+		// rhizo commands start
+		else if(command.equals("Copy treelines")){
+			RhizoAddons.copyTreeLine();
+		}
+		else if(command.equals("Load images")){
+			RhizoAddons.imageLoader();
+		}
+		else if(command.equals("colVis")){
+			RhizoAddons.setVisibility();
+		}
+		else if(command.equals("testtest")){
+			RhizoAddons.test();
+		}
+		else if(command.equals("readXML")){
+			RhizoAddons.readMTBXML();
+		}
+		else if(command.equals("writeXML")){
+			RhizoAddons.writeMTBXML();
+		}
+		// rhizo commands end
+		else {
 			Utils.log2("Display: don't know what to do with command " + command);
 		}
 		}});
@@ -6972,55 +7034,54 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		return fop;
 	}
 	
-	private boolean dummy = false;
     //actyc: new Panel to add more functionality
-    private OptionPanel createExtendedOptionPanel() {
-        final OptionPanel eop = new OptionPanel();
-//		final Runnable reaction = new Runnable() {
-//			@Override
-//            public void run() {
-//				RhizoAddons.copyTreeLine();
-//			}
-//		};
-        //eop.addMessage("Copy Options:");
-        RhizoAddons.init();
-        //add Short cuts
-        RhizoAddons.shortyForTreeLine(this.getTabbedPane());
-        //RhizoAddons.shortyForTreeLine(eop);
-        //RhizoAddons.shortyForTreeLine(panel_zdispl);
-        
-        eop.addButton("Copy Treelines", new OptionPanel.ButtonSetter(this, "dummy", new Runnable() {
-            @Override
-            public void run() {
-                RhizoAddons.copyTreeLine();
-            }
-        }));
-        //change to predefined colors [old]
-        eop.addButton("update", new OptionPanel.ButtonSetter(this, "dummy", new Runnable() {
-            @Override
-            public void run() {
-                RhizoAddons.applyCorrespondingColor();
-            }
-        }));
-        eop.addButton("visibility", new OptionPanel.ButtonSetter(this, "dummy", new Runnable() {
-            @Override
-            public void run() {
-                RhizoAddons.setVisibility();
-            }
-        }));
-        eop.addButton("testButton", new OptionPanel.ButtonSetter(this, "dummy", new Runnable() {
-            @Override
-            public void run() {
-                RhizoAddons.test();
-            }
-        }));
-		eop.addButton("writeMTBXML", new OptionPanel.ButtonSetter(this, "dummy", new Runnable() {
-        @Override
-        public void run() {
-            RhizoAddons.writeMTBXML();
-        }
-    }));
-        return eop;
+    private JPanel createExtendedOptionPanel() 
+    {
+    	RhizoAddons.init();
+    	RhizoAddons.shortyForTreeLine(this.getTabbedPane());
+    	//RhizoAddons.shortyForMergeTool(this.getTabbedPane()); //deprecated
+    	
+    	
+    	JPanel panel = new JPanel();
+    	panel.setLayout(new GridLayout(0, 2)); // n rows 2 columns
+
+    	JButton copyButton = new JButton("Copy Treelines");
+    	copyButton.setToolTipText("Copys treelines from the current layer to the next layer.");
+    	copyButton.setActionCommand("Copy treelines");
+    	copyButton.addActionListener(this);
+    	panel.add(copyButton);
+    	
+    	JButton loadImagesButton = new JButton("Load Images");
+    	loadImagesButton.setToolTipText("Import one or more images as a stack.");
+    	loadImagesButton.setActionCommand("Load images");
+    	loadImagesButton.addActionListener(this);
+    	panel.add(loadImagesButton);
+    	
+    	JButton visbilityButton = new JButton("Color & Visbility");
+    	visbilityButton.setToolTipText("Adjust the color and opacity of treelines of a certain type.");
+    	visbilityButton.setActionCommand("colVis");
+    	visbilityButton.addActionListener(this);
+    	panel.add(visbilityButton);
+    	
+    	JButton devTest = new JButton("Test");
+    	devTest.setToolTipText("");
+    	devTest.setActionCommand("testtest");
+    	devTest.addActionListener(this);
+    	panel.add(devTest);
+    	
+    	JButton readXMLButton = new JButton("Read MTBXML");
+    	readXMLButton.setToolTipText("Reads a MTBXML file that corresponds to the images already loaded.");
+    	readXMLButton.setActionCommand("readXML");
+    	readXMLButton.addActionListener(this);
+    	panel.add(readXMLButton);
+    	
+    	JButton writeXMLButton = new JButton("Write MTBXML");
+    	writeXMLButton.setToolTipText("Writes the current TrakEM project to MTBXML format.");
+    	writeXMLButton.setActionCommand("writeXML");
+    	writeXMLButton.addActionListener(this);
+    	panel.add(writeXMLButton);
+    	
+    	return panel;
     }
 
 	protected Image applyFilters(final Image img) {
@@ -7629,4 +7690,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		}
 		return ds;
 	}
+
 }
+

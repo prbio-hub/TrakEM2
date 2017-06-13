@@ -817,6 +817,17 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				a.add(t);
 			}
 			this.calculateBoundingBox(null); // outside synch
+			//actyc: inform the Connector
+			if(this.getClass().equals(Treeline.class)){
+				ArrayList<Treeline> interestingTrees = new ArrayList<Treeline>();  
+				for (Tree<T> tree : a) {
+					interestingTrees.add((Treeline)tree);
+				}
+				TreeEvent te = new TreeEvent((Treeline) this,"split",null,interestingTrees);
+				treeAction(te);
+			}
+			
+			
 			return a;
 		} catch (final Exception e) {
 			IJError.print(e);
@@ -1364,7 +1375,20 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		// Don't clear this.marked
 
 		updateView();
-
+		
+		//actyc: inform the connectors
+		boolean sane=true;
+		for (Tree<T> tree : ts) {
+			if(!tree.getClass().equals(Treeline.class)) sane=false;
+		}
+		if(sane){
+			ArrayList<Treeline> interestingTrees = new ArrayList<Treeline>();
+			for (Tree<T> tree : ts) {
+				interestingTrees.add((Treeline) tree);
+			}
+			TreeEvent te = new TreeEvent((Treeline) this,"join",null,interestingTrees);
+			treeAction(te);
+		}
 		return true;
 	}
 
@@ -1543,90 +1567,106 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 
 	@Override
 	public void mousePressed(final MouseEvent me, final Layer layer, final int x_p, final int y_p, final double mag) {
-		if (ProjectToolbar.PEN != ProjectToolbar.getToolId()) {
-			return;
-		}
-
-		if (null != root) {
-			// transform the x_p, y_p to the local coordinates
-			int x_pl = x_p;
-			int y_pl = y_p;
-			if (!this.at.isIdentity()) {
-				final Point2D.Double po = inverseTransformPoint(x_p, y_p);
-				x_pl = (int)po.x;
-				y_pl = (int)po.y;
-			}
-
-			Node<T> found = findNode(x_pl, y_pl, layer, mag);
-			setActive(found);
-
-			if (null != found) {
-				if (2 == me.getClickCount()) {
-					setLastMarked(found);
-					setActive(null);
-					return;
+		//actyc changed from !=PEN > return to ==PEN > {} to be able to use more than just PEN
+		if (ProjectToolbar.PEN == ProjectToolbar.getToolId()) {
+			if (null != root) {
+				// transform the x_p, y_p to the local coordinates
+				int x_pl = x_p;
+				int y_pl = y_p;
+				if (!this.at.isIdentity()) {
+					final Point2D.Double po = inverseTransformPoint(x_p, y_p);
+					x_pl = (int)po.x;
+					y_pl = (int)po.y;
 				}
-				if (me.isShiftDown() && Utils.isControlDown(me)) {
+
+				Node<T> found = findNode(x_pl, y_pl, layer, mag);
+				setActive(found);
+
+				if (null != found) {
+					if (2 == me.getClickCount()) {
+						setLastMarked(found);
+						setActive(null);
+						return;
+					}
+					if (me.isShiftDown() && Utils.isControlDown(me)) {
+						if (me.isAltDown()) {
+							// Remove point and its subtree
+							removeNode(found);
+						} else {
+							// Just remove the slab point, joining parent with child
+							if (!popNode(found)) {
+								Utils.log("Can't pop out branch point!\nUse shift+control+alt+click to remove a branch point and its subtree.");
+								setActive(null);
+								return;
+							}
+						}
+						repaint(false, layer); // keep larger size for repainting, will call calculateBoundingBox on mouseRelesed
+						setActive(null);
+						return;
+					}
+				} else {
+					if (2 == me.getClickCount()) {
+						setLastMarked(null);
+						return;
+					}
 					if (me.isAltDown()) {
-						// Remove point and its subtree
-						removeNode(found);
+						return;
+					}
+					// Add new point
+					if (me.isShiftDown()) {
+						final Node<T>[] ns = findNearestEdge(x_pl, y_pl, layer, mag);
+						if (null != ns) {
+							found = createNewNode(x_pl, y_pl, layer, ns[0]);
+							insertNode(ns[0], ns[1], found, ns[0].getConfidence(ns[1]));
+							setActive(found);
+						}
 					} else {
-						// Just remove the slab point, joining parent with child
-						if (!popNode(found)) {
-							Utils.log("Can't pop out branch point!\nUse shift+control+alt+click to remove a branch point and its subtree.");
-							setActive(null);
+						final Node<T> nearest = last_visited;
+						if (null == nearest) {
+							Utils.showMessage("Before adding a new node, please activate an existing node\nby clicking on it, or pushing 'g' on it.");
 							return;
 						}
+						// Find the point closest to any other starting or ending point in all branches
+						//Node<T> nearest = findNearestEndNode(x_pl, y_pl, layer); // at least the root exists, so it has to find a node, any node
+						// append new child; inherits radius from parent
+						found = createNewNode(x_pl, y_pl, layer, nearest);
+						//actyc: new node get confidence of parent node
+						//addNode(nearest, found, Node.MAX_EDGE_CONFIDENCE);
+						addNode(nearest, found, nearest.getConfidence());
+						setActive(found);
+						repaint(true, layer);
 					}
-					repaint(false, layer); // keep larger size for repainting, will call calculateBoundingBox on mouseRelesed
-					setActive(null);
 					return;
 				}
 			} else {
-				if (2 == me.getClickCount()) {
-					setLastMarked(null);
-					return;
-				}
-				if (me.isAltDown()) {
-					return;
-				}
-				// Add new point
-				if (me.isShiftDown()) {
-					final Node<T>[] ns = findNearestEdge(x_pl, y_pl, layer, mag);
-					if (null != ns) {
-						found = createNewNode(x_pl, y_pl, layer, ns[0]);
-						insertNode(ns[0], ns[1], found, ns[0].getConfidence(ns[1]));
-						setActive(found);
-					}
-				} else {
-					final Node<T> nearest = last_visited;
-					if (null == nearest) {
-						Utils.showMessage("Before adding a new node, please activate an existing node\nby clicking on it, or pushing 'g' on it.");
-						return;
-					}
-					// Find the point closest to any other starting or ending point in all branches
-					//Node<T> nearest = findNearestEndNode(x_pl, y_pl, layer); // at least the root exists, so it has to find a node, any node
-					// append new child; inherits radius from parent
-					found = createNewNode(x_pl, y_pl, layer, nearest);
-					//actyc: new node get confidence of parent node
-					//addNode(nearest, found, Node.MAX_EDGE_CONFIDENCE);
-					addNode(nearest, found, nearest.getConfidence());
-					setActive(found);
-					repaint(true, layer);
-				}
-				return;
+				// First point
+				root = createNewNode(x_p, y_p, layer, null); // world coords, so calculateBoundingBox will do the right thing
+				addNode(null, root, (byte)0);
+				setActive(root);
 			}
-		} else {
-			// First point
-			root = createNewNode(x_p, y_p, layer, null); // world coords, so calculateBoundingBox will do the right thing
-			addNode(null, root, (byte)0);
-			setActive(root);
 		}
+		if(ProjectToolbar.CON == ProjectToolbar.getToolId()){
+			//Utils.log("huhu du hast mit dem CON tool was mit ner Treeline gemacht");
+			if(null != root){
+				//actyc: hook for mergTool of RhizoAddons
+				if(this.getClass().equals(Treeline.class)){
+					Utils.log("active node in the parent tree: "+ this.last_visited);
+					this.marked = this.last_visited;
+					RhizoAddons.mergeTool(layer, x_p, y_p,mag, (Treeline.RadiusNode) this.last_visited, (Treeline) this,me);
+					//RhizoAddons.mergeActive=false; //deprecated
+					return;
+				}
+			}
+		}
+		return;
 	}
 
 	@Override
 	public void mouseDragged(final MouseEvent me, final Layer la, final int x_p, final int y_p, final int x_d, final int y_d, final int x_d_old, final int y_d_old) {
 		translateActive(me, la, x_d, y_d, x_d_old, y_d_old);
+		//actyc: drag event to stimulate a sanity check
+		TreeEvent te = new TreeEvent((Treeline) this,"drag",null,null);
+		treeAction(te);
 	}
 
 	@Override
@@ -3825,6 +3865,23 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		if (null == root) return;
 		for (final Node<T> nd : root.getSubtreeNodes()) {
 			nd.removeAllTags();
+		}
+	}
+	
+	/** actyc: listener interaction with connector type */
+	private List<TreeEventListener> treeEventListener = new ArrayList<TreeEventListener>();
+	
+	public void addTreeEventListener(TreeEventListener newListener){
+		treeEventListener.add(newListener);
+	}
+	
+	public void removeTreeEventListener(TreeEventListener toBeRemove){
+		treeEventListener.remove(toBeRemove);
+	}
+	
+	public void treeAction(TreeEvent te){
+		for(TreeEventListener tEL: treeEventListener){
+			tEL.eventAppeared(te);
 		}
 	}
 }

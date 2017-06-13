@@ -47,6 +47,9 @@ public class ProjectToolbar implements MouseListener {
 	public static final int BRUSH = Toolbar.SPARE4;
 
 	public static final int WAND = Toolbar.SPARE5;
+	
+	//actyc: my new shiny tool
+	public static final int CON = Toolbar.CUSTOM4;
 
 	static private String startup_macros = null;
 
@@ -101,6 +104,7 @@ public class ProjectToolbar implements MouseListener {
 				.append("macro 'Freehand Tool-C000Lb0c0La1d1L92e2L83f3L74f4L65e5L56d6L47c7L38b8L29a9L2a2aL4a9aL1b2bL5b8bL1c1cL6c7cL0d1dL5d6dL0e0eL3e5eL0f3f' {\ncall('ini.trakem2.utils.ProjectToolbar.toolChanged', 'PENCIL');\n}\n")
 				.append("macro 'Pen Tool-C000L8080L7191L7292L6363L8383La3a3L6464L8484Lb4b4L5555L8585Lb5b5L4646L8686Lc6c6L4747Lc7c7L3838Ld8d8L4949Lc9c9L4a4aLcacaL5b5bLbbbbL5c5cLbcbcL4dcdL5e5eLbebeL5fbf' {\ncall('ini.trakem2.utils.ProjectToolbar.toolChanged', 'PEN');\n}\n")
 				.append("macro 'Brush Tool - C037La077Ld098L6859L4a2fL2f4fL3f99L5e9bL9b98L6888L5e8dL888c' {\ncall('ini.trakem2.utils.ProjectToolbar.toolChanged', 'BRUSH');\n}\n")
+				.append("macro 'Con Tool Tool - C000Db7C000D94C000Db6C000Dd6C000D27D87D96Db5C000D23Db4C000Dc4C000D43C000D47C000C111C222Db3C222C333C444D2bD2dD4aD4eDbaDbeDdbDddC444D67C555De6C555D63De3De4De5C555C666D15C666D95C666C777D16C777D93C777D0cDfcC888Dd5C888D66C888C999D14D64C999Dc3C999D55C999D97C999CaaaD54D65CaaaD56CaaaCbbbD24CbbbD26CbbbD1bD1dD3aD3eDcaDceDebDedCcccDc5CcccD25CcccDd7CcccCdddCeeeD32CeeeD38CeeeD17CeeeDb2De2CeeeCfffD72Da5Db8De8CfffD78CfffD82CfffD53D57Df3Df4Df5Df6Df7CfffD00D01D02D03D04D05D06D07D08D09D0aD0bD0dD0eD0fD10D11D12D13D18D19D1aD1eD1fD20D21D22D28D29D2aD2eD2fD30D31D34D35D36D39D3fD40D41D42D44D45D46D48D49D4fD50D51D52D58D59D5aD5bD5dD5eD5fD60D61D62D68D69D6aD6bD6dD6eD6fD70D71D74D75D76D79D7aD7bD7dD7eD7fD80D81D84D85D86D88D89D8aD8bD8dD8eD8fD90D91D92D98D99D9aD9bD9dD9eD9fDa0Da1Da2Da3Da4Da6Da7Da8Da9DaaDabDadDaeDafDb0Db1Db9DbfDc0Dc1Dc2Dc6Dc7Dc8Dc9DcfDd0Dd1Dd2Dd3Dd4Dd8Dd9DdaDdeDdfDe0De1De9DeaDeeDefDf0Df1Df2Df8Df9DfaDfbDfdDfeDff'{\ncall('ini.trakem2.utils.ProjectToolbar.toolChanged', 'CON');\n}\n")
 			;
 
 			installer.install(sb_tools.toString()); // another call to install erases the previous, so it needs all at the same time
@@ -257,6 +261,8 @@ public class ProjectToolbar implements MouseListener {
 			case KeyEvent.VK_F7:
 				break;
 			case KeyEvent.VK_F8:
+				//actyc
+				setTool(CON);
 				break;
 			case KeyEvent.VK_F9:
 				setTool(SELECT);
@@ -278,6 +284,8 @@ public class ProjectToolbar implements MouseListener {
 			case PENCIL:
 			case BRUSH:
 			case PEN:
+			//actyc
+			case CON:
 				return true;
 			default:
 				return false;

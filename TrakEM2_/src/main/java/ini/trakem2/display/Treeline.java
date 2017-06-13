@@ -91,7 +91,7 @@ public class Treeline extends Tree<Float> {
 		if (-1 == last_radius) {
 			last_radius = 10 / (float)mag;
 		}
-
+		
 		if (me.isShiftDown() && me.isAltDown() && !Utils.isControlDown(me)) {
 			final Display front = Display.getFront(this.project);
 			final Layer layer = front.getLayer();
@@ -115,7 +115,6 @@ public class Treeline extends Tree<Float> {
 			nd.setData((float)Math.sqrt(Math.pow(xp - nd.x, 2) + Math.pow(yp - nd.y, 2)));
 			repaint(true, la);
 			setLastEdited(nd);
-
 			return;
 		}
 

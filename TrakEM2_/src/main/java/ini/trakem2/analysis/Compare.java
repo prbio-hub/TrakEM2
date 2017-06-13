@@ -1337,7 +1337,7 @@ public class Compare {
 
 		// write chain titles, with project prefix
 		if (cp.format.equals(cp.formats[0])) {
-			// as csv:
+			// as  :
 			try {
 				final StringBuffer[] titles = new StringBuffer[n_chains];
 				int next = 0;

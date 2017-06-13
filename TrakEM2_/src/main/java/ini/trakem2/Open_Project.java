@@ -21,8 +21,11 @@ Institute of Neuroinformatics, University of Zurich / ETH, Switzerland.
 **/
 package ini.trakem2;
 
+import java.io.File;
+
 import ij.plugin.PlugIn;
 //import ini.trakem2.utils.BigBrother;
+import ini.trakem2.display.RhizoAddons;
 
 public class Open_Project implements PlugIn {
 

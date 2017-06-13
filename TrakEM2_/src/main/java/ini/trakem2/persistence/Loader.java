@@ -109,6 +109,7 @@ import ini.trakem2.display.MipMapImage;
 import ini.trakem2.display.Patch;
 import ini.trakem2.display.Polyline;
 import ini.trakem2.display.Region;
+import ini.trakem2.display.RhizoAddons;
 import ini.trakem2.display.Selection;
 import ini.trakem2.display.Stack;
 import ini.trakem2.display.YesNoDialog;
@@ -3495,6 +3496,7 @@ while (it.hasNext()) {
 			// a stack!
 			final Layer layer = Display.getFrontLayer(project);
 			if (null == layer) return null;
+			Utils.log("Ich habe mehr als 1 Slice!");
 			importStack(layer, x, y, imp, true, path, true);
 			return null;
 		}
@@ -3824,6 +3826,10 @@ while (it.hasNext()) {
 
 	/** Exports the project and its images (optional); if export_images is true, it will be asked for confirmation anyway -beware: for FSLoader, images are not exported since it doesn't own them; only their path.*/
 	protected String export(final Project project, final File fxml, final XMLOptions options) {
+		//actyc: save the connector infos
+		//RhizoAddons.saveConnectorData(fxml);
+		RhizoAddons.addonSaver(fxml);
+		//end
 		String path = null;
 		if (null == project || null == fxml) return null;
 

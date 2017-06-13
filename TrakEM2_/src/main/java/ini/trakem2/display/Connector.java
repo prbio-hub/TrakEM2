@@ -29,7 +29,11 @@ import ini.trakem2.utils.Utils;
 
 /** A one-to-many connection, represented by one source point and one or more target points. The connector is drawn by click+drag+release, defining the origin at click and the target at release. By clicking anywhere else, the connector can be given another target. Points can be dragged and removed.
  * Connectors are meant to represent synapses, in particular polyadic synapses. */
-public class Connector extends Treeline {
+/** actyc: over all I added a new TreeEventListener Interface/Implementation to keep track of changes in the linked trees */
+public class Connector extends Treeline  implements TreeEventListener{
+	
+	//actyc: variable to store connected Treelines explicitly 
+	protected ArrayList<Treeline>  conTreelines = new ArrayList<Treeline>();
 
 	public Connector(final Project project, final String title) {
 		super(project, title);
@@ -376,73 +380,102 @@ public class Connector extends Treeline {
 		}
 		return base;
 	}
-
+	//actyc: same as in tree; change the !=Pen>return situation to ==Pen{} to get the shiny CON Tool working
 	/** Add a root or child nodes to root. */
 	@Override
 	public void mousePressed(final MouseEvent me, final Layer layer, final int x_p, final int y_p, final double mag) {
-		if (ProjectToolbar.PEN != ProjectToolbar.getToolId()) {
-			return;
-		}
+		if (ProjectToolbar.PEN == ProjectToolbar.getToolId()) {
 
-		if (-1 == last_radius) {
-			last_radius = 10 / (float)mag;
-		}
-
-		if (null != root) {
-			// transform the x_p, y_p to the local coordinates
-			int x_pl = x_p;
-			int y_pl = y_p;
-			if (!this.at.isIdentity()) {
-				final Point2D.Double po = inverseTransformPoint(x_p, y_p);
-				x_pl = (int)po.x;
-				y_pl = (int)po.y;
+			if (-1 == last_radius) {
+				last_radius = 10 / (float)mag;
 			}
 
-			Node<Float> found = findNode(x_pl, y_pl, layer, mag);
-			setActive(found);
+			if (null != root) {
+				// transform the x_p, y_p to the local coordinates
+				int x_pl = x_p;
+				int y_pl = y_p;
+				if (!this.at.isIdentity()) {
+					final Point2D.Double po = inverseTransformPoint(x_p, y_p);
+					x_pl = (int)po.x;
+					y_pl = (int)po.y;
+				}
 
-			if (null != found) {
-				if (2 == me.getClickCount()) {
-					setLastMarked(found);
-					setActive(null);
-					return;
-				}
-				if (me.isShiftDown() && Utils.isControlDown(me)) {
-					if (found == root) {
-						// Remove the whole Connector
-						layer_set.addChangeTreesStep();
-						if (remove2(true)) {
-							setActive(null);
-							layer_set.addChangeTreesStep();
-						} else {
-							layer_set.removeLastUndoStep(); // no need
-						}
-						return;
-					} else {
-						// Remove point
-						removeNode(found);
-					}
-				}
-			} else {
-				if (2 == me.getClickCount()) {
-					setLastMarked(null);
-					return;
-				}
-				// Add new target point to root:
-				found = newNode(x_pl, y_pl, layer, root);
-				((ConnectorNode)found).setData(last_radius);
-				addNode(root, found, Node.MAX_EDGE_CONFIDENCE);
+				Node<Float> found = findNode(x_pl, y_pl, layer, mag);
 				setActive(found);
-				repaint(true, layer);
+
+				if (null != found) {
+					if (2 == me.getClickCount()) {
+						setLastMarked(found);
+						setActive(null);
+						return;
+					}
+					if (me.isShiftDown() && Utils.isControlDown(me)) {
+						if (found == root) {
+							// Remove the whole Connector
+							layer_set.addChangeTreesStep();
+							if (remove2(true)) {
+								setActive(null);
+								layer_set.addChangeTreesStep();
+							} else {
+								layer_set.removeLastUndoStep(); // no need
+							}
+							return;
+						} else {
+							// Remove point
+							removeNode(found);
+						}
+					}
+				} else {
+					if (2 == me.getClickCount()) {
+						setLastMarked(null);
+						return;
+					}
+					// Add new target point to root:
+					found = newNode(x_pl, y_pl, layer, root);
+					((ConnectorNode)found).setData(last_radius);
+					addNode(root, found, Node.MAX_EDGE_CONFIDENCE);
+					setActive(found);
+					repaint(true, layer);
+				}
+				return;
+			} else {
+				// First point
+				root = newNode(x_p, y_p, layer, null); // world coords, so calculateBoundingBox will do the right thing
+				addNode(null, root, (byte)0);
+				((ConnectorNode)root).setData(last_radius);
+				setActive(root);
+			}
+		}
+		if(ProjectToolbar.CON == ProjectToolbar.getToolId()){
+			if(root != null){
+				
+				// transform the x_p, y_p to the local coordinates
+				int x_pl = x_p;
+				int y_pl = y_p;
+				if (!this.at.isIdentity()) {
+					final Point2D.Double po = inverseTransformPoint(x_p, y_p);
+					x_pl = (int)po.x;
+					y_pl = (int)po.y;
+				}
+				int oldSize = conTreelines.size();
+				
+				if(!me.isShiftDown() && !Utils.isControlDown(me)){
+					RhizoAddons.bindConnectorToTreeline(layer, x_p, y_p, mag, this, me);
+					return;
+				}
+
+				if (me.isShiftDown() && Utils.isControlDown(me)) {
+					Utils.log("list of connected trees:");
+					for(Treeline tree: conTreelines){
+						Utils.log("Treeline: "+tree.getId());
+					}
+					return;
+				}
+				return;
 			}
 			return;
-		} else {
-			// First point
-			root = newNode(x_p, y_p, layer, null); // world coords, so calculateBoundingBox will do the right thing
-			addNode(null, root, (byte)0);
-			((ConnectorNode)root).setData(last_radius);
-			setActive(root);
 		}
+		return;
 	}
 
 	@Override
@@ -475,5 +508,142 @@ public class Connector extends Treeline {
 			return true;
 		}
 		return super.crop(range);
+	}
+	
+	/**actyc: sanity check for the connector*/
+	
+	public boolean sanityCheck(){
+		if(!conTreelines.isEmpty()){
+			if(root!=null && root.hasChildren()){
+				ArrayList<Node<Float>> targets = new ArrayList<Node<Float>>();
+				ArrayList<Node<Float>> deleteList = targets;
+				
+				for (final Node<Float> nd : root.children) {
+					targets.add(nd);
+				}
+				
+				for(Treeline tree: conTreelines){
+					Node<Float> treeRoot = tree.getRoot();
+					Point2D result = RhizoAddons.changeSpace(treeRoot.getX(),treeRoot.getY(),tree.getAffineTransform(),this.getAffineTransform());
+					if(result==null) return false;
+					
+					//make sure all the connected treelines still exists
+					if(!tree.getClass().equals(Treeline.class)) {
+						if(!conTreelines.remove(tree)) return false;
+					}
+					
+					//make sure all the connected treelines have a target node at there root
+					boolean found = false;
+					//Utils.log("active treeline: "+ tree.getId());
+					for (final Node<Float> nd : targets) {
+						//Utils.log("xdist: "+ Math.abs((float)result.getX()-nd.getX()) +" ydist: "+Math.abs((float)result.getY()-nd.getY()));
+						if( Math.abs((float)result.getX()-nd.getX())<10 && Math.abs((float)result.getY()-nd.getY())<10) {
+							found = true;
+							deleteList.remove(nd);
+							//Utils.log("inside the if");
+							break;
+						}
+					}
+					if(!found){
+						Utils.log("inside the new node if");
+						Node<Float> newTarget = newNode((float) result.getX(),(float) result.getY(), treeRoot.getLayer(), root);
+						found = ((ConnectorNode)newTarget).setData(last_radius);
+						found = addNode(root, newTarget, Node.MAX_EDGE_CONFIDENCE);					
+					}
+				}
+				//delete all unused nodes
+				for(Node<Float> nd: deleteList){
+					this.removeNode(nd);
+				}
+			} else {
+				//conTreelines is not empty but the connector have no children
+				for(Treeline tree: conTreelines){
+					Node<Float> treeRoot = tree.getRoot();
+					Point2D result = RhizoAddons.changeSpace(treeRoot.getX(),treeRoot.getY(),tree.getAffineTransform(),this.getAffineTransform());
+					if(result==null) return false;
+					Node<Float> newTarget = newNode((float) result.getX(),(float) result.getY(), treeRoot.getLayer(), root);
+					((ConnectorNode)newTarget).setData(last_radius);
+					if(!addNode(root, newTarget, Node.MAX_EDGE_CONFIDENCE)) return false;
+				}	
+			}
+		} else {
+			if(root!=null && root.hasChildren()){
+				for(Node<Float> nd: root.children){
+					this.removeNode(nd);
+				}
+			}
+		}
+		//Utils.log(root.children.length);
+		repaint(true, layer);
+		return true;
+	}
+	
+	/** actyc: methodes to interact with the connected treelines */
+	
+	public ArrayList<Treeline> getConTreelines() {
+		return conTreelines;
+	}
+	
+	public void setConTreelines(ArrayList<Treeline> newList){
+		conTreelines=newList;
+	}
+	
+	public boolean addConTreeline(Treeline newTreeline){
+		boolean added = conTreelines.add(newTreeline);
+		if(added) newTreeline.addTreeEventListener(this);
+		sanityCheck();
+		return added;
+	}
+	
+	public boolean removeConTreeline(Treeline tobeRemoved){
+		boolean removed = conTreelines.remove(tobeRemoved);
+		if(removed) tobeRemoved.removeTreeEventListener(this);
+		sanityCheck();
+		return removed;
+	}
+	
+	/** actyc: start of the listener implementation */
+	public void eventAppeared(TreeEvent te){
+		//oh captain my captain the event appeared
+		if(te.getEventMessage().equals("drag")){
+			sanityCheck();
+		}
+	}
+	
+	
+}
+
+/** interface for the listener*/
+interface TreeEventListener {
+	void eventAppeared(TreeEvent te);
+}
+
+/** event for the listener interaction */
+class TreeEvent {
+	Treeline source;
+	String eventMessage;
+	ArrayList<Node> interestingNodes;
+	ArrayList<Treeline> interestingTrees;
+	TreeEvent(Treeline source,String eventMessage, ArrayList<Node> interestingNodes,ArrayList<Treeline> interestingTrees){
+		this.source = source;
+		this.eventMessage= eventMessage;
+		this.interestingNodes= interestingNodes;
+		this.interestingTrees= interestingTrees;
+	}
+	
+	public Tree getSource() {
+		return source;
+	}
+	
+	public String getEventMessage() {
+		return eventMessage;
+	}
+	
+	public ArrayList<Node> getInterestingNodes() {
+		return interestingNodes;
+	}
+	
+	public ArrayList<Treeline> getInterestingTrees() {
+		return interestingTrees;
 	}
 }

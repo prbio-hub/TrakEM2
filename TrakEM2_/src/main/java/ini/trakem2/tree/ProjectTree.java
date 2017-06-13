@@ -37,6 +37,7 @@ import ini.trakem2.display.Layer;
 import ini.trakem2.display.Pipe;
 import ini.trakem2.display.Polyline;
 import ini.trakem2.display.Profile;
+import ini.trakem2.display.TestConnector;
 import ini.trakem2.display.Tree;
 import ini.trakem2.display.Treeline;
 import ini.trakem2.display.VectorData;
