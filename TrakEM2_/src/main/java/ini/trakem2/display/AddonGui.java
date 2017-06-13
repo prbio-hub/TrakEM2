@@ -55,24 +55,31 @@ import ini.trakem2.tree.ProjectThing;
 import ini.trakem2.tree.ProjectTree;
 import ini.trakem2.utils.Utils;
 
-public class AddonGui {
-	public VisibilityPanel VisibilityPanel(){
+public class AddonGui
+{
+	public VisibilityPanel visibilityPanel()
+	{
 		VisibilityPanel visPanel = new VisibilityPanel();
 		return visPanel;
 	}
-	public ImageImport imageImport(){
+
+	public ImageImport imageImport()
+	{
 		ImageImport imageImportPanel = new ImageImport();
 		return imageImportPanel;
 	}
 }
 
-class VisibilityPanel extends javax.swing.JPanel {
+class VisibilityPanel extends javax.swing.JPanel 
+{
 
-	public VisibilityPanel() {
+	public VisibilityPanel() 
+	{
 		initComponents();
 	}
 
-	private void initComponents() {
+	private void initComponents() 
+	{
 
 		jPanelNames = new javax.swing.JPanel();
 		jLabel31 = new javax.swing.JLabel();
@@ -627,14 +634,17 @@ class VisibilityPanel extends javax.swing.JPanel {
 	private boolean[] checkBoxArray = RhizoAddons.treeLineClickable;
 
 	// Color change button action
-	Action colorChangeButton = new AbstractAction("colorChangeButton") {
-		public void actionPerformed(ActionEvent e) {
+	Action colorChangeButton = new AbstractAction("colorChangeButton")
+	{
+		public void actionPerformed(ActionEvent e)
+		{
 			int state = Integer.parseInt(e.getActionCommand());
 			javax.swing.JButton source = (JButton) e.getSource();
 			javax.swing.JSlider cSlider = (JSlider) componentCollection_hash.get(state)[0];
 
-			Color currentColor = JColorChooser.showDialog(source, "chose desired color", Color.WHITE);
-			if(currentColor!=null){
+			Color currentColor = JColorChooser.showDialog(source, "Choose color", Color.WHITE);
+			if (currentColor != null)
+			{
 				int alpha = cSlider.getValue();
 				int red = currentColor.getRed();
 				int green = currentColor.getGreen();
@@ -643,13 +653,14 @@ class VisibilityPanel extends javax.swing.JPanel {
 
 				RhizoAddons.confidencColors.put((byte) state, newColor);
 				RhizoAddons.applyCorrespondingColor();
-				source.setBackground(newColor);	
+				source.setBackground(newColor);
 			}
 		}
 	};
 
 	// alpha change slider action
-	ChangeListener sliderAction = new ChangeListener() {
+	ChangeListener sliderAction = new ChangeListener()
+	{
 		@Override
 		public void stateChanged(ChangeEvent e) {
 			int state = 10;
@@ -708,8 +719,10 @@ class VisibilityPanel extends javax.swing.JPanel {
 	};
 
 	// clickablity change action
-	Action clickablityAction = new AbstractAction("clickablityAction") {
-		public void actionPerformed(ActionEvent e) {
+	Action clickablityAction = new AbstractAction("clickablityAction") 
+	{
+		public void actionPerformed(ActionEvent e) 
+		{
 			int state = Integer.parseInt(e.getActionCommand());
 			javax.swing.JCheckBox source = (JCheckBox) e.getSource();
 
@@ -718,7 +731,8 @@ class VisibilityPanel extends javax.swing.JPanel {
 	};
 }
 
-class ImageImport extends javax.swing.JPanel {
+class ImageImport extends javax.swing.JPanel 
+{
 	private javax.swing.Box.Filler filler1;
 	private javax.swing.JButton jButton1;
 	private javax.swing.JButton jButton2;
@@ -728,14 +742,16 @@ class ImageImport extends javax.swing.JPanel {
 	private javax.swing.DefaultListModel<String> listModel;
 	File[] files;
 
-	public ImageImport() {
+	public ImageImport() 
+	{
 		iniComponents();
 	}
 
-	private void iniComponents() {
+	private void iniComponents() 
+	{
 		//TODO check if there are any annotations on currentImage > if yes lock stack/layers
 		//TODO check if names are duplicated > if yes ask user to rename
-		//TODO change order of Images via drag and drop
+		
 		listModel	=	new javax.swing.DefaultListModel<String>();
 		jScrollPane1 = new javax.swing.JScrollPane();
 		jPanel1 = new javax.swing.JPanel();
@@ -770,7 +786,7 @@ class ImageImport extends javax.swing.JPanel {
 
 		jPanel1.setLayout(new javax.swing.BoxLayout(jPanel1, javax.swing.BoxLayout.PAGE_AXIS));
 
-		jButton1.setText("open image");
+		jButton1.setText("Open images");
 		jButton1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				jButton1ActionPerformed(evt);
@@ -778,7 +794,7 @@ class ImageImport extends javax.swing.JPanel {
 		});
 		jPanel1.add(jButton1);
 
-		jButton2.setText("add to stack");
+		jButton2.setText("Import images");
 		jButton2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				jButton2ActionPerformed(evt);
@@ -828,89 +844,70 @@ class ImageImport extends javax.swing.JPanel {
         
 	}
 }
-///////////////////////////////////////////////////////////77
-/////////////////////////////////////////////////////////////
-//class FileTransferHandler extends TransferHandler {
-//	int selectedIndex =-1;
-//	
-//	public boolean canImport(TransferHandler.TransferSupport support) {
-//		return support.isDataFlavorSupported(DataFlavor.javaFileListFlavor);
-//	}
-//	
-//	protected Transferable createTransferable(JComponent comp){
-//		JList<File> list = (JList)comp;
-//		selectedIndex =list.getSelectedIndex();
-//		File file = list.getSelectedValue();
-//		
-//		return file;
-//		
-//	}
-//	
-//	
-//}
-//
-//////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////
 
-
-
-class ListTransferHandler extends TransferHandler{
+class ListTransferHandler extends TransferHandler
+{
 	private int selectedindex = -1;
-	
-    public boolean canImport(TransferHandler.TransferSupport support) {
-        return support.isDataFlavorSupported(DataFlavor.stringFlavor);
-    }
-	
-	protected Transferable createTransferable(JComponent comp){
-		JList<String> list = (JList)comp;
-		selectedindex =list.getSelectedIndex();
-		String value =list.getSelectedValue();
+
+	public boolean canImport(TransferHandler.TransferSupport support)
+	{
+		return support.isDataFlavorSupported(DataFlavor.stringFlavor);
+	}
+
+	protected Transferable createTransferable(JComponent comp)
+	{
+		JList<String> list = (JList) comp;
+		selectedindex = list.getSelectedIndex();
+		String value = list.getSelectedValue();
 		return new StringSelection(value);
 	}
-	
-	public int getSourceActions(JComponent c){
+
+	public int getSourceActions(JComponent c)
+	{
 		return TransferHandler.MOVE;
 	}
-	
-	public boolean importData(TransferHandler.TransferSupport support){
-		if(!support.isDrop()){
+
+	public boolean importData(TransferHandler.TransferSupport support)
+	{
+		if (!support.isDrop())
+		{
 			return false;
 		}
-		JList list = (JList)support.getComponent();
-		DefaultListModel listModel = (DefaultListModel)list.getModel();
+		JList list = (JList) support.getComponent();
+		DefaultListModel listModel = (DefaultListModel) list.getModel();
 		JList.DropLocation dl = list.getDropLocation();
+		
 		int index = dl.getIndex();
-		//string that dropped
+		
+		// string that dropped
 		Transferable t = support.getTransferable();
 		String data;
-		try {
+		try
+		{
 			data = (String) t.getTransferData(DataFlavor.stringFlavor);
-		} catch (UnsupportedFlavorException | IOException e) {
+		} catch (UnsupportedFlavorException | IOException e)
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
-		//Utils.log("String der verschoben wird: "+ data);
-		//Utils.log("Position auf der eingefügt wird: "+ index);
+
 		listModel.insertElementAt(data, index);
-		if(index<selectedindex){
+		if (index < selectedindex)
+		{
 			selectedindex++;
 		}
-//		if(fileList==null){
-//			Utils.log("Filelist is empty");
-//		} else {
-//			for (File file : fileList) {
-//				Utils.log(file.getName());
-//			}
-//		}
+
 		return true;
 	}
-	public void exportDone( JComponent comp, Transferable trans, int action ) {
-		JList list = (JList)comp;
-		DefaultListModel listModel = (DefaultListModel)list.getModel();
-        if (action==MOVE) {
-        	//Utils.log("Position die gelöscht wird: "+ (selectedindex));
-        	listModel.remove((selectedindex));
-        }
-    }
+
+	public void exportDone(JComponent comp, Transferable trans, int action)
+	{
+		JList list = (JList) comp;
+		DefaultListModel listModel = (DefaultListModel) list.getModel();
+		if (action == MOVE)
+		{
+			listModel.remove((selectedindex));
+		}
+	}
 }

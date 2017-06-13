@@ -7057,7 +7057,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	loadImagesButton.addActionListener(this);
     	panel.add(loadImagesButton);
     	
-    	JButton visbilityButton = new JButton("Color & Visbility");
+    	JButton visbilityButton = new JButton("Color & Visibility");
     	visbilityButton.setToolTipText("Adjust the color and opacity of treelines of a certain type.");
     	visbilityButton.setActionCommand("colVis");
     	visbilityButton.addActionListener(this);
@@ -7067,7 +7067,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	devTest.setToolTipText("");
     	devTest.setActionCommand("testtest");
     	devTest.addActionListener(this);
-    	panel.add(devTest);
+//    	panel.add(devTest);
     	
     	JButton readXMLButton = new JButton("Read MTBXML");
     	readXMLButton.setToolTipText("Reads a MTBXML file that corresponds to the images already loaded.");
@@ -7079,6 +7079,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	writeXMLButton.setToolTipText("Writes the current TrakEM project to MTBXML format.");
     	writeXMLButton.setActionCommand("writeXML");
     	writeXMLButton.addActionListener(this);
+    	writeXMLButton.setEnabled(false);
     	panel.add(writeXMLButton);
     	
     	return panel;

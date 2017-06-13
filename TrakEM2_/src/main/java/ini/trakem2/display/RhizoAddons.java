@@ -652,7 +652,7 @@ public class RhizoAddons
 	{
 		JFrame frame = new JFrame("Color and visibility panel");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		JPanel temp = guiAddons.VisibilityPanel();
+		JPanel temp = guiAddons.visibilityPanel();
 		frame.add(temp);
 		frame.pack();
 		frame.setVisible(true);
@@ -668,72 +668,53 @@ public class RhizoAddons
 	public static void copyTreeLine()
 	{
 		Display display = Display.getFront();
-
+		// Layer frontLayer = Display.getFrontLayer();
 		Layer currentLayer = display.getLayer();
 		LayerSet currentLayerSet = currentLayer.getParent();
 		
+		Utils.log(currentLayer);
+		Utils.log(currentLayerSet.next(currentLayer));
+		
 		// determine next layer
 		Layer nextLayer = currentLayerSet.next(currentLayer);
-		if (nextLayer == null)
-		{
+		//copytreelineconnector
+		if (nextLayer == null || nextLayer.getZ()==currentLayer.getZ()) {
 			Utils.showMessage("no more layers as target");
 			return;
 		}
-		
 		// get treelines of current layerset
 		ArrayList<Displayable> trees = currentLayerSet.get(Treeline.class);
-		for (Displayable cObj : trees)
-		{
+		for (Displayable cObj : trees) {
 			Treeline ctree = (Treeline) cObj;
 			// Utils.log2("current Tree first Layer: " + ctree.getFirstLayer());
-			if (ctree.getFirstLayer() == currentLayer)
-			{
+			if (ctree.getFirstLayer() == currentLayer) {
 				Treeline copy = null;
-				try
-				{
+				try {
 					// copy current tree
 					copy = Tree.copyAs(ctree, Treeline.class, Treeline.RadiusNode.class);
 					copy.setLayer(nextLayer, true);
-					for (Node<Float> cnode : copy.getRoot().getSubtreeNodes())
-					{
+					for (Node<Float> cnode : copy.getRoot().getSubtreeNodes()) {
 						cnode.setLayer(nextLayer);
 						cnode.setColor(confidencColors.get(cnode.getConfidence()));
 					}
-					
-					copy.setTitle(ctree.getTitle());
+					copy.setTitle("treeline");
 					copy.clearState();
 					copy.updateCache();
 					currentLayerSet.add(copy);
 					ctree.getProject().getProjectTree().addSibling(ctree, copy);
-					
-					// get the parent connector; if non exists a new will be created
-					Connector parentConnector = RhizoAddons.getRightPC(ctree, copy);
-					if (parentConnector == null)
-					{
+					// get the parent connector; if non exists a new will be create
+					//copytreelineconnector
+					if(!RhizoAddons.getRightPC(ctree, copy)){
 						Utils.showMessage("error: couldn't add connector automatically");
 					}
-					else
-					{
-						// the copy of the tree line gets its own link to the connector
-						Node<Float> conRoot = parentConnector.getRoot();
-						parentConnector.addNode(conRoot, new ConnectorNode(conRoot.getX(), conRoot.getY(), copy.getRoot().getLayer(), 3F), Node.MAX_EDGE_CONFIDENCE);
-						parentConnector.getRoot().setData(3F);
-						parentConnector.clearState();
-						parentConnector.updateCache();
-						// in the new "direct" model the connector knows the
-						// treelines he's supposed to connect
-						parentConnector.addConTreeline(copy);
-					}
-				}
-				catch (Exception e)
-				{
-
+					Display.update(currentLayerSet);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
 
 		}
-
 	}
 
 	/**
@@ -780,60 +761,47 @@ public class RhizoAddons
 	 * Finds the parent connector
 	 * @param ptree - Parent treeline
 	 * @param ctree - Current treeline
-	 * @return
+	 * @return Success
+	 * @author Axel
 	 */
-	private static Connector getRightPC(Treeline ptree, Treeline ctree)
+	private static boolean getRightPC(Treeline ptree, Treeline ctree)
 	{
-		Connector pCon;
-		Node<Float> pTreeRoot = ptree.getRoot();
-		
-		List<Connector>[] conLists = null;
-		try
+		//copytreelineconnector - two possibilities: a) ptree has no connector, so a new one needs to be created b) ptree has a connector so we can call copyEvent
+		if (ptree.getTreeEventListener().size() < 1)
 		{
-			conLists = ptree.findConnectors();
+			Node<Float> pTreeRoot = ptree.getRoot();
+			Project project = Display.getFront().getProject();
+			Connector pCon = project.getProjectTree().tryAddNewConnector(ptree, false);
+			if (pCon == null)
+			{
+				return false;
+			}
+			Node<Float> newRoot = pCon.newNode(pTreeRoot.getX(), pTreeRoot.getY(), pTreeRoot.getLayer(), null);
+			pCon.addNode(null, newRoot, pTreeRoot.getConfidence());
+			pCon.setRoot(newRoot);
+			pCon.setAffineTransform(ptree.getAffineTransform());
+			boolean suc = pCon.addConTreeline(ptree);
+			ptree.copyEvent(ctree);
+			return suc;
 		}
-		catch (Exception e)
+		else
 		{
-			e.printStackTrace();
+			ptree.copyEvent(ctree);
 		}
-		
-		// if incoming list ist not empty, i.e. there is a connector starting at the parentTreeline
-		if (conLists[0].isEmpty() == false)
-		{
-			// get the connector and everything is fine
-			pCon = conLists[0].get(0);
-			return pCon;
-		}
-		
-		// if outgoing list ist not empty, i.e. there is a connector ending at the  parentTreeline
-		if (conLists[1].isEmpty() == false)
-		{
-			// get the connector and everything is fine
-			pCon = conLists[1].get(0);
-			return pCon;
-		}
-		// if were are here there was no connector; so make a new one
-		Project project = Display.getFront().getProject();
-		pCon = project.getProjectTree().tryAddNewConnector(ptree, false);
-		if (pCon == null)
-		{
-			return null;
-		}
-		Node<Float> newRoot = pCon.newNode(pTreeRoot.getX(), pTreeRoot.getY(), pTreeRoot.getLayer(), null);
-		pCon.addNode(null, newRoot, pTreeRoot.getConfidence());
-		pCon.setRoot(newRoot);
-		pCon.setAffineTransform(ptree.getAffineTransform());
-		// if there is no parent we also need a target at this position
-		pCon.addNode(pCon.root, new ConnectorNode(pCon.getX(), pCon.getY(), pCon.getRoot().getLayer(), 3F), Node.MAX_EDGE_CONFIDENCE);
-		pCon.getRoot().setData(3F);
-		pCon.clearState();
-		pCon.updateCache();
-		// in the new "direct" model the connector knows the treelines he's
-		// supposed to connect
-		pCon.addConTreeline(ptree);
-		return pCon;
+		return true;
 	}
 	
+	/**
+	 * Tool for merging treelines in a more convenient way
+	 * @param la - Current layer
+	 * @param x_p - Mouse x position
+	 * @param y_p - Mouse y position
+	 * @param mag - Current magnification
+	 * @param anode - Selected active node
+	 * @param parentTl - Selected active treeline
+	 * @param me - MouseEvent
+	 * @author Axel
+	 */
 	public static void mergeTool(final Layer la, final int x_p, final int y_p, double mag, RadiusNode anode, Treeline parentTl, MouseEvent me)
 	{
 		Thread mergeRun = new Thread()
@@ -902,39 +870,62 @@ public class RhizoAddons
 		mergeRun.start();
 	}
 	
-	public static void bindConnectorToTreeline(final Layer la, final int x_p, final int y_p,double mag,Connector parentConnector,MouseEvent me) {
-		Thread bindRun = new Thread(){
-			{ setPriority(Thread.NORM_PRIORITY); }
+	/**
+	 * Tool for binding connectors to treelines
+	 * @param la - Current layer
+	 * @param x_p - Mouse x position
+	 * @param y_p - Mouse y position
+	 * @param mag - Current magnification
+	 * @param parentConnector - Connector to be bound
+	 * @param me - MouseEvent
+	 * @author Axel
+	 */
+	public static void bindConnectorToTreeline(final Layer la, final int x_p, final int y_p, double mag, Connector parentConnector, MouseEvent me)
+	{
+		Thread bindRun = new Thread()
+		{
+			{
+				setPriority(Thread.NORM_PRIORITY);
+			}
+
 			@Override
-            public void run() {
+			public void run()
+			{
 				Display display = Display.getFront();
 				DisplayCanvas dc = display.getCanvas();
 				final Point po = dc.getCursorLoc();
-				//Utils.log(display.getActive());
+				// Utils.log(display.getActive());
 				Displayable oldActive = display.getActive();
-				Thread t = RhizoAddons.choose(me.getX(), me.getY(), x_p, y_p, Treeline.class,display);
+				Thread t = RhizoAddons.choose(me.getX(), me.getY(), x_p, y_p, Treeline.class, display);
 				t.start();
-				try {
+				try
+				{
 					t.join();
-				} catch (InterruptedException e) {
+				} catch (InterruptedException e)
+				{
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				//Utils.log(display.getActive());
-				if(oldActive.equals(display.getActive())){
+				// Utils.log(display.getActive());
+				if (oldActive.equals(display.getActive()))
+				{
 					Utils.log("found no target");
 					return;
 				}
 				Treeline target = (Treeline) display.getActive();
-				if(target==null){
+				if (target == null)
+				{
 					Utils.log("no active Treeline found");
 					return;
 				}
-				//check if the treeline is already connected
-				for(Treeline tree: parentConnector.getConTreelines()){
-					if(tree.equals(target)){
-						//that should happen if the target is already connected to the Connector
-						if(Utils.check("Really remove connection between "+parentConnector.getId() +" and " +target.getId()+" ?")){
+				// check if the treeline is already connected
+				for (Treeline tree : parentConnector.getConTreelines())
+				{
+					if (tree.equals(target))
+					{
+						// that should happen if the target is already connected to the Connector
+						if (Utils.check("Really remove connection between " + parentConnector.getId() + " and " + target.getId() + " ?"))
+						{
 							parentConnector.removeConTreeline(target);
 						}
 						display.setActive(parentConnector);
@@ -945,14 +936,18 @@ public class RhizoAddons
 				display.setActive(parentConnector);
 			};
 		};
-		bindRun.start();		
+		bindRun.start();
 	}
 	
 	
 	/* other stuff */
 	
-	// open image load and reorder dialog
-	public static void imageLoader() {
+	/**
+	 * Open image loading dialogue
+	 * @author Axel
+	 */
+	public static void imageLoader()
+	{
 		JFrame frame = new JFrame("Image Loader");
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JPanel temp = guiAddons.imageImport();
@@ -961,24 +956,33 @@ public class RhizoAddons
 		frame.setVisible(true);
 	}
 
-
-
-
-	private static ProjectThing findParentAllowing(String type, Project project) {
+	/**
+	 * Finds a projecThing that can hold objects of the given type
+	 * @param type
+	 * @param project - Current project
+	 * @return ProjectThing
+	 */
+	private static ProjectThing findParentAllowing(String type, Project project)
+	{
 		Enumeration enum_nodes;
 		enum_nodes = project.getProjectTree().getRoot().depthFirstEnumeration();
-		while (enum_nodes.hasMoreElements()) {
+		while (enum_nodes.hasMoreElements())
+		{
 			DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) enum_nodes.nextElement();
 			ProjectThing currentProjectThing = (ProjectThing) currentNode.getUserObject();
-			if (currentProjectThing.canHaveAsChild(type)) {
+			if (currentProjectThing.canHaveAsChild(type))
+			{
 				return currentProjectThing;
 			}
 		}
 		return null;
 	}
 
-
-	public static void writeStatistic(){
+	/**
+	 * TODO
+	 */
+	public static void writeStatistic()
+	{
 		Display display = Display.getFront();
 		// Layer frontLayer = Display.getFrontLayer();
 		Layer currentLayer = display.getLayer();
@@ -987,83 +991,103 @@ public class RhizoAddons
 		// determine next layer
 		ArrayList<Displayable> trees = currentLayerSet.get(Treeline.class);
 		ArrayList<Segment> all_segments = new ArrayList<Segment>();
-		//for all treelines > calculate things
-		for (Displayable cObj : trees) {
+		// for all treelines > calculate things
+		for (Displayable cObj : trees)
+		{
 			Treeline ctree = (Treeline) cObj;
-			//traveres tree
+			// traveres tree
 			Collection<Node<Float>> all_nodes = ctree.getRoot().getSubtreeNodes();
-			for (Node<Float> node : all_nodes) {
-				if(!node.equals(ctree.getRoot())){
-					Segment currentSegment = new Segment((RadiusNode)node,(RadiusNode) node.getParent());
+			for (Node<Float> node : all_nodes)
+			{
+				if (!node.equals(ctree.getRoot()))
+				{
+					Segment currentSegment = new Segment((RadiusNode) node, (RadiusNode) node.getParent());
 					all_segments.add(currentSegment);
 				}
 			}
 		}
-		//write things to a csv
-		try {
+		// write things to a csv
+		try
+		{
 			File saveFile = Utils.chooseFile(System.getProperty("user.home"), null, ".csv");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
-			for (Segment segment : all_segments) {
+			for (Segment segment : all_segments)
+			{
 				bw.write(segment.getStatistics());
 				bw.newLine();
 			}
 			bw.close();
-		} catch (IOException e) {
+		} catch (IOException e)
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	public static void addLayerAndImage(File[] files){
-		if(files.length>0){
+	/**
+	 * Adds images from the load images dialogue and creates new layers
+	 * @param files - Array of image files
+	 * @author Axel
+	 */
+	public static void addLayerAndImage(File[] files)
+	{
+		if (files.length > 0)
+		{
 			LayerSet parent = Display.getFrontLayer().getParent();
-	        int numberOfLayers = parent.getLayers().size();
-	        Utils.log("number of layers: "+numberOfLayers);
-	        Layer currentLastLayer = parent.getLayers().get(numberOfLayers-1);
-	        Utils.log("current last: "+currentLastLayer);
-	        int lastZ = (int)currentLastLayer.getZ();
+			int numberOfLayers = parent.getLayers().size();
+			Utils.log("number of layers: " + numberOfLayers);
+			Layer currentLastLayer = parent.getLayers().get(numberOfLayers - 1);
+			Utils.log("current last: " + currentLastLayer);
+			int lastZ = (int) currentLastLayer.getZ();
 
-	        Project project = parent.getProject();
-	        Loader loader = project.getLoader();
-	        for(int e=1;e<files.length+1;e++){
-	    		Layer layer = new Layer(project, lastZ+e, 1, parent);
-	    		parent.add(layer);
-	    		project.getLayerTree().addLayer(parent, layer);
-	    		parent.recreateBuckets(layer, true);
-	    		loader.importImage(layer, 0, 0,files[e-1].getPath(), true);
-	        }
-	        
+			Project project = parent.getProject();
+			Loader loader = project.getLoader();
 
-	        //remove all empty layers
-	        for(Layer layer: parent.getLayers()){
-	        	Utils.log(layer.getDisplayables(Patch.class).isEmpty());
-	        	if(layer.getDisplayables(Patch.class).isEmpty()){
-	        		parent.remove(layer);
-	        		parent.getProject().getLayerTree().remove(layer, false);
-	        	}
-	        }
+			for (int e = 1; e < files.length + 1; e++)
+			{
+				Layer layer = new Layer(project, lastZ + e, 1, parent);
+				parent.add(layer);
+				project.getLayerTree().addLayer(parent, layer);
+				parent.recreateBuckets(layer, true);
+				loader.importImage(layer, 0, 0, files[e - 1].getPath(), true);
+				// layer.getDisplayables(Patch.class).get(0).setLocked(true);
+			}
+
+			// TODO: remove all empty layers
+
 		}
 	}
 
-
-	
-	public static Point2D changeSpace(float x, float y, AffineTransform start, AffineTransform end){
+	/**
+	 * Converts connector coordinates to treeline coordinates and vice versa
+	 * @param x
+	 * @param y
+	 * @param start - Source 
+	 * @param end - Target
+	 * @author Axel
+	 * @return Point2D of the converted coordinates
+	 */
+	public static Point2D changeSpace(float x, float y, AffineTransform start, AffineTransform end)
+	{
 		Point2D result = new Point2D.Float(x, y);
 		result = start.transform(result, null);
-		try {
+		try
+		{
 			result = end.inverseTransform(result, null);
-		} catch (NoninvertibleTransformException e) {
+		} catch (NoninvertibleTransformException e)
+		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			result=null;
+			result = null;
 		}
 		return result;
 	}
 	
-
-
-	
-	public static void test() {
+	/**
+	 * For testing purposes
+	 */
+	public static void test() 
+	{
 		// RhizoAddons.test = !RhizoAddons.test;
 		Utils.log("Aktueller Zustand: " + RhizoAddons.test);
 		Display display = Display.getFront();
@@ -1094,183 +1118,256 @@ public class RhizoAddons
 //		}
 	}
 	
-	//better version of chooser
-	protected static Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final Class<?> c, final Display currentDisplay) {
-		return choose(screen_x_p, screen_y_p, x_p, y_p, false, c,currentDisplay);
-	}
-	protected static Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final Display currentDisplay) {
-		return choose(screen_x_p, screen_y_p, x_p, y_p, false, null,currentDisplay);
+	
+	protected static Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final Class<?> c, final Display currentDisplay)
+	{
+		return choose(screen_x_p, screen_y_p, x_p, y_p, false, c, currentDisplay);
 	}
 
-	/** Find a Displayable to add to the selection under the given point (which is in offscreen coords); will use a popup menu to give the user a range of Displayable objects to select from. */
-	protected static Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final boolean shift_down, final Class<?> c, Display currentDisplay) {
-		//Utils.log("Display.choose: x,y " + x_p + "," + y_p);
-		Thread t = new Thread(){
-		{ setPriority(Thread.NORM_PRIORITY); }
-		@Override
-        public void run() {};
+	protected static Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final Display currentDisplay)
+	{
+		return choose(screen_x_p, screen_y_p, x_p, y_p, false, null, currentDisplay);
+	}
+
+	/**
+	 * Find a Displayable to add to the selection under the given point (which is in offscreen coords); will use a popup menu to give the user a set of Displayable objects to select from.
+	 * @param screen_x_p - Clicked global x coordinate
+	 * @param screen_y_p - Clicked global y coordinate
+	 * @param x_p - Clicked local x coordinate
+	 * @param y_p - Clicked local y coordinate
+	 * @param shift_down - Is shift pressed?
+	 * @param c - Class of objects to be choosing from
+	 * @param currentDisplay
+	 * @return Thread created by clicking overlapping nodes
+	 * @author Axel
+	 */
+	protected static Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final boolean shift_down, final Class<?> c, Display currentDisplay)
+	{
+		// Utils.log("Display.choose: x,y " + x_p + "," + y_p);
+		Thread t = new Thread()
+		{
+			{
+				setPriority(Thread.NORM_PRIORITY);
+			}
+
+			@Override
+			public void run()
+			{
+			};
 		};
 		Layer layer = currentDisplay.getFrontLayer();
 		final ArrayList<Displayable> al = new ArrayList<Displayable>(layer.find(x_p, y_p, true));
 		al.addAll(layer.getParent().findZDisplayables(layer, x_p, y_p, true)); // only visible ones
-		
-		//actyc: remove those trees that contain a non clickable node at xp und yp
+
+		// actyc: remove those trees that contain a non clickable node at xp und yp
 		ArrayList<Displayable> alternatedList = new ArrayList<Displayable>();
-		for (Displayable displayable : al) {
-			if(displayable.getClass()==Treeline.class){
+		for (Displayable displayable : al)
+		{
+			if (displayable.getClass() == Treeline.class)
+			{
 				Treeline currentTreeline = (Treeline) displayable;
-				double transX = x_p -currentTreeline.getAffineTransform().getTranslateX();
-				double transY = y_p -currentTreeline.getAffineTransform().getTranslateY();
-				Node<Float> nearestNode = currentTreeline.findNearestNode((float)transX,(float) transY, layer);
-				//Utils.log(nearestNode);
-				if(RhizoAddons.treeLineClickable[(int)nearestNode.getConfidence()]==false){
+				double transX = x_p - currentTreeline.getAffineTransform().getTranslateX();
+				double transY = y_p - currentTreeline.getAffineTransform().getTranslateY();
+				Node<Float> nearestNode = currentTreeline.findNearestNode((float) transX, (float) transY, layer);
+				// Utils.log(nearestNode);
+				if (RhizoAddons.treeLineClickable[(int) nearestNode.getConfidence()] == false)
+				{
 					alternatedList.add(displayable);
-				}				
+				}
 			}
 		}
 		al.removeAll(alternatedList);
-		//
-		
-		if (al.isEmpty()) {
+
+		if (al.isEmpty())
+		{
 			final Displayable act = currentDisplay.getActive();
 			currentDisplay.clearSelection();
 			currentDisplay.getCanvas().setUpdateGraphics(true);
-			//Utils.log("choose: set active to null");
-			// fixing lack of repainting for unknown reasons, of the active one TODO this is a temporary solution
+			// Utils.log("choose: set active to null");
+			// fixing lack of repainting for unknown reasons, of the active one
+			// TODO this is a temporary solution
 			if (null != act) Display.repaint(layer, act, 5);
-		} else if (1 == al.size()) {
-			final Displayable d = (Displayable)al.get(0);
-			if (null != c && d.getClass() != c) {
+		}
+		else if (1 == al.size())
+		{
+			final Displayable d = (Displayable) al.get(0);
+			if (null != c && d.getClass() != c)
+			{
 				currentDisplay.clearSelection();
 				return t;
 			}
 			currentDisplay.select(d, shift_down);
-			//Utils.log("choose 1: set active to " + active);
-		} else {
-			if (al.contains(currentDisplay.getActive()) && !shift_down) {
+			// Utils.log("choose 1: set active to " + active);
+		} 
+		else
+		{
+			if (al.contains(currentDisplay.getActive()) && !shift_down)
+			{
 				// do nothing
-			} else {
-				if (null != c) {
+			}
+			else
+			{
+				if (null != c)
+				{
 					// check if at least one of them is of class c
 					// if only one is of class c, set as selected
 					// else show menu
-					for (final Iterator<?> it = al.iterator(); it.hasNext(); ) {
+					for (final Iterator<?> it = al.iterator(); it.hasNext();)
+					{
 						final Object ob = it.next();
-						if (ob.getClass() != c) it.remove();
+						if (ob.getClass() != c)
+							it.remove();
 					}
-					if (0 == al.size()) {
+					if (0 == al.size())
+					{
 						// deselect
 						currentDisplay.clearSelection();
 						return t;
 					}
-					if (1 == al.size()) {
-						currentDisplay.select((Displayable)al.get(0), shift_down);
+					if (1 == al.size())
+					{
+						currentDisplay.select((Displayable) al.get(0), shift_down);
 						return t;
 					}
 					// else, choose among the many
 				}
-				return choose(screen_x_p, screen_y_p, al, shift_down, x_p, y_p,currentDisplay);
+				return choose(screen_x_p, screen_y_p, al, shift_down, x_p, y_p, currentDisplay);
 			}
-			//Utils.log("choose many: set active to " + active);
+			// Utils.log("choose many: set active to " + active);
 		}
+		
 		return t;
 	}
-	private static Thread choose(final int screen_x_p, final int screen_y_p, final Collection<Displayable> al, final boolean shift_down, final int x_p, final int y_p,Display currentDisplay) {
+	
+	/**
+	 * See other choose method
+	 * @param screen_x_p
+	 * @param screen_y_p
+	 * @param al
+	 * @param shift_down
+	 * @param x_p
+	 * @param y_p
+	 * @param currentDisplay
+	 * @return
+	 * @author Axel
+	 * 
+	 */
+	private static Thread choose(final int screen_x_p, final int screen_y_p, final Collection<Displayable> al, final boolean shift_down, final int x_p, final int y_p, Display currentDisplay)
+	{
 		// show a popup on the canvas to choose
-		Thread t =new Thread() {
-			{ setPriority(Thread.NORM_PRIORITY); }
+		Thread t = new Thread()
+		{
+			{
+				setPriority(Thread.NORM_PRIORITY);
+			}
+
 			@Override
-            public void run() {
+			public void run()
+			{
 				final Object lock = new Object();
 				final DisplayableChooser d_chooser = new DisplayableChooser(al, lock);
 				final JPopupMenu pop = new JPopupMenu("Select:");
-				for (final Displayable d : al) {
+				for (final Displayable d : al)
+				{
 					final JMenuItem menu_item = new JMenuItem(d.toString());
 					menu_item.addActionListener(d_chooser);
 					pop.add(menu_item);
-					//actyc: try to do something on mouse hoover
+					// actyc: try to do something on mouse hoover
 					menu_item.addMouseListener(new MouseListener()
 					{
-						
+
 						@Override
 						public void mouseReleased(MouseEvent e)
 						{
 							// TODO Auto-generated method stub
-							
+
 						}
-						
+
 						@Override
 						public void mousePressed(MouseEvent e)
 						{
 							// TODO Auto-generated method stub
-							
+
 						}
-						
+
 						@Override
 						public void mouseExited(MouseEvent e)
 						{
-							if(d.getClass().equals(Treeline.class)){
-								RhizoAddons.removeHighlight((Treeline)d);
+							if (d.getClass().equals(Treeline.class))
+							{
+								RhizoAddons.removeHighlight((Treeline) d);
 							}
 						}
-						
+
 						@Override
 						public void mouseEntered(MouseEvent e)
 						{
-							if(d.getClass().equals(Treeline.class)){
-								RhizoAddons.highlightTree((Treeline)d);
-							}							
+							if (d.getClass().equals(Treeline.class))
+							{
+								RhizoAddons.highlightTree((Treeline) d);
+							}
 						}
 
 						@Override
 						public void mouseClicked(MouseEvent e)
 						{
 							// TODO Auto-generated method stub
-							
+
 						}
-						
+
 					});
 				}
 
-				SwingUtilities.invokeLater(new Runnable() { @Override
-                public void run() {
-					pop.show(currentDisplay.getCanvas(), screen_x_p, screen_y_p);
-				}});
+				SwingUtilities.invokeLater(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						pop.show(currentDisplay.getCanvas(), screen_x_p, screen_y_p);
+					}
+				});
 
-				//now wait until selecting something
-				synchronized(lock) {
-					do {
-						try {
+				// now wait until selecting something
+				synchronized (lock)
+				{
+					do
+					{
+						try
+						{
 							lock.wait();
-						} catch (final InterruptedException ie) {}
+						} catch (final InterruptedException ie)
+						{
+						}
 					} while (d_chooser.isWaiting() && pop.isShowing());
 				}
 
-				//grab the chosen Displayable object
+				// grab the chosen Displayable object
 				final Displayable d = d_chooser.getChosen();
-				//Utils.log("Chosen: " + d.toString());
-				if (null == d) { Utils.log2("Display.choose: returning a null!"); }
+				// Utils.log("Chosen: " + d.toString());
+				if (null == d)
+				{
+					Utils.log2("Display.choose: returning a null!");
+				}
 				currentDisplay.select(d, shift_down);
 				pop.setVisible(false);
 
-				// fix selection bug: never receives mouseReleased event when the popup shows
+				// fix selection bug: never receives mouseReleased event when
+				// the popup shows
 				currentDisplay.getMode().mouseReleased(null, x_p, y_p, x_p, y_p, x_p, y_p);
-				
-				//actyc: return to the original color
+
+				// actyc: return to the original color
 				RhizoAddons.removeHighlight(new ArrayList<Displayable>(al));
-				
+
 				return;
 			}
 		};
 		return t;
 	}
 	
-
-    ///////////////////////
-    // aeekz Tino
-    
-    /* Writes the current project to a xmlbeans file. In contrast to the standard TrakEM xml format,
-     * this file may be opened with MiToBo. */
+    /**
+     *  Writes the current project to a xmlbeans file. In contrast to the standard TrakEM xml format,  this file may be opened with MiToBo
+     *  @author Tino
+     */
     public static void writeMTBXML()
 	{
 		try 
@@ -1380,7 +1477,14 @@ public class RhizoAddons
 		}
 	}	
     
-    /* Returns treeline in xmlbeans format */
+    /**
+     * Converts a given treeline to MTBXML format
+     * @param treeline - Treeline to be converted
+     * @param currentLayer
+     * @param rootId - Current rootID
+     * @return MTBXMLRootType
+     * @author Tino
+     */
 	private static MTBXMLRootType treelineToXMLType(Treeline treeline, Layer currentLayer, int rootId)
 	{
 		MTBXMLRootType xmlRoot = MTBXMLRootType.Factory.newInstance();
@@ -1435,6 +1539,11 @@ public class RhizoAddons
 		return xmlRoot;
 	}
 
+	/**
+	 * Converts MTBXML to TrakEM project.
+	 * Does not work yet!
+	 * @author Tino
+	 */
 	public static void readMTBXML()
 	{
 		String[] filepath = Utils.selectFile("test");
@@ -1546,7 +1655,12 @@ public class RhizoAddons
 		
 	}
 	
-	/* Returns the list of all treelines under the origin and under the targets */
+	/**
+	 * Returns the list of all treelines under the origin and under the targets. Used for reading MTBXML formats
+	 * @param c - Connector
+	 * @return List of treelines
+	 * @author Tino
+	 */
 	private static List<Treeline> treelinesOfConnector(Connector c)
 	{
 		List<Treeline> treelines = new ArrayList<Treeline>();
@@ -1569,7 +1683,13 @@ public class RhizoAddons
 		return treelines;
 	}
 
-    /* Returns the number of treelines in a layer */
+    /**
+     * Returns the number of treelines in a layer
+     * @param l - Current layer
+     * @param treelines - List of all treelines 
+     * @return Number of treelines in the given layer
+     * @author Tino
+     */
     private static int numberOfTreelinesInLayer(Layer l, List<Displayable> treelines)
     {
     	int res = 0;
@@ -1587,63 +1707,90 @@ public class RhizoAddons
 
 
 
-//segment class for easy representation of statistic data
-class Segment{
+/**
+ * Segment class for writing statistics. Not used yet.
+ * @author Tino
+ *
+ */
+class Segment
+{
 	RadiusNode child;
 	RadiusNode parent;
-	//infos
+	// infos
 	float length;
 	float avgRadius;
 	float surfaceArea;
 	float volume;
 	int numberOfChildren;
 	int state;
-	float minRadius =1;
-	float r1=minRadius;
-	float r2=minRadius;
-	public Segment(RadiusNode self,RadiusNode parent){
-		this.state=child.getConfidence();
-		this.child=self;
-		this.parent=parent;
-		this.length=(float) Math.sqrt(Math.pow(child.getX()-parent.getX(), 2)+Math.pow(child.getX()-parent.getX(), 2));
-		if(parent.getData()>0){
-			this.r1=parent.getData();
+	float minRadius = 1;
+	float r1 = minRadius;
+	float r2 = minRadius;
+
+	public Segment(RadiusNode self, RadiusNode parent)
+	{
+		this.state = child.getConfidence();
+		this.child = self;
+		this.parent = parent;
+		this.length = (float) Math.sqrt(Math.pow(child.getX() - parent.getX(), 2) + Math.pow(child.getX() - parent.getX(), 2));
+		if (parent.getData() > 0)
+		{
+			this.r1 = parent.getData();
 		}
-		if(child.getData()>0){
-			this.r2=child.getData();
+		if (child.getData() > 0)
+		{
+			this.r2 = child.getData();
 		}
-		this.avgRadius = (r1+r2)/2;
-		float s = (float) Math.sqrt(Math.pow((r1-r2), 2)+Math.pow(this.length, 2));
-		this.surfaceArea=  (float) (Math.PI*Math.pow(r1,2)+Math.PI*Math.pow(r2,2)+Math.PI*s*(r1+r2));
-		this.volume = (float) ((Math.PI*length*(Math.pow(r1, 2)+Math.pow(r1, 2)+r1*r2))/3);
+		this.avgRadius = (r1 + r2) / 2;
+		float s = (float) Math.sqrt(Math.pow((r1 - r2), 2) + Math.pow(this.length, 2));
+		this.surfaceArea = (float) (Math.PI * Math.pow(r1, 2) + Math.PI * Math.pow(r2, 2) + Math.PI * s * (r1 + r2));
+		this.volume = (float) ((Math.PI * length * (Math.pow(r1, 2) + Math.pow(r1, 2) + r1 * r2)) / 3);
 	}
-	public RadiusNode getChild() {
+
+	public RadiusNode getChild()
+	{
 		return child;
 	}
-	public RadiusNode getParent() {
+
+	public RadiusNode getParent()
+	{
 		return parent;
 	}
-	public float getLength() {
+
+	public float getLength()
+	{
 		return length;
 	}
-	public float getAvgRadius() {
+
+	public float getAvgRadius()
+	{
 		return avgRadius;
 	}
-	public float getSurfaceArea() {
+
+	public float getSurfaceArea()
+	{
 		return surfaceArea;
 	}
-	public float getVolume() {
+
+	public float getVolume()
+	{
 		return volume;
 	}
-	public int getNumberOfChildren() {
+
+	public int getNumberOfChildren()
+	{
 		return numberOfChildren;
 	}
-	public int getState() {
+
+	public int getState()
+	{
 		return state;
 	}
-	public String getStatistics(){
-		String result = Integer.toString(state)+";"+Float.toString(length)+";"+Float.toString(avgRadius)+";"+Float.toString(surfaceArea);
-		result = result+";"+Float.toString(volume)+";"+Integer.toString(numberOfChildren);
-		return result; 
+
+	public String getStatistics()
+	{
+		String result = Integer.toString(state) + ";" + Float.toString(length) + ";" + Float.toString(avgRadius) + ";" + Float.toString(surfaceArea);
+		result = result + ";" + Float.toString(volume) + ";" + Integer.toString(numberOfChildren);
+		return result;
 	}
 }

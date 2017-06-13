@@ -3884,4 +3884,16 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 			tEL.eventAppeared(te);
 		}
 	}
+	
+	//copytreelineconnector
+	/** actyc: further methodes */
+	public void copyEvent(Treeline copy){
+		ArrayList<Treeline> treesOfInterest = new ArrayList<Treeline>();
+		treesOfInterest.add(copy);
+		treeAction(new TreeEvent((Treeline) this, "copy", null, treesOfInterest));
+	}
+	
+	public List<TreeEventListener> getTreeEventListener() {
+		return treeEventListener;
+	}
 }

@@ -524,20 +524,24 @@ public class Connector extends Treeline  implements TreeEventListener{
 				
 				for(Treeline tree: conTreelines){
 					Node<Float> treeRoot = tree.getRoot();
+					Layer treeRootLayer = tree.getRoot().getLayer();
 					Point2D result = RhizoAddons.changeSpace(treeRoot.getX(),treeRoot.getY(),tree.getAffineTransform(),this.getAffineTransform());
 					if(result==null) return false;
-					
+
 					//make sure all the connected treelines still exists
 					if(!tree.getClass().equals(Treeline.class)) {
 						if(!conTreelines.remove(tree)) return false;
 					}
+					
+					
 					
 					//make sure all the connected treelines have a target node at there root
 					boolean found = false;
 					//Utils.log("active treeline: "+ tree.getId());
 					for (final Node<Float> nd : targets) {
 						//Utils.log("xdist: "+ Math.abs((float)result.getX()-nd.getX()) +" ydist: "+Math.abs((float)result.getY()-nd.getY()));
-						if( Math.abs((float)result.getX()-nd.getX())<10 && Math.abs((float)result.getY()-nd.getY())<10) {
+						
+						if( Math.abs((float)result.getX()-nd.getX())<3 && Math.abs((float)result.getY()-nd.getY())<3 && nd.getLayer().equals(treeRootLayer)) {
 							found = true;
 							deleteList.remove(nd);
 							//Utils.log("inside the if");
@@ -606,6 +610,12 @@ public class Connector extends Treeline  implements TreeEventListener{
 	public void eventAppeared(TreeEvent te){
 		//oh captain my captain the event appeared
 		if(te.getEventMessage().equals("drag")){
+			sanityCheck();
+		}
+
+		//copytreelineconnector
+		if(te.getEventMessage().equals("copy")){
+			addConTreeline(te.getInterestingTrees().get(0));
 			sanityCheck();
 		}
 	}
