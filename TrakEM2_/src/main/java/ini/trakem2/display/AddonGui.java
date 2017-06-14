@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -542,10 +543,10 @@ class VisibilityPanel extends javax.swing.JPanel
 		//highlight color stuff
 		jPanel12.setLayout(new javax.swing.BoxLayout(jPanel12, javax.swing.BoxLayout.LINE_AXIS));
 
-		jLabel12.setText("highlight color");
-		jLabel12.setMaximumSize(new java.awt.Dimension(12, 14));
+		jLabel12.setText("Highlighting color");
+		jLabel12.setMaximumSize(new java.awt.Dimension(500, 100));
 		jLabel12.setMinimumSize(new java.awt.Dimension(12, 14));
-		jLabel12.setPreferredSize(new java.awt.Dimension(12, 14));
+		jLabel12.setPreferredSize(new java.awt.Dimension(120, 14));
 		jPanel12.add(jLabel12);
 
 		jButton12.setActionCommand("11");
@@ -645,7 +646,11 @@ class VisibilityPanel extends javax.swing.JPanel
 			Color currentColor = JColorChooser.showDialog(source, "Choose color", Color.WHITE);
 			if (currentColor != null)
 			{
-				int alpha = cSlider.getValue();
+				int alpha=255;
+				if(cSlider!=null)
+				{
+					alpha = cSlider.getValue();	
+				}
 				int red = currentColor.getRed();
 				int green = currentColor.getGreen();
 				int blue = currentColor.getBlue();
@@ -736,6 +741,7 @@ class ImageImport extends javax.swing.JPanel
 	private javax.swing.Box.Filler filler1;
 	private javax.swing.JButton jButton1;
 	private javax.swing.JButton jButton2;
+	private javax.swing.JButton jButton3;
 	private javax.swing.JList jList1;
 	private javax.swing.JPanel jPanel1;
 	private javax.swing.JScrollPane jScrollPane1;
@@ -758,6 +764,7 @@ class ImageImport extends javax.swing.JPanel
 		jList1 = new javax.swing.JList();
 		jButton1 = new javax.swing.JButton();
 		jButton2 = new javax.swing.JButton();
+		jButton3 = new javax.swing.JButton();
 		filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0),
 				new java.awt.Dimension(0, 32767));
 		
@@ -801,6 +808,15 @@ class ImageImport extends javax.swing.JPanel
 			}
 		});
 		jPanel1.add(jButton2);
+		
+		jButton3.setText("Sort by date");
+		jButton3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				sortList(evt);
+			}
+		});
+		jPanel1.add(jButton3);
+		
 		jPanel1.add(filler1);
 		
 		add(jPanel1);
@@ -842,6 +858,56 @@ class ImageImport extends javax.swing.JPanel
         //adding appropriate number of layer and image
         RhizoAddons.addLayerAndImage(files);
         
+	}
+	
+	private void sortList(ActionEvent e)
+	{
+		ArrayList<String> result = new ArrayList<String>();
+		ArrayList<String> currentList = new ArrayList<String>();
+		
+		for(Object string:listModel.toArray())
+		{
+			currentList.add((String) string);
+		}
+		
+		while(!currentList.isEmpty()){
+			
+			int currentMinPosi = 0;
+			String currentMinString = currentList.get(0);
+			
+			if(currentList.size()>1)
+			{
+				for(int i=1;i<currentList.size();i++)
+				{
+					if(getSortingNumber(currentMinString)>getSortingNumber(currentList.get(i)))
+					{
+						currentMinPosi=i;
+						currentMinString=currentList.get(i);
+					}
+				}
+			}
+			
+			result.add(currentMinString);
+			
+			currentList.remove(currentMinPosi);
+			
+		}
+		
+		listModel.clear();
+		for (String string : result)
+		{
+			listModel.addElement(string);
+		}
+	}
+	
+	private int getSortingNumber(String string){
+		int result =-1;
+		if(string.split("_").length>5)
+		{
+			result = Integer.parseInt(string.split("_")[5]);
+			Utils.log("currentSortNum: " + result);
+		}
+		return result;
 	}
 }
 

@@ -1033,27 +1033,97 @@ public class RhizoAddons
 	{
 		if (files.length > 0)
 		{
+//			LayerSet parent = Display.getFrontLayer().getParent();
+//			int numberOfLayers = parent.getLayers().size();
+//			Utils.log("number of layers: " + numberOfLayers);
+//			Layer currentLastLayer = parent.getLayers().get(numberOfLayers - 1);
+//			Utils.log("current last: " + currentLastLayer);
+//			int lastZ = (int) currentLastLayer.getZ();
+//
+//			Project project = parent.getProject();
+//			Loader loader = project.getLoader();
+//
+//			for (int e = 1; e < files.length + 1; e++)
+//			{
+//				Layer layer = new Layer(project, lastZ + e, 1, parent);
+//				parent.add(layer);
+//				project.getLayerTree().addLayer(parent, layer);
+//				parent.recreateBuckets(layer, true);
+//				loader.importImage(layer, 0, 0, files[e - 1].getPath(), true);
+//				// layer.getDisplayables(Patch.class).get(0).setLocked(true);
+//			}
+//
+//			// TODO: remove all empty layers
+//			
+			//next try
 			LayerSet parent = Display.getFrontLayer().getParent();
-			int numberOfLayers = parent.getLayers().size();
-			Utils.log("number of layers: " + numberOfLayers);
-			Layer currentLastLayer = parent.getLayers().get(numberOfLayers - 1);
-			Utils.log("current last: " + currentLastLayer);
-			int lastZ = (int) currentLastLayer.getZ();
-
-			Project project = parent.getProject();
-			Loader loader = project.getLoader();
-
-			for (int e = 1; e < files.length + 1; e++)
+			ArrayList<Layer> layerlist = parent.getLayers();
+			
+			double firstEmptyAtBack=-1;
+			double realLast=-1;
+			int emptys = 0;
+			boolean lastBack=false;
+			for (Layer layer : layerlist)
 			{
-				Layer layer = new Layer(project, lastZ + e, 1, parent);
+				//check if layer have no patch
+				if(layer.getDisplayables(Patch.class).size()<1)
+				{
+					if(!lastBack)
+					{
+						firstEmptyAtBack=layer.getZ();
+						lastBack=true;
+						emptys++;
+					}
+					else
+					{
+						emptys++;
+					}
+					
+				}
+				else
+				{
+					lastBack=false;
+					firstEmptyAtBack=-1;
+					emptys=0;
+				}
+				realLast = layer.getZ();
+			}
+			//so firstEmptyAtBack is z of first empty at the end of the stack and emptys is the number of emptyLayers
+			
+			int numberToAdd = files.length-emptys;
+			if(numberToAdd<0)
+			{
+				numberToAdd =0;
+			}
+			//so numberToAdd additionally layers are needed
+			
+			Project project = parent.getProject();
+			
+			if(firstEmptyAtBack==-1)
+			{
+				Layer layer = new Layer(project, realLast+1, 1, parent);
 				parent.add(layer);
 				project.getLayerTree().addLayer(parent, layer);
 				parent.recreateBuckets(layer, true);
-				loader.importImage(layer, 0, 0, files[e - 1].getPath(), true);
-				// layer.getDisplayables(Patch.class).get(0).setLocked(true);
+				firstEmptyAtBack=realLast+1;
+				numberToAdd--;
 			}
-
-			// TODO: remove all empty layers
+			for(int i=0;i<numberToAdd;i++){
+				Layer layer = new Layer(project, firstEmptyAtBack+1+i, 1, parent);
+				parent.add(layer);
+				project.getLayerTree().addLayer(parent, layer);
+				parent.recreateBuckets(layer, true);				
+			}
+			//now we have enough empty layers starting from z=firstEmptyAtBack
+			
+			Loader loader = project.getLoader();
+			for (File file : files)
+			{
+				Layer currentLayer =parent.getLayer(firstEmptyAtBack); 
+				loader.importImage(currentLayer, 0, 0, file.getPath(), true);
+				firstEmptyAtBack++;
+			}
+			
 
 		}
 	}
