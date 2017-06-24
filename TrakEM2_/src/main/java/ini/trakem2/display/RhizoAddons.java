@@ -51,13 +51,14 @@ import javax.swing.tree.DefaultTreeModel;
 import org.python.antlr.ast.Slice.Slice___init___exposer;
 
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootAssociationType;
+import de.unihalle.informatik.MiToBo_xml.MTBXMLRootImageAnnotationType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootProjectDocument;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootProjectType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootReferenceType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentPointType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentStatusType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentType;
-import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSetType;
+import de.unihalle.informatik.MiToBo_xml.MTBXMLRootImageAnnotationType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootType;
 import ij.ImagePlus;
 import ij.plugin.frame.ThresholdAdjuster;
@@ -1465,7 +1466,7 @@ public class RhizoAddons
 			xmlRootProject.setXresolution((float) imagePlus.getCalibration().getX(1)); // TODO
 			xmlRootProject.setYresolution((float) imagePlus.getCalibration().getY(1)); // TODO
 			
-			MTBXMLRootSetType[] xmlRootSets = new MTBXMLRootSetType[layers.size()];
+			MTBXMLRootImageAnnotationType[] xmlRootSets = new MTBXMLRootImageAnnotationType[layers.size()];
 
 			// all treelines in the project
 			List<Displayable> allTreelines = layerSet.get(Treeline.class);
@@ -1474,7 +1475,7 @@ public class RhizoAddons
 			for(int i = 0; i < layers.size(); i++)
 			{
 				Layer currentLayer = layers.get(i); 
-				MTBXMLRootSetType rootSet = MTBXMLRootSetType.Factory.newInstance();
+				MTBXMLRootImageAnnotationType rootSet = MTBXMLRootImageAnnotationType.Factory.newInstance();
 				
 				rootSet.setImagename(imageNames[i]);
 				rootSet.setRootSetID(i);
@@ -1500,7 +1501,7 @@ public class RhizoAddons
 				xmlRootSets[i] = rootSet;
 			}
 
-			xmlRootProject.setRootsetsArray(xmlRootSets);
+			xmlRootProject.setCollectionOfImageAnnotationsArray(xmlRootSets);
 			
 			
 			// Connectors in project
@@ -1560,7 +1561,7 @@ public class RhizoAddons
 		MTBXMLRootType xmlRoot = MTBXMLRootType.Factory.newInstance();
 
 		xmlRoot.setRootID(rootId);
-		xmlRoot.setStartID(0); // TODO?
+		xmlRoot.setStartSegmentID(0); // TODO?
 		
 		List<Node<Float>> nodes = new ArrayList<Node<Float>>(treeline.getNodesAt(currentLayer)); // arraylist for convenience
 		nodes.remove(treeline.getRoot());
@@ -1630,7 +1631,7 @@ public class RhizoAddons
 		{
 			MTBXMLRootProjectDocument rootProjectDocument = MTBXMLRootProjectDocument.Factory.parse(file);
 			MTBXMLRootProjectType rootProject = rootProjectDocument.getMTBXMLRootProject();
-			MTBXMLRootSetType[] rootSets = rootProject.getRootsetsArray();
+			MTBXMLRootImageAnnotationType[] rootSets = rootProject.getCollectionOfImageAnnotationsArray();
 
 			Display display = Display.getFront();	
 			Project project = display.getProject();
@@ -1647,7 +1648,7 @@ public class RhizoAddons
 			for(int i = 0; i < rootSets.length; i++)
 			{
 				Layer currentLayer = layers.get(i);
-				MTBXMLRootSetType currentRootSet = rootSets[i];
+				MTBXMLRootImageAnnotationType currentRootSet = rootSets[i];
 				
 				ProjectThing possibleParent = findParentAllowing("treeline", project);
 				if(possibleParent == null)
