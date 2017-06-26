@@ -28,6 +28,7 @@ import ij.gui.GenericDialog;
 import ij.gui.YesNoCancelDialog;
 import ini.trakem2.display.Display3D;
 import ini.trakem2.display.ImageJCommandListener;
+import ini.trakem2.display.RhizoAddons;
 import ini.trakem2.display.YesNoDialog;
 import ini.trakem2.persistence.Loader;
 import ini.trakem2.tree.LayerTree;
@@ -256,6 +257,8 @@ public class ControlWindow {
 							if (!Utils.check("Close " + (1 == ht_projects.size() ? "the project?" : "all projects?"))) {
 								return;
 							}
+							if(RhizoAddons.getColorVisbilityFrame() != null) RhizoAddons.getColorVisbilityFrame().dispose(); // Tino
+							if(RhizoAddons.getImageLoaderFrame() != null) RhizoAddons.getImageLoaderFrame().dispose(); // Tino
 							destroy();
 						}
 					}

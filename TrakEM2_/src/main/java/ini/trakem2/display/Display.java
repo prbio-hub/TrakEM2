@@ -7073,13 +7073,13 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	readXMLButton.setToolTipText("Reads a MTBXML file that corresponds to the images already loaded.");
     	readXMLButton.setActionCommand("readXML");
     	readXMLButton.addActionListener(this);
+    	readXMLButton.setEnabled(false);
     	panel.add(readXMLButton);
     	
     	JButton writeXMLButton = new JButton("Write MTBXML");
     	writeXMLButton.setToolTipText("Writes the current TrakEM project to MTBXML format.");
     	writeXMLButton.setActionCommand("writeXML");
     	writeXMLButton.addActionListener(this);
-    	writeXMLButton.setEnabled(false);
     	panel.add(writeXMLButton);
     	
     	return panel;
