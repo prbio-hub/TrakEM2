@@ -209,7 +209,7 @@ public class RhizoAddons
 		
 		if (currentLine.length != 4)
 		{
-			Utils.log("unable to load user settings: incorrect line length (2)");
+			Utils.log("Unable to load user settings: incorrect line length (2)");
 			return;
 		}
 		Color currentColor = stringToColor(currentLine[0] + ";" + currentLine[1] + ";" + currentLine[2] + ";" + currentLine[3]);
@@ -1314,19 +1314,6 @@ public class RhizoAddons
 		return t;
 	}
 	
-	/**
-	 * See other choose method
-	 * @param screen_x_p
-	 * @param screen_y_p
-	 * @param al
-	 * @param shift_down
-	 * @param x_p
-	 * @param y_p
-	 * @param currentDisplay
-	 * @return
-	 * @author Axel
-	 * 
-	 */
 	private static Thread choose(final int screen_x_p, final int screen_y_p, final Collection<Displayable> al, final boolean shift_down, final int x_p, final int y_p, Display currentDisplay)
 	{
 		// show a popup on the canvas to choose
