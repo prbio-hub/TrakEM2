@@ -1494,6 +1494,17 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	/** The node currently being dragged or edited in some way. */
 	protected Node<T> getActive() { return active; }
 
+	// Tino - aeekz
+	protected void setLastActive(final Node<T> nd)
+	{
+		this.last_active = nd;
+	}
+	
+	protected Node<T> getLastActive()
+	{
+		return this.last_active;
+	}
+	
 	protected void setLastEdited(final Node<T> nd) {
 		this.last_edited = nd;
 		setLastVisited(nd);
@@ -1553,6 +1564,8 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	/** The last visited node, either navigating or editing.
 	 *  It's the only node that can receive new children by clicking*/
 	private Node<T> last_visited = null;
+	
+	private Node<T> last_active = null;
 
 	// TODO: last_visited and receiver overlap TOTALLY
 
@@ -1581,11 +1594,12 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 
 				Node<T> found = findNode(x_pl, y_pl, layer, mag);
 				setActive(found);
-
+				
 				if (null != found) {
 					if (2 == me.getClickCount()) {
 						setLastMarked(found);
 						setActive(null);
+
 						return;
 					}
 					if (me.isShiftDown() && Utils.isControlDown(me)) {
@@ -1633,7 +1647,11 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 						//actyc: new node get confidence of parent node
 						//addNode(nearest, found, Node.MAX_EDGE_CONFIDENCE);
 						addNode(nearest, found, nearest.getConfidence());
-						setActive(found);
+						
+						RhizoAddons.lastEditedOrActiveNode = found; // Tino - aeekz
+						RhizoAddons.applyCorrespondingColor();
+						
+						setActive(found);		
 						repaint(true, layer);
 					}
 					return;
@@ -1642,11 +1660,19 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				// First point
 				root = createNewNode(x_p, y_p, layer, null); // world coords, so calculateBoundingBox will do the right thing
 				addNode(null, root, (byte)0);
+				
+				if(RhizoAddons.lastEditedOrActiveNode != null)// Tino - aeekz 
+				{
+					@SuppressWarnings("unchecked")
+					Node<T> temp = (Node<T>) RhizoAddons.lastEditedOrActiveNode;
+					root.setConfidence(temp.getConfidence());
+					root.setData(temp.getData());
+				}
+				
 				setActive(root);
 			}
 		}
 		if(ProjectToolbar.CON == ProjectToolbar.getToolId()){
-			//Utils.log("huhu du hast mit dem CON tool was mit ner Treeline gemacht");
 			if(null != root){
 				//actyc: hook for mergTool of RhizoAddons
 				if(this.getClass().equals(Treeline.class)){
@@ -2041,7 +2067,15 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 			final float x = (float)((mwe.getX() / magnification) + srcRect.x);
 			final float y = (float)((mwe.getY() / magnification) + srcRect.y);
 
-			adjustEdgeConfidence(rotation > 0 ? 1 : -1, x, y, la, dc);
+			Node<T> n = adjustEdgeConfidence(rotation > 0 ? 1 : -1, x, y, la, dc);
+
+			RhizoAddons.applyCorrespondingColor(); // Tino - aeekz
+		
+			if(n != null)
+			{
+				RhizoAddons.lastEditedOrActiveNode = n;
+			}
+			
 			Display.repaint(this);
 			mwe.consume();
 		}

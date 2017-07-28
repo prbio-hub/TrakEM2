@@ -84,6 +84,8 @@ public class RhizoAddons
 	static int[] treelineSlider ={255,255,255,255,255,255,255,255,255,255,255};
 	static boolean ini = false;
 	
+	public static Node lastEditedOrActiveNode = null;
+	
 	private static JFrame colorFrame, imageLoaderFrame;
 	
 	static Hashtable<Byte, Color> confidencColors = new Hashtable<Byte, Color>();
@@ -552,6 +554,8 @@ public class RhizoAddons
 		{
 			Treeline ctree = (Treeline) cObj;
 			boolean repaint = false;
+			
+			if(ctree.getRoot() == null || ctree.getRoot().getSubtreeNodes() == null) continue; 
 			
 			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes())
 			{
@@ -1479,6 +1483,8 @@ public class RhizoAddons
 				{
 					Treeline currentTreeline = (Treeline) allTreelines.get(j);
 
+					if(null == currentTreeline.getFirstLayer()) continue;
+					
 					// if treeline belongs to the current layer, then add it
 					if(currentTreeline.getFirstLayer().equals(currentLayer))
 					{
@@ -1487,11 +1493,10 @@ public class RhizoAddons
 						rootID++;
 					}
 				}
-				
+				numberOfTreelinesInLayer(currentLayer, allTreelines);
 				rootSet.setRootsArray(roots.toArray(new MTBXMLRootType[numberOfTreelinesInLayer(currentLayer, allTreelines)]));
 				xmlRootSets[i] = rootSet;
 			}
-
 			xmlRootProject.setCollectionOfImageAnnotationsArray(xmlRootSets);
 			
 			
@@ -1769,6 +1774,7 @@ public class RhizoAddons
 		{
 			Treeline currentTreeline = (Treeline) treelines.get(j);
 			
+			if(null == currentTreeline.getFirstLayer()) continue;
 			if(currentTreeline.getFirstLayer().equals(l)) res++;
 		}
     	
