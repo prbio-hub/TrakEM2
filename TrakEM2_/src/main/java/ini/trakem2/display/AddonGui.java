@@ -39,6 +39,7 @@ import javax.swing.JColorChooser;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JList;
+import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.ListSelectionModel;
 import javax.swing.TransferHandler;
@@ -50,6 +51,8 @@ import javax.swing.tree.DefaultTreeModel;
 import ch.qos.logback.classic.pattern.Util;
 import ij.ImagePlus;
 import ini.trakem2.Project;
+import ini.trakem2.conflictManagement.ConflictManager;
+import ini.trakem2.conflictManagement.ConnectorConflict;
 import ini.trakem2.persistence.Loader;
 import ini.trakem2.tree.DNDTree;
 import ini.trakem2.tree.ProjectThing;
@@ -69,6 +72,12 @@ public class AddonGui
 		ImageImport imageImportPanel = new ImageImport();
 		return imageImportPanel;
 	}
+	
+//	public ConflictPanel conflictManagerPanel()
+//	{
+//		ConflictPanel conflictPanel = new ConflictPanel();
+//		return conflictPanel;
+//	}
 }
 
 class VisibilityPanel extends javax.swing.JPanel 
@@ -742,7 +751,7 @@ class ImageImport extends javax.swing.JPanel
 	private javax.swing.JButton jButton1;
 	private javax.swing.JButton jButton2;
 	private javax.swing.JButton jButton3;
-	private javax.swing.JList jList1;
+	private javax.swing.JList<String> jList1;
 	private javax.swing.JPanel jPanel1;
 	private javax.swing.JScrollPane jScrollPane1;
 	private javax.swing.DefaultListModel<String> listModel;
@@ -761,7 +770,7 @@ class ImageImport extends javax.swing.JPanel
 		listModel	=	new javax.swing.DefaultListModel<String>();
 		jScrollPane1 = new javax.swing.JScrollPane();
 		jPanel1 = new javax.swing.JPanel();
-		jList1 = new javax.swing.JList();
+		jList1 = new javax.swing.JList<String>();
 		jButton1 = new javax.swing.JButton();
 		jButton2 = new javax.swing.JButton();
 		jButton3 = new javax.swing.JButton();
@@ -922,7 +931,7 @@ class ListTransferHandler extends TransferHandler
 
 	protected Transferable createTransferable(JComponent comp)
 	{
-		JList<String> list = (JList) comp;
+		JList<String> list = (JList<String>) comp;
 		selectedindex = list.getSelectedIndex();
 		String value = list.getSelectedValue();
 		return new StringSelection(value);
@@ -939,8 +948,8 @@ class ListTransferHandler extends TransferHandler
 		{
 			return false;
 		}
-		JList list = (JList) support.getComponent();
-		DefaultListModel listModel = (DefaultListModel) list.getModel();
+		JList<String> list = (JList<String>) support.getComponent();
+		DefaultListModel<String> listModel = (DefaultListModel<String>) list.getModel();
 		JList.DropLocation dl = list.getDropLocation();
 		
 		int index = dl.getIndex();
@@ -977,3 +986,100 @@ class ListTransferHandler extends TransferHandler
 		}
 	}
 }
+
+//class ConflictPanel extends javax.swing.JPanel implements ActionListener
+//{
+//	private javax.swing.Box.Filler filler1;
+//	private javax.swing.JButton jButton1;
+//	private javax.swing.JButton jButton2;
+//	private javax.swing.JButton jButton3;
+//	private javax.swing.JList<String> jList1;
+//	private javax.swing.JPanel jPanel1;
+//	private javax.swing.JScrollPane jScrollPane1;
+//	private javax.swing.DefaultListModel<String> listModel;
+//	File[] files;
+//
+//	public ConflictPanel() 
+//	{
+//		iniComponents();
+//	}
+//
+//	private void iniComponents() 
+//	{
+//
+//		listModel	=	new javax.swing.DefaultListModel<String>();
+//		jScrollPane1 = new javax.swing.JScrollPane();
+//		jPanel1 = new javax.swing.JPanel();
+//		jList1 = new javax.swing.JList<String>();
+//		jButton1 = new javax.swing.JButton();
+//		jButton2 = new javax.swing.JButton();
+//		jButton3 = new javax.swing.JButton();
+//		filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0),
+//				new java.awt.Dimension(0, 32767));
+//		
+//		
+//		setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.LINE_AXIS));
+//
+//		jList1.setModel(listModel);
+//		jList1.setTransferHandler(new ListTransferHandler());
+//		jList1.setDragEnabled(true);
+//		jList1.setDropMode(DropMode.INSERT);
+//		jList1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+//
+//		jScrollPane1.setViewportView(jList1);
+//
+//		add(jScrollPane1);
+//
+//		jPanel1.setLayout(new javax.swing.BoxLayout(jPanel1, javax.swing.BoxLayout.PAGE_AXIS));
+//
+//		jButton1.setText("update");
+//		jButton1.setActionCommand("update");
+//		jButton1.addActionListener(this);
+//		jPanel1.add(jButton1);
+//
+//		jButton2.setText("cmd2");
+//		jButton2.setActionCommand("cmd2");
+//		jButton2.addActionListener(this);
+//		jPanel1.add(jButton2);
+//		
+//		jButton3.setText("cmd3");
+//		jButton3.setActionCommand("cmd3");
+//		jButton3.addActionListener(this);
+//		jPanel1.add(jButton3);
+//		
+//		jPanel1.add(filler1);
+//		
+//		add(jPanel1);
+//		
+//		updateListModel();
+//		
+//
+//	}
+//
+//	@Override
+//	public void actionPerformed(ActionEvent evt) {
+//		switch (evt.getActionCommand()) {
+//		case "update":
+//			Utils.log("Update button pressed");
+//			ConflictManager.validateConflicts();
+//			updateListModel();
+//			break;
+//
+//		default:
+//			break;
+//		}
+//		
+//	}
+//	
+//	public void updateListModel()
+//	{
+//		listModel.removeAllElements();
+//		for(ConnectorConflict conflict:ConflictManager.getOpenTwoConnectorConflicts())
+//		{
+//			listModel.addElement(conflict.toString());
+//		}		
+//	}
+//	
+//
+//	
+//}

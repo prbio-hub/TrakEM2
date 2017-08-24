@@ -3868,7 +3868,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		}
 	}
 	
-	/** actyc: listener interaction with connector type */
+	/* actyc: listener interaction with connector type */
 	private List<TreeEventListener> treeEventListener = new ArrayList<TreeEventListener>();
 	
 	public void addTreeEventListener(TreeEventListener newListener){
@@ -3886,11 +3886,17 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	}
 	
 	//copytreelineconnector
-	/** actyc: further methodes */
+	/* actyc: further methodes */
 	public void copyEvent(Treeline copy){
 		ArrayList<Treeline> treesOfInterest = new ArrayList<Treeline>();
 		treesOfInterest.add(copy);
 		treeAction(new TreeEvent((Treeline) this, "copy", null, treesOfInterest));
+	}
+	
+	public void mergeEvent(Treeline toBeMerged){
+		//call of the conflict check
+		//conflict(toBeMerged);
+		
 	}
 	
 	public List<TreeEventListener> getTreeEventListener() {

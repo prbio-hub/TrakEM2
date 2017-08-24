@@ -63,6 +63,8 @@ import de.unihalle.informatik.MiToBo_xml.MTBXMLRootType;
 import ij.ImagePlus;
 import ij.plugin.frame.ThresholdAdjuster;
 import ini.trakem2.Project;
+import ini.trakem2.conflictManagement.ConflictManager;
+import ini.trakem2.conflictManagement.ConflictManager;
 import ini.trakem2.display.Connector.ConnectorNode;
 import ini.trakem2.display.Treeline.RadiusNode;
 import ini.trakem2.persistence.Loader;
@@ -142,6 +144,10 @@ public class RhizoAddons
 
 				Utils.log("loading connector data ...");
 				loadConnector(file);
+				Utils.log("done");
+				
+				Utils.log("restore conflicts ...");
+				ConflictManager.restorConflicts();
 				Utils.log("done");
 
 				RhizoAddons.readyToLoad = false;
@@ -272,6 +278,16 @@ public class RhizoAddons
 					{
 						long currentConID = Long.parseLong(content[0]);
 						ArrayList<Treeline> conTrees = new ArrayList<Treeline>();
+
+						Connector rightConn=null;
+						
+						for (Displayable conn : connector)
+						{
+							if (conn.getId() == currentConID)
+							{
+								rightConn = (Connector) conn;
+							}
+						}
 						
 						for (int i = 1; i < content.length; i++)
 						{
@@ -279,21 +295,36 @@ public class RhizoAddons
 							
 							for (Displayable tree : trees)
 							{
-								if (tree.getId() == currentID)
+								if (tree.getId() == currentID && tree.getClass().equals(Treeline.class) && rightConn!=null)
 								{
-									conTrees.add((Treeline) tree);
+									rightConn.addConTreeline( (Treeline) tree);
 								}
 							}
 						}
+
+
 						
-						for (Displayable conn : connector)
-						{
-							if (conn.getId() == currentConID)
-							{
-								Connector rightConn = (Connector) conn;
-								rightConn.setConTreelines(conTrees);
-							}
-						}
+//						for (int i = 1; i < content.length; i++)
+//						{
+//							long currentID = Long.parseLong(content[i]);
+//							
+//							for (Displayable tree : trees)
+//							{
+//								if (tree.getId() == currentID)
+//								{
+//									conTrees.add((Treeline) tree);
+//								}
+//							}
+//						}
+//						
+//						for (Displayable conn : connector)
+//						{
+//							if (conn.getId() == currentConID)
+//							{
+//								Connector rightConn = (Connector) conn;
+//								rightConn.setConTreelines(conTrees);
+//							}
+//						}
 
 					}
 				}
@@ -536,32 +567,36 @@ public class RhizoAddons
 	 * Updates the color for all treelines and repaints them
 	 * @author Axel
 	 */
-	public static void applyCorrespondingColor()
-	{
+	public static void applyCorrespondingColor() {
 		Display display = Display.getFront();
 		Layer currentLayer = display.getLayer();
 		LayerSet currentLayerSet = currentLayer.getParent();
-		
+
 		// get treelines of current layerset
 		ArrayList<Displayable> trees = currentLayerSet.get(Treeline.class);
-		for (Displayable cObj : trees)
-		{
+		for (Displayable cObj : trees) {
+			Utils.log("current Treeline: " + cObj.getUniqueIdentifier());
 			Treeline ctree = (Treeline) cObj;
 			boolean repaint = false;
-			
-			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes())
-			{
+			if (ctree.getRoot() == null) {
+				Utils.log("treeline: "+ctree.getUniqueIdentifier()+ "got no root");
+				continue;
+			}
+			if (ctree.getRoot().getSubtreeNodes() == null) {
+				Utils.log("treeline: "+ctree.getUniqueIdentifier()+ "got no subtree");
+				continue;
+			}
+			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes()) {
 				byte currentConfi = cnode.getConfidence();
 				Color newColor = confidencColors.get(currentConfi);
-				
-				if (cnode.getColor() != newColor)
-				{
+
+				if (cnode.getColor() != newColor) {
 					cnode.setColor(newColor);
 					repaint = true;
+					Utils.log("new color on a node");
 				}
 			}
-			if (repaint)
-			{
+			if (repaint) {
 				cObj.repaint();
 			}
 		}
@@ -858,6 +893,28 @@ public class RhizoAddons
 
 				target.setLastMarked(nd);
 				joinList.add(target);
+				
+				//get the Connector of the target, remove the target and add the parent treeline
+				//furthermore update ConflictManager 
+				ArrayList<Connector> connectorList = new ArrayList<Connector>();
+				List<TreeEventListener> listenerList = target.getTreeEventListener();
+				for(TreeEventListener currentListener: listenerList)
+				{
+					Connector currentCon = currentListener.getConnector();
+					if(currentCon!=null){
+						connectorList.add(currentCon);
+					}
+				}
+				for(Connector currentCon: connectorList)
+				{
+					currentCon.removeConTreeline(target);
+					ConflictManager.processChange(target, currentCon);
+				}
+				
+				//targetConnector.removeConTreeline(target);
+				//targetConnector.addConTreeline(parentTl);
+				
+				
 
 				parentTl.join(joinList);
 				parentTl.unmark();
@@ -865,6 +922,14 @@ public class RhizoAddons
 				target.deselect();
 
 				display.getProject().remove(target);
+				
+				for(Connector currentCon: connectorList)
+				{
+					currentCon.addConTreeline(parentTl);
+					ConflictManager.processChange(parentTl, currentCon);
+				}
+				
+
 
 			};
 		};
@@ -928,6 +993,7 @@ public class RhizoAddons
 						if (Utils.check("Really remove connection between " + parentConnector.getId() + " and " + target.getId() + " ?"))
 						{
 							parentConnector.removeConTreeline(target);
+							ConflictManager.processChange(target, parentConnector);
 						}
 						display.setActive(parentConnector);
 						return;
@@ -935,6 +1001,7 @@ public class RhizoAddons
 				}
 				parentConnector.addConTreeline(target);
 				display.setActive(parentConnector);
+				ConflictManager.processChange(target, parentConnector);
 			};
 		};
 		bindRun.start();

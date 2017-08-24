@@ -140,6 +140,7 @@ import ij.process.ImageProcessor;
 import ini.trakem2.ControlWindow;
 import ini.trakem2.Project;
 import ini.trakem2.analysis.Graph;
+import ini.trakem2.conflictManagement.ConflictManager;
 import ini.trakem2.display.inspect.InspectPatchTrianglesMode;
 import ini.trakem2.imaging.Blending;
 import ini.trakem2.imaging.LayerStack;
@@ -6305,6 +6306,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("writeXML")){
 			RhizoAddons.writeMTBXML();
 		}
+		else if(command.equals("conflictPanel")){
+			ConflictManager.showConflicts();
+		}
 		// rhizo commands end
 		else {
 			Utils.log2("Display: don't know what to do with command " + command);
@@ -7081,6 +7085,13 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	writeXMLButton.addActionListener(this);
     	writeXMLButton.setEnabled(false);
     	panel.add(writeXMLButton);
+    	
+    	JButton conflicManagerButton = new JButton("Open ConflictManager");
+    	conflicManagerButton.setToolTipText("Manage conflicts relating to connectors.");
+    	conflicManagerButton.setActionCommand("conflictPanel");
+    	conflicManagerButton.addActionListener(this);
+    	conflicManagerButton.setEnabled(true);
+    	panel.add(conflicManagerButton);
     	
     	return panel;
     }

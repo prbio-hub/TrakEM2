@@ -639,17 +639,21 @@ public class Project extends DBObject {
 					}});
 					project.getTemplateTree().updateUILater(); // repainting to fix gross errors in tree rendering
 					project.getProjectTree().updateUILater();  // idem
+					
+					//actyc: ready to load
+					RhizoAddons.readyToLoad=true;
 					} catch (Exception ie) {}
 				}}.start();
 			} else {
 				// help the helpless users
 				Display.createDisplay(project, project.layer_set.getLayer(0));
+				
+				//actyc: ready to load
+				RhizoAddons.readyToLoad=true;
 			}
 		}
 		
 		project.restartAutosaving();
-		//actyc: ready to load
-		RhizoAddons.readyToLoad=true;
 		return project;
 	}
 

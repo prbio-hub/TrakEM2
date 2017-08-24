@@ -23,6 +23,7 @@ import org.scijava.vecmath.Point3f;
 import ij.measure.Calibration;
 import ij.measure.ResultsTable;
 import ini.trakem2.Project;
+import ini.trakem2.conflictManagement.ConflictManager;
 import ini.trakem2.utils.M;
 import ini.trakem2.utils.ProjectToolbar;
 import ini.trakem2.utils.Utils;
@@ -510,7 +511,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 		return super.crop(range);
 	}
 	
-	/**actyc: sanity check for the connector*/
+	/*actyc: sanity check for the connector*/
 	
 	public boolean sanityCheck(){
 		if(!conTreelines.isEmpty()){
@@ -578,11 +579,25 @@ public class Connector extends Treeline  implements TreeEventListener{
 			}
 		}
 		//Utils.log(root.children.length);
-		repaint(true, layer);
+//		if(layer!=null)
+//		{
+//			repaint();
+//		}
 		return true;
 	}
 	
-	/** actyc: methodes to interact with the connected treelines */
+	//get layers with connected treelines
+	public List<Layer> getConnectedLayerList()
+	{
+		List<Layer> result = new ArrayList<Layer>();
+		for(Treeline treeline:conTreelines)
+		{
+			result.add(treeline.getFirstLayer());
+		}
+		return result;
+	}
+	
+	/* actyc: methodes to interact with the connected treelines */
 	
 	public ArrayList<Treeline> getConTreelines() {
 		return conTreelines;
@@ -593,6 +608,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 	}
 	
 	public boolean addConTreeline(Treeline newTreeline){
+		if(conTreelines.contains(newTreeline)) return false;
 		boolean added = conTreelines.add(newTreeline);
 		if(added) newTreeline.addTreeEventListener(this);
 		sanityCheck();
@@ -603,10 +619,11 @@ public class Connector extends Treeline  implements TreeEventListener{
 		boolean removed = conTreelines.remove(tobeRemoved);
 		if(removed) tobeRemoved.removeTreeEventListener(this);
 		sanityCheck();
+		ConflictManager.processChange(tobeRemoved, this);
 		return removed;
 	}
 	
-	/** actyc: start of the listener implementation */
+	/* actyc: start of the listener implementation */
 	public void eventAppeared(TreeEvent te){
 		//oh captain my captain the event appeared
 		if(te.getEventMessage().equals("drag")){
@@ -620,40 +637,10 @@ public class Connector extends Treeline  implements TreeEventListener{
 		}
 	}
 	
+	public Connector getConnector(){
+		return this;
+	}
+	
 	
 }
 
-/** interface for the listener*/
-interface TreeEventListener {
-	void eventAppeared(TreeEvent te);
-}
-
-/** event for the listener interaction */
-class TreeEvent {
-	Treeline source;
-	String eventMessage;
-	ArrayList<Node> interestingNodes;
-	ArrayList<Treeline> interestingTrees;
-	TreeEvent(Treeline source,String eventMessage, ArrayList<Node> interestingNodes,ArrayList<Treeline> interestingTrees){
-		this.source = source;
-		this.eventMessage= eventMessage;
-		this.interestingNodes= interestingNodes;
-		this.interestingTrees= interestingTrees;
-	}
-	
-	public Tree getSource() {
-		return source;
-	}
-	
-	public String getEventMessage() {
-		return eventMessage;
-	}
-	
-	public ArrayList<Node> getInterestingNodes() {
-		return interestingNodes;
-	}
-	
-	public ArrayList<Treeline> getInterestingTrees() {
-		return interestingTrees;
-	}
-}

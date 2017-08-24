@@ -3060,6 +3060,12 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 						ProjectToolbar.setTool(ProjectToolbar.PEN);
 						break;
 				}
+				
+				//actyc: if a connector is selected switch to the con-tool
+				if(t.getClass().equals(Connector.class)){
+					ProjectToolbar.setTool(ProjectToolbar.CON);
+				}
+				
 				return true;
 			}
 		} catch (final Exception e) {
