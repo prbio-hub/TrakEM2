@@ -9,6 +9,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
@@ -83,6 +85,10 @@ public class RhizoAddons
 	static boolean[] treeLineClickable = { true, true, true, true, true, true, true, true, true, true, true };
 	static int[] treelineSlider ={255,255,255,255,255,255,255,255,255,255,255};
 	static boolean ini = false;
+	
+	public static Node lastEditedOrActiveNode = null;
+	
+	private static JFrame colorFrame, imageLoaderFrame;
 	
 	static Hashtable<Byte, Color> confidencColors = new Hashtable<Byte, Color>();
 	static AddonGui guiAddons;
@@ -211,7 +217,7 @@ public class RhizoAddons
 		
 		if (currentLine.length != 4)
 		{
-			Utils.log("unable to load user settings: incorrect line length (2)");
+			Utils.log("Unable to load user settings: incorrect line length (2)");
 			return;
 		}
 		Color currentColor = stringToColor(currentLine[0] + ";" + currentLine[1] + ";" + currentLine[2] + ";" + currentLine[3]);
@@ -578,15 +584,10 @@ public class RhizoAddons
 			Utils.log("current Treeline: " + cObj.getUniqueIdentifier());
 			Treeline ctree = (Treeline) cObj;
 			boolean repaint = false;
-			if (ctree.getRoot() == null) {
-				Utils.log("treeline: "+ctree.getUniqueIdentifier()+ "got no root");
-				continue;
-			}
-			if (ctree.getRoot().getSubtreeNodes() == null) {
-				Utils.log("treeline: "+ctree.getUniqueIdentifier()+ "got no subtree");
-				continue;
-			}
-			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes()) {
+			if(ctree.getRoot() == null || ctree.getRoot().getSubtreeNodes() == null) continue; 
+			
+			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes())
+			{
 				byte currentConfi = cnode.getConfidence();
 				Color newColor = confidencColors.get(currentConfi);
 
@@ -686,12 +687,12 @@ public class RhizoAddons
 	 */
 	public static void setVisibility()
 	{
-		JFrame frame = new JFrame("Color and visibility panel");
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		colorFrame = new JFrame("Color and visibility panel");
+		colorFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JPanel temp = guiAddons.visibilityPanel();
-		frame.add(temp);
-		frame.pack();
-		frame.setVisible(true);
+		colorFrame.add(temp);
+		colorFrame.pack();
+		colorFrame.setVisible(true);
 	}
 	
 	
@@ -777,7 +778,7 @@ public class RhizoAddons
 				// inform user if no ProjectThing is found
 				if (parent == null)
 				{
-					Utils.showMessage("no project thing found that is capable of holding treelines");
+					Utils.showMessage("Project does not contain object that can hold treelines.");
 					return;
 				}
 				// make new treeline
@@ -1016,12 +1017,12 @@ public class RhizoAddons
 	 */
 	public static void imageLoader()
 	{
-		JFrame frame = new JFrame("Image Loader");
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		imageLoaderFrame = new JFrame("Image Loader");
+		imageLoaderFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JPanel temp = guiAddons.imageImport();
-		frame.add(temp);
-		frame.pack();
-		frame.setVisible(true);
+		imageLoaderFrame.add(temp);
+		imageLoaderFrame.pack();
+		imageLoaderFrame.setVisible(true);
 	}
 
 	/**
@@ -1377,19 +1378,6 @@ public class RhizoAddons
 		return t;
 	}
 	
-	/**
-	 * See other choose method
-	 * @param screen_x_p
-	 * @param screen_y_p
-	 * @param al
-	 * @param shift_down
-	 * @param x_p
-	 * @param y_p
-	 * @param currentDisplay
-	 * @return
-	 * @author Axel
-	 * 
-	 */
 	private static Thread choose(final int screen_x_p, final int screen_y_p, final Collection<Displayable> al, final boolean shift_down, final int x_p, final int y_p, Display currentDisplay)
 	{
 		// show a popup on the canvas to choose
@@ -1544,7 +1532,7 @@ public class RhizoAddons
 				Layer currentLayer = layers.get(i); 
 				MTBXMLRootImageAnnotationType rootSet = MTBXMLRootImageAnnotationType.Factory.newInstance();
 				
-				rootSet.setImagename(imageNames[i]);
+				rootSet.setImagename(imageNames[i]); // also adds "Software: IrfanView" to the string for some reason
 				rootSet.setRootSetID(i);
 				
 				List<MTBXMLRootType> roots = new ArrayList<MTBXMLRootType>(); // arraylist for convenience
@@ -1555,6 +1543,8 @@ public class RhizoAddons
 				{
 					Treeline currentTreeline = (Treeline) allTreelines.get(j);
 
+					if(null == currentTreeline.getFirstLayer()) continue;
+					
 					// if treeline belongs to the current layer, then add it
 					if(currentTreeline.getFirstLayer().equals(currentLayer))
 					{
@@ -1563,11 +1553,10 @@ public class RhizoAddons
 						rootID++;
 					}
 				}
-				
+				numberOfTreelinesInLayer(currentLayer, allTreelines);
 				rootSet.setRootsArray(roots.toArray(new MTBXMLRootType[numberOfTreelinesInLayer(currentLayer, allTreelines)]));
 				xmlRootSets[i] = rootSet;
 			}
-
 			xmlRootProject.setCollectionOfImageAnnotationsArray(xmlRootSets);
 			
 			
@@ -1699,15 +1688,27 @@ public class RhizoAddons
 			MTBXMLRootProjectDocument rootProjectDocument = MTBXMLRootProjectDocument.Factory.parse(file);
 			MTBXMLRootProjectType rootProject = rootProjectDocument.getMTBXMLRootProject();
 			MTBXMLRootImageAnnotationType[] rootSets = rootProject.getCollectionOfImageAnnotationsArray();
-
+			
 			Display display = Display.getFront();	
+			
 			Project project = display.getProject();
 			ProjectTree projectTree = project.getProjectTree();
+			
 			LayerSet layerSet = display.getLayerSet();  
 			ArrayList<Layer> layers = layerSet.getLayers();
 			
+			while(rootSets.length != layers.size())
+			{
+				Utils.showMessage("Number of rootSets in the xml file does not match the number of layers.");
+				filepath = Utils.selectFile("test");
+				file = new File(filepath[0] + filepath[1]);
+				
+				rootProjectDocument = MTBXMLRootProjectDocument.Factory.parse(file);
+				rootProject = rootProjectDocument.getMTBXMLRootProject();
+				rootSets = rootProject.getCollectionOfImageAnnotationsArray();
+			}
+			
 			/* catch exceptions:
-			 * - rootSets.length == layerSet.size()?
 			 * - check resolution 
 			 * - check image names
 			 */
@@ -1768,7 +1769,6 @@ public class RhizoAddons
 	    					RadiusNode child = new RadiusNode(xmlEnd.getX(), xmlEnd.getY(), currentLayer, currentRootSegment.getEndRadius());
 	    					Utils.log("else "+k);
 	    					Utils.log("added child: " + treeline.addNode(currentParent, child, (byte) 1)); 
-	    			
 	    					
 	    					currentParent = child;
 	    				}
@@ -1781,9 +1781,7 @@ public class RhizoAddons
 	    			Utils.log(treeline.getNodesAt(currentLayer).size()); 
 				}
 			}
-			
-			
-		} 
+		}
 		catch (Exception e) 
 		{
 			Utils.log(e.getMessage());
@@ -1836,18 +1834,30 @@ public class RhizoAddons
 		{
 			Treeline currentTreeline = (Treeline) treelines.get(j);
 			
+			if(null == currentTreeline.getFirstLayer()) continue;
 			if(currentTreeline.getFirstLayer().equals(l)) res++;
 		}
     	
     	return res;
     }
+    
+    public static JFrame getColorVisbilityFrame()
+    {
+    	return colorFrame;
+    }
+    
+    public static JFrame getImageLoaderFrame()
+    {
+    	return imageLoaderFrame;
+    }
 }
+
 
 
 
 /**
  * Segment class for writing statistics. Not used yet.
- * @author Tino
+ * @author Axel
  *
  */
 class Segment

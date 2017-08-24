@@ -38,10 +38,12 @@ import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -814,6 +816,12 @@ class ImageImport extends javax.swing.JPanel
 		jButton2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				jButton2ActionPerformed(evt);
+				
+				if(SwingUtilities.getRoot(jPanel1) instanceof JFrame)
+				{
+					JFrame jf = (JFrame) SwingUtilities.getRoot(jPanel1);
+					jf.dispose();
+				}
 			}
 		});
 		jPanel1.add(jButton2);
@@ -879,7 +887,8 @@ class ImageImport extends javax.swing.JPanel
 			currentList.add((String) string);
 		}
 		
-		while(!currentList.isEmpty()){
+		while(!currentList.isEmpty())
+		{
 			
 			int currentMinPosi = 0;
 			String currentMinString = currentList.get(0);
@@ -888,7 +897,7 @@ class ImageImport extends javax.swing.JPanel
 			{
 				for(int i=1;i<currentList.size();i++)
 				{
-					if(getSortingNumber(currentMinString)>getSortingNumber(currentList.get(i)))
+					if(getSortingNumber(currentMinString) > getSortingNumber(currentList.get(i)))
 					{
 						currentMinPosi=i;
 						currentMinString=currentList.get(i);
@@ -899,7 +908,6 @@ class ImageImport extends javax.swing.JPanel
 			result.add(currentMinString);
 			
 			currentList.remove(currentMinPosi);
-			
 		}
 		
 		listModel.clear();
@@ -909,12 +917,12 @@ class ImageImport extends javax.swing.JPanel
 		}
 	}
 	
-	private int getSortingNumber(String string){
-		int result =-1;
+	private int getSortingNumber(String string)
+	{
+		int result = -1;
 		if(string.split("_").length>5)
 		{
 			result = Integer.parseInt(string.split("_")[5]);
-			Utils.log("currentSortNum: " + result);
 		}
 		return result;
 	}
