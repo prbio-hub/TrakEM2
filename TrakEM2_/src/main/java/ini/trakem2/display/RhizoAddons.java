@@ -1632,8 +1632,8 @@ public class RhizoAddons
 			
 			if(!n.equals(treeline.getRoot()))
 			{
-				if(n instanceof RadiusNode) startRadius = ((RadiusNode) n).getData();
-				if(n.getParent() instanceof RadiusNode) endRadius = ((RadiusNode) n.getParent()).getData();
+				if(n.getParent() instanceof RadiusNode) startRadius = ((RadiusNode) n.getParent()).getData();
+				if(n instanceof RadiusNode) endRadius = ((RadiusNode) n).getData();
 				
 				MTBXMLRootSegmentType rootSegment = MTBXMLRootSegmentType.Factory.newInstance();
 				rootSegment.setRootID(xmlRoot.getRootID());
@@ -1646,6 +1646,7 @@ public class RhizoAddons
 				Point2D start = treeline.getAffineTransform().transform(new Point2D.Float(n.getParent().getX(), n.getParent().getY()), null);
 				xmlStart.setX((float) start.getX());
 				xmlStart.setY((float) start.getY());
+		
 				rootSegment.setStartPoint(xmlStart);
 				rootSegment.setStartRadius(startRadius);
 				
