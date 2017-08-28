@@ -327,8 +327,6 @@ public final class FSLoader extends Loader {
 		}
 		// else, good
 		crashDetector();
-		//actyc: start the load thread
-		RhizoAddons.addonLoader(new File(path));
 
 		return data;
 	}

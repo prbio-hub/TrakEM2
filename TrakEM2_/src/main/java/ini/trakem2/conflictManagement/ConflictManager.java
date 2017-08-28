@@ -8,6 +8,7 @@ import java.util.Set;
 
 import javax.swing.JFrame;
 
+import ini.trakem2.Project;
 import ini.trakem2.display.Connector;
 import ini.trakem2.display.Display;
 import ini.trakem2.display.Displayable;
@@ -266,26 +267,28 @@ public class ConflictManager {
 	//restore conflicts
 	public static void restorConflicts()
 	{
-		Display display = Display.getFront();
-		Layer currentLayer = display.getLayer();
-		LayerSet currentLayerSet = currentLayer.getParent();
+		clear();
+		for(Project project: Project.getProjects()){
+			
+			LayerSet currentLayerSet = project.getRootLayerSet();
+			
+			ArrayList<Displayable> trees = currentLayerSet.get(Treeline.class);
 
-		ArrayList<Displayable> trees = currentLayerSet.get(Treeline.class);
-
-		for (Displayable cObj : trees)
-		{
-			Treeline ctree = (Treeline) cObj;
-			addConnectorConflict(ctree);
-		}
-		
-		ArrayList<Displayable> connectors = currentLayerSet.get(Connector.class);
-
-		for (Displayable cObj : connectors)
-		{
-			Connector cconnector = (Connector) cObj;
-			for(Layer layer: currentLayerSet.getLayers())
+			for (Displayable cObj : trees)
 			{
-				addTreelineConflict(cconnector, layer);	
+				Treeline ctree = (Treeline) cObj;
+				addConnectorConflict(ctree);
+			}
+			
+			ArrayList<Displayable> connectors = currentLayerSet.get(Connector.class);
+
+			for (Displayable cObj : connectors)
+			{
+				Connector cconnector = (Connector) cObj;
+				for(Layer layer: currentLayerSet.getLayers())
+				{
+					addTreelineConflict(cconnector, layer);	
+				}
 			}
 		}
 	}
@@ -295,15 +298,14 @@ public class ConflictManager {
 	//TODO make a panel for showing and resolving conflicts
 	public static void showConflicts()
 	{
-		if(conflictPanel==null || conflictFrame==null)
+		if(conflictPanel==null || conflictFrame==null || !conflictFrame.requestFocusInWindow())
 		{
 			conflictPanel = new ConflictPanel();
 			conflictFrame = new JFrame("ConflictManager");
-			conflictFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+			conflictFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 			conflictFrame.add(conflictPanel);
-		}
-
-		conflictFrame.setVisible(true);
+			conflictFrame.setVisible(true);
+		}		
 	}
 	
 	//addons
@@ -373,6 +375,12 @@ public class ConflictManager {
 			return true;
 		}
 		return false;
+	}
+	
+	private static void clear()
+	{
+		treelineConflictHash.clear();
+		connectorConflictHash.clear();
 	}
 	
 

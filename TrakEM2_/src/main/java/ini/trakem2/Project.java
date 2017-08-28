@@ -632,25 +632,30 @@ public class Project extends DBObject {
 				// SO: WAIT TILL THE END OF TIME!
 				new Thread() { public void run() {
 					try {
-					Thread.sleep(4000); // ah, the pain in my veins. I can't take this shitty setup anymore.
-					javax.swing.SwingUtilities.invokeAndWait(new Runnable() { public void run() {
-						project.getLoader().setChanged(false);
-						Utils.log2("D set to false");
-					}});
-					project.getTemplateTree().updateUILater(); // repainting to fix gross errors in tree rendering
-					project.getProjectTree().updateUILater();  // idem
-					
-					//actyc: ready to load
-					RhizoAddons.readyToLoad=true;
+						Thread.sleep(4000); // ah, the pain in my veins. I can't take this shitty setup anymore.
+						javax.swing.SwingUtilities.invokeAndWait(new Runnable() { public void run() {
+							project.getLoader().setChanged(false);
+							Utils.log2("D set to false");
+						}});
+						project.getTemplateTree().updateUILater(); // repainting to fix gross errors in tree rendering
+						project.getProjectTree().updateUILater();  // idem
+
 					} catch (Exception ie) {}
 				}}.start();
 			} else {
 				// help the helpless users
 				Display.createDisplay(project, project.layer_set.getLayer(0));
-				
-				//actyc: ready to load
-				RhizoAddons.readyToLoad=true;
 			}
+		}
+		
+		//actyc: ready to load
+		try {
+			Utils.log2("start addon loader ...");
+			RhizoAddons.addonLoader(new File(path)).join();
+			Utils.log2("started");
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		project.restartAutosaving();

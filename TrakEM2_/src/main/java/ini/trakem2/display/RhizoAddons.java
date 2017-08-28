@@ -78,7 +78,6 @@ import ini.trakem2.utils.Utils;
 
 public class RhizoAddons
 {
-	public static boolean readyToLoad = false;
 	static boolean chooseReady = false; 
 
 	static boolean test = true;
@@ -120,7 +119,7 @@ public class RhizoAddons
 	 * @param file - saved project file
 	 * @author Axel
 	 */
-	public static void addonLoader(File file)
+	public static Thread addonLoader(File file)
 	{
 		Thread loader = new Thread()
 		{
@@ -131,32 +130,19 @@ public class RhizoAddons
 			@Override
 			public void run()
 			{
-				while (RhizoAddons.readyToLoad == false)
-				{
-					try
-					{
-						sleep(500);
-					} 
-					catch (InterruptedException e)
-					{
-						e.printStackTrace();
-					}
-				}
-
 				// load connector data
-				Utils.log("loading user settings ...");
+				Utils.log2("loading user settings ...");
 				loadUserSettings();
-				Utils.log("done");
+				Utils.log2("done");
 
-				Utils.log("loading connector data ...");
+				Utils.log2("loading connector data ...");
 				loadConnector(file);
-				Utils.log("done");
+				Utils.log2("done");
 				
-				Utils.log("restore conflicts ...");
+				Utils.log2("restore conflicts ...");
 				ConflictManager.restorConflicts();
-				Utils.log("done");
+				Utils.log2("done");
 
-				RhizoAddons.readyToLoad = false;
 				return;
 			}
 
@@ -164,7 +150,8 @@ public class RhizoAddons
 		
 		// start the thread
 		loader.start();
-		return;
+		Utils.log2("return loader");
+		return loader;
 	}
 	
 	/**
