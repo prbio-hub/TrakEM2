@@ -6,7 +6,7 @@ import ini.trakem2.display.Connector;
 import ini.trakem2.display.TreeEventListener;
 import ini.trakem2.display.Treeline;
 
-public class ConnectorConflict {
+public class ConnectorConflict extends Conflict{
 	Treeline conflictTree;
 	ArrayList<Connector> connectorList;
 	
@@ -63,7 +63,8 @@ public class ConnectorConflict {
 	}
 
 
-	@Override public String toString(){
+	@Override 
+	public String toString(){
 		return "Multiple Connector Conflict on Tree: "+ conflictTree.getId() + getConnectorAsString();
 	}
 }

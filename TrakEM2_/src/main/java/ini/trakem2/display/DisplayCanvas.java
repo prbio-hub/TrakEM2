@@ -85,6 +85,8 @@ import ij.measure.Calibration;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ini.trakem2.Project;
+import ini.trakem2.conflictManagement.ConflictManager;
+import ini.trakem2.conflictManagement.TreelineConflict;
 import ini.trakem2.display.graphics.GraphicsSource;
 import ini.trakem2.display.inspect.InspectPatchTrianglesMode;
 import ini.trakem2.imaging.Segmentation;
@@ -3046,6 +3048,40 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				if (!zd.isVisible()) continue;
 				if (!(zd instanceof Tree<?>)) continue;
 				final Tree<?> t = (Tree<?>)zd;
+				
+				//actyc: [old check code!]check if your in a solving situation and the tree is helpful
+//				Layer la = null;
+//				if(!ConflictManager.isSolving())
+//				{
+//					la = t.toClosestPaintedNode(active_layer, po.x, po.y, magnification);
+//				}
+//				if(ConflictManager.isSolving())
+//				{
+//					boolean rightConflictTyp = ConflictManager.currentConflictIsTreelineConflict();
+//					boolean rightInstance = false;
+//					boolean rightTree = false;		
+//					if(t instanceof Treeline)
+//					{
+//						rightInstance=true;
+//					}
+//					if(rightConflictTyp && rightInstance)
+//					{
+//						TreelineConflict currentConflict = (TreelineConflict) ConflictManager.getCurrentSolvingConflict();
+//						rightTree = currentConflict.getTreelineOne().contains(t);
+//					}
+//					if(rightConflictTyp && rightInstance && rightTree){
+//						la = t.toClosestPaintedNode(active_layer, po.x, po.y, magnification);
+//					}					
+//					else 
+//					{
+//						
+//						if (Utils.check("currently solving ... abort?"))
+//						{
+//							la = t.toClosestPaintedNode(active_layer, po.x, po.y, magnification);
+//							ConflictManager.abortCurrentSolving();
+//						}
+//					}
+//				}
 				final Layer la = t.toClosestPaintedNode(active_layer, po.x, po.y, magnification);
 				if (null == la) continue;
 				// Else:

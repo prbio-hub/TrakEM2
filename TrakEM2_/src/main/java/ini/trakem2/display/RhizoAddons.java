@@ -588,7 +588,16 @@ public class RhizoAddons
 			
 			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes())
 			{
-				byte currentConfi = cnode.getConfidence();
+				byte currentConfi = (byte) 1;
+				if(cnode.high())
+				{
+					currentConfi = (byte) 11;
+				}
+				else
+				{
+					currentConfi = cnode.getConfidence();
+				}
+
 				Color newColor = confidencColors.get(currentConfi);
 
 				if (cnode.getColor() != newColor) {
@@ -604,42 +613,69 @@ public class RhizoAddons
 	}
 
 	/**
+	 * Update the color for the given treeline and repaint
+	 * @author Axel
+	 */
+	public static void applyCorrespondingColorToDisplayable(Displayable disp) {
+		if(disp instanceof Treeline)
+		{
+			Treeline ctree = (Treeline) disp;
+			boolean repaint = false;
+			if(ctree.getRoot() == null || ctree.getRoot().getSubtreeNodes() == null) return; 
+
+			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes())
+			{
+				byte currentConfi = (byte) 1;
+				if(cnode.high())
+				{
+					currentConfi = (byte) 11;
+				}
+				else
+				{
+					currentConfi = cnode.getConfidence();
+				}
+
+				Color newColor = confidencColors.get(currentConfi);
+
+				if (cnode.getColor() != newColor) {
+					cnode.setColor(newColor);
+					repaint = true;
+					Utils.log("new color on a node");
+				}
+			}
+			if (repaint) {
+				ctree.repaint();
+			}	
+		}
+	}
+	
+	/**
 	 * 
 	 * @param toBeHigh - Treeline to be highlighted
 	 * @author Axel
 	 */
-	public static void highlightTree(Treeline toBeHigh)
+	public static void highlight(Displayable toBeHigh)
 	{
-		highlightTree(toBeHigh, confidencColors.get((byte) 11));
-	}
-
-	public static void highlightTree(Treeline toBeHigh, Color col)
-	{
-		for (Node<Float> cnode : toBeHigh.getRoot().getSubtreeNodes())
-		{
-			cnode.setColor(col);
+		if(toBeHigh instanceof Treeline){
+			Treeline tree = (Treeline) toBeHigh;
+			for (Node<Float> cnode : tree.getRoot().getSubtreeNodes())
+			{
+				cnode.high(true);
+			}
+			RhizoAddons.applyCorrespondingColorToDisplayable(tree);	
 		}
-		toBeHigh.repaint();
 	}
 
 	/**
 	 * 
-	 * @param toBeHigh - Treelines to be highlighted
+	 * @param toBeHigh - Treeline to be highlighted
 	 * @author Axel
 	 */
 	public static void highlight(List<Displayable> toBeHigh)
-	{
-		highlight(toBeHigh, confidencColors.get((byte) 11));
-	}
-
-	public static void highlight(List<Displayable> toBeHigh, Color col)
-	{
+	{		
 		for (Displayable disp : toBeHigh)
 		{
-			if (disp.getClass().equals(Treeline.class))
-			{
-				highlightTree((Treeline) disp, col);
-			}
+			highlight(disp);
 		}
 	}
 
@@ -648,21 +684,17 @@ public class RhizoAddons
 	 * @param notToBeHigh - Treeline to be dehighlighted
 	 * @author Axel
 	 */
-	public static void removeHighlight(Treeline notToBeHigh)
+	public static void removeHighlight(Displayable notToBeHigh)
 	{
-
-		for (Node<Float> cnode : notToBeHigh.getRoot().getSubtreeNodes())
-		{
-			byte currentConfi = cnode.getConfidence();
-			Color newColor = confidencColors.get(currentConfi);
-			
-			if (cnode.getColor() != newColor)
+		if(notToBeHigh instanceof Treeline){
+			Treeline tree = (Treeline) notToBeHigh;
+			for (Node<Float> cnode : tree.getRoot().getSubtreeNodes())
 			{
-				cnode.setColor(newColor);
-			}
+				cnode.high(false);
+			}	
+			RhizoAddons.applyCorrespondingColorToDisplayable(tree);
 		}
-		
-		notToBeHigh.repaint();
+
 	}
 
 	/**
@@ -895,6 +927,11 @@ public class RhizoAddons
 				target.setLastMarked(nd);
 				joinList.add(target);
 				
+				parentTl.join(joinList);
+				parentTl.unmark();
+
+				target.deselect();
+				
 				//get the Connector of the target, remove the target and add the parent treeline
 				//furthermore update ConflictManager 
 				ArrayList<Connector> connectorList = new ArrayList<Connector>();
@@ -915,22 +952,13 @@ public class RhizoAddons
 				//targetConnector.removeConTreeline(target);
 				//targetConnector.addConTreeline(parentTl);
 				
-				
-
-				parentTl.join(joinList);
-				parentTl.unmark();
-
-				target.deselect();
-
-				display.getProject().remove(target);
-				
 				for(Connector currentCon: connectorList)
 				{
 					currentCon.addConTreeline(parentTl);
 					ConflictManager.processChange(parentTl, currentCon);
 				}
 				
-
+				display.getProject().remove(target);
 
 			};
 		};
@@ -1428,10 +1456,8 @@ public class RhizoAddons
 						@Override
 						public void mouseEntered(MouseEvent e)
 						{
-							if (d.getClass().equals(Treeline.class))
-							{
-								RhizoAddons.highlightTree((Treeline) d);
-							}
+							RhizoAddons.highlight( d);
+
 						}
 
 						@Override

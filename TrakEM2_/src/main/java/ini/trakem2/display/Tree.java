@@ -100,6 +100,8 @@ import ij.measure.ResultsTable;
 import ini.trakem2.Project;
 import ini.trakem2.analysis.Centrality;
 import ini.trakem2.analysis.Vertex;
+import ini.trakem2.conflictManagement.ConflictManager;
+import ini.trakem2.conflictManagement.TreelineConflict;
 import ini.trakem2.parallel.Process;
 import ini.trakem2.parallel.TaskFactory;
 import ini.trakem2.persistence.XMLOptions;
@@ -1050,8 +1052,45 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	protected Layer toClosestPaintedNode(final Layer active_layer, final float wx, final float wy, final double magnification) {
 		final Node<T> nd = findClosestNodeW(getNodesToPaint(active_layer), wx, wy, magnification);
 		if (null != nd) {
-			setLastVisited(nd);
-			return nd.la;
+			
+			//actyc: check if your in a solving situation and the tree is helpful
+			if(!ConflictManager.isSolving()){
+				setLastVisited(nd);
+				return nd.la;
+			}
+			else
+			{
+				boolean rightConflictTyp = ConflictManager.currentConflictIsTreelineConflict();
+				boolean rightInstance = false;
+				boolean rightTree = false;		
+				if(this instanceof Treeline)
+				{
+					rightInstance=true;
+				}
+				if(rightConflictTyp && rightInstance)
+				{
+					TreelineConflict currentConflict = (TreelineConflict) ConflictManager.getCurrentSolvingConflict();
+					rightTree = currentConflict.getTreelineOne().contains(this);
+				}
+				
+				if(rightConflictTyp && rightInstance && rightTree){
+					setLastVisited(nd);
+					return nd.la;
+				}
+				else
+				{
+					if (Utils.check("currently solving ... abort?"))
+					{
+						ConflictManager.abortCurrentSolving();
+						setLastVisited(nd);
+						return nd.la;
+					}
+					return null;
+				}
+			}
+			
+//			setLastVisited(nd);
+//			return nd.la;
 		}
 		return null;
 	}
@@ -1631,6 +1670,11 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 						final Node<T>[] ns = findNearestEdge(x_pl, y_pl, layer, mag);
 						if (null != ns) {
 							found = createNewNode(x_pl, y_pl, layer, ns[0]);
+							
+							//actyc: new node inherits highlight status
+							found.high(ns[0].high());
+							RhizoAddons.applyCorrespondingColorToDisplayable(this);
+							
 							insertNode(ns[0], ns[1], found, ns[0].getConfidence(ns[1]));
 							setActive(found);
 						}
@@ -1651,9 +1695,13 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 						RhizoAddons.lastEditedOrActiveNode = found; // Tino - aeekz
 						RhizoAddons.applyCorrespondingColor();
 						
+						//actyc: new node inherits highlight status
+						found.high(nearest.high());
+						RhizoAddons.applyCorrespondingColorToDisplayable(this);
+						
 						setActive(found);		
 						repaint(true, layer);
-					}
+					}		
 					return;
 				}
 			} else {

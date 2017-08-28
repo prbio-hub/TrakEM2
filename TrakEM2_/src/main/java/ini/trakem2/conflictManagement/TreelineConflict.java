@@ -7,7 +7,7 @@ import ini.trakem2.display.Layer;
 import ini.trakem2.display.Treeline;
 import ini.trakem2.utils.Utils;
 
-public class TreelineConflict {
+public class TreelineConflict extends Conflict {
 	TreelineConflictKey treeConKey;
 	ArrayList<Treeline> treelineList;
 	
@@ -75,7 +75,8 @@ public class TreelineConflict {
 		}
 	}
 	
-	@Override public String toString(){
+	@Override 
+	public String toString(){
 		return "Connector:"+ treeConKey.getConnector().getId() + getTreelinesAsString();
 	}
 	

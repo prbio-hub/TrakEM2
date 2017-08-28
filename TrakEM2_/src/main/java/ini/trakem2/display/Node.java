@@ -37,6 +37,9 @@ public abstract class Node<T> implements Taggable {
 	/** Maximum possible confidence in an edge (ranges from 0 to 5, inclusive).*/
 	//actyc:changed maximum to 10
 	static public final byte MAX_EDGE_CONFIDENCE = 10;
+	
+	//actyc: added a indicator showing whether the node is highlighted
+	private boolean high = false;
 
 	protected Node<T> parent = null;
 	public Node<T> getParent() { return parent; }
@@ -1162,5 +1165,17 @@ public abstract class Node<T> implements Taggable {
 		if (null == t1 || null == t2) return false; // at least one is not null
 		t1.removeAll(t2);
 		return t1.isEmpty();
+	}
+	
+	//actyc: getter and setter for highlight variable
+	
+	public boolean high()
+	{
+		return high;
+	}
+	
+	public void high(boolean high)
+	{
+		this.high = high;
 	}
 }

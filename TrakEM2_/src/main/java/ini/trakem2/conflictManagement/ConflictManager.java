@@ -3,6 +3,7 @@ package ini.trakem2.conflictManagement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import javax.swing.JFrame;
@@ -12,9 +13,11 @@ import ini.trakem2.display.Display;
 import ini.trakem2.display.Displayable;
 import ini.trakem2.display.Layer;
 import ini.trakem2.display.LayerSet;
+import ini.trakem2.display.RhizoAddons;
 import ini.trakem2.display.Tree;
 import ini.trakem2.display.Treeline;
 import ini.trakem2.display.addonGui.ConflictPanel;
+import ini.trakem2.utils.Utils;
 
 public class ConflictManager {
 	
@@ -26,6 +29,37 @@ public class ConflictManager {
 	private static ConflictPanel conflictPanel = null;
 	private static JFrame	conflictFrame = null;
 	
+	private static boolean isSolving=false;
+	/**
+	 * @return the isSolving
+	 */
+	public static boolean isSolving() {
+		return isSolving;
+	}
+
+	/**
+	 * @param isSolving the isSolving to set
+	 */
+	public static void setSolving(boolean isSolving) {
+		ConflictManager.isSolving = isSolving;
+	}
+
+	/**
+	 * @return the currentSolvingConflict
+	 */
+	public static Conflict getCurrentSolvingConflict() {
+		return currentSolvingConflict;
+	}
+
+	/**
+	 * @param currentSolvingConflict the currentSolvingConflict to set
+	 */
+	public static void setCurrentSolvingConflict(Conflict currentSolvingConflict) {
+		ConflictManager.currentSolvingConflict = currentSolvingConflict;
+	}
+
+	private static Conflict currentSolvingConflict=null;
+	
 
 	//check for conflicts
 	
@@ -35,7 +69,10 @@ public class ConflictManager {
 		{
 			addTreelineConflict(connector, tree.getFirstLayer());
 		}
-		conflictPanel.updateList();
+		if(conflictPanel!=null)
+		{
+			conflictPanel.updateList();	
+		}
 	}
 	
 	//auto resolve to minimize multiple connector conflicts if possible
@@ -43,13 +80,116 @@ public class ConflictManager {
 	{
 		if(!aggressive)
 		{
-			//so only solve cases if no new treeconflict will arise
-			Collection<ConnectorConflict> conflicts = connectorConflictHash.values();
+			//so only solve cases if no new treeconflict will arise aka max one connected tree per layer
 			
+			ArrayList<ConnectorConflict> conflictsList = new ArrayList<ConnectorConflict>(connectorConflictHash.values());
+			while(conflictsList.size()>0)
+			{
+				//as long as there are conflicts to solve
+				ConnectorConflict currentConflict = conflictsList.get(0);
+				ArrayList<Connector> currentConnectorList = currentConflict.getConnectorList();
+				HashMap<Layer,Connector> conflictAtlas = new HashMap<Layer,Connector>();
+				boolean isSolvable=true;
+				for(Connector currentConnector: currentConnectorList)
+				{
+					//for every connector in the current conflict > try to find if there are more than max one connected tree
+					ArrayList<Treeline> currentTreelineList = currentConnector.getConTreelines();
+					for(Treeline currentTreeline: currentTreelineList)
+					{
+						Layer currentLayer = currentTreeline.getFirstLayer();
+						//check if its really resolvable so the non max one is not the current conflict point and and its already taken and the connectors aren't in a subset situation
+						if(conflictAtlas.containsKey(currentLayer) && currentLayer!=currentConflict.getConflictTree().getFirstLayer() && !conflictAtlas.get(currentLayer).getConTreelines().contains(currentTreeline))
+						{
+							isSolvable=false;
+						}
+						conflictAtlas.put(currentLayer, currentConnector);
+					}
+				}
+				if(isSolvable)
+				{
+					//its solvable so we need to find the most upper connector as the future parent to be.
+					Set<Layer> keySet =conflictAtlas.keySet();
+					Layer first = null;
+					for(Layer currentLayer: keySet)
+					{
+						if(first==null)
+						{
+							first = currentLayer;
+						}
+						if(currentLayer.getZ() < first.getZ())
+						{
+							first = currentLayer;
+						}
+					}
+					
+					Connector parent = conflictAtlas.get(first);
+					for(Connector currentConnector: currentConnectorList)
+					{
+						//for every connector in the current conflict > port treelines to parent
+						mergeConnector(parent, currentConnector);
+						
+					}
+					//conflictsList = new ArrayList<ConnectorConflict>(connectorConflictHash.values());
+				}
+				if(conflictsList.size()>0)
+				{
+					conflictsList.remove(0);
+				}		
+			}		
 		}
 		else
 		{
+			//so the goal is to convert multiple connectorconflicts to treeconflicts
 			
+			ArrayList<ConnectorConflict> conflictsList = new ArrayList<ConnectorConflict>(connectorConflictHash.values());
+			while(conflictsList.size()>0)
+			{
+				//as long as there are conflicts to solve
+				ConnectorConflict currentConflict = conflictsList.get(0);
+				ArrayList<Connector> currentConnectorList = currentConflict.getConnectorList();
+				HashMap<Layer,Connector> conflictAtlas = new HashMap<Layer,Connector>();
+				boolean isSolvable=true;
+				for(Connector currentConnector: currentConnectorList)
+				{
+					//for every connector in the current conflict > try to find if there are more than max one connected tree
+					ArrayList<Treeline> currentTreelineList = currentConnector.getConTreelines();
+					for(Treeline currentTreeline: currentTreelineList)
+					{
+						Layer currentLayer = currentTreeline.getFirstLayer();
+						conflictAtlas.put(currentLayer, currentConnector);
+					}
+				}
+				if(isSolvable)
+				{
+					//its solvable so we need to find the most upper connector as the future parent to be.
+					Set<Layer> keySet =conflictAtlas.keySet();
+					Layer first = null;
+					for(Layer currentLayer: keySet)
+					{
+						if(first==null)
+						{
+							first = currentLayer;
+						}
+						if(currentLayer.getZ() < first.getZ())
+						{
+							first = currentLayer;
+						}
+					}
+					
+					Connector parent = conflictAtlas.get(first);
+					for(Connector currentConnector: currentConnectorList)
+					{
+						//for every connector in the current conflict > port treelines to parent
+						mergeConnector(parent, currentConnector);
+						
+					}
+					//conflictsList = new ArrayList<ConnectorConflict>(connectorConflictHash.values());
+				}
+				if(conflictsList.size()>0)
+				{
+					conflictsList.remove(0);
+				}		
+			}	
 		}
 	}
 
@@ -102,10 +242,24 @@ public class ConflictManager {
 	//remove conflicts
 		
 	public static void  removeConnectorConflict(Treeline treeline){
+		ConnectorConflict currentConflict = connectorConflictHash.get(treeline);
+		
+		if(currentConflict!=null && currentConflict.equals(ConflictManager.getCurrentSolvingConflict()))
+		{
+			ConflictManager.abortCurrentSolving();
+		}
+		
 		connectorConflictHash.remove(treeline);
 	}
 	
 	public static void  removeTreelineConflict(TreelineConflictKey treeConKey){
+		TreelineConflict currentConflict = treelineConflictHash.get(treeConKey);
+		
+		if(currentConflict!=null && currentConflict.equals(ConflictManager.getCurrentSolvingConflict()))
+		{
+			ConflictManager.abortCurrentSolving();
+		}
+		
 		treelineConflictHash.remove(treeConKey);
 	}
 	
@@ -162,6 +316,63 @@ public class ConflictManager {
 	public static Collection<TreelineConflict> getTreelineConflicts()
 	{
 		return treelineConflictHash.values();
+	}
+	
+	private static void mergeConnector(Connector parentConnector, Connector childConnector){
+		if(parentConnector.equals(childConnector)){return;}
+		Utils.log("connector: "+childConnector.getUniqueIdentifier() + " has " + childConnector.getConTreelines().size() + " trees");
+		ArrayList<Treeline> treelineList = new ArrayList<Treeline>(childConnector.getConTreelines());
+		for(Treeline curentTreeline: treelineList)
+		{
+			Utils.log("current Treeline tobe remove and added"+curentTreeline.getUniqueIdentifier());
+			childConnector.removeConTreeline(curentTreeline);
+			parentConnector.addConTreeline(curentTreeline);
+		}
+		Display.getFront().getProject().removeProjectThing(childConnector, false);
+		childConnector.remove(false);
+	}
+	
+	public static boolean abortCurrentSolving()
+	{
+		Conflict currentConflict = currentSolvingConflict;
+		if(currentConflict!=null){
+			if(currentConflict.getClass().equals(TreelineConflict.class)){		
+				TreelineConflict conflict = (TreelineConflict)currentConflict;		
+				if(isSolving)
+				{
+					//abort
+					Utils.log("solve abort");
+					List<Displayable> treelineList = new ArrayList<Displayable>(conflict.getTreelineOne());
+					RhizoAddons.removeHighlight(treelineList);
+					
+					if(conflictPanel!=null){
+						conflictPanel.setSolved();
+					}
+					
+					isSolving=false;
+					return true;
+				}
+			}
+			if(currentConflict.getClass().equals(ConnectorConflict.class)){		
+				TreelineConflict conflict = (TreelineConflict)currentConflict;		
+				if(isSolving)
+				{
+					isSolving=false;
+					return true;
+				}
+			}	
+		}
+		isSolving=true;
+		return false;
+	}
+	
+	public static boolean currentConflictIsTreelineConflict()
+	{
+		if(currentSolvingConflict.getClass().equals(TreelineConflict.class))
+		{
+			return true;
+		}
+		return false;
 	}
 	
 

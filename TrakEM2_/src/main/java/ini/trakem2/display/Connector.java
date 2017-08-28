@@ -30,7 +30,7 @@ import ini.trakem2.utils.Utils;
 
 /** A one-to-many connection, represented by one source point and one or more target points. The connector is drawn by click+drag+release, defining the origin at click and the target at release. By clicking anywhere else, the connector can be given another target. Points can be dragged and removed.
  * Connectors are meant to represent synapses, in particular polyadic synapses. */
-/** actyc: over all I added a new TreeEventListener Interface/Implementation to keep track of changes in the linked trees */
+/** actyc: over all added a new TreeEventListener Interface/Implementation to keep track of changes in the linked trees */
 public class Connector extends Treeline  implements TreeEventListener{
 	
 	//actyc: variable to store connected Treelines explicitly 
@@ -612,6 +612,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 		boolean added = conTreelines.add(newTreeline);
 		if(added) newTreeline.addTreeEventListener(this);
 		sanityCheck();
+		ConflictManager.processChange(newTreeline, this);
 		return added;
 	}
 	
