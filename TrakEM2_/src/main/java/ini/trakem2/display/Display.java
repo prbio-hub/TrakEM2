@@ -2359,6 +2359,11 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					}
 					if (remove_doc) annot_docs.remove(prev_active);
 				}
+				//actyc: remove highlight of connected treelines
+				if(prev_active instanceof Connector){
+					RhizoAddons.removeHighlight(new ArrayList<Displayable>(((Connector)prev_active).getConTreelines()));
+				}
+				//end
 			}
 			// activate the new active
 			if (null != displ) {
@@ -2393,7 +2398,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					annot_editor.setDocument(doc);
 					if (null != displ.getAnnotation()) annot_editor.setText(displ.getAnnotation());
 				}
-				annot_editor.setEnabled(true);
+				annot_editor.setEnabled(true);		
+				//actyc: highlight  connected treelines
+				if(displ instanceof Connector){
+					RhizoAddons.highlight(new ArrayList<Displayable>(((Connector)displ).getConTreelines()));
+				}
+				//end
 			} else {
 				//ensure decorations are removed from the panels, for Displayables in a selection besides the active one
 				Utils.updateComponent(tabs.getSelectedComponent());
