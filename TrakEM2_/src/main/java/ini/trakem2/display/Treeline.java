@@ -30,6 +30,7 @@ import java.util.Set;
 import org.scijava.java3d.Transform3D;
 import org.scijava.vecmath.AxisAngle4f;
 import org.scijava.vecmath.Color3f;
+import org.scijava.vecmath.Point2d;
 import org.scijava.vecmath.Point3f;
 import org.scijava.vecmath.Vector3f;
 
@@ -275,6 +276,48 @@ public class Treeline extends Tree<Float> {
 					   new int[]{(int)(parent.y + vy90 * parent.r), (int)(parent.y + vy270 * parent.r), (int)(this.y + vy270 * this.r), (int)(this.y + vy90 * this.r)},
 					   4);
 		}
+		
+		//actyc: modified version of getSegment to fix a rendering issue causing treelines to have a visual radius of 0  
+		private final Polygon getSegment(AffineTransform to_screen) {
+			
+			final RadiusNode parent = (RadiusNode) this.parent;
+			float vx = parent.x - this.x;
+			float vy = parent.y - this.y;
+			final float len = (float) Math.sqrt(vx*vx + vy*vy);
+			if (0 == len) {
+				// Points are on top of each other
+				return new Polygon(new int[]{(int)this.x, (int)Math.ceil(parent.x)},
+								   new int[]{(int)this.y, (int)Math.ceil(parent.y)}, 2);
+			}
+			
+			vx /= len;
+			vy /= len;
+			// perpendicular vector
+			final float vx90 = -vy;
+			final float vy90 = vx;
+			final float vx270 = vy;
+			final float vy270 = -vx;
+			
+			Point2D p1 = new Point2D.Float(parent.getX()+vx90*parent.getData(),parent.getY()+vy90*parent.getData());
+			Point2D p2 = new Point2D.Float(parent.getX()+vx270*parent.getData(),parent.getY()+vy270*parent.getData());
+			
+			Point2D p3 = new Point2D.Float(this.getX()+vx270*this.getData(),this.getY()+vy270*this.getData());
+			Point2D p4 = new Point2D.Float(this.getX()+vx90*this.getData(),this.getY()+vy90*this.getData());
+			
+			to_screen.transform(p1,p1);
+			to_screen.transform(p2,p2);
+			
+			to_screen.transform(p3,p3);
+			to_screen.transform(p4,p4);
+
+			
+			return new Polygon(new int[]{(int) p1.getX(), (int)p2.getX(), (int)p3.getX(), (int)p4.getX()},
+			new int[]{(int)p1.getY(), (int)p2.getY(), (int)p3.getY(), (int)p4.getY()},
+			4);
+			
+
+		}
+		//ende
 
 		// The human compiler at work!
 		/** Detect intersection between localRect and the bounds of getSegment() */
@@ -328,20 +371,26 @@ public class Treeline extends Tree<Float> {
 			//	|| localRect.contains((int)(parent.x + vx270 * parent.r), (int)(parent.y + vy270 * parent.r))
 			//	|| localRect.contains((int)(this.x + vx270 * this.r), (int)(this.y + vy270 * this.r))
 			//	|| localRect.contains((int)(this.x + vx90 * this.r), (int)(this.y + vy90 * this.r));
-		}
-
+		}  
+		
 		@Override
 		public void paintData(final Graphics2D g, final Rectangle srcRect,
 				final Tree<Float> tree, final AffineTransform to_screen, final Color cc,
 				final Layer active_layer) {
+
 			if (null == this.parent) return; // doing it here for less total cost
+
 			if (0 == this.r && 0 == parent.getData()) return;
 
 			// Two transformations, but it's only 4 points each and it's necessary
 			//final Polygon segment = getSegment();
 			//if (!tree.at.createTransformedShape(segment).intersects(srcRect)) return Node.FALSE;
-			//final Shape shape = to_screen.createTransformedShape(segment);
-			final Shape shape = to_screen.createTransformedShape(getSegment());
+
+			//actyc: switched to a fixed version of getSegment()
+			//final Shape shape = to_screen.createTransformedShape(getSegment();
+			final Shape shape = getSegment(to_screen);
+
+			//final Shape shape = to_screen.createTransformedShape(getSegment());
 			final Composite c = g.getComposite();
 			final float alpha = tree.getAlpha();
 			g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha > 0.4f ? 0.4f : alpha));
@@ -349,7 +398,6 @@ public class Treeline extends Tree<Float> {
 			g.fill(shape);
 			g.setComposite(c);
 			g.draw(shape); // in Tree's composite mode (such as an alpha)
-			
 		}
 
 		/** Expects @param a in local coords. */
