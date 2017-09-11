@@ -2239,9 +2239,10 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				double transY = y_p -currentTreeline.getAffineTransform().getTranslateY();
 				Node<Float> nearestNode = currentTreeline.findNearestNode((float)transX,(float) transY, layer);
 				//Utils.log(nearestNode);
+				//check if treeline is clickable if not add it to the remove list
 				if(RhizoAddons.treeLineClickable[(int)nearestNode.getConfidence()]==false){
 					alternatedList.add(displayable);
-				}				
+				}
 			}
 		}
 		al.removeAll(alternatedList);

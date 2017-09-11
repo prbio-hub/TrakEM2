@@ -1,6 +1,7 @@
 package ini.trakem2.display.addonGui;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
@@ -22,6 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
 import javax.swing.TransferHandler;
 
+import ij.IJ;
 import ini.trakem2.conflictManagement.Conflict;
 import ini.trakem2.conflictManagement.ConflictManager;
 import ini.trakem2.conflictManagement.ConflictManager;
@@ -143,13 +145,15 @@ public class ConflictPanel extends JPanel implements ActionListener {
 	public void updateList()
 	{
 		listModel.removeAllElements();
-		for(ConnectorConflict conflict:ConflictManager.getConnectorConflicts())
+		ArrayList<ConnectorConflict> currentConnectorConflicts = new ArrayList<ConnectorConflict>(ConflictManager.getConnectorConflicts());
+		for(ConnectorConflict conflict:currentConnectorConflicts)
 		{
 			conflict.update();
 			listModel.addElement(conflict.toString());
 			dataTable.put(conflict.toString(), conflict);
 		}
-		for(TreelineConflict conflict:ConflictManager.getTreelineConflicts())
+		ArrayList<TreelineConflict> currentTreelineConflicts = new ArrayList<TreelineConflict>(ConflictManager.getTreelineConflicts());
+		for(TreelineConflict conflict:currentTreelineConflicts)
 		{
 			conflict.update();
 			listModel.addElement(conflict.toString());
@@ -184,7 +188,8 @@ public class ConflictPanel extends JPanel implements ActionListener {
 				RhizoAddons.highlight(treelineList);
 				
 
-				Display.getFront().getCanvas().getParent().requestFocusInWindow();
+				Display.getFront().getFrame().toFront();
+				
 			}
 			//case two: Connector conflict
 		}

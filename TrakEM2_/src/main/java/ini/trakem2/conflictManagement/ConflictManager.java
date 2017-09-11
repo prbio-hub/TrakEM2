@@ -305,6 +305,7 @@ public class ConflictManager {
 			conflictFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 			conflictFrame.add(conflictPanel);
 			conflictFrame.setVisible(true);
+			conflictFrame.setSize(700, 300);
 		}		
 	}
 	
@@ -382,6 +383,71 @@ public class ConflictManager {
 		treelineConflictHash.clear();
 		connectorConflictHash.clear();
 	}
+	
+	public static boolean isPartOfSolution(Displayable d)
+	{
+		if(currentConflictIsTreelineConflict())
+		{
+			TreelineConflict currentConflict = (TreelineConflict) currentSolvingConflict;
+			List<Treeline> currentTrees = currentConflict.getTreelineOne();
+			if(d instanceof Treeline){
+				if(currentTrees.contains(d))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public static boolean userAbort()
+	{
+		if(Utils.check("currently solving ... abort?"))
+		{
+			return true;
+		}
+		return false;
+	}
+	
+//	public static boolean abortSolvingUserInteraction(Displayable d)
+//	{
+//		if(isSolving)
+//		{
+//			if(currentConflictIsTreelineConflict()){
+//				TreelineConflict currentConflict = (TreelineConflict) currentSolvingConflict;
+//				List<Treeline> currentTrees = currentConflict.getTreelineOne();
+//				if(d instanceof Treeline){
+//					if(currentTrees.contains(d))
+//					{
+//						return false;
+//					}
+//					else
+//					{
+//						if(Utils.check("currently solving ... abort?"))
+//						{
+//							return true;
+//						}
+//						else
+//						{
+//							return false;
+//						}
+//					}
+//				}
+//				else 
+//				{
+//					return false;
+//				}
+//			}
+//			else
+//			{
+//				return false;
+//			}
+//		}
+//		else
+//		{
+//			return false;
+//		}
+//	}
 	
 
 }

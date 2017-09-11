@@ -683,6 +683,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				if (null == active || !active.contains(x_p, y_p)) {
 					// find a Displayable to activate, if any
 					display.choose(me.getX(), me.getY(), x_p, y_p, DLabel.class);
+
 					active = display.getActive();
 				}
 				if (null != active && active.isVisible() && active instanceof DLabel) {
@@ -712,7 +713,13 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 		}
 		// select or deselect another active Displayable, or add it to the selection group:
 		if (ProjectToolbar.SELECT == tool) {
-			display.choose(me.getX(), me.getY(), x_p, y_p, me.isShiftDown(), null);
+			//actyc: change to the modified version to centralize changes
+			//old:
+//			display.choose(me.getX(), me.getY(), x_p, y_p, me.isShiftDown(), null);
+			//new:
+			Thread t = RhizoAddons.choose(me.getX(), me.getY(), x_p, y_p, me.isShiftDown(), null,Display.getFront());
+			t.start();
+			//end
 		}
 		active = display.getActive();
 		selection = display.getSelection();

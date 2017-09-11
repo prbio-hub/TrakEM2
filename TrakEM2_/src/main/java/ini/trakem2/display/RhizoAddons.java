@@ -888,23 +888,27 @@ public class RhizoAddons
 				if (oldActive.equals(display.getActive()))
 				{
 					Utils.log("found no target");
+					parentTl.unmark();
 					return;
 				}
 				Treeline target = (Treeline) display.getActive();
 				if (target == null)
 				{
 					Utils.log("no active Treeline found");
+					parentTl.unmark();
 					return;
 				}
 				RadiusNode nd = (RadiusNode) target.findClosestNodeW(target.getNodesToPaint(la), po.x, po.y, dc.getMagnification());
 				if (nd == null)
 				{
 					Utils.log("found no target node");
+					parentTl.unmark();
 					return;
 				}
 				if (parentTl.getClass().equals(Treeline.class) == false)
 				{
 					Utils.log("to-be-parent is no treeline");
+					parentTl.unmark();
 					return;
 				}
 				ArrayList<Tree<Float>> joinList = new ArrayList<>();
@@ -1324,6 +1328,7 @@ public class RhizoAddons
 				double transY = y_p - currentTreeline.getAffineTransform().getTranslateY();
 				Node<Float> nearestNode = currentTreeline.findNearestNode((float) transX, (float) transY, layer);
 				// Utils.log(nearestNode);
+				//check if treeline is clickable if not add it to the remove list
 				if (RhizoAddons.treeLineClickable[(int) nearestNode.getConfidence()] == false)
 				{
 					alternatedList.add(displayable);
@@ -1350,7 +1355,30 @@ public class RhizoAddons
 				currentDisplay.clearSelection();
 				return t;
 			}
-			currentDisplay.select(d, shift_down);
+			
+			if(ConflictManager.isSolving()){
+				if(ConflictManager.isPartOfSolution(d))
+				{
+					currentDisplay.select(d, shift_down);
+				}
+				else
+				{
+					if(ConflictManager.userAbort())
+					{
+						ConflictManager.abortCurrentSolving();
+						currentDisplay.select(d, shift_down);
+					}
+					else
+					{
+						return t;
+					}
+				}
+			}
+			else
+			{
+				currentDisplay.select(d, shift_down);
+			}
+			
 			// Utils.log("choose 1: set active to " + active);
 		} 
 		else
@@ -1434,10 +1462,7 @@ public class RhizoAddons
 						@Override
 						public void mouseExited(MouseEvent e)
 						{
-							if (d.getClass().equals(Treeline.class))
-							{
-								RhizoAddons.removeHighlight((Treeline) d);
-							}
+							RhizoAddons.removeHighlight( d);
 						}
 
 						@Override
@@ -1487,7 +1512,29 @@ public class RhizoAddons
 				{
 					Utils.log2("Display.choose: returning a null!");
 				}
-				currentDisplay.select(d, shift_down);
+				
+				//check if there is a solving situation is running
+				
+				if(ConflictManager.isSolving()){
+					if(ConflictManager.isPartOfSolution(d))
+					{
+						currentDisplay.select(d, shift_down);
+					}
+					else
+					{
+						if(ConflictManager.userAbort())
+						{
+							ConflictManager.abortCurrentSolving();
+							currentDisplay.select(d, shift_down);
+						}
+					}
+				}
+				else
+				{
+					currentDisplay.select(d, shift_down);
+				}
+				
+				
 				pop.setVisible(false);
 
 				// fix selection bug: never receives mouseReleased event when
