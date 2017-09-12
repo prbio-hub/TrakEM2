@@ -461,6 +461,14 @@ public class Treeline extends Tree<Float> {
 					r = (float)Math.sqrt(Math.pow(fp[2] - fp[0], 2) + Math.pow(fp[3] - fp[1], 2));
 			}
 		}
+		
+		//actyc: also copy radius when copy node
+		@Override
+		protected final void copyProperties(final Node<?> nd) {
+			this.confidence = nd.confidence;
+			this.tags = nd.getTagsCopy();
+			this.setData((Float) nd.getData());
+		}
 	}
 
 	static public void exportDTD(final StringBuilder sb_header, final HashSet<String> hs, final String indent) {
@@ -847,7 +855,9 @@ public class Treeline extends Tree<Float> {
 
 		return askAdjustRadius(nd);
 	}
-
+	
+	//actyc: maybe here is a position to implement the status change downstream
+	
 	protected boolean askAdjustRadius(final Node<Float> nd) {
 
 		final GenericDialog gd = new GenericDialog("Adjust radius");

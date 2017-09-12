@@ -829,13 +829,13 @@ public abstract class Node<T> implements Taggable {
 			return false;
 		}
 	}
-
-	protected final void copyProperties(final Node<?> nd) {
+	//actyc: removed final 
+	protected void copyProperties(final Node<?> nd) {
 		this.confidence = nd.confidence;
 		this.tags = nd.getTagsCopy();
 	}
-
-	synchronized private final Object getTagsCopy() {
+	//actyc: made visible to package
+	synchronized final Object getTagsCopy() {
 		if (null == this.tags) return null;
 		if (this.tags instanceof Tag) return this.tags;
 		final Tag[] t1 = (Tag[])this.tags;
