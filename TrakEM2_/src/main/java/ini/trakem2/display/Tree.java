@@ -826,7 +826,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 					interestingTrees.add((Treeline)tree);
 				}
 				TreeEvent te = new TreeEvent((Treeline) this,"split",null,interestingTrees);
-				treeAction(te);
+				treeSingleAction(te);
 			}
 			
 			
@@ -3964,6 +3964,13 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	public void treeAction(TreeEvent te){
 		for(TreeEventListener tEL: treeEventListener){
 			tEL.eventAppeared(te);
+		}
+	}
+	
+	public void treeSingleAction(TreeEvent te){
+		if(treeEventListener.size()>0)
+		{
+			treeEventListener.get(0).eventAppeared(te);
 		}
 	}
 	

@@ -69,6 +69,7 @@ import ini.trakem2.conflictManagement.ConflictManager;
 import ini.trakem2.conflictManagement.ConflictManager;
 import ini.trakem2.display.Connector.ConnectorNode;
 import ini.trakem2.display.Treeline.RadiusNode;
+import ini.trakem2.display.addonGui.SplitDialog;
 import ini.trakem2.persistence.Loader;
 import ini.trakem2.tree.DNDTree;
 import ini.trakem2.tree.ProjectThing;
@@ -78,7 +79,9 @@ import ini.trakem2.utils.Utils;
 
 public class RhizoAddons
 {
-	static boolean chooseReady = false; 
+	static boolean chooseReady = false;
+	
+	public static boolean splitDialog = false;
 
 	static boolean test = true;
 	static boolean[] treeLineClickable = { true, true, true, true, true, true, true, true, true, true, true };
@@ -847,6 +850,55 @@ public class RhizoAddons
 		return true;
 	}
 	
+	public static Connector giveNewConnector(Treeline target,Treeline model)
+	{
+		if(model == null)
+		{
+			model = target;
+		}
+		if(!target.getTreeEventListener().isEmpty())
+		{
+			//already own a connector
+			return null;
+		}
+			
+		Node<Float> pTreeRoot = target.getRoot();
+		Project project = Display.getFront().getProject();
+		Connector con = project.getProjectTree().tryAddNewConnector(model, false);
+		
+		if (con == null)
+		{
+			//something went wrong
+			return null;
+		}
+		
+		Node<Float> newRoot = con.newNode(pTreeRoot.getX(), pTreeRoot.getY(), pTreeRoot.getLayer(), null);
+		con.addNode(null, newRoot, pTreeRoot.getConfidence());
+		con.setRoot(newRoot);
+		con.setAffineTransform(target.getAffineTransform());
+		
+		boolean suc = con.addConTreeline(target);
+		
+		if(!suc)
+		{
+			//something went wrong
+			return null;
+		}
+		
+		return con;
+	}
+	
+	public static void transferConnector(Treeline donor, Treeline acceptor)
+	{
+		List<TreeEventListener> listenerList = new ArrayList<TreeEventListener>(donor.getTreeEventListener());
+		for(TreeEventListener currentListener: listenerList)
+		{
+			Connector currentConnector = currentListener.getConnector();
+			currentConnector.removeConTreeline(donor);
+			currentConnector.addConTreeline(acceptor);
+		}
+	}
+	
 	/**
 	 * Tool for merging treelines in a more convenient way
 	 * @param la - Current layer
@@ -1246,14 +1298,15 @@ public class RhizoAddons
 	 */
 	public static void test() 
 	{
+		//SplitDialog splitDialog = new SplitDialog();
 		// RhizoAddons.test = !RhizoAddons.test;
-		Utils.log("Aktueller Zustand: " + RhizoAddons.test);
-		Display display = Display.getFront();
+		//Utils.log("Aktueller Zustand: " + RhizoAddons.test);
+		//Display display = Display.getFront();
 		// Layer frontLayer = Display.getFrontLayer();
-		Layer currentLayer = display.getLayer();
-		LayerSet currentLayerSet = currentLayer.getParent();
-		Project project = display.getProject();
-		project.getProjectTree();
+		//Layer currentLayer = display.getLayer();
+		//LayerSet currentLayerSet = currentLayer.getParent();
+		//Project project = display.getProject();
+		//project.getProjectTree();
 //		Utils.log("Status: "+RhizoAddons.mergeActive);
 //		// currentLayerSet.updateLayerTree();
 //		// determine next layer

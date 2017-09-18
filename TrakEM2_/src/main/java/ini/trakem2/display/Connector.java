@@ -24,6 +24,7 @@ import ij.measure.Calibration;
 import ij.measure.ResultsTable;
 import ini.trakem2.Project;
 import ini.trakem2.conflictManagement.ConflictManager;
+import ini.trakem2.display.addonGui.SplitDialog;
 import ini.trakem2.utils.M;
 import ini.trakem2.utils.ProjectToolbar;
 import ini.trakem2.utils.Utils;
@@ -635,6 +636,18 @@ public class Connector extends Treeline  implements TreeEventListener{
 		if(te.getEventMessage().equals("copy")){
 			addConTreeline(te.getInterestingTrees().get(0));
 			sanityCheck();
+		}
+		
+		if(te.getEventMessage().equals("split"))
+		{
+			ArrayList<Treeline> trees = te.getInterestingTrees();
+			if(!RhizoAddons.splitDialog)
+			{
+				RhizoAddons.splitDialog = true;
+				new SplitDialog(trees);
+			}
+			
+			
 		}
 	}
 	
