@@ -18,7 +18,6 @@ package mpicbg.trakem2.align;
 
 
 import ij.IJ;
-import ij.ImagePlus;
 import ij.process.ImageProcessor;
 import ini.trakem2.display.Layer;
 import ini.trakem2.display.Patch;
@@ -214,7 +213,7 @@ final public class AlignmentUtils
                 final FloatArray2DSIFT sift = new FloatArray2DSIFT( siftParam );
                 final SIFT ijSIFT = new SIFT( sift );
                 fs = new ArrayList< Feature >();
-                final ImageProcessor ip = layer.getProject().getLoader().getFlatImage( layer, finalBox, scale, 0xffffffff, ImagePlus.GRAY8, Patch.class, patches, true ).getProcessor();
+                final ImageProcessor ip = Patch.makeFlatGreyImage( patches, finalBox, 0, scale );
                 ijSIFT.extractFeatures( ip, fs );
                 Utils.log( fs.size() + " features extracted for " + layerName );
 

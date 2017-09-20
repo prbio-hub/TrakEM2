@@ -20,6 +20,7 @@ import mpicbg.models.CoordinateTransform;
 import mpicbg.models.CoordinateTransformList;
 import mpicbg.models.CoordinateTransformMesh;
 import mpicbg.models.TranslationModel2D;
+import mpicbg.trakem2.util.Pair;
 import mpicbg.trakem2.util.Triple;
 
 public class ExportUnsignedShort
@@ -66,30 +67,65 @@ public class ExportUnsignedShort
 		target.setMinAndMax( -min * a, ( 1.0 - min ) * a );
 		return target;
 	}
-
-	final static protected void map( final PatchTransform pt, final double x, final double y, final ShortProcessor mappedIntensities, final ShortProcessor target )
+	
+	final static protected void map( final PatchTransform pt, final double x, final double y, final ShortProcessor mappedIntensities, final ShortProcessor target)
 	{
+		map( pt, x, y, Double.NaN, mappedIntensities, target);
+	}
+
+	final static protected void map( final PatchTransform pt, final double x, final double y, final double scale, final ShortProcessor mappedIntensities, final ShortProcessor target )
+	{
+		map( pt, x, y, Double.NaN, mappedIntensities, target, null );
+	}
+		
+	final static protected void map( final PatchTransform pt, final double x, final double y, final double scale, final ShortProcessor mappedIntensities, final ShortProcessor target, final ByteProcessor alphaTarget)
+		{
 		final TranslationModel2D t = new TranslationModel2D();
 		t.set( -x, -y );
 
 		final CoordinateTransformList< CoordinateTransform > ctl = new CoordinateTransformList< CoordinateTransform >();
 		ctl.add( pt.ct );
+		if ( !Double.isNaN( scale ) ) {
+			final AffineModel2D s = new AffineModel2D();
+			s.set(scale, 0, 0, scale, 0, 0);
+			ctl.add( s );
+		}
 		ctl.add( t );
 
 		final CoordinateTransformMesh mesh = new CoordinateTransformMesh( ctl, pt.pir.patch.getMeshResolution(), pt.pir.patch.getOWidth(), pt.pir.patch.getOHeight() );
 
 		final TransformMeshMappingWithMasks< CoordinateTransformMesh > mapping = new TransformMeshMappingWithMasks< CoordinateTransformMesh >( mesh );
 
+		ByteProcessor alpha = null;
+		
 		mappedIntensities.setInterpolationMethod( ImageProcessor.BILINEAR );
+
 		if ( pt.pir.patch.hasAlphaMask() )
 		{
-			final ByteProcessor alpha = pt.pir.patch.getAlphaMask();
+			alpha = pt.pir.patch.getAlphaMask();
 			alpha.setInterpolationMethod( ImageProcessor.BILINEAR );
 			mapping.map( mappedIntensities, alpha, target );
 		}
 		else
 		{
 			mapping.mapInterpolated( mappedIntensities, target );
+		}
+		
+		// If alphaTarget is present, repeat the mapping but just for the alpha channel
+		if ( null != alphaTarget )
+		{
+			if ( null == alpha )
+			{
+				// Simulate full alpha: no transparency
+				alpha = new ByteProcessor( pt.pir.patch.getOWidth(), pt.pir.patch.getOHeight() );
+				alpha.setInterpolationMethod( ImageProcessor.BILINEAR );
+				final byte[] as = ( byte[] )alpha.getPixels();
+				for ( int i=0; i<as.length; ++i) {
+					as[i] = (byte)255;
+				}
+			}
+			
+			mapping.mapInterpolated( alpha, alphaTarget);
 		}
 	}
 
@@ -308,10 +344,26 @@ public class ExportUnsignedShort
 	 * @return
 	 */
 	static public final ShortProcessor makeFlatImage(final List<Patch> patches, final Rectangle roi) {
-		return makeFlatImage(patches, roi, 0);
+		return makeFlatImage(patches, roi, 0, Double.NaN);
+	}
+	
+	static public final ShortProcessor makeFlatImage(final List<Patch> patches, final Rectangle roi, final double backgroundValue) {
+		return makeFlatImage(patches, roi, backgroundValue, Double.NaN);
 	}
 
-	static public final ShortProcessor makeFlatImage(final List<Patch> patches, final Rectangle roi, final double backgroundValue) {
+	/**
+	 * 
+	 * @param patches
+	 * @param roi
+	 * @param backgroundValue
+	 * @param scale Ignored when NaN.
+	 * @return
+	 */
+	static public final ShortProcessor makeFlatImage(final List<Patch> patches, final Rectangle roi, final double backgroundValue, final double scale) {
+		return makeFlatImage( patches, roi, backgroundValue, scale, false ).a;
+	}
+
+	static public final Pair< ShortProcessor, ByteProcessor > makeFlatImage(final List<Patch> patches, final Rectangle roi, final double backgroundValue, final double scale, final boolean makeAlphaMask) {
 		final ArrayList< PatchIntensityRange > patchIntensityRanges = new ArrayList< PatchIntensityRange >();
 		double min = Double.MAX_VALUE;
 		double max = -Double.MAX_VALUE;
@@ -329,20 +381,29 @@ public class ExportUnsignedShort
 		final double minI = -min * 65535.0 / ( max - min );
 		final double maxI = ( 1.0 - min ) * 65535.0 / ( max - min );
 
-		final ShortProcessor sp = new ShortProcessor( roi.width, roi.height );
+		final ShortProcessor sp;
+		
+		if ( Double.isNaN( scale ) ) {
+			sp = new ShortProcessor( roi.width, roi.height );
+		} else {
+			sp = new ShortProcessor( (int)(roi.width * scale + 0.5), (int)(roi.height * scale + 0.5) );
+		}
+
 		sp.setMinAndMax( minI, maxI );
 		if (0 != backgroundValue) {
 			sp.setValue(backgroundValue);
 			sp.setRoi(0, 0, roi.width, roi.height);
 			sp.fill();
 		}
+		
+		final ByteProcessor alphaTarget = makeAlphaMask ? new ByteProcessor( sp.getWidth(), sp.getHeight() ) : null;
 
 		for ( final PatchIntensityRange pir : patchIntensityRanges )
 		{
-			map( new PatchTransform( pir ), roi.x, roi.y, mapIntensities( pir, min, max ), sp );
+			map( new PatchTransform( pir ), roi.x, roi.y, scale, mapIntensities( pir, min, max ), sp, alphaTarget );
 		}
 
-		return sp;
+		return new Pair< ShortProcessor, ByteProcessor >( sp, alphaTarget );
 	}
 
 	/**
