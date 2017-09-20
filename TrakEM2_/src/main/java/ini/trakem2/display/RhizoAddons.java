@@ -963,6 +963,9 @@ public class RhizoAddons
 					parentTl.unmark();
 					return;
 				}
+
+				display.setActive(parentTl);
+				
 				ArrayList<Tree<Float>> joinList = new ArrayList<>();
 
 				joinList.add(parentTl);
@@ -973,7 +976,7 @@ public class RhizoAddons
 				parentTl.join(joinList);
 				parentTl.unmark();
 
-				target.deselect();
+				//target.deselect();
 				
 				//get the Connector of the target, remove the target and add the parent treeline
 				//furthermore update ConflictManager 
@@ -1001,7 +1004,12 @@ public class RhizoAddons
 					ConflictManager.processChange(parentTl, currentCon);
 				}
 				
-				display.getProject().remove(target);
+
+				target.remove2(false);
+				
+				Display.repaint(display.getLayerSet());
+				
+				//display.getProject().remove(target);
 
 			};
 		};
