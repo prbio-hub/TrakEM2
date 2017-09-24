@@ -3,10 +3,9 @@
  */
 package mpicbg.trakem2.align;
 
-import ini.trakem2.display.Patch;
-
 import java.awt.geom.AffineTransform;
 
+import de.unihalle.informatik.rhizoTrak.display.Patch;
 import mpicbg.models.TranslationModel2D;
 
 public class TranslationTile2D extends AbstractAffineTile2D< mpicbg.models.TranslationModel2D >

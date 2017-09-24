@@ -3,10 +3,9 @@
  */
 package mpicbg.trakem2.align;
 
-import ini.trakem2.display.Patch;
-
 import java.awt.geom.AffineTransform;
 
+import de.unihalle.informatik.rhizoTrak.display.Patch;
 import mpicbg.models.Affine2D;
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.InterpolatedAffineModel2D;

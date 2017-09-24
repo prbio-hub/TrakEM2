@@ -6,11 +6,6 @@ import ij.process.ByteProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
-import ini.trakem2.Project;
-import ini.trakem2.display.Layer;
-import ini.trakem2.display.Patch;
-import ini.trakem2.utils.Filter;
-import ini.trakem2.utils.Utils;
 
 import java.awt.Color;
 import java.awt.Image;
@@ -21,6 +16,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.display.Layer;
+import de.unihalle.informatik.rhizoTrak.display.Patch;
+import de.unihalle.informatik.rhizoTrak.utils.Filter;
+import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import mpicbg.ij.blockmatching.BlockMatching;
 import mpicbg.models.AbstractModel;
 import mpicbg.models.ErrorStatistic;
