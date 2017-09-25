@@ -23,6 +23,9 @@ import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
+import ini.trakem2.Project;
+import ini.trakem2.display.Layer;
+import ini.trakem2.display.Patch;
 
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
@@ -33,9 +36,6 @@ import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 
-import de.unihalle.informatik.rhizoTrak.Project;
-import de.unihalle.informatik.rhizoTrak.display.Layer;
-import de.unihalle.informatik.rhizoTrak.display.Patch;
 import mpicbg.ij.TransformMeshMapping;
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.CoordinateTransform;

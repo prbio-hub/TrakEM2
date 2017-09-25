@@ -33,10 +33,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import de.unihalle.informatik.rhizoTrak.display.Displayable;
-import de.unihalle.informatik.rhizoTrak.display.Layer;
-import de.unihalle.informatik.rhizoTrak.display.Patch;
 import ij.process.ByteProcessor;
+import ini.trakem2.display.Displayable;
+import ini.trakem2.display.Layer;
+import ini.trakem2.display.Patch;
 import mpicbg.models.Affine2D;
 import mpicbg.models.Model;
 import mpicbg.models.NoninvertibleModelException;

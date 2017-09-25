@@ -20,6 +20,16 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import ij.process.ImageProcessor;
+import ini.trakem2.display.Display;
+import ini.trakem2.display.Layer;
+import ini.trakem2.display.LayerSet;
+import ini.trakem2.display.Patch;
+import ini.trakem2.persistence.Loader;
+import ini.trakem2.utils.Bureaucrat;
+import ini.trakem2.utils.Filter;
+import ini.trakem2.utils.IJError;
+import ini.trakem2.utils.Utils;
+import ini.trakem2.utils.Worker;
 
 import java.awt.Choice;
 import java.awt.Rectangle;
@@ -55,16 +65,6 @@ import mpicbg.trakem2.transform.TranslationModel2D;
 import bunwarpj.Transformation;
 import bunwarpj.bUnwarpJ_;
 import bunwarpj.trakem2.transform.CubicBSplineTransform;
-import de.unihalle.informatik.rhizoTrak.display.Display;
-import de.unihalle.informatik.rhizoTrak.display.Layer;
-import de.unihalle.informatik.rhizoTrak.display.LayerSet;
-import de.unihalle.informatik.rhizoTrak.display.Patch;
-import de.unihalle.informatik.rhizoTrak.persistence.Loader;
-import de.unihalle.informatik.rhizoTrak.utils.Bureaucrat;
-import de.unihalle.informatik.rhizoTrak.utils.Filter;
-import de.unihalle.informatik.rhizoTrak.utils.IJError;
-import de.unihalle.informatik.rhizoTrak.utils.Utils;
-import de.unihalle.informatik.rhizoTrak.utils.Worker;
 
 /**
  * Register a range of layers using linear or non-linear transformations.

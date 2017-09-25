@@ -5,7 +5,7 @@ package mpicbg.trakem2.align;
 
 import java.awt.geom.AffineTransform;
 
-import de.unihalle.informatik.rhizoTrak.display.Patch;
+import ini.trakem2.display.Patch;
 import mpicbg.models.RigidModel2D;
 
 public class RigidTile2D extends AbstractAffineTile2D< mpicbg.models.RigidModel2D >
