@@ -99,12 +99,13 @@ public class Project extends DBObject {
 
 	static {
 		try {
-			//UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			
 			if (IJ.isLinux()) {
 				UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
 				if (null != IJ.getInstance()) javax.swing.SwingUtilities.updateComponentTreeUI(IJ.getInstance());
 				//if ("albert".equals(System.getProperty("user.name"))) UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
 			}
+			else UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
 			Utils.log("Failed to set System Look and Feel");
 		}

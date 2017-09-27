@@ -1,7 +1,9 @@
 package ini.trakem2.display;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.GridLayout;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -787,7 +789,7 @@ class ImageImport extends javax.swing.JPanel
 //		ImagePlus imagePlus = patches.get(0).getImagePlus();
 //		String[] imageNames = imagePlus.getImageStack().getSliceLabels();
 		
-		setLayout(new javax.swing.BoxLayout(this, javax.swing.BoxLayout.LINE_AXIS));
+		setLayout(new BorderLayout());
 		//make listModel and load all images that are already in trackem project
 //		for (String string : imageNames) {
 //			if(string!=null){
@@ -801,12 +803,12 @@ class ImageImport extends javax.swing.JPanel
 		jList1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 		jScrollPane1.setViewportView(jList1);
-
+		
 		add(jScrollPane1);
 
-		jPanel1.setLayout(new javax.swing.BoxLayout(jPanel1, javax.swing.BoxLayout.PAGE_AXIS));
+		jPanel1.setLayout(new GridLayout(3, 1));
 
-		jButton1.setText("Open images");
+		jButton1.setText("Open Images");
 		jButton1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				jButton1ActionPerformed(evt);
@@ -814,7 +816,7 @@ class ImageImport extends javax.swing.JPanel
 		});
 		jPanel1.add(jButton1);
 
-		jButton2.setText("Import images");
+		jButton2.setText("Import Images");
 		jButton2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				jButton2ActionPerformed(evt);
@@ -828,7 +830,7 @@ class ImageImport extends javax.swing.JPanel
 		});
 		jPanel1.add(jButton2);
 		
-		jButton3.setText("Sort by date");
+		jButton3.setText("Sort by Timepoint");
 		jButton3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				sortList(evt);
@@ -836,9 +838,7 @@ class ImageImport extends javax.swing.JPanel
 		});
 		jPanel1.add(jButton3);
 		
-		jPanel1.add(filler1);
-		
-		add(jPanel1);
+		add(jPanel1, BorderLayout.EAST);
 	}
 	
 	private void jButton1ActionPerformed(java.awt.event.ActionEvent evt){

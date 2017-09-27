@@ -1,16 +1,13 @@
 package ini.trakem2.display;
 
 import java.awt.Color;
+import java.awt.GridLayout;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
@@ -21,7 +18,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,24 +29,22 @@ import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JButton;
+import javax.swing.Box;
 import javax.swing.JColorChooser;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-
-import org.python.antlr.ast.Slice.Slice___init___exposer;
 
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootAssociationType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootImageAnnotationType;
@@ -60,20 +54,15 @@ import de.unihalle.informatik.MiToBo_xml.MTBXMLRootReferenceType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentPointType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentStatusType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentType;
-import de.unihalle.informatik.MiToBo_xml.MTBXMLRootImageAnnotationType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootType;
 import ij.ImagePlus;
-import ij.plugin.frame.ThresholdAdjuster;
 import ini.trakem2.Project;
 import ini.trakem2.conflictManagement.ConflictManager;
-import ini.trakem2.display.Connector.ConnectorNode;
 import ini.trakem2.display.Treeline.RadiusNode;
-import ini.trakem2.display.addonGui.SplitDialog;
 import ini.trakem2.persistence.Loader;
 import ini.trakem2.tree.DNDTree;
 import ini.trakem2.tree.ProjectThing;
 import ini.trakem2.tree.ProjectTree;
-import ini.trakem2.utils.Dispatcher;
 import ini.trakem2.utils.Utils;
 
 public class RhizoAddons
@@ -738,7 +727,7 @@ public class RhizoAddons
 		Layer nextLayer = currentLayerSet.next(currentLayer);
 		//copytreelineconnector
 		if (nextLayer == null || nextLayer.getZ()==currentLayer.getZ()) {
-			Utils.showMessage("no more layers as target");
+			Utils.showMessage("Can't copy. This is the last layer.");
 			return;
 		}
 		// get treelines of current layerset
@@ -1125,56 +1114,154 @@ public class RhizoAddons
 		}
 		return null;
 	}
+	
+	/**
+	 * @author Tino
+	 * @param t - a treeline
+	 * @return - The patch t is displayed on
+	 */
+	private static Patch getPatch(Treeline t)
+	{
+		Layer layer = t.getFirstLayer();
+		LayerSet layerSet = layer.getParent();
+		List<Patch> patches = layerSet.getAll(Patch.class);
+		
+		for(Patch patch: patches)
+		{
+			if(patch.getLayer().getZ() == layer.getZ()) return patch;
+		}
+		
+		return null;
+	}
 
 	/**
-	 * TODO
+	 * TODO return/error messages
 	 */
 	public static void writeStatistics()
 	{
+		String[] choices1 = {"{Tab}" , "{;}", "{,}", "Space"};
+		String[] choices1_ = {"\t", ";", ",", " "};
+		String[] choices2 = {"Current layer only", "All layers"};
+		String[] choices3 = {"pixel", "inch", "mm"};
+		
+		JComboBox<String> combo1 = new JComboBox<String>(choices1);
+		JComboBox<String> combo2 = new JComboBox<String>(choices2);
+		JComboBox<String> combo3 = new JComboBox<String>(choices3);
+		
+		JPanel statChoicesPanel = new JPanel();
+		statChoicesPanel.setLayout(new GridLayout(3, 2, 0, 10));
+		statChoicesPanel.add(new JLabel("Separator "));
+		statChoicesPanel.add(combo1);
+		statChoicesPanel.add(new JLabel("Output type "));
+		statChoicesPanel.add(combo2);
+		statChoicesPanel.add(new JLabel("Unit "));
+		statChoicesPanel.add(combo3);
+
+		int result = JOptionPane.showConfirmDialog(null, statChoicesPanel, "Statistics Output Options", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+		String sep = "";
+		String outputType = "";
+		String unit = "";
+		if(result == JOptionPane.OK_OPTION)
+		{
+			sep = choices1_[Arrays.asList(choices1).indexOf(combo1.getSelectedItem())];
+			outputType = (String) combo2.getSelectedItem();
+			unit = (String) combo3.getSelectedItem();
+			
+			if(sep.equals("") || outputType.equals("") || unit.equals("")) return;
+		}
+		else return;
+
 		Display display = Display.getFront();
-		// Layer frontLayer = Display.getFrontLayer();
 		Layer currentLayer = display.getLayer();
 		LayerSet currentLayerSet = currentLayer.getParent();
-		// currentLayerSet.updateLayerTree();
-		// determine next layer
-		
-		
-		ArrayList<Displayable> trees = currentLayerSet.get(Treeline.class);
-		ArrayList<Segment> allSegments = new ArrayList<Segment>();
 
+		Utils.log(currentLayerSet.getAll(Patch.class).size());
+		Utils.log(currentLayerSet.get(Treeline.class).size());
+		Utils.log(currentLayerSet.get(Connector.class).size());
 
-		// for all treelines > calculate things
-		for (Displayable cObj : trees)
+		List<Displayable> trees = null;
+		List<Segment> allSegments = new ArrayList<Segment>();
+		
+
+		if(outputType.equals("Current layer only") || (outputType.equals("All layers") && currentLayerSet.getLayers().size() == 1 && currentLayerSet.get(Connector.class).isEmpty()))
 		{
-			Treeline ctree = (Treeline) cObj;
-			// traveres tree
-			if(null == ctree || null == ctree.getRoot()) continue;
-			
-			Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
-
-			for (Node<Float> node : allNodes)
-			{
-				if (!node.equals(ctree.getRoot()))
+			 trees = filterTreelinesByLayer(currentLayer, currentLayerSet.get(Treeline.class));
+			 
+			 for(Displayable cObj : trees)
 				{
-					Segment currentSegment = new Segment((RadiusNode) node, (RadiusNode) node.getParent());
-					allSegments.add(currentSegment);
+					Treeline ctree = (Treeline) cObj;
+					
+					int segmentID = 1;
+					long rootID = ctree.getId();
+					// traverse tree
+					if(null == ctree || null == ctree.getRoot()) continue;
+					
+					Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
+
+					for(Node<Float> node : allNodes)
+					{
+						if (!node.equals(ctree.getRoot()))
+						{
+							Segment currentSegment = new Segment(getPatch(ctree), rootID, segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit);
+							segmentID++;
+							
+							allSegments.add(currentSegment);
+						}
+					}
 				}
-			}
 		}
+		else if(outputType.equals("All layers"))
+		{
+			 trees = currentLayerSet.get(Treeline.class);
+			 
+			 List<Displayable> connectors = currentLayerSet.get(Connector.class);
+			 
+			 for(Displayable cObj: connectors)
+			 {
+				 Connector c = (Connector) cObj;
+				 
+				 List<Treeline> treelines = c.getConTreelines();
+				 long rootID = treelines.get(0).getId();
+
+				 for(Treeline ctree: treelines)
+				 {
+					 if(null == ctree || null == ctree.getRoot()) continue;
+					 
+					 int segmentID = 1;
+					 Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
+
+					 for(Node<Float> node : allNodes)
+					 {
+						 if (!node.equals(ctree.getRoot()))
+						 {
+							 Segment currentSegment = new Segment(getPatch(ctree), rootID, segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit);
+							 segmentID++;
+											
+							 allSegments.add(currentSegment);
+						 }
+					 }
+				 }
+			 }
+		}
+		else return;
+
+		
 		// write things to a csv
 		try
 		{
-			String sep = "\t";
 			File saveFile = Utils.chooseFile(System.getProperty("user.home"), null, ".csv");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
-			bw.write("status"+sep+"length"+sep+"avgRadius"+sep+"surfaceArea"+sep+"volume"+sep+"children\n");
+			
+			bw.write("experiment"+sep+"tube"+sep+"timepoint"+sep+"rootID"+sep+"segmentID"+sep+"status"+sep+"length"+sep+"avgRadius"+sep+"surfaceArea"+sep+"volume"+sep+"children\n");
 			for (Segment segment : allSegments)
 			{
 				bw.write(segment.getStatistics(sep));
 				bw.newLine();
 			}
 			bw.close();
-		} catch (IOException e)
+		} 
+		catch (IOException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1315,6 +1402,25 @@ public class RhizoAddons
 	 */
 	public static void test() 
 	{
+		// aeekz:
+	
+		// get layers
+		Display display = Display.getFront();	
+		LayerSet layerSet = display.getLayerSet();  
+		ArrayList<Layer> layers = layerSet.getLayers();
+		
+		// get image names
+		List<Patch> patches = layerSet.getAll(Patch.class);
+		
+		for(Patch p: patches)
+		{
+			ImagePlus image = p.getImagePlus();
+			Utils.log(image.getTitle());
+			Utils.log("1 pixel = " + image.getCalibration().pixelWidth + image.getCalibration().getUnits());
+		}
+		
+		// actyc:
+		
 		//SplitDialog splitDialog = new SplitDialog();
 		// RhizoAddons.test = !RhizoAddons.test;
 		//Utils.log("Aktueller Zustand: " + RhizoAddons.test);
@@ -1924,6 +2030,7 @@ public class RhizoAddons
 	
 	/**
 	 * Returns the list of all treelines under the origin and under the targets. Used for reading MTBXML formats
+	 * TODO deprecated due to changes to the connector class
 	 * @param c - Connector
 	 * @return List of treelines
 	 * @author Tino
@@ -1952,8 +2059,8 @@ public class RhizoAddons
 
     /**
      * Returns the number of treelines in a layer
-     * @param l - Current layer
-     * @param treelines - List of all treelines 
+     * @param l - Layer
+     * @param treelines - List of treelines 
      * @return Number of treelines in the given layer
      * @author Tino
      */
@@ -1967,6 +2074,28 @@ public class RhizoAddons
 			
 			if(null == currentTreeline.getFirstLayer()) continue;
 			if(currentTreeline.getFirstLayer().equals(l)) res++;
+		}
+    	
+    	return res;
+    }
+    
+    /**
+     * Filters a list of treelines by the given layer
+     * @param l - Layer
+     * @param treelines - List of treelines
+     * @return Treelines in the given layer
+     * @author Tino
+     */
+    private static List<Displayable> filterTreelinesByLayer(Layer l, List<Displayable> treelines)
+    {
+    	 List<Displayable> res = new ArrayList<Displayable>();
+    	
+    	for(int j = 0; j < treelines.size(); j++)
+		{
+			Treeline currentTreeline = (Treeline) treelines.get(j);
+			
+			if(null == currentTreeline.getFirstLayer()) continue;
+			if(currentTreeline.getFirstLayer().equals(l)) res.add(currentTreeline);
 		}
     	
     	return res;
@@ -1987,8 +2116,8 @@ public class RhizoAddons
 
 
 /**
- * Segment class for writing statistics. Not used yet.
- * @author Axel
+ * Segment class for writing statistics.
+ * @author Axel, Tino
  *
  */
 class Segment
@@ -1999,18 +2128,25 @@ class Segment
 	Layer layer;
 	
 	// infos
-	float length;
-	float avgRadius;
-	float surfaceArea;
-	float volume;
-	int numberOfChildren;
-	int state;
-	float minRadius = 1;
-	float r1 = minRadius;
-	float r2 = minRadius;
+	private String imageName, experiment, tube, timepoint;
+	private double length, avgRadius, surfaceArea, volume;
+	private int segmentID, numberOfChildren, state;
 
-	public Segment(RadiusNode child, RadiusNode parent)
+	private long treeID;
+	
+	private double scale;
+	private final double inchToMM = 25.4;
+	
+	private final double minRadius = 1;
+	private double r1 = minRadius;
+	private double r2 = minRadius;
+
+	public Segment(Patch p, long treeID, int segmentID, RadiusNode child, RadiusNode parent, String unit)
 	{
+		if(unit.equals("inch")) this.scale = p.getImagePlus().getCalibration().pixelWidth;
+		else if(unit.equals("mm")) this.scale = p.getImagePlus().getCalibration().pixelWidth * inchToMM;
+		else this.scale = 1;
+		
 		this.child = child;
 		this.state = child.getConfidence();
 		this.parent = parent;
@@ -2019,58 +2155,82 @@ class Segment
 		if(parent.getData() > 0) this.r1 = parent.getData();
 		if(child.getData() > 0) this.r2 = child.getData();
 		
-		this.length = (float) Math.sqrt(Math.pow(child.getX() - parent.getX(), 2) + Math.pow(child.getX() - parent.getX(), 2));
+		if(null != p) this.imageName = p.getImagePlus().getTitle();
+		else this.imageName = "";
+		
+		parseImageName(imageName);
+		
+		this.treeID = treeID;
+		this.segmentID = segmentID;
+		this.length = Math.sqrt(Math.pow(child.getX() - parent.getX(), 2) + Math.pow(child.getY() - parent.getY(), 2));
 		this.avgRadius = (r1 + r2) / 2;
-		float s = (float) Math.sqrt(Math.pow((r1 - r2), 2) + Math.pow(this.length, 2));
-		this.surfaceArea = (float) (Math.PI * Math.pow(r1, 2) + Math.PI * Math.pow(r2, 2) + Math.PI * s * (r1 + r2));
-		this.volume = (float) ((Math.PI * length * (Math.pow(r1, 2) + Math.pow(r1, 2) + r1 * r2)) / 3);
+		double s = Math.sqrt(Math.pow((r1 - r2), 2) + Math.pow(this.length, 2));
+		this.surfaceArea = (Math.PI * Math.pow(r1, 2) + Math.PI * Math.pow(r2, 2) + Math.PI * s * (r1 + r2));
+		this.volume = ((Math.PI * length * (Math.pow(r1, 2) + Math.pow(r1, 2) + r1 * r2)) / 3);
 		this.numberOfChildren = child.getChildrenCount();
 	}
-
-	public RadiusNode getChild()
+	
+	private void parseImageName(String name)
 	{
-		return child;
+		if(name.equals(""))
+		{
+			experiment = "NA";
+			tube = "NA";
+			timepoint ="NA";
+			return;
+		}
+		
+		String[] split = name.split("_");
+		experiment = split[0];
+		tube = split[1];
+		timepoint = split[5];
 	}
 
-	public RadiusNode getParent()
-	{
-		return parent;
-	}
-
-	public float getLength()
-	{
-		return length;
-	}
-
-	public float getAvgRadius()
-	{
-		return avgRadius;
-	}
-
-	public float getSurfaceArea()
-	{
-		return surfaceArea;
-	}
-
-	public float getVolume()
-	{
-		return volume;
-	}
-
-	public int getNumberOfChildren()
-	{
-		return numberOfChildren;
-	}
-
-	public int getState()
-	{
-		return state;
-	}
+//	public RadiusNode getChild()
+//	{
+//		return child;
+//	}
+//
+//	public RadiusNode getParent()
+//	{
+//		return parent;
+//	}
+//
+//	public float getLength()
+//	{
+//		return length;
+//	}
+//
+//	public float getAvgRadius()
+//	{
+//		return avgRadius;
+//	}
+//
+//	public float getSurfaceArea()
+//	{
+//		return surfaceArea;
+//	}
+//
+//	public float getVolume()
+//	{
+//		return volume;
+//	}
+//
+//	public int getNumberOfChildren()
+//	{
+//		return numberOfChildren;
+//	}
+//
+//	public int getState()
+//	{
+//		return state;
+//	}
 
 	public String getStatistics(String sep)
 	{
-		String result = Integer.toString(state) + sep + Float.toString(length) + sep + Float.toString(avgRadius) + sep + Float.toString(surfaceArea) +
-				sep + Float.toString(volume) + sep + Integer.toString(numberOfChildren);
+		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) + sep + Integer.toString(segmentID) + sep + Integer.toString((int) layer.getZ()) + sep + Integer.toString(state) +
+				sep + Double.toString(length * scale) + sep + Double.toString(avgRadius * scale) + sep + Double.toString(surfaceArea * scale) +
+				sep + Double.toString(volume * scale) + sep + Integer.toString(numberOfChildren);
 
 		return result;
 	}

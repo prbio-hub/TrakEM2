@@ -125,7 +125,7 @@ public class Treeline extends Tree<Float> {
 	protected boolean requireAltDownToEditRadius() {
 		return true;
 	}
-
+	
 	@Override
 	public void mouseDragged(final MouseEvent me, final Layer la, final int x_p, final int y_p, final int x_d, final int y_d, final int x_d_old, final int y_d_old) {
 		if (null == getActive()) return;

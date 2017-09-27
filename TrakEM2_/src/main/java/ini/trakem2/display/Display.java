@@ -7112,12 +7112,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	visbilityButton.addActionListener(this);
     	panel.add(visbilityButton);
     	
-    	JButton devTest = new JButton("Test");
-    	devTest.setToolTipText("");
-    	devTest.setActionCommand("testtest");
-    	devTest.addActionListener(this);
-    	//panel.add(devTest);
-    	
     	JButton readXMLButton = new JButton("Read MTBXML");
     	readXMLButton.setToolTipText("Reads a MTBXML file that corresponds to the images already loaded.");
     	readXMLButton.setActionCommand("readXML");
@@ -7144,6 +7138,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	statButton.addActionListener(this);
     	statButton.setEnabled(true);
     	panel.add(statButton);
+    	
+    	JButton devTest = new JButton("Test");
+    	devTest.setToolTipText("");
+    	devTest.setActionCommand("testtest");
+    	devTest.addActionListener(this);
+    	panel.add(devTest); 
     	
     	return panel;
     }

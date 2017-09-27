@@ -247,7 +247,7 @@ public class ControlWindow {
 					});
 					hooked = true;
 				}
-				frame = createJFrame("TrakEM2");
+				frame = createJFrame("rhizoTrak");
 				frame.setBackground(Color.white);
 				frame.getContentPane().setBackground(Color.white);
 				frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
