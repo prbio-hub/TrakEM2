@@ -120,6 +120,8 @@ public class Utils implements ij.plugin.PlugIn {
 
 	static public String version = "1.0a 2012-07-04";
 
+	static public boolean rhizoTrakDebug = false; // aeekz
+	
 	static public boolean debug = false;
 	static public boolean debug_mouse = false;
 	static public boolean debug_sql = false;
@@ -305,9 +307,9 @@ public class Utils implements ij.plugin.PlugIn {
 	/** Intended for the user to see. */
 	static public final void log(final String msg) {
 		if (ControlWindow.isGUIEnabled() && null != logger) {
-			logger.log(msg);
+			if(rhizoTrakDebug) logger.log(msg); // aeekz
 		} else {
-			System.out.println(msg);
+			if(rhizoTrakDebug) System.out.println(msg); // aeekz
 		}
 	}
 
@@ -333,7 +335,7 @@ public class Utils implements ij.plugin.PlugIn {
 
 	/** Intended for developers: prints to terminal. */
 	static public final void log2(final String msg) {
-		System.out.println(msg);
+		if(rhizoTrakDebug) System.out.println(msg); // aeekz
 	}
 
 	/** Pretty-print the object, for example arrays as [0, 1, 2]. */

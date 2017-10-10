@@ -7111,6 +7111,13 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	visbilityButton.setActionCommand("colVis");
     	visbilityButton.addActionListener(this);
     	panel.add(visbilityButton);
+
+    	JButton conflicManagerButton = new JButton("Conflict Manager");
+    	conflicManagerButton.setToolTipText("Manage conflicts related to connectors.");
+    	conflicManagerButton.setActionCommand("conflictPanel");
+    	conflicManagerButton.addActionListener(this);
+    	conflicManagerButton.setEnabled(false);
+    	panel.add(conflicManagerButton);
     	
     	JButton readXMLButton = new JButton("Read MTBXML");
     	readXMLButton.setToolTipText("Reads a MTBXML file that corresponds to the images already loaded.");
@@ -7122,18 +7129,13 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	JButton writeXMLButton = new JButton("Write MTBXML");
     	writeXMLButton.setToolTipText("Writes the current TrakEM project to MTBXML format.");
     	writeXMLButton.setActionCommand("writeXML");
+    	writeXMLButton.setEnabled(true);
     	writeXMLButton.addActionListener(this);
     	panel.add(writeXMLButton);
     	
-    	JButton conflicManagerButton = new JButton("Conflict Manager");
-    	conflicManagerButton.setToolTipText("Manage conflicts relating to connectors.");
-    	conflicManagerButton.setActionCommand("conflictPanel");
-    	conflicManagerButton.addActionListener(this);
-    	conflicManagerButton.setEnabled(true);
-    	panel.add(conflicManagerButton);
     	
     	JButton statButton = new JButton("Write Statistics");
-    	statButton.setToolTipText(""); // TODO
+    	statButton.setToolTipText("");
     	statButton.setActionCommand("stat");
     	statButton.addActionListener(this);
     	statButton.setEnabled(true);
@@ -7143,7 +7145,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	devTest.setToolTipText("");
     	devTest.setActionCommand("testtest");
     	devTest.addActionListener(this);
-    	panel.add(devTest); 
+//    	panel.add(devTest); 
     	
     	return panel;
     }

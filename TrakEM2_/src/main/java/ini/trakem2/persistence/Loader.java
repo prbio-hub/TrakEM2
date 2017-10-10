@@ -3856,6 +3856,9 @@ while (it.hasNext()) {
 
 	/** Exports the project and its images (optional); if export_images is true, it will be asked for confirmation anyway -beware: for FSLoader, images are not exported since it doesn't own them; only their path.*/
 	protected String export(final Project project, final File fxml, final XMLOptions options) {
+		
+		RhizoAddons.addonSaver(fxml);
+		
 		String path = null;
 		if (null == project || null == fxml) return null;
 

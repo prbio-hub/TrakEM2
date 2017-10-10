@@ -559,7 +559,7 @@ public class RhizoAddons
 		// get treelines of current layerset
 		ArrayList<Displayable> trees = currentLayerSet.get(Treeline.class);
 		for (Displayable cObj : trees) {
-			Utils.log("current Treeline: " + cObj.getUniqueIdentifier());
+//			Utils.log("current Treeline: " + cObj.getUniqueIdentifier());
 			Treeline ctree = (Treeline) cObj;
 			boolean repaint = false;
 			if(ctree.getRoot() == null || ctree.getRoot().getSubtreeNodes() == null) continue; 
@@ -581,7 +581,7 @@ public class RhizoAddons
 				if (cnode.getColor() != newColor) {
 					cnode.setColor(newColor);
 					repaint = true;
-					Utils.log("new color on a node");
+//					Utils.log("new color on a node");
 				}
 			}
 			if (repaint) {
@@ -618,7 +618,7 @@ public class RhizoAddons
 				if (cnode.getColor() != newColor) {
 					cnode.setColor(newColor);
 					repaint = true;
-					Utils.log("new color on a node");
+//					Utils.log("new color on a node");
 				}
 			}
 			if (repaint) {
@@ -720,8 +720,8 @@ public class RhizoAddons
 		Layer currentLayer = display.getLayer();
 		LayerSet currentLayerSet = currentLayer.getParent();
 		
-		Utils.log(currentLayer);
-		Utils.log(currentLayerSet.next(currentLayer));
+//		Utils.log(currentLayer);
+//		Utils.log(currentLayerSet.next(currentLayer));
 		
 		// determine next layer
 		Layer nextLayer = currentLayerSet.next(currentLayer);
@@ -1176,9 +1176,9 @@ public class RhizoAddons
 		Layer currentLayer = display.getLayer();
 		LayerSet currentLayerSet = currentLayer.getParent();
 
-		Utils.log(currentLayerSet.getAll(Patch.class).size());
-		Utils.log(currentLayerSet.get(Treeline.class).size());
-		Utils.log(currentLayerSet.get(Connector.class).size());
+//		Utils.log(currentLayerSet.getAll(Patch.class).size());
+//		Utils.log(currentLayerSet.get(Treeline.class).size());
+//		Utils.log(currentLayerSet.get(Connector.class).size());
 
 		List<Displayable> trees = null;
 		List<Segment> allSegments = new ArrayList<Segment>();
@@ -1253,7 +1253,7 @@ public class RhizoAddons
 			File saveFile = Utils.chooseFile(System.getProperty("user.home"), null, ".csv");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
 			
-			bw.write("experiment"+sep+"tube"+sep+"timepoint"+sep+"rootID"+sep+"segmentID"+sep+"status"+sep+"length"+sep+"avgRadius"+sep+"surfaceArea"+sep+"volume"+sep+"children\n");
+			bw.write("experiment"+sep+"tube"+sep+"timepoint"+sep+"rootID"+sep+"segmentID"+sep+"layer"+sep+"status"+sep+"length"+sep+"avgRadius"+sep+"surfaceArea"+sep+"volume"+sep+"children\n");
 			for (Segment segment : allSegments)
 			{
 				bw.write(segment.getStatistics(sep));
@@ -2152,8 +2152,8 @@ class Segment
 		this.parent = parent;
 		this.layer = child.getLayer();
 		
-		if(parent.getData() > 0) this.r1 = parent.getData();
-		if(child.getData() > 0) this.r2 = child.getData();
+		if(parent.getData() > 0) this.r1 = parent.getData() * scale;
+		if(child.getData() > 0) this.r2 = child.getData() * scale;
 		
 		if(null != p) this.imageName = p.getImagePlus().getTitle();
 		else this.imageName = "";
@@ -2162,7 +2162,7 @@ class Segment
 		
 		this.treeID = treeID;
 		this.segmentID = segmentID;
-		this.length = Math.sqrt(Math.pow(child.getX() - parent.getX(), 2) + Math.pow(child.getY() - parent.getY(), 2));
+		this.length = Math.sqrt(Math.pow(child.getX() - parent.getX(), 2) + Math.pow(child.getY() - parent.getY(), 2)) * scale;
 		this.avgRadius = (r1 + r2) / 2;
 		double s = Math.sqrt(Math.pow((r1 - r2), 2) + Math.pow(this.length, 2));
 		this.surfaceArea = (Math.PI * Math.pow(r1, 2) + Math.PI * Math.pow(r2, 2) + Math.PI * s * (r1 + r2));
@@ -2229,8 +2229,8 @@ class Segment
 	public String getStatistics(String sep)
 	{
 		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) + sep + Integer.toString(segmentID) + sep + Integer.toString((int) layer.getZ()) + sep + Integer.toString(state) +
-				sep + Double.toString(length * scale) + sep + Double.toString(avgRadius * scale) + sep + Double.toString(surfaceArea * scale) +
-				sep + Double.toString(volume * scale) + sep + Integer.toString(numberOfChildren);
+				sep + Double.toString(length) + sep + Double.toString(avgRadius) + sep + Double.toString(surfaceArea) +
+				sep + Double.toString(volume) + sep + Integer.toString(numberOfChildren);
 
 		return result;
 	}
