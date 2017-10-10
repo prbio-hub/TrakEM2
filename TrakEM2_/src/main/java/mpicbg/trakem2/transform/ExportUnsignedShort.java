@@ -5,9 +5,6 @@ import ij.ImageStack;
 import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
-import ini.trakem2.display.Displayable;
-import ini.trakem2.display.Layer;
-import ini.trakem2.display.Patch;
 
 import java.awt.Rectangle;
 import java.util.ArrayList;
@@ -16,6 +13,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import de.unihalle.informatik.rhizoTrak.display.Displayable;
+import de.unihalle.informatik.rhizoTrak.display.Layer;
+import de.unihalle.informatik.rhizoTrak.display.Patch;
 import mpicbg.models.CoordinateTransform;
 import mpicbg.models.CoordinateTransformList;
 import mpicbg.models.CoordinateTransformMesh;
