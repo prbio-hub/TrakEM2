@@ -109,7 +109,7 @@ public class Project extends DBObject {
 			else UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
 			Utils.log("Failed to set System Look and Feel");
-		}
+		} 
 	}
 
 
@@ -652,8 +652,9 @@ public class Project extends DBObject {
 		
 		//actyc: ready to load
 		try {
+			Utils.log(loader.getProjectXMLPath()); 
 			Utils.log2("start addon loader ...");
-			RhizoAddons.addonLoader(new File(path)).join();
+			RhizoAddons.addonLoader(new File(loader.getProjectXMLPath())).join();
 			Utils.log2("started");
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
