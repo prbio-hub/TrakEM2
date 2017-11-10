@@ -653,7 +653,7 @@ public class Project extends DBObject {
 		//actyc: ready to load
 		try {
 			Utils.log2("start addon loader ...");
-			RhizoAddons.addonLoader(new File(path)).join();
+			RhizoAddons.addonLoader(new File(loader.getProjectXMLPath())).join();
 			Utils.log2("started");
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block

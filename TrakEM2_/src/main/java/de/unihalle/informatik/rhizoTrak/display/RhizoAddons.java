@@ -18,6 +18,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,6 +60,8 @@ import de.unihalle.informatik.MiToBo_xml.MTBXMLRootType;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
+import de.unihalle.informatik.rhizoTrak.display.addonGui.ImageImport;
+import de.unihalle.informatik.rhizoTrak.display.addonGui.VisibilityPanel;
 import de.unihalle.informatik.rhizoTrak.persistence.Loader;
 import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
@@ -70,17 +74,20 @@ public class RhizoAddons
 	static boolean chooseReady = false;
 	
 	public static boolean splitDialog = false;
+	
+	public static File imageDir = null;
 
 	static boolean test = true;
-	static boolean[] treeLineClickable = { true, true, true, true, true, true, true, true, true, true, true };
+	public static boolean[] treeLineClickable = { true, true, true, true, true, true, true, true, true, true, true };
 	static int[] treelineSlider ={255,255,255,255,255,255,255,255,255,255,255};
+	static String relativPatchDir="/_images";
 	static boolean ini = false;
 	
 	public static Node lastEditedOrActiveNode = null;
 	
 	private static JFrame colorFrame, imageLoaderFrame;
 	
-	static Hashtable<Byte, Color> confidencColors = new Hashtable<Byte, Color>();
+	public static Hashtable<Byte, Color> confidencColors = new Hashtable<Byte, Color>();
 	static AddonGui guiAddons;
 	
 	/* initialization and termination stuff */
@@ -117,10 +124,11 @@ public class RhizoAddons
 			{
 				setPriority(Thread.NORM_PRIORITY);
 			}
-
 			@Override
 			public void run()
 			{
+				//set imgDir
+				imageDir = file.getParentFile();
 				// load connector data
 				Utils.log2("loading user settings ...");
 				loadUserSettings();
@@ -699,7 +707,8 @@ public class RhizoAddons
 	{
 		colorFrame = new JFrame("Color & Visibility");
 		colorFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		JPanel temp = guiAddons.visibilityPanel();
+		JPanel temp = new VisibilityPanel();
+		//JPanel temp = guiAddons.visibilityPanel();
 		colorFrame.add(temp);
 		colorFrame.setSize(320, 450);
 //		colorFrame.pack();
@@ -719,6 +728,8 @@ public class RhizoAddons
 		// Layer frontLayer = Display.getFrontLayer();
 		Layer currentLayer = display.getLayer();
 		LayerSet currentLayerSet = currentLayer.getParent();
+		
+		
 		
 //		Utils.log(currentLayer);
 //		Utils.log(currentLayerSet.next(currentLayer));
@@ -1087,7 +1098,7 @@ public class RhizoAddons
 	{
 		imageLoaderFrame = new JFrame("Image Loader");
 		imageLoaderFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		JPanel temp = guiAddons.imageImport();
+		JPanel temp = new ImageImport();
 		imageLoaderFrame.add(temp);
 		imageLoaderFrame.pack();
 		imageLoaderFrame.setVisible(true);
@@ -1277,29 +1288,6 @@ public class RhizoAddons
 	{
 		if (files.length > 0)
 		{
-//			LayerSet parent = Display.getFrontLayer().getParent();
-//			int numberOfLayers = parent.getLayers().size();
-//			Utils.log("number of layers: " + numberOfLayers);
-//			Layer currentLastLayer = parent.getLayers().get(numberOfLayers - 1);
-//			Utils.log("current last: " + currentLastLayer);
-//			int lastZ = (int) currentLastLayer.getZ();
-//
-//			Project project = parent.getProject();
-//			Loader loader = project.getLoader();
-//
-//			for (int e = 1; e < files.length + 1; e++)
-//			{
-//				Layer layer = new Layer(project, lastZ + e, 1, parent);
-//				parent.add(layer);
-//				project.getLayerTree().addLayer(parent, layer);
-//				parent.recreateBuckets(layer, true);
-//				loader.importImage(layer, 0, 0, files[e - 1].getPath(), true);
-//				// layer.getDisplayables(Patch.class).get(0).setLocked(true);
-//			}
-//
-//			// TODO: remove all empty layers
-//			
-			//next try
 			LayerSet parent = Display.getFrontLayer().getParent();
 			ArrayList<Layer> layerlist = parent.getLayers();
 			
@@ -1371,6 +1359,21 @@ public class RhizoAddons
 
 		}
 	}
+	
+	/**
+	 * Adds images from the load images dialogue and creates new layers
+	 * @param files - ArrayList of image files
+	 * @author Axel
+	 */
+	public static void addLayerAndImage(ArrayList<File> files)
+	{
+		int size = files.size();
+		File[] fileArray = new File[size];
+		for(int i=0;i<size;i++){
+			fileArray[i]=files.get(i);
+		}
+		addLayerAndImage(fileArray);
+	}
 
 	/**
 	 * Converts connector coordinates to treeline coordinates and vice versa
@@ -1393,6 +1396,52 @@ public class RhizoAddons
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			result = null;
+		}
+		return result;
+	}
+	
+	/**
+	 * gives relative patchdir
+	 * @author actyc
+	 * @return String representing the relative patches directory
+	 */
+	public static String convertToRelativPath(String currentPathString){
+		if(currentPathString.contains(File.separator) && !currentPathString.contains(".")){
+			Path currentPath = Paths.get(currentPathString);
+			Path base = Paths.get(imageDir.getAbsolutePath());
+			Path relativPath = base.relativize(currentPath);
+			//Utils.log("convert path from: "+currentPathString+" to: "+relativPath.toString());
+			return relativPath.toString();
+		}
+		return currentPathString;
+
+	}
+	
+	//check if path is equal on level up if yes return path else return empty String
+	public static String imageParentPath(){
+		String result="";
+		boolean equal=true;
+		//get all patches
+		LayerSet layerSet = Display.getFront().getLayerSet();
+		List<Patch> patches = layerSet.getAll(Patch.class);
+		//equal path
+		Path currentEqual=null;
+		
+		for (Patch patch : patches) {
+			Path currentPath = Paths.get(patch.getImageFilePath());
+			currentPath = currentPath.getParent();
+			
+			if(currentEqual==null){
+				currentEqual=currentPath;
+			}
+			else {
+				if(!currentEqual.equals(currentPath)){
+					equal=false;
+				}
+			}
+		}
+		if(equal && currentEqual!=null){
+			result=currentEqual.toString();
 		}
 		return result;
 	}
@@ -2110,6 +2159,20 @@ public class RhizoAddons
     {
     	return imageLoaderFrame;
     }
+
+	/**
+	 * @return the relativPatchDir
+	 */
+	public static String getRelativPatchDir() {
+		return relativPatchDir;
+	}
+
+	/**
+	 * @param relativPatchDir the relativPatchDir to set
+	 */
+	public static void setRelativPatchDir(String relativPatchDir) {
+		RhizoAddons.relativPatchDir = relativPatchDir;
+	}
 }
 
 

@@ -836,6 +836,8 @@ public final class Patch extends Displayable implements ImageData {
 		}
 		sb_body.append(indent).append("<t2_patch\n");
 		String rel_path = null;
+		
+		
 		if (null != path && path.equals(path2)) { // this happens when a DB project is exported. It may be a different path when it's a FS loader
 			//Utils.log2("p id=" + id + "  path==path2");
 			rel_path = path2;
@@ -860,9 +862,12 @@ public final class Patch extends Displayable implements ImageData {
 				rel_path = title; // at least some clue for recovery
 			} else {
 				rel_path = path2;
+				//actyc: convert path2 to relativ path; it appears the path is not relativ if the image is in another directory than the xml
+				rel_path = RhizoAddons.convertToRelativPath(path2);
 			}
 		}
 
+		
 		//Utils.log("Patch path is: " + rel_path);
 
 		super.exportXML(sb_body, in, options);
@@ -873,6 +878,7 @@ public final class Patch extends Displayable implements ImageData {
 			final ImagePlus imp = project.getLoader().fetchImagePlus(this);
 			if (null != imp) type = imp.getType();
 		}
+		
 		sb_body.append(in).append("type=\"").append(type /*null == any ? ImagePlus.GRAY8 : type*/).append("\"\n")
 		       .append(in).append("file_path=\"").append(rel_path).append("\"\n")
 		       .append(in).append("style=\"fill-opacity:").append(alpha).append(";stroke:#").append(RGB[0]).append(RGB[1]).append(RGB[2]).append(";\"\n")

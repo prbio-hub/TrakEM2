@@ -371,6 +371,9 @@ public class ConflictManager {
 	
 	public static boolean currentConflictIsTreelineConflict()
 	{
+		if(currentSolvingConflict==null){
+			return false;
+		}
 		if(currentSolvingConflict.getClass().equals(TreelineConflict.class))
 		{
 			return true;
