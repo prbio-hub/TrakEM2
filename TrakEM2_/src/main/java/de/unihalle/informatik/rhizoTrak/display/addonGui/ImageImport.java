@@ -13,7 +13,10 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.DefaultListModel;
 import javax.swing.DropMode;
@@ -47,6 +50,10 @@ public class ImageImport extends JPanel {
 	private javax.swing.JScrollPane jScrollPane1;
 	private javax.swing.DefaultListModel<String> listModel;
 	File[] files;
+	
+	//image filter ini: constant_part > constant across all images; sort_part > part that is used to reconstruct the timeline
+	private String filterReg_constant_part = "_(T|t)\\d*";
+	private String filterReg_sort_part = "_\\d{3}";
 
 	public ImageImport() 
 	{
@@ -70,6 +77,7 @@ public class ImageImport extends JPanel {
 		imgDir = new javax.swing.JLabel();
 		filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0),
 				new java.awt.Dimension(0, 32767));
+		
 		
 //		//get current loaded images
 //		LayerSet layerSet	=	Display.getFront().getLayerSet();
@@ -259,6 +267,7 @@ public class ImageImport extends JPanel {
 	
 	private void autoImport()
 	{
+		Utils.log2("Start auto import:");
 		File imageDir = RhizoAddons.imageDir;
 		if(imageDir==null)
 		{
@@ -278,7 +287,7 @@ public class ImageImport extends JPanel {
 				  if (pathname.isDirectory()) {
 				    return false;
 
-				  } else if ((filename.endsWith("jpg") || filename.endsWith("jpeg") || filename.endsWith("png") || filename.endsWith("gif") || filename.endsWith("tif"))) {
+				  } else if ((filename.endsWith("jpg") || filename.endsWith("jpeg") || filename.endsWith("png") || filename.endsWith("gif") || filename.endsWith("tif") || filename.endsWith("tiff"))) {
 				    return true;
 				  } else {
 				    return false;
@@ -293,6 +302,7 @@ public class ImageImport extends JPanel {
 			return;
 		}
 		
+		//if there is no patch already simply import
 		if(patches.isEmpty()){
 			RhizoAddons.addLayerAndImage(files);
 			return;
@@ -311,6 +321,23 @@ public class ImageImport extends JPanel {
 			}
 		}
 		
+		//filter files
+		//get the tube number
+		String template=patches.get(0).getImagePlus().getTitle();
+		Matcher matcher = Pattern.compile(filterReg_constant_part).matcher(template);
+		matcher.find();
+		String currentTubeNumber = matcher.group();
+		Utils.log2("found tube number was:"+ currentTubeNumber);
+		//filter for the found tube
+		Iterator<File> importIt = toImport.iterator();
+		while(importIt.hasNext()){
+			File currentFile = importIt.next();
+			if(!currentFile.getName().contains(currentTubeNumber)){
+				importIt.remove();
+			}
+		}
+		
+		
         File[] importArray = new File[toImport.size()];
         toImport.toArray(importArray);
         this.files=importArray;
@@ -320,7 +347,6 @@ public class ImageImport extends JPanel {
 		//RhizoAddons.addLayerAndImage(toImport);
 	}
 }
-
 
 
 
