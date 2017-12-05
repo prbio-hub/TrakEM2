@@ -35,8 +35,9 @@ import de.unihalle.informatik.rhizoTrak.utils.Utils;
 /** Can only have one parent, so there aren't cyclic graphs. */
 public abstract class Node<T> implements Taggable {
 	/** Maximum possible confidence in an edge (ranges from 0 to 5, inclusive).*/
-	//actyc:changed maximum to 10
-	static public final byte MAX_EDGE_CONFIDENCE = 10;
+	// actyc: changed maximum to 10
+	// aeekz: is changed when a status file exists
+	static public byte MAX_EDGE_CONFIDENCE = RhizoAddons.getStatusListSize();
 	
 	//actyc: added a indicator showing whether the node is highlighted
 	private boolean high = false;
@@ -350,7 +351,13 @@ public abstract class Node<T> implements Taggable {
 			}
 			if (null != parent && active && with_confidence_boxes && (active_layer == this.la || active_layer == parent.la || (thisZ < actZ && actZ < parent.la.getZ()))) {
 				// Draw confidence half-way through the edge
-				final String s = Integer.toString(confidence);
+				
+				// aeekz
+				int i = (int) confidence;
+				String s = "";
+				if(RhizoAddons.statusFileExists) s = RhizoAddons.statusListAbbr.get(i);
+				else s = Integer.toString(i);
+				
 				final Dimension dim = Utils.getDimensions(s, g.getFont());
 				g.setColor(Color.white);
 				final int xc = (int)(parent_x + (x - parent_x)/2),

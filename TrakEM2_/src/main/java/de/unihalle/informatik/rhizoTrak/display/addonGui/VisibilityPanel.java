@@ -2,21 +2,30 @@ package de.unihalle.informatik.rhizoTrak.display.addonGui;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.util.Hashtable;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
+import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 public class VisibilityPanel extends JPanel {
 
@@ -95,6 +104,7 @@ public class VisibilityPanel extends JPanel {
 		jPanel12 = new javax.swing.JPanel();
 		jLabel12 = new javax.swing.JLabel();
 		jButton12 = new javax.swing.JButton();
+		
 
 		setMinimumSize(new java.awt.Dimension(300, 320));
 		setName("filter panel"); // NOI18N
@@ -121,367 +131,421 @@ public class VisibilityPanel extends JPanel {
 
 		add(jPanelNames);
 
-		jPanel1.setLayout(new javax.swing.BoxLayout(jPanel1, javax.swing.BoxLayout.LINE_AXIS));
-
-		jLabel1.setText("10");
-		jPanel1.add(jLabel1);
-
-		jSlider1.setName("1");
-		jSlider1.setMinimum(0);
-		jSlider1.setMaximum(255);
-		jSlider1.setValue(255);
-		jSlider1.addChangeListener(sliderAction);
-		jPanel1.add(jSlider1);
-
-		jCheckBox1.setSelected(checkBoxArray[10]);
-		jCheckBox1.setActionCommand("10");
-		jCheckBox1.addActionListener(clickablityAction);
-		jPanel1.add(jCheckBox1);
-
-		jButton1.setActionCommand("10");
-		jButton1.addActionListener(colorChangeButton);
-		jButton1.setMaximumSize(new java.awt.Dimension(33, 15));
-		jButton1.setMinimumSize(new java.awt.Dimension(33, 15));
-		jButton1.setPreferredSize(new java.awt.Dimension(33, 12));
-		jButton1.setContentAreaFilled(false);
-		jButton1.setOpaque(true);
-		jButton1.setBackground(RhizoAddons.confidencColors.get((byte) 10));
-		jPanel1.add(jButton1);
-
-		Component[] c1 = { jSlider1, jButton1 };
-		componentCollection_hash.put(10, c1);
-		add(jPanel1);
-
-		jPanel2.setLayout(new javax.swing.BoxLayout(jPanel2, javax.swing.BoxLayout.LINE_AXIS));
-
-		jLabel2.setText("9");
-		jLabel2.setMaximumSize(new java.awt.Dimension(12, 14));
-		jLabel2.setMinimumSize(new java.awt.Dimension(12, 14));
-		jLabel2.setPreferredSize(new java.awt.Dimension(12, 14));
-		jPanel2.add(jLabel2);
-
-		jSlider2.setName("2");
-		jSlider2.setMinimum(0);
-		jSlider2.setMaximum(255);
-		jSlider2.setValue(255);
-		jSlider2.addChangeListener(sliderAction);
-		jPanel2.add(jSlider2);
-
-		jCheckBox2.setSelected(checkBoxArray[9]);
-		jCheckBox2.setActionCommand("9");
-		jCheckBox2.addActionListener(clickablityAction);
-		jPanel2.add(jCheckBox2);
-
-		jButton2.setActionCommand("9");
-		jButton2.addActionListener(colorChangeButton);
-		jButton2.setMaximumSize(new java.awt.Dimension(33, 15));
-		jButton2.setMinimumSize(new java.awt.Dimension(33, 15));
-		jButton2.setPreferredSize(new java.awt.Dimension(33, 12));
-		jButton2.setContentAreaFilled(false);
-		jButton2.setOpaque(true);
-		jButton2.setBackground(RhizoAddons.confidencColors.get((byte) 9));
-		jPanel2.add(jButton2);
-
-		Component[] c2 = { jSlider2, jButton2 };
-		componentCollection_hash.put(9, c2);
-		add(jPanel2);
-
-		jPanel3.setLayout(new javax.swing.BoxLayout(jPanel3, javax.swing.BoxLayout.LINE_AXIS));
-
-		jLabel3.setText("8");
-		jLabel3.setMaximumSize(new java.awt.Dimension(12, 14));
-		jLabel3.setPreferredSize(new java.awt.Dimension(12, 14));
-		jPanel3.add(jLabel3);
-
-		jSlider3.setName("3");
-		jSlider3.setMinimum(0);
-		jSlider3.setMaximum(255);
-		jSlider3.setValue(255);
-		jSlider3.addChangeListener(sliderAction);
-		jPanel3.add(jSlider3);
-
-		jCheckBox3.setSelected(checkBoxArray[8]);
-		jCheckBox3.setActionCommand("8");
-		jCheckBox3.addActionListener(clickablityAction);
-		jPanel3.add(jCheckBox3);
-
-		jButton3.setActionCommand("8");
-		jButton3.addActionListener(colorChangeButton);
-		jButton3.setMaximumSize(new java.awt.Dimension(33, 15));
-		jButton3.setMinimumSize(new java.awt.Dimension(33, 15));
-		jButton3.setPreferredSize(new java.awt.Dimension(33, 12));
-		jButton3.setContentAreaFilled(false);
-		jButton3.setOpaque(true);
-		jButton3.setBackground(RhizoAddons.confidencColors.get((byte) 8));
-		jPanel3.add(jButton3);
-
-		Component[] c3 = { jSlider3, jButton3 };
-		componentCollection_hash.put(8, c3);
-		add(jPanel3);
-
-		jPanel4.setLayout(new javax.swing.BoxLayout(jPanel4, javax.swing.BoxLayout.LINE_AXIS));
-
-		jLabel4.setText("7");
-		jLabel4.setMaximumSize(new java.awt.Dimension(12, 14));
-		jLabel4.setPreferredSize(new java.awt.Dimension(12, 14));
-		jPanel4.add(jLabel4);
-
-		jSlider4.setName("4");
-		jSlider4.setMinimum(0);
-		jSlider4.setMaximum(255);
-		jSlider4.setValue(255);
-		jSlider4.addChangeListener(sliderAction);
-		jPanel4.add(jSlider4);
-
-		jCheckBox4.setSelected(checkBoxArray[7]);
-		jCheckBox4.setActionCommand("7");
-		jCheckBox4.addActionListener(clickablityAction);
-		jPanel4.add(jCheckBox4);
-
-		jButton4.setActionCommand("7");
-		jButton4.addActionListener(colorChangeButton);
-		jButton4.setMaximumSize(new java.awt.Dimension(33, 15));
-		jButton4.setMinimumSize(new java.awt.Dimension(33, 15));
-		jButton4.setPreferredSize(new java.awt.Dimension(33, 12));
-		jButton4.setContentAreaFilled(false);
-		jButton4.setOpaque(true);
-		jButton4.setBackground(RhizoAddons.confidencColors.get((byte) 7));
-		jPanel4.add(jButton4);
-
-		Component[] c4 = { jSlider4, jButton4 };
-		componentCollection_hash.put(7, c4);
-		add(jPanel4);
-
-		jPanel5.setLayout(new javax.swing.BoxLayout(jPanel5, javax.swing.BoxLayout.LINE_AXIS));
-
-		jLabel5.setText("6");
-		jLabel5.setMaximumSize(new java.awt.Dimension(12, 14));
-		jLabel5.setPreferredSize(new java.awt.Dimension(12, 14));
-		jPanel5.add(jLabel5);
-
-		jSlider5.setName("5");
-		jSlider5.setMinimum(0);
-		jSlider5.setMaximum(255);
-		jSlider5.setValue(255);
-		jSlider5.addChangeListener(sliderAction);
-		jPanel5.add(jSlider5);
-
-		jCheckBox5.setSelected(checkBoxArray[6]);
-		jCheckBox5.setActionCommand("6");
-		jCheckBox5.addActionListener(clickablityAction);
-		jPanel5.add(jCheckBox5);
-
-		jButton5.setActionCommand("6");
-		jButton5.addActionListener(colorChangeButton);
-		jButton5.setMaximumSize(new java.awt.Dimension(33, 15));
-		jButton5.setMinimumSize(new java.awt.Dimension(33, 15));
-		jButton5.setPreferredSize(new java.awt.Dimension(33, 12));
-		jButton5.setContentAreaFilled(false);
-		jButton5.setOpaque(true);
-		jButton5.setBackground(RhizoAddons.confidencColors.get((byte) 6));
-		jPanel5.add(jButton5);
-
-		Component[] c5 = { jSlider5, jButton5 };
-		componentCollection_hash.put(6, c5);
-		add(jPanel5);
-
-		jPanel6.setLayout(new javax.swing.BoxLayout(jPanel6, javax.swing.BoxLayout.LINE_AXIS));
-
-		jLabel6.setText("5");
-		jLabel6.setMaximumSize(new java.awt.Dimension(12, 14));
-		jLabel6.setPreferredSize(new java.awt.Dimension(12, 14));
-		jPanel6.add(jLabel6);
-
-		jSlider6.setName("6");
-		jSlider6.setMinimum(0);
-		jSlider6.setMaximum(255);
-		jSlider6.setValue(255);
-		jSlider6.addChangeListener(sliderAction);
-		jPanel6.add(jSlider6);
-
-		jCheckBox6.setSelected(checkBoxArray[5]);
-		jCheckBox6.setActionCommand("5");
-		jCheckBox6.addActionListener(clickablityAction);
-		jPanel6.add(jCheckBox6);
-
-		jButton6.setActionCommand("5");
-		jButton6.addActionListener(colorChangeButton);
-		jButton6.setMaximumSize(new java.awt.Dimension(33, 15));
-		jButton6.setMinimumSize(new java.awt.Dimension(33, 15));
-		jButton6.setPreferredSize(new java.awt.Dimension(33, 12));
-		jButton6.setContentAreaFilled(false);
-		jButton6.setOpaque(true);
-		jButton6.setBackground(RhizoAddons.confidencColors.get((byte) 5));
-		jPanel6.add(jButton6);
-
-		Component[] c6 = { jSlider6, jButton6 };
-		componentCollection_hash.put(5, c6);
-		add(jPanel6);
-
-		jPanel7.setLayout(new javax.swing.BoxLayout(jPanel7, javax.swing.BoxLayout.LINE_AXIS));
-
-		jLabel7.setText("4");
-		jLabel7.setMaximumSize(new java.awt.Dimension(12, 14));
-		jLabel7.setPreferredSize(new java.awt.Dimension(12, 14));
-		jPanel7.add(jLabel7);
-
-		jSlider7.setName("7");
-		jSlider7.setMinimum(0);
-		jSlider7.setMaximum(255);
-		jSlider7.setValue(255);
-		jSlider7.addChangeListener(sliderAction);
-		jPanel7.add(jSlider7);
-
-		jCheckBox7.setSelected(checkBoxArray[4]);
-		jCheckBox7.setActionCommand("4");
-		jCheckBox7.addActionListener(clickablityAction);
-		jPanel7.add(jCheckBox7);
-
-		jButton7.setActionCommand("4");
-		jButton7.addActionListener(colorChangeButton);
-		jButton7.setMaximumSize(new java.awt.Dimension(33, 15));
-		jButton7.setMinimumSize(new java.awt.Dimension(33, 15));
-		jButton7.setPreferredSize(new java.awt.Dimension(33, 12));
-		jButton7.setContentAreaFilled(false);
-		jButton7.setOpaque(true);
-		jButton7.setBackground(RhizoAddons.confidencColors.get((byte) 4));
-		jPanel7.add(jButton7);
-
-		Component[] c7 = { jSlider7, jButton7 };
-		componentCollection_hash.put(4, c7);
-		add(jPanel7);
-
-		jPanel8.setLayout(new javax.swing.BoxLayout(jPanel8, javax.swing.BoxLayout.LINE_AXIS));
-
-		jLabel8.setText("3");
-		jLabel8.setMaximumSize(new java.awt.Dimension(12, 14));
-		jLabel8.setPreferredSize(new java.awt.Dimension(12, 14));
-		jPanel8.add(jLabel8);
-
-		jSlider8.setName("8");
-		jSlider8.setMinimum(0);
-		jSlider8.setMaximum(255);
-		jSlider8.setValue(255);
-		jSlider8.addChangeListener(sliderAction);
-		jPanel8.add(jSlider8);
-
-		jCheckBox8.setSelected(checkBoxArray[3]);
-		jCheckBox8.setActionCommand("3");
-		jCheckBox8.addActionListener(clickablityAction);
-		jPanel8.add(jCheckBox8);
-
-		jButton8.setActionCommand("3");
-		jButton8.addActionListener(colorChangeButton);
-		jButton8.setMaximumSize(new java.awt.Dimension(33, 15));
-		jButton8.setMinimumSize(new java.awt.Dimension(33, 15));
-		jButton8.setPreferredSize(new java.awt.Dimension(33, 12));
-		jButton8.setContentAreaFilled(false);
-		jButton8.setOpaque(true);
-		jButton8.setBackground(RhizoAddons.confidencColors.get((byte) 3));
-		jPanel8.add(jButton8);
-
-		Component[] c8 = { jSlider8, jButton8 };
-		componentCollection_hash.put(3, c8);
-		add(jPanel8);
-
-		jPanel9.setLayout(new javax.swing.BoxLayout(jPanel9, javax.swing.BoxLayout.LINE_AXIS));
-
-		jLabel9.setText("2");
-		jLabel9.setMaximumSize(new java.awt.Dimension(12, 14));
-		jLabel9.setPreferredSize(new java.awt.Dimension(12, 14));
-		jPanel9.add(jLabel9);
-
-		jSlider9.setName("9");
-		jSlider9.setMinimum(0);
-		jSlider9.setMaximum(255);
-		jSlider9.setValue(255);
-		jSlider9.addChangeListener(sliderAction);
-		jPanel9.add(jSlider9);
-
-		jCheckBox9.setSelected(checkBoxArray[2]);
-		jCheckBox9.setActionCommand("2");
-		jCheckBox9.addActionListener(clickablityAction);
-		jPanel9.add(jCheckBox9);
-
-		jButton9.setActionCommand("2");
-		jButton9.addActionListener(colorChangeButton);
-		jButton9.setMaximumSize(new java.awt.Dimension(33, 15));
-		jButton9.setMinimumSize(new java.awt.Dimension(33, 15));
-		jButton9.setPreferredSize(new java.awt.Dimension(33, 12));
-		jButton9.setContentAreaFilled(false);
-		jButton9.setOpaque(true);
-		jButton9.setBackground(RhizoAddons.confidencColors.get((byte) 2));
-		jPanel9.add(jButton9);
-
-		Component[] c9 = { jSlider9, jButton9 };
-		componentCollection_hash.put(2, c9);
-		add(jPanel9);
-
-		jPanel10.setLayout(new javax.swing.BoxLayout(jPanel10, javax.swing.BoxLayout.LINE_AXIS));
-
-		jLabel10.setText("1");
-		jLabel10.setMaximumSize(new java.awt.Dimension(12, 14));
-		jLabel10.setPreferredSize(new java.awt.Dimension(12, 14));
-		jPanel10.add(jLabel10);
-
-		jSlider10.setName("10");
-		jSlider10.setMinimum(0);
-		jSlider10.setMaximum(255);
-		jSlider10.setValue(255);
-		jSlider10.addChangeListener(sliderAction);
-		jPanel10.add(jSlider10);
-
-		jCheckBox10.setSelected(checkBoxArray[1]);
-		jCheckBox10.setActionCommand("1");
-		jCheckBox10.addActionListener(clickablityAction);
-		jPanel10.add(jCheckBox10);
-
-		jButton10.setActionCommand("1");
-		jButton10.addActionListener(colorChangeButton);
-		jButton10.setMaximumSize(new java.awt.Dimension(33, 15));
-		jButton10.setMinimumSize(new java.awt.Dimension(33, 15));
-		jButton10.setPreferredSize(new java.awt.Dimension(33, 12));
-		jButton10.setContentAreaFilled(false);
-		jButton10.setOpaque(true);
-		jButton10.setBackground(RhizoAddons.confidencColors.get((byte) 1));
-		jPanel10.add(jButton10);
-
-		Component[] c10 = { jSlider10, jButton10 };
-		componentCollection_hash.put(1, c10);
-		add(jPanel10);
-
-		jPanel11.setLayout(new javax.swing.BoxLayout(jPanel11, javax.swing.BoxLayout.LINE_AXIS));
-
-		jLabel11.setText("0");
-		jLabel11.setMaximumSize(new java.awt.Dimension(12, 14));
-		jLabel11.setPreferredSize(new java.awt.Dimension(12, 14));
-		jPanel11.add(jLabel11);
-
-		jSlider11.setName("11");
-		jSlider11.setMinimum(0);
-		jSlider11.setMaximum(255);
-		jSlider11.setValue(255);
-		jSlider11.addChangeListener(sliderAction);
-		jPanel11.add(jSlider11);
-
-		jCheckBox11.setSelected(checkBoxArray[0]);
-		jCheckBox11.setActionCommand("0");
-		jCheckBox11.addActionListener(clickablityAction);
-		jPanel11.add(jCheckBox11);
-
-		jButton11.setActionCommand("0");
-		jButton11.addActionListener(colorChangeButton);
-		jButton11.setMaximumSize(new java.awt.Dimension(33, 15));
-		jButton11.setMinimumSize(new java.awt.Dimension(33, 15));
-		jButton11.setPreferredSize(new java.awt.Dimension(33, 12));
-		jButton11.setContentAreaFilled(false);
-		jButton11.setOpaque(true);
-		jButton11.setBackground(RhizoAddons.confidencColors.get((byte) 0));
-		jPanel11.add(jButton11);
-
-		Component[] c11 = { jSlider11, jButton11 };
-		componentCollection_hash.put(0, c11);
-		add(jPanel11);
+		if(RhizoAddons.statusFileExists)
+		{
+			List<String> status = RhizoAddons.statusList;
+			List<String> statusAbbr = RhizoAddons.statusListAbbr;
+			
+			for(int i = 0; i < status.size(); i++)
+			{
+				JPanel panel = new JPanel();
+				panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+				
+				
+				String temp = statusAbbr.get(i)+" | "+status.get(i);
+				JLabel lab = new JLabel(temp);
+				panel.add(lab);
+				
+				// workaround TODO: find max dimensions
+				panel.add(Box.createRigidArea(new Dimension(80 - Utils.getDimensions(temp, UIManager.getFont("Label.font")).width, 0)));
+				
+				JSlider slider = new JSlider();
+				slider.setMinimum(0);
+				slider.setName(Integer.toString(i));
+				slider.setMaximum(255);
+				slider.setValue(255);
+				slider.addChangeListener(sliderAction);
+				panel.add(slider);
+				
+				JCheckBox checkBox = new JCheckBox("", true);
+				checkBox.setActionCommand(Integer.toString(i));
+				checkBox.addActionListener(clickablityAction);
+				panel.add(checkBox);
+				
+				JButton button = new JButton();
+				button.setActionCommand(Integer.toString(i));
+				button.addActionListener(colorChangeButton);
+				button.setMaximumSize(new java.awt.Dimension(33, 15));
+				button.setMinimumSize(new java.awt.Dimension(33, 15));
+				button.setPreferredSize(new java.awt.Dimension(33, 12));
+				button.setContentAreaFilled(false);
+				button.setOpaque(true);
+				button.setBackground(RhizoAddons.confidencColors.get((byte) 10));
+				panel.add(button);
+				
+				Component[] c = { slider, button };
+				componentCollection_hash.put(i, c);
+				
+				add(panel);
+			}
+
+		}
+		else // temporary solution
+		{
+			jPanel1.setLayout(new javax.swing.BoxLayout(jPanel1, javax.swing.BoxLayout.LINE_AXIS));
+
+			jLabel1.setText("10");
+			jPanel1.add(jLabel1);
+
+			jSlider1.setName("1");
+			jSlider1.setMinimum(0);
+			jSlider1.setMaximum(255);
+			jSlider1.setValue(255);
+			jSlider1.addChangeListener(sliderAction);
+			jPanel1.add(jSlider1);
+
+			jCheckBox1.setSelected(checkBoxArray[10]);
+			jCheckBox1.setActionCommand("10");
+			jCheckBox1.addActionListener(clickablityAction);
+			jPanel1.add(jCheckBox1);
+
+			jButton1.setActionCommand("10");
+			jButton1.addActionListener(colorChangeButton);
+			jButton1.setMaximumSize(new java.awt.Dimension(33, 15));
+			jButton1.setMinimumSize(new java.awt.Dimension(33, 15));
+			jButton1.setPreferredSize(new java.awt.Dimension(33, 12));
+			jButton1.setContentAreaFilled(false);
+			jButton1.setOpaque(true);
+			jButton1.setBackground(RhizoAddons.confidencColors.get((byte) 10));
+			jPanel1.add(jButton1);
+
+			Component[] c1 = { jSlider1, jButton1 };
+			componentCollection_hash.put(10, c1);
+			add(jPanel1);
+
+			jPanel2.setLayout(new javax.swing.BoxLayout(jPanel2, javax.swing.BoxLayout.LINE_AXIS));
+
+			jLabel2.setText("9");
+			jLabel2.setMaximumSize(new java.awt.Dimension(12, 14));
+			jLabel2.setMinimumSize(new java.awt.Dimension(12, 14));
+			jLabel2.setPreferredSize(new java.awt.Dimension(12, 14));
+			jPanel2.add(jLabel2);
+			
+			jSlider2.setName("2");
+			jSlider2.setMinimum(0);
+			jSlider2.setMaximum(255);
+			jSlider2.setValue(255);
+			jSlider2.addChangeListener(sliderAction);
+			jPanel2.add(jSlider2);
+
+			jCheckBox2.setSelected(checkBoxArray[9]);
+			jCheckBox2.setActionCommand("9");
+			jCheckBox2.addActionListener(clickablityAction);
+			jPanel2.add(jCheckBox2);
+
+			jButton2.setActionCommand("9");
+			jButton2.addActionListener(colorChangeButton);
+			jButton2.setMaximumSize(new java.awt.Dimension(33, 15));
+			jButton2.setMinimumSize(new java.awt.Dimension(33, 15));
+			jButton2.setPreferredSize(new java.awt.Dimension(33, 12));
+			jButton2.setContentAreaFilled(false);
+			jButton2.setOpaque(true);
+			jButton2.setBackground(RhizoAddons.confidencColors.get((byte) 9));
+			jPanel2.add(jButton2);
+
+			Component[] c2 = { jSlider2, jButton2 };
+			componentCollection_hash.put(9, c2);
+			add(jPanel2);
+
+			jPanel3.setLayout(new javax.swing.BoxLayout(jPanel3, javax.swing.BoxLayout.LINE_AXIS));
+
+			jLabel3.setText("8");
+			jLabel3.setMaximumSize(new java.awt.Dimension(12, 14));
+			jLabel3.setPreferredSize(new java.awt.Dimension(12, 14));
+			jPanel3.add(jLabel3);
+
+			jSlider3.setName("3");
+			jSlider3.setMinimum(0);
+			jSlider3.setMaximum(255);
+			jSlider3.setValue(255);
+			jSlider3.addChangeListener(sliderAction);
+			jPanel3.add(jSlider3);
+
+			jCheckBox3.setSelected(checkBoxArray[8]);
+			jCheckBox3.setActionCommand("8");
+			jCheckBox3.addActionListener(clickablityAction);
+			jPanel3.add(jCheckBox3);
+
+			jButton3.setActionCommand("8");
+			jButton3.addActionListener(colorChangeButton);
+			jButton3.setMaximumSize(new java.awt.Dimension(33, 15));
+			jButton3.setMinimumSize(new java.awt.Dimension(33, 15));
+			jButton3.setPreferredSize(new java.awt.Dimension(33, 12));
+			jButton3.setContentAreaFilled(false);
+			jButton3.setOpaque(true);
+			jButton3.setBackground(RhizoAddons.confidencColors.get((byte) 8));
+			jPanel3.add(jButton3);
+
+			Component[] c3 = { jSlider3, jButton3 };
+			componentCollection_hash.put(8, c3);
+			add(jPanel3);
+
+			jPanel4.setLayout(new javax.swing.BoxLayout(jPanel4, javax.swing.BoxLayout.LINE_AXIS));
+
+			jLabel4.setText("7");
+			jLabel4.setMaximumSize(new java.awt.Dimension(12, 14));
+			jLabel4.setPreferredSize(new java.awt.Dimension(12, 14));
+			jPanel4.add(jLabel4);
+
+			jSlider4.setName("4");
+			jSlider4.setMinimum(0);
+			jSlider4.setMaximum(255);
+			jSlider4.setValue(255);
+			jSlider4.addChangeListener(sliderAction);
+			jPanel4.add(jSlider4);
+
+			jCheckBox4.setSelected(checkBoxArray[7]);
+			jCheckBox4.setActionCommand("7");
+			jCheckBox4.addActionListener(clickablityAction);
+			jPanel4.add(jCheckBox4);
+
+			jButton4.setActionCommand("7");
+			jButton4.addActionListener(colorChangeButton);
+			jButton4.setMaximumSize(new java.awt.Dimension(33, 15));
+			jButton4.setMinimumSize(new java.awt.Dimension(33, 15));
+			jButton4.setPreferredSize(new java.awt.Dimension(33, 12));
+			jButton4.setContentAreaFilled(false);
+			jButton4.setOpaque(true);
+			jButton4.setBackground(RhizoAddons.confidencColors.get((byte) 7));
+			jPanel4.add(jButton4);
+
+			Component[] c4 = { jSlider4, jButton4 };
+			componentCollection_hash.put(7, c4);
+			add(jPanel4);
+
+			jPanel5.setLayout(new javax.swing.BoxLayout(jPanel5, javax.swing.BoxLayout.LINE_AXIS));
+
+			jLabel5.setText("6");
+			jLabel5.setMaximumSize(new java.awt.Dimension(12, 14));
+			jLabel5.setPreferredSize(new java.awt.Dimension(12, 14));
+			jPanel5.add(jLabel5);
+
+			jSlider5.setName("5");
+			jSlider5.setMinimum(0);
+			jSlider5.setMaximum(255);
+			jSlider5.setValue(255);
+			jSlider5.addChangeListener(sliderAction);
+			jPanel5.add(jSlider5);
+
+			jCheckBox5.setSelected(checkBoxArray[6]);
+			jCheckBox5.setActionCommand("6");
+			jCheckBox5.addActionListener(clickablityAction);
+			jPanel5.add(jCheckBox5);
+
+			jButton5.setActionCommand("6");
+			jButton5.addActionListener(colorChangeButton);
+			jButton5.setMaximumSize(new java.awt.Dimension(33, 15));
+			jButton5.setMinimumSize(new java.awt.Dimension(33, 15));
+			jButton5.setPreferredSize(new java.awt.Dimension(33, 12));
+			jButton5.setContentAreaFilled(false);
+			jButton5.setOpaque(true);
+			jButton5.setBackground(RhizoAddons.confidencColors.get((byte) 6));
+			jPanel5.add(jButton5);
+
+			Component[] c5 = { jSlider5, jButton5 };
+			componentCollection_hash.put(6, c5);
+			add(jPanel5);
+
+			jPanel6.setLayout(new javax.swing.BoxLayout(jPanel6, javax.swing.BoxLayout.LINE_AXIS));
+
+			jLabel6.setText("5");
+			jLabel6.setMaximumSize(new java.awt.Dimension(12, 14));
+			jLabel6.setPreferredSize(new java.awt.Dimension(12, 14));
+			jPanel6.add(jLabel6);
+
+			jSlider6.setName("6");
+			jSlider6.setMinimum(0);
+			jSlider6.setMaximum(255);
+			jSlider6.setValue(255);
+			jSlider6.addChangeListener(sliderAction);
+			jPanel6.add(jSlider6);
+
+			jCheckBox6.setSelected(checkBoxArray[5]);
+			jCheckBox6.setActionCommand("5");
+			jCheckBox6.addActionListener(clickablityAction);
+			jPanel6.add(jCheckBox6);
+
+			jButton6.setActionCommand("5");
+			jButton6.addActionListener(colorChangeButton);
+			jButton6.setMaximumSize(new java.awt.Dimension(33, 15));
+			jButton6.setMinimumSize(new java.awt.Dimension(33, 15));
+			jButton6.setPreferredSize(new java.awt.Dimension(33, 12));
+			jButton6.setContentAreaFilled(false);
+			jButton6.setOpaque(true);
+			jButton6.setBackground(RhizoAddons.confidencColors.get((byte) 5));
+			jPanel6.add(jButton6);
+
+			Component[] c6 = { jSlider6, jButton6 };
+			componentCollection_hash.put(5, c6);
+			add(jPanel6);
+
+			jPanel7.setLayout(new javax.swing.BoxLayout(jPanel7, javax.swing.BoxLayout.LINE_AXIS));
+
+			jLabel7.setText("4");
+			jLabel7.setMaximumSize(new java.awt.Dimension(12, 14));
+			jLabel7.setPreferredSize(new java.awt.Dimension(12, 14));
+			jPanel7.add(jLabel7);
+
+			jSlider7.setName("7");
+			jSlider7.setMinimum(0);
+			jSlider7.setMaximum(255);
+			jSlider7.setValue(255);
+			jSlider7.addChangeListener(sliderAction);
+			jPanel7.add(jSlider7);
+
+			jCheckBox7.setSelected(checkBoxArray[4]);
+			jCheckBox7.setActionCommand("4");
+			jCheckBox7.addActionListener(clickablityAction);
+			jPanel7.add(jCheckBox7);
+
+			jButton7.setActionCommand("4");
+			jButton7.addActionListener(colorChangeButton);
+			jButton7.setMaximumSize(new java.awt.Dimension(33, 15));
+			jButton7.setMinimumSize(new java.awt.Dimension(33, 15));
+			jButton7.setPreferredSize(new java.awt.Dimension(33, 12));
+			jButton7.setContentAreaFilled(false);
+			jButton7.setOpaque(true);
+			jButton7.setBackground(RhizoAddons.confidencColors.get((byte) 4));
+			jPanel7.add(jButton7);
+
+			Component[] c7 = { jSlider7, jButton7 };
+			componentCollection_hash.put(4, c7);
+			add(jPanel7);
+
+			jPanel8.setLayout(new javax.swing.BoxLayout(jPanel8, javax.swing.BoxLayout.LINE_AXIS));
+
+			jLabel8.setText("3");
+			jLabel8.setMaximumSize(new java.awt.Dimension(12, 14));
+			jLabel8.setPreferredSize(new java.awt.Dimension(12, 14));
+			jPanel8.add(jLabel8);
+
+			jSlider8.setName("8");
+			jSlider8.setMinimum(0);
+			jSlider8.setMaximum(255);
+			jSlider8.setValue(255);
+			jSlider8.addChangeListener(sliderAction);
+			jPanel8.add(jSlider8);
+
+			jCheckBox8.setSelected(checkBoxArray[3]);
+			jCheckBox8.setActionCommand("3");
+			jCheckBox8.addActionListener(clickablityAction);
+			jPanel8.add(jCheckBox8);
+
+			jButton8.setActionCommand("3");
+			jButton8.addActionListener(colorChangeButton);
+			jButton8.setMaximumSize(new java.awt.Dimension(33, 15));
+			jButton8.setMinimumSize(new java.awt.Dimension(33, 15));
+			jButton8.setPreferredSize(new java.awt.Dimension(33, 12));
+			jButton8.setContentAreaFilled(false);
+			jButton8.setOpaque(true);
+			jButton8.setBackground(RhizoAddons.confidencColors.get((byte) 3));
+			jPanel8.add(jButton8);
+
+			Component[] c8 = { jSlider8, jButton8 };
+			componentCollection_hash.put(3, c8);
+			add(jPanel8);
+
+			jPanel9.setLayout(new javax.swing.BoxLayout(jPanel9, javax.swing.BoxLayout.LINE_AXIS));
+
+			jLabel9.setText("2");
+			jLabel9.setMaximumSize(new java.awt.Dimension(12, 14));
+			jLabel9.setPreferredSize(new java.awt.Dimension(12, 14));
+			jPanel9.add(jLabel9);
+
+			jSlider9.setName("9");
+			jSlider9.setMinimum(0);
+			jSlider9.setMaximum(255);
+			jSlider9.setValue(255);
+			jSlider9.addChangeListener(sliderAction);
+			jPanel9.add(jSlider9);
+
+			jCheckBox9.setSelected(checkBoxArray[2]);
+			jCheckBox9.setActionCommand("2");
+			jCheckBox9.addActionListener(clickablityAction);
+			jPanel9.add(jCheckBox9);
+
+			jButton9.setActionCommand("2");
+			jButton9.addActionListener(colorChangeButton);
+			jButton9.setMaximumSize(new java.awt.Dimension(33, 15));
+			jButton9.setMinimumSize(new java.awt.Dimension(33, 15));
+			jButton9.setPreferredSize(new java.awt.Dimension(33, 12));
+			jButton9.setContentAreaFilled(false);
+			jButton9.setOpaque(true);
+			jButton9.setBackground(RhizoAddons.confidencColors.get((byte) 2));
+			jPanel9.add(jButton9);
+
+			Component[] c9 = { jSlider9, jButton9 };
+			componentCollection_hash.put(2, c9);
+			add(jPanel9);
+
+			jPanel10.setLayout(new javax.swing.BoxLayout(jPanel10, javax.swing.BoxLayout.LINE_AXIS));
+
+			jLabel10.setText("1");
+			jLabel10.setMaximumSize(new java.awt.Dimension(12, 14));
+			jLabel10.setPreferredSize(new java.awt.Dimension(12, 14));
+			jPanel10.add(jLabel10);
+
+			jSlider10.setName("10");
+			jSlider10.setMinimum(0);
+			jSlider10.setMaximum(255);
+			jSlider10.setValue(255);
+			jSlider10.addChangeListener(sliderAction);
+			jPanel10.add(jSlider10);
+
+			jCheckBox10.setSelected(checkBoxArray[1]);
+			jCheckBox10.setActionCommand("1");
+			jCheckBox10.addActionListener(clickablityAction);
+			jPanel10.add(jCheckBox10);
+
+			jButton10.setActionCommand("1");
+			jButton10.addActionListener(colorChangeButton);
+			jButton10.setMaximumSize(new java.awt.Dimension(33, 15));
+			jButton10.setMinimumSize(new java.awt.Dimension(33, 15));
+			jButton10.setPreferredSize(new java.awt.Dimension(33, 12));
+			jButton10.setContentAreaFilled(false);
+			jButton10.setOpaque(true);
+			jButton10.setBackground(RhizoAddons.confidencColors.get((byte) 1));
+			jPanel10.add(jButton10);
+
+			Component[] c10 = { jSlider10, jButton10 };
+			componentCollection_hash.put(1, c10);
+			add(jPanel10);
+
+			jPanel11.setLayout(new javax.swing.BoxLayout(jPanel11, javax.swing.BoxLayout.LINE_AXIS));
+
+			jLabel11.setText("0");
+			jLabel11.setMaximumSize(new java.awt.Dimension(12, 14));
+			jLabel11.setPreferredSize(new java.awt.Dimension(12, 14));
+			jPanel11.add(jLabel11);
+
+			jSlider11.setName("11");
+			jSlider11.setMinimum(0);
+			jSlider11.setMaximum(255);
+			jSlider11.setValue(255);
+			jSlider11.addChangeListener(sliderAction);
+			jPanel11.add(jSlider11);
+
+			jCheckBox11.setSelected(checkBoxArray[0]);
+			jCheckBox11.setActionCommand("0");
+			jCheckBox11.addActionListener(clickablityAction);
+			jPanel11.add(jCheckBox11);
+
+			jButton11.setActionCommand("0");
+			jButton11.addActionListener(colorChangeButton);
+			jButton11.setMaximumSize(new java.awt.Dimension(33, 15));
+			jButton11.setMinimumSize(new java.awt.Dimension(33, 15));
+			jButton11.setPreferredSize(new java.awt.Dimension(33, 12));
+			jButton11.setContentAreaFilled(false);
+			jButton11.setOpaque(true);
+			jButton11.setBackground(RhizoAddons.confidencColors.get((byte) 0));
+			jPanel11.add(jButton11);
+
+			Component[] c11 = { jSlider11, jButton11 };
+			componentCollection_hash.put(0, c11);
+			add(jPanel11);
+		}
+		
+
 
 		// highlight color stuff
 		jPanel12.setLayout(new javax.swing.BoxLayout(jPanel12, javax.swing.BoxLayout.LINE_AXIS));
