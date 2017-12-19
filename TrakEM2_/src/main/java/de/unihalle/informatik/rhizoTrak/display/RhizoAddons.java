@@ -83,6 +83,11 @@ public class RhizoAddons
 	static String relativPatchDir="/_images";
 	static boolean ini = false;
 	
+	public static boolean statusFileExists = false;
+	
+	public static List<String> statusList = new ArrayList<String>();
+	public static List<String> statusListAbbr = new ArrayList<String>();
+	
 	public static Node lastEditedOrActiveNode = null;
 	
 	private static JFrame colorFrame, imageLoaderFrame;
@@ -130,16 +135,20 @@ public class RhizoAddons
 				//set imgDir
 				imageDir = file.getParentFile();
 				// load connector data
-				Utils.log2("loading user settings ...");
+				Utils.log2("loading user settings...");
 				loadUserSettings();
 				Utils.log2("done");
 
-				Utils.log2("loading connector data ...");
+				Utils.log2("loading connector data...");
 				loadConnector(file);
 				Utils.log2("done");
 				
-				Utils.log2("restore conflicts ...");
+				Utils.log2("restoring conflicts...");
 				ConflictManager.restorConflicts();
+				Utils.log2("done");
+				
+				Utils.log2("restoring status conventions...");
+				loadStatusFile(file.getAbsolutePath().replace(".xml", ".status"));
 				Utils.log2("done");
 				
 				return;
@@ -213,6 +222,57 @@ public class RhizoAddons
 	}
 	
 	/**
+	 * Reads the status file with the status conventions when a project is opened or a new one is created
+	 * @param file - The project status file
+	 * @author Tino
+	 */
+	public static void loadStatusFile(String path)
+	{
+		File statusFile = null;
+		if(null != path) statusFile = new File(path);
+		else return;
+		
+		// TODO: add popup dialog
+		if(!path.endsWith(".status")) return;
+		
+		try
+		{
+			FileReader fr = new FileReader(statusFile);
+			BufferedReader br = new BufferedReader(fr);
+			
+			String line = "";
+			while((line = br.readLine()) != null)
+			{
+				if(!line.startsWith("#") && line.split("\t").length == 2)
+				{
+					String[] temp = line.split("\t");
+					statusListAbbr.add(temp[0]);
+					statusList.add(temp[1]);
+				}
+			}
+
+			br.close();
+		} 
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		
+		statusFileExists = true;
+	}
+	
+	/**
+	 * Returns the size of the status list or a default value
+	 * @return Size of the list or default 10
+	 */
+	public static byte getStatusListSize()
+	{
+		if(statusFileExists) return (byte) (statusList.size() - 1);
+		else return (byte) 10;
+	}
+	
+	/**
 	 * Loads the connector file
 	 * @param file - The project save file
 	 * @author Axel
@@ -220,7 +280,7 @@ public class RhizoAddons
 	public static void loadConnector(File file)
 	{
 		// read the save file
-		File conFile = new File(file.getParentFile().getAbsolutePath() + File.separator + file.getName().split("\\.")[0] + ".con");
+		File conFile = new File(file.getParentFile().getAbsolutePath() + File.separator + file.getName().replace(".xml", ".con"));
 																													
 		if (!conFile.exists())
 		{
@@ -1064,7 +1124,10 @@ public class RhizoAddons
 	 */
 	public static void imageLoader()
 	{
-		imageLoaderFrame = new JFrame("Image Loader");
+		String title = "Image Loader";
+		if(null != imageDir) title = "Image Loader - " + imageDir.getAbsolutePath();
+		
+		imageLoaderFrame = new JFrame(title);
 		imageLoaderFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JPanel temp = new ImageImport();
 		imageLoaderFrame.add(temp);

@@ -4045,6 +4045,10 @@ while (it.hasNext()) {
 			restorePaths(copy, mipmaps_dir, storage_dir);
 		}
 		//
+		
+		// aeekz - only makes sense if xml file is saved in the storage folder
+		RhizoAddons.imageDir = new File(storage_dir);
+		
 		return path;
 	}
 

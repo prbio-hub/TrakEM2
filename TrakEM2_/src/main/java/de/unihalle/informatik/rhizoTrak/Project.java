@@ -26,6 +26,7 @@ package de.unihalle.informatik.rhizoTrak;
 import ij.IJ;
 import ij.gui.GenericDialog;
 import ij.io.DirectoryChooser;
+import ij.io.OpenDialog;
 
 import java.awt.Rectangle;
 import java.io.BufferedReader;
@@ -509,9 +510,15 @@ public class Project extends DBObject {
 				if (IJ.isWindows()) dir_project = dir_project.replace('\\', '/');
 			}
 			loader = new FSLoader(dir_project);
+			
+			
 
 			Project project = createNewProject(loader, !("blank".equals(arg) || "amira".equals(arg)), template_root);
 
+			// aeekz
+			final OpenDialog od = new OpenDialog("Select status file", dir_project, null);
+			RhizoAddons.loadStatusFile(od.getPath());
+	
 			// help the helpless users:
 			if (autocreate_one_layer && null != project && ControlWindow.isGUIEnabled()) {
 				Utils.log2("Creating automatic Display.");

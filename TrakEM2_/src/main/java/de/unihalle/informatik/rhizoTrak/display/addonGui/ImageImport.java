@@ -136,7 +136,7 @@ public class ImageImport extends JPanel {
 		});
 		jPanel1.add(jButton3);
 		
-		jButton4.setText("select image directory");
+		jButton4.setText("Select Image Directory");
 		jButton4.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				chooseImageDir();
@@ -144,7 +144,7 @@ public class ImageImport extends JPanel {
 		});
 		jPanel1.add(jButton4);
 		
-		jButton5.setText("search new images");
+		jButton5.setText("Search New Images");
 		jButton5.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				autoImport();
@@ -152,10 +152,12 @@ public class ImageImport extends JPanel {
 		});
 		jPanel1.add(jButton5);
 		
-		jPanel1.add(imgDir);
-		if(RhizoAddons.imageDir!=null){
-			imgDir.setText(RhizoAddons.imageDir.getAbsolutePath());
-		}
+//		jPanel1.add(imgDir);
+//		if(RhizoAddons.imageDir!=null){
+//			imgDir.setText(RhizoAddons.imageDir.getAbsolutePath());
+//		}
+		JFrame parentFrame = (JFrame) SwingUtilities.getRoot(this);
+		if(null != parentFrame && null != RhizoAddons.imageDir) parentFrame.setTitle("Image Loader - "+ RhizoAddons.imageDir.getAbsolutePath());
 		
 		
 		add(jPanel1, BorderLayout.EAST);
@@ -260,11 +262,14 @@ public class ImageImport extends JPanel {
 		{
 			File dir = dialog.getSelectedFile();
 			RhizoAddons.imageDir=dir;
-			imgDir.setText(RhizoAddons.imageDir.getAbsolutePath());
+//			imgDir.setText(RhizoAddons.imageDir.getAbsolutePath());
+			JFrame parentFrame = (JFrame) SwingUtilities.getRoot(this);
+			if(null != parentFrame) parentFrame.setTitle("Image Loader - "+ RhizoAddons.imageDir.getAbsolutePath());
 		}
 		
 	}
 	
+	// aeekz - maybe add them to the window first before importing
 	private void autoImport()
 	{
 		Utils.log2("Start auto import:");
@@ -299,6 +304,7 @@ public class ImageImport extends JPanel {
 		
 		File[] files = imageDir.listFiles(ioFilter);
 		if(files.length==0){
+			// open dialog to inform user
 			return;
 		}
 		
