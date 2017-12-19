@@ -67,4 +67,11 @@ public class ConnectorConflict extends Conflict{
 	public String toString(){
 		return "Multiple Connector Conflict on Tree: "+ conflictTree.getId() + getConnectorAsString();
 	}
+	
+	private boolean stillExists()
+	{
+		boolean result = true;
+		return result;
+	}
+	
 }

@@ -2362,7 +2362,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				}
 				//actyc: remove highlight of connected treelines
 				if(prev_active instanceof Connector){
-					RhizoAddons.removeHighlight(new ArrayList<Displayable>(((Connector)prev_active).getConTreelines()));
+					RhizoAddons.removeHighlight(new ArrayList<Displayable>(((Connector)prev_active).getConTreelines()),false);
 				}
 				//end
 			}
@@ -2402,7 +2402,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				annot_editor.setEnabled(true);		
 				//actyc: highlight  connected treelines
 				if(displ instanceof Connector){
-					RhizoAddons.highlight(new ArrayList<Displayable>(((Connector)displ).getConTreelines()));
+					RhizoAddons.highlight(new ArrayList<Displayable>(((Connector)displ).getConTreelines()),false);
 				}
 				//end
 			} else {
@@ -7116,7 +7116,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	conflicManagerButton.setToolTipText("Manage conflicts related to connectors.");
     	conflicManagerButton.setActionCommand("conflictPanel");
     	conflicManagerButton.addActionListener(this);
-    	conflicManagerButton.setEnabled(false);
+    	conflicManagerButton.setEnabled(true);
     	panel.add(conflicManagerButton);
     	
     	JButton readXMLButton = new JButton("Read MTBXML");

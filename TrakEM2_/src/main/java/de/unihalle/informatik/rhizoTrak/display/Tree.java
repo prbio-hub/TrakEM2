@@ -1673,7 +1673,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 							
 							//actyc: new node inherits highlight status
 							found.high(ns[0].high());
-							RhizoAddons.applyCorrespondingColorToDisplayable(this);
+							//RhizoAddons.applyCorrespondingColorToDisplayable(this);
 							
 							insertNode(ns[0], ns[1], found, ns[0].getConfidence(ns[1]));
 							setActive(found);
@@ -1697,7 +1697,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 						
 						//actyc: new node inherits highlight status
 						found.high(nearest.high());
-						RhizoAddons.applyCorrespondingColorToDisplayable(this);
+						//RhizoAddons.applyCorrespondingColorToDisplayable(this);
 						
 						setActive(found);		
 						repaint(true, layer);
@@ -2364,6 +2364,19 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 
 	@Override
 	public boolean remove2(final boolean check) {
+		Utils.log("remove something");
+		//actyct: fire remove event or if tree is a connector remove all references
+		if(this instanceof Treeline)
+		{
+			TreeEvent te = new TreeEvent((Treeline) this,"remove",null,null);
+			treeAction(te);
+		}
+		if(this instanceof Connector)
+		{
+			Connector thisConnector = (Connector) this;
+			thisConnector.removeAllTreelines();
+		}
+		
 		if (super.remove2(check)) {
 			synchronized (this) {
 				if (null != tndv) {

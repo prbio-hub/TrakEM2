@@ -649,10 +649,22 @@ public class Connector extends Treeline  implements TreeEventListener{
 			
 			
 		}
+		if(te.getEventMessage().equals("remove")){
+			removeConTreeline((Treeline) te.getSource());
+		}
 	}
 	
 	public Connector getConnector(){
 		return this;
+	}
+	
+	public void removeAllTreelines(){
+		for(Treeline currentTree: conTreelines){
+			if(currentTree != null)
+			{
+				this.removeConTreeline(currentTree);
+			}
+		}
 	}
 	
 	

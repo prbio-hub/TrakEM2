@@ -291,7 +291,7 @@ public final class LayerSet extends Displayable implements Bucketable { // Displ
 			throw new IllegalArgumentException("LayerSet rejected a Layer: belongs to a different project.");
 
 		if (null != idlayers.get(layer.getId())) return;
-
+		
 		final double z = layer.getZ();
 		final int n = al_layers.size();
 		int i = 0;

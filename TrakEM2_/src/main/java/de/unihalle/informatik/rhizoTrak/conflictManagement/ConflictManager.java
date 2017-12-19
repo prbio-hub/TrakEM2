@@ -346,7 +346,7 @@ public class ConflictManager {
 					//abort
 					Utils.log("solve abort");
 					List<Displayable> treelineList = new ArrayList<Displayable>(conflict.getTreelineOne());
-					RhizoAddons.removeHighlight(treelineList);
+					RhizoAddons.removeHighlight(treelineList,false);
 					
 					if(conflictPanel!=null){
 						conflictPanel.setSolved();

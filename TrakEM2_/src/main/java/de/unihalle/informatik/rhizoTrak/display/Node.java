@@ -39,7 +39,7 @@ public abstract class Node<T> implements Taggable {
 	static public final byte MAX_EDGE_CONFIDENCE = 10;
 	
 	//actyc: added a indicator showing whether the node is highlighted
-	private boolean high = false;
+	private boolean[] high = {false,false};
 
 	protected Node<T> parent = null;
 	public Node<T> getParent() { return parent; }
@@ -201,6 +201,11 @@ public abstract class Node<T> implements Taggable {
 		final double actZ = active_layer.getZ();
 		final double thisZ = this.la.getZ();
 		final Color node_color;
+		
+		//actyc: get the color corrected for highlighting
+		this.color = getCorrectedColor();
+		//end
+		
 		if (null == this.color) {
 			// this node doesn't have its color set, so use tree color and given above/below colors
 			node_color = tree.color;
@@ -1169,13 +1174,52 @@ public abstract class Node<T> implements Taggable {
 	
 	//actyc: getter and setter for highlight variable
 	
-	public boolean high()
+	public boolean[] high()
 	{
 		return high;
 	}
 	
-	public void high(boolean high)
+	public void high(boolean[] high)
 	{
 		this.high = high;
+	}
+	
+	// set normal and choose highlight
+	public void highlight(){
+		this.high[0]=true;
+	}
+	
+	public void chooseHighlight(){
+		this.high[1]=true;
+	}
+	
+	public void removeHighlight(){
+		this.high[0]=false;
+	}
+	
+	public void removeChooseHighlight(){
+		this.high[1]=false;
+	}
+	
+	//actyc: get the righ color aka wheter non, first or seconded highlight
+	private Color getCorrectedColor(){
+		Utils.log("current high= " + high[0]+"-"+high[1]);
+		Color result = RhizoAddons.confidencColors.get(this.getConfidence());
+//		if(high>0){
+//			result = RhizoAddons.confidencColors.get((byte) 11);
+//			if(high>1){
+//				Utils.log("even more highlighted");
+//				result = Color.red;
+//			}
+//		}
+		if(high[0]){
+			result = RhizoAddons.confidencColors.get((byte) 11);
+		}
+		if(high[1]){
+			Color cC = RhizoAddons.confidencColors.get((byte) 11);
+			result = Color.pink;
+			//result = new Color(cC.getRed()+10,cC.getGreen(),cC.getBlue()+10);
+		}
+		return result;
 	}
 }

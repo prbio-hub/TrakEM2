@@ -141,7 +141,7 @@ public class RhizoAddons
 				Utils.log2("restore conflicts ...");
 				ConflictManager.restorConflicts();
 				Utils.log2("done");
-
+				
 				return;
 			}
 
@@ -566,89 +566,52 @@ public class RhizoAddons
 
 		// get treelines of current layerset
 		ArrayList<Displayable> trees = currentLayerSet.get(Treeline.class);
-		for (Displayable cObj : trees) {
-//			Utils.log("current Treeline: " + cObj.getUniqueIdentifier());
+		boolean repaint = false;
+		for (Displayable cObj : trees) 
+		{			
 			Treeline ctree = (Treeline) cObj;
-			boolean repaint = false;
-			if(ctree.getRoot() == null || ctree.getRoot().getSubtreeNodes() == null) continue; 
+			if(ctree.getRoot() == null || ctree.getRoot().getSubtreeNodes() == null) continue;
+			Utils.log("active layer_" + display.getLayer());
+			Utils.log("found tree: "+ cObj.getUniqueIdentifier());
 			
 			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes())
 			{
-				byte currentConfi = (byte) 1;
-				if(cnode.high())
-				{
-					currentConfi = (byte) 11;
-				}
-				else
-				{
-					currentConfi = cnode.getConfidence();
-				}
-
+				byte currentConfi = cnode.getConfidence();
 				Color newColor = confidencColors.get(currentConfi);
 
-				if (cnode.getColor() != newColor) {
+				if (cnode.getColor() != newColor) 
+				{
 					cnode.setColor(newColor);
 					repaint = true;
-//					Utils.log("new color on a node");
 				}
-			}
-			if (repaint) {
-				cObj.repaint();
-			}
+			}			
 		}
-	}
-
-	/**
-	 * Update the color for the given treeline and repaint
-	 * @author Axel
-	 */
-	public static void applyCorrespondingColorToDisplayable(Displayable disp) {
-		if(disp instanceof Treeline)
+		if(repaint)
 		{
-			Treeline ctree = (Treeline) disp;
-			boolean repaint = false;
-			if(ctree.getRoot() == null || ctree.getRoot().getSubtreeNodes() == null) return; 
-
-			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes())
-			{
-				byte currentConfi = (byte) 1;
-				if(cnode.high())
-				{
-					currentConfi = (byte) 11;
-				}
-				else
-				{
-					currentConfi = cnode.getConfidence();
-				}
-
-				Color newColor = confidencColors.get(currentConfi);
-
-				if (cnode.getColor() != newColor) {
-					cnode.setColor(newColor);
-					repaint = true;
-//					Utils.log("new color on a node");
-				}
-			}
-			if (repaint) {
-				ctree.repaint();
-			}	
+			Display.repaint(currentLayer);		
 		}
 	}
+	
 	
 	/**
 	 * 
 	 * @param toBeHigh - Treeline to be highlighted
 	 * @author Axel
 	 */
-	public static void highlight(Displayable toBeHigh)
+	public static void highlight(Displayable toBeHigh,boolean choose)
 	{
 		if(toBeHigh instanceof Treeline){
 			Treeline tree = (Treeline) toBeHigh;
 			for (Node<Float> cnode : tree.getRoot().getSubtreeNodes())
 			{
-				cnode.high(true);
+				if(choose){
+					cnode.chooseHighlight();
+				} else {
+					cnode.highlight();
+				}	
 			}
-			RhizoAddons.applyCorrespondingColorToDisplayable(tree);	
+			Display.repaint(Display.getFrontLayer());
+			//tree.repaint();	
 		}
 	}
 
@@ -657,11 +620,11 @@ public class RhizoAddons
 	 * @param toBeHigh - Treeline to be highlighted
 	 * @author Axel
 	 */
-	public static void highlight(List<Displayable> toBeHigh)
+	public static void highlight(List<Displayable> toBeHigh,boolean choose)
 	{		
 		for (Displayable disp : toBeHigh)
 		{
-			highlight(disp);
+			highlight(disp,choose);
 		}
 	}
 
@@ -670,15 +633,20 @@ public class RhizoAddons
 	 * @param notToBeHigh - Treeline to be dehighlighted
 	 * @author Axel
 	 */
-	public static void removeHighlight(Displayable notToBeHigh)
+	public static void removeHighlight(Displayable notToBeHigh,boolean choose)
 	{
 		if(notToBeHigh instanceof Treeline){
 			Treeline tree = (Treeline) notToBeHigh;
 			for (Node<Float> cnode : tree.getRoot().getSubtreeNodes())
 			{
-				cnode.high(false);
+				if(choose){
+					cnode.removeChooseHighlight();
+				} else {
+					cnode.removeHighlight();
+				}				
 			}	
-			RhizoAddons.applyCorrespondingColorToDisplayable(tree);
+			Display.repaint(Display.getFrontLayer());
+			//tree.repaint();	
 		}
 
 	}
@@ -688,13 +656,13 @@ public class RhizoAddons
 	 * @param notToBeHigh - Treelines to be dehighlighted
 	 * @author Axel
 	 */
-	public static void removeHighlight(List<Displayable> toBeHigh)
+	public static void removeHighlight(List<Displayable> toBeHigh,boolean choose)
 	{
 		for (Displayable disp : toBeHigh)
 		{
 			if (disp.getClass().equals(Treeline.class))
 			{
-				removeHighlight((Treeline) disp);
+				removeHighlight((Treeline) disp,choose);
 			}
 		}
 	}
@@ -1333,19 +1301,30 @@ public class RhizoAddons
 			
 			if(firstEmptyAtBack==-1)
 			{
-				Layer layer = new Layer(project, realLast+1, 1, parent);
+				final Layer layer = new Layer(project, realLast+1, 1, parent);
 				parent.add(layer);
-				project.getLayerTree().addLayer(parent, layer);
-				parent.recreateBuckets(layer, true);
+				layer.recreateBuckets();
+				layer.updateLayerTree();
+				//project.getLayerTree().addLayer(parent, layer);
+				//layer.updateLayerTree();
+				//parent.recreateBuckets(layer, true);
+				//parent.updateLayerTree();
 				firstEmptyAtBack=realLast+1;
 				numberToAdd--;
 			}
 			for(int i=0;i<numberToAdd;i++){
-				Layer layer = new Layer(project, firstEmptyAtBack+1+i, 1, parent);
+				final Layer layer = new Layer(project, firstEmptyAtBack+1+i, 1, parent);
 				parent.add(layer);
-				project.getLayerTree().addLayer(parent, layer);
-				parent.recreateBuckets(layer, true);				
+				layer.recreateBuckets();
+				layer.updateLayerTree();
+				//project.getLayerTree().addLayer(parent, layer);
+				//layer.updateLayerTree();
+				//parent.recreateBuckets(layer, true);
+				//parent.updateLayerTree();
 			}
+			//parent.updateLayerTree();
+			//parent.recreateBuckets(false);
+			
 			//now we have enough empty layers starting from z=firstEmptyAtBack
 			
 			Loader loader = project.getLoader();
@@ -1687,13 +1666,13 @@ public class RhizoAddons
 						@Override
 						public void mouseExited(MouseEvent e)
 						{
-							RhizoAddons.removeHighlight( d);
+							RhizoAddons.removeHighlight( d,true);
 						}
 
 						@Override
 						public void mouseEntered(MouseEvent e)
 						{
-							RhizoAddons.highlight( d);
+							RhizoAddons.highlight( d,true);
 
 						}
 
@@ -1767,7 +1746,7 @@ public class RhizoAddons
 				currentDisplay.getMode().mouseReleased(null, x_p, y_p, x_p, y_p, x_p, y_p);
 
 				// actyc: return to the original color
-				RhizoAddons.removeHighlight(new ArrayList<Displayable>(al));
+				RhizoAddons.removeHighlight(new ArrayList<Displayable>(al),true);
 
 				return;
 			}

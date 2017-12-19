@@ -171,6 +171,7 @@ public class ConflictPanel extends JPanel implements ActionListener {
 		
 		if(selection>-1)
 		{
+			Utils.log("start solving");
 			String selectedConflictString = listModel.getElementAt(selection);
 			Conflict currentConflict = dataTable.get(selectedConflictString);
 			//case one: Treeline conflict
@@ -187,7 +188,7 @@ public class ConflictPanel extends JPanel implements ActionListener {
 				Display.getFront().setLayer(layer);
 				//find the interesting treelines and highlight
 				List<Displayable> treelineList = new ArrayList<Displayable>(conflict.getTreelineOne());
-				RhizoAddons.highlight(treelineList);
+				RhizoAddons.highlight(treelineList,false);
 				
 
 				Display.getFront().getFrame().toFront();
