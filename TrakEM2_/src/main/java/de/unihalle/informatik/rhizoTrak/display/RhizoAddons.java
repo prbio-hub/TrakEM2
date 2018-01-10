@@ -48,6 +48,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
+import com.google.common.io.Files;
+
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootAssociationType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootImageAnnotationType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootProjectDocument;
@@ -83,6 +85,7 @@ public class RhizoAddons
 	static String relativPatchDir="/_images";
 	static boolean ini = false;
 	
+	private static File statusFile;
 	public static boolean statusFileExists = false;
 	
 	public static List<String> statusList = new ArrayList<String>();
@@ -222,18 +225,20 @@ public class RhizoAddons
 	}
 	
 	/**
-	 * Reads the status file with the status conventions when a project is opened or a new one is created
-	 * @param file - The project status file
+	 * Reads the status file with the status conventions when a project is opened or a new one is created.
+	 * 
+	 * @param path - The project status file path
 	 * @author Tino
 	 */
 	public static void loadStatusFile(String path)
 	{
-		File statusFile = null;
 		if(null != path) statusFile = new File(path);
-		else return;
+		else return; // the user cancels the open file dialog
 		
-		// TODO: add popup dialog
-		if(!path.endsWith(".status")) return;
+		
+		// TODO: add popup dialogs
+		if(!statusFile.exists()) return; // can't find status file within the same directory as the xml file
+		if(!path.endsWith(".status")) return; // selected file does not end with .status
 		
 		try
 		{
@@ -258,8 +263,8 @@ public class RhizoAddons
 			e.printStackTrace();
 		}
 		
-		
 		statusFileExists = true;
+		Node.MAX_EDGE_CONFIDENCE = getStatusListSize();
 	}
 	
 	/**
@@ -268,6 +273,7 @@ public class RhizoAddons
 	 */
 	public static byte getStatusListSize()
 	{
+		
 		if(statusFileExists) return (byte) (statusList.size() - 1);
 		else return (byte) 10;
 	}
@@ -407,9 +413,36 @@ public class RhizoAddons
 		saveUserSettings();
 		//save connector data
 		saveConnectorData(file);
+		
+		// if for some reason the selected status file is not in the project folder or the saved project file has
+		// a different name than the status file create a new one
+		if(statusFileExists && 
+				(!statusFile.getParent().equals(file.getParent()) || 
+						!statusFile.getName().replace(".status", "").equals(file.getName().replace(".xml", "")))) 
+			saveStatusFile(file);
+		
 		return;		
 	}
 	
+	/**
+	 * Creates a new status file in the project directory when the original status file has been selected from another
+	 * directory. The content will be identical but the name will be changed to the name of the project file.
+	 * 
+	 * @param file - The project xml file
+	 * @author Tino
+	 */
+	public static void saveStatusFile(File file) 
+	{
+		try 
+		{
+			Files.copy(statusFile, new File(file.getAbsolutePath().replace(".xml", ".status")));
+		}
+		catch (IOException e) 
+		{
+			e.printStackTrace();
+		}
+	}
+
 	/**
 	 * Saves the user settings
 	 * @author Axel
