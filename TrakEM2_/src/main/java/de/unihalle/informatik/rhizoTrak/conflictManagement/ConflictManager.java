@@ -293,6 +293,13 @@ public class ConflictManager {
 		}
 	}
 	
+	public static void clearAndUpdate()
+	{
+		connectorConflictHash.clear();
+		connectorConflictHash.clear();
+		restorConflicts();
+	}
+	
 	//gui stuff
 	
 	//TODO make a panel for showing and resolving conflicts
