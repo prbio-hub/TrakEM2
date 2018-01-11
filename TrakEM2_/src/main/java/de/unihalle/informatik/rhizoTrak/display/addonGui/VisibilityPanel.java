@@ -152,7 +152,7 @@ public class VisibilityPanel extends JPanel {
 				
 				JSlider slider = new JSlider();
 				slider.setMinimum(0);
-				slider.setName(Integer.toString(i));
+				slider.setName(Integer.toString(11-i));
 				slider.setMaximum(255);
 				slider.setValue(255);
 				slider.addChangeListener(sliderAction);

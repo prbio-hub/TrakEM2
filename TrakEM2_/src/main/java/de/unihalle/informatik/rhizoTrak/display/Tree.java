@@ -552,7 +552,9 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		;
 		if (null != node.parent) {
 			final byte conf = node.getConfidence();
-			if (Node.MAX_EDGE_CONFIDENCE != conf) sb.append(" c=\"").append(conf).append('\"');
+			// aeekz - for some reason MAX_EDGE_CONFIDENCE is not explicitly saved in the xml file
+//			if (Node.MAX_EDGE_CONFIDENCE != conf) sb.append(" c=\"").append(conf).append('\"');
+			sb.append(" c=\"").append(conf).append('\"');
 		}
 		if (null != node.color) {
 			sb.append(" color=\"");

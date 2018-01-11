@@ -790,7 +790,7 @@ public class Project extends DBObject {
 		}
 		if (loader.hasChanges() && !getBooleanProperty("no_shutdown_hook")) { // DBLoader always returns false
 			if (ControlWindow.isGUIEnabled()) {
-				final YesNoDialog yn = ControlWindow.makeYesNoDialog("TrakEM2", "There are unsaved changes in project " + title + ". Save them?");
+				final YesNoDialog yn = ControlWindow.makeYesNoDialog("rhizoTrak", "There are unsaved changes in project " + title + ". Save them?");
 				if (yn.yesPressed()) {
 					save();
 				}

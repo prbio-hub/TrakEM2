@@ -37,7 +37,7 @@ public abstract class Node<T> implements Taggable {
 	/** Maximum possible confidence in an edge (ranges from 0 to 5, inclusive).*/
 	// actyc: changed maximum to 10
 	// aeekz: is changed when a status file exists
-	static public byte MAX_EDGE_CONFIDENCE = RhizoAddons.getStatusListSize();
+	static public byte MAX_EDGE_CONFIDENCE = 5;
 	
 	//actyc: added a indicator showing whether the node is highlighted
 	private boolean[] high = {false,false};
@@ -65,7 +65,7 @@ public abstract class Node<T> implements Taggable {
 	/** The confidence value of the edge towards the parent;
 	 *  in other words, how much this node can be trusted to continue from its parent node.
 	 *  Defaults to MAX_EDGE_CONFIDENCE for full trust, and 0 for none. */
-	protected byte confidence = MAX_EDGE_CONFIDENCE;
+	protected byte confidence = RhizoAddons.getStatusListSize();
 	public byte getConfidence() { return confidence; }
 
 	protected Layer la;
