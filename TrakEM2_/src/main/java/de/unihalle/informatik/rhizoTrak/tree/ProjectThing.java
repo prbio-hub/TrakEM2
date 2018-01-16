@@ -491,12 +491,12 @@ public final class ProjectThing extends DBObject implements TitledThing {
 			addPopupItem("Show tabular view", listener, al_items);
 		}
 
-		// plugins
-		JMenuItem plugin_menu = Utils.addPlugIns("Project Tree", project, new Callable<Displayable>() {
-										public Displayable call() {
-											if (object instanceof Displayable) return (Displayable)object;
-											return null; }} );
-		if (null != plugin_menu) al_items.add(plugin_menu);
+		// plugins - removed - aeekz
+//		JMenuItem plugin_menu = Utils.addPlugIns("Project Tree", project, new Callable<Displayable>() {
+//										public Displayable call() {
+//											if (object instanceof Displayable) return (Displayable)object;
+//											return null; }} );
+//		if (null != plugin_menu) al_items.add(plugin_menu);
 
 		addPopupItem("Measure", listener, al_items);
 
