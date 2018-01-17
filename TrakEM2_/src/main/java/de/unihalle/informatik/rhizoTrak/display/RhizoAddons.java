@@ -88,6 +88,8 @@ public class RhizoAddons
 	private static File statusFile;
 	public static boolean statusFileExists = false;
 	
+	public static File userSettingFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings");
+	
 	public static List<String> statusList = new ArrayList<String>();
 	public static List<String> statusListAbbr = new ArrayList<String>();
 	
@@ -171,7 +173,6 @@ public class RhizoAddons
 	 */
 	public static void loadUserSettings()
 	{
-		File userSettingFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings");
 
 		if (!userSettingFile.exists())
 		{
@@ -767,7 +768,8 @@ public class RhizoAddons
 	public static void setVisibility()
 	{
 		colorFrame = new JFrame("Color & Visibility");
-		colorFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		
+		colorFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		JPanel temp = new VisibilityPanel();
 		//JPanel temp = guiAddons.visibilityPanel();
 		colorFrame.add(temp);
@@ -2225,11 +2227,28 @@ public class RhizoAddons
     	return res;
     }
     
-    public static JFrame getColorVisbilityFrame()
+    /**
+     * 
+     */
+    public static void clearColorVisibilityLists()
+    {
+    	statusList = new ArrayList<String>();
+    	statusListAbbr = new ArrayList<String>();
+    }
+    
+    /**
+     * Used for disposing JFrames when closing the control window
+     * @return The color and visbility JFrame
+     */
+    public static JFrame getColorVisibilityFrame()
     {
     	return colorFrame;
     }
     
+    /**
+     * Used for disposing JFrames when closing the control window
+     * @return The image loader JFrame
+     */
     public static JFrame getImageLoaderFrame()
     {
     	return imageLoaderFrame;

@@ -171,7 +171,7 @@ public class VisibilityPanel extends JPanel {
 				button.setPreferredSize(new java.awt.Dimension(33, 12));
 				button.setContentAreaFilled(false);
 				button.setOpaque(true);
-				button.setBackground(RhizoAddons.confidencColors.get((byte) 10));
+				button.setBackground(RhizoAddons.confidencColors.get((byte) i));
 				panel.add(button);
 				
 				Component[] c = { slider, button };
