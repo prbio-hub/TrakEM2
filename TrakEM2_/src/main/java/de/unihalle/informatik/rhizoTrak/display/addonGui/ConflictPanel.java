@@ -146,7 +146,9 @@ public class ConflictPanel extends JPanel implements ActionListener {
 	
 	public void updateList()
 	{
-		listModel.removeAllElements();
+		ConflictManager.clearAndUpdate();
+		
+		listModel.removeAllElements();	
 		ArrayList<ConnectorConflict> currentConnectorConflicts = new ArrayList<ConnectorConflict>(ConflictManager.getConnectorConflicts());
 		for(ConnectorConflict conflict:currentConnectorConflicts)
 		{

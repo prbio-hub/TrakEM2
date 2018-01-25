@@ -1936,6 +1936,10 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	}
 
 	static public void remove(final ZDisplayable zdispl) {
+		if(zdispl instanceof Tree)
+		{
+			((Tree) zdispl).deleteTrigger();
+		}
 		for (final Display d : al_displays) {
 			if (zdispl.getLayerSet() == d.layer.getParent()) {
 				d.remove((Displayable)zdispl);

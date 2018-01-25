@@ -3982,6 +3982,22 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		}
 	}
 	
+	//actyc: removeeventTrigger
+	public void deleteTrigger(){
+		Utils.log("remove something");
+		//actyct: fire remove event or if tree is a connector remove all references
+		if(this instanceof Treeline)
+		{
+			TreeEvent te = new TreeEvent((Treeline) this,"remove",null,null);
+			treeAction(te);
+		}
+		if(this instanceof Connector)
+		{
+			Connector thisConnector = (Connector) this;
+			thisConnector.removeAllTreelines();
+		}
+	}
+	
 	/* actyc: listener interaction with connector type */
 	private List<TreeEventListener> treeEventListener = new ArrayList<TreeEventListener>();
 	
