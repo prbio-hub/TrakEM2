@@ -77,7 +77,7 @@ public class TreelineConflict extends Conflict {
 	
 	@Override 
 	public String toString(){
-		return "Connector:"+ treeConKey.getConnector().getId() + getTreelinesAsString();
+		return "Multiple Treeline Conflict on Connector: "+ treeConKey.getConnector().getId() + " " + getTreelinesAsString();
 	}
 	
 }
