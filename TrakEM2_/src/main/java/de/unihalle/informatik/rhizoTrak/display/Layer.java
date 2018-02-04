@@ -62,6 +62,8 @@ public final class Layer extends DBObject implements Bucketable, Comparable<Laye
 	private double thickness = 0;
 
 	private LayerSet parent;
+	
+	public boolean mtbxml = false;
 
 	/** Compare layers by Z. */
 	static public final Comparator<Layer> COMPARATOR = new Comparator<Layer>() {

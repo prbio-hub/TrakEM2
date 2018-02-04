@@ -1853,7 +1853,7 @@ public class RhizoAddons
 	}
 	
     /**
-     *  Writes the current project to a xmlbeans file. In contrast to the standard TrakEM xml format,  this file may be opened with MiToBo
+     *  Writes the current project to a xmlbeans file. In contrast to the standard TrakEM xml format, this file may be opened with MiToBo
      *  @author Tino
      */
     public static void writeMTBXML()
@@ -1880,8 +1880,8 @@ public class RhizoAddons
 			MTBXMLRootProjectType xmlRootProject = xmlRootProjectDocument.addNewMTBXMLRootProject();
 			xmlRootProject.setXsize((int) layers.get(0).getLayerWidth());
 			xmlRootProject.setYsize((int) layers.get(0).getLayerHeight());
-			xmlRootProject.setXresolution((float) imagePlus.getCalibration().getX(1)); // TODO
-			xmlRootProject.setYresolution((float) imagePlus.getCalibration().getY(1)); // TODO
+			xmlRootProject.setXresolution((float) imagePlus.getCalibration().getX(1));
+			xmlRootProject.setYresolution((float) imagePlus.getCalibration().getY(1));
 			
 			MTBXMLRootImageAnnotationType[] xmlRootSets = new MTBXMLRootImageAnnotationType[layers.size()];
 
@@ -1894,7 +1894,7 @@ public class RhizoAddons
 				Layer currentLayer = layers.get(i); 
 				MTBXMLRootImageAnnotationType rootSet = MTBXMLRootImageAnnotationType.Factory.newInstance();
 				
-				rootSet.setImagename(imageNames[i]); // also adds "Software: IrfanView" to the string for some reason
+				rootSet.setImagename(imageNames[i]); // TODO: why does this not work?
 				rootSet.setRootSetID(i);
 				
 				List<MTBXMLRootType> roots = new ArrayList<MTBXMLRootType>(); // arraylist for convenience
@@ -1934,7 +1934,7 @@ public class RhizoAddons
 				
 				MTBXMLRootAssociationType rootAssociation = MTBXMLRootAssociationType.Factory.newInstance();
 				
-				// treeline = rootReference
+				// treeline = rootReference TODO: first rootreference is redundant in xml output? might be caused by changes to the connector class
 				List<MTBXMLRootReferenceType> rootReferencesList = new ArrayList<MTBXMLRootReferenceType>(); // arraylist for convenience
 				List<Treeline> treelinesOfConnector = treelinesOfConnector(currentConnector);
  				
@@ -1981,8 +1981,11 @@ public class RhizoAddons
 		xmlRoot.setRootID(rootId);
 		xmlRoot.setStartSegmentID(0); // TODO?
 		
-		List<Node<Float>> nodes = new ArrayList<Node<Float>>(treeline.getNodesAt(currentLayer)); // arraylist for convenience
-		nodes.remove(treeline.getRoot());
+		List<Node<Float>> treelineNodes = new ArrayList<Node<Float>>(treeline.getNodesAt(currentLayer)); // arraylist for convenience
+		treelineNodes.remove(treeline.getRoot()); // skip the root node
+
+		// TODO: some nodes in annotated projects (roman) appear to be parentless? how?
+		List<Node<Float>> nodes = sortTreelineNodes(treelineNodes, treeline);
 		
 		MTBXMLRootSegmentType[] rootSegmentsArray = new MTBXMLRootSegmentType[nodes.size()];
 		
@@ -2001,7 +2004,7 @@ public class RhizoAddons
 				rootSegment.setRootID(xmlRoot.getRootID());
 				rootSegment.setSegmentID(i); 
 				if(n.getParent().equals(treeline.getRoot())) rootSegment.setParentID(-1);
-				else rootSegment.setParentID(i-1); // TODO find actual parent segment id via coordinates or save the previous RootSegmentType?
+				else rootSegment.setParentID(i-1); // this works because nodes are sorted
 
 				MTBXMLRootSegmentPointType xmlStart = MTBXMLRootSegmentPointType.Factory.newInstance();
 				// transform local coordinates to global
@@ -2020,7 +2023,7 @@ public class RhizoAddons
 				rootSegment.setEndPoint(xmlEnd);
 				rootSegment.setEndRadius(endRadius);
 
-				rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING); // TODO
+				rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING); // TODO: custom status vs enums?
 				rootSegmentsArray[i] = rootSegment;
 			}
 		}
@@ -2028,10 +2031,54 @@ public class RhizoAddons
 		xmlRoot.setRootSegmentsArray(rootSegmentsArray);
 		return xmlRoot;
 	}
+	
+	/**
+	 * Sorts the nodes of a treeline according their start and end coordinates
+	 * @param List of nodes in a treeline
+	 * @return Sorted list of nodes
+	 * @author Tino
+	 */
+	private static List<Node<Float>> sortTreelineNodes(List<Node<Float>> treelineNodes, Treeline treeline)
+	{
+		List<Node<Float>> result = new ArrayList<Node<Float>>();
+		// first node
+		Node<Float> current = null;
+		for(Node<Float> n: treelineNodes)
+		{
+			if(n.getParent().equals(treeline.getRoot()))
+			{
+				result.add(n);
+				current = n;
+			}
+		}
+
+		while(result.size() < treelineNodes.size())
+		{
+			boolean found = false;
+			for(Node<Float> n: treelineNodes)
+			{
+				if(n.getParent().equals(current))
+				{
+					result.add(n);
+					current = n;
+					found = true;
+					break;
+				}
+			}
+			
+			if(!found)
+			{
+				Utils.log("treeline "+treeline+" has parentless nodes.");
+				break;
+			}
+		}
+
+		return result;
+	}
 
 	/**
 	 * Converts MTBXML to TrakEM project.
-	 * Does not work yet!
+	 * INCOMPLETE - TODO: add connectors, image names, find better workaround
 	 * @author Tino
 	 */
 	public static void readMTBXML()
@@ -2039,6 +2086,7 @@ public class RhizoAddons
 		String[] filepath = Utils.selectFile("test");
 		File file = new File(filepath[0] + filepath[1]);
 		
+		// TODO: check other violations
 		while(!filepath[1].contains(".xml"))
 		{
 			Utils.showMessage("Selected file is not a valid xml file.");
@@ -2052,6 +2100,8 @@ public class RhizoAddons
 			MTBXMLRootProjectType rootProject = rootProjectDocument.getMTBXMLRootProject();
 			MTBXMLRootImageAnnotationType[] rootSets = rootProject.getCollectionOfImageAnnotationsArray();
 			
+			Utils.log("@readMTBXML: number of rootsets " + rootSets.length);
+			
 			Display display = Display.getFront();	
 			
 			Project project = display.getProject();
@@ -2060,6 +2110,7 @@ public class RhizoAddons
 			LayerSet layerSet = display.getLayerSet();  
 			ArrayList<Layer> layers = layerSet.getLayers();
 			
+			// TODO: do we care about the image names?
 			while(rootSets.length != layers.size())
 			{
 				Utils.showMessage("Number of rootSets in the xml file does not match the number of layers.");
@@ -2073,12 +2124,10 @@ public class RhizoAddons
 			
 			/* catch exceptions:
 			 * - check resolution 
-			 * - check image names
 			 */
-			
 			for(int i = 0; i < rootSets.length; i++)
 			{
-				Layer currentLayer = layers.get(i);
+				Layer currentLayer = layers.get(i); // order of rootsets has to correspond to the layer if we don't care about image names
 				MTBXMLRootImageAnnotationType currentRootSet = rootSets[i];
 				
 				ProjectThing possibleParent = findParentAllowing("treeline", project);
@@ -2089,7 +2138,8 @@ public class RhizoAddons
 				}
 				
 				MTBXMLRootType[] roots = currentRootSet.getRootsArray();
-				
+				Utils.log("@readMTBXML: number of roots in rootset "+ i + ": " + roots.length);
+		
 				for(int j = 0; j < roots.length; j++)
 				{
 					MTBXMLRootType currentRoot = roots[j];
@@ -2103,7 +2153,11 @@ public class RhizoAddons
 	    			Treeline treeline = (Treeline) treelineThing.getObject();
 	    			treeline.setLayer(currentLayer);
 	    			
+	    			// TODO: this is a workaround for the repainting issues that occur when creating a new nodes out of a mtbxml file
+	    			currentLayer.mtbxml = true;
+	    			
 	    			MTBXMLRootSegmentType[] rootSegments = currentRoot.getRootSegmentsArray();
+//	    			Utils.log("@readMTBXML: number of segments in root "+ j + " in rootset "+ i + ": " + rootSegments.length);
 	    			
 	    			for(int k = 0; k < rootSegments.length; k++)
 	    			{
@@ -2112,34 +2166,34 @@ public class RhizoAddons
 	    				MTBXMLRootSegmentPointType xmlEnd = currentRootSegment.getEndPoint();
 	    				
 	    				RadiusNode root = null;
-	    				RadiusNode currentParent = null;
+	    				RadiusNode nodeAfterRoot = null;
 	    				
-	    				// TODO global coordinates to local
-	    				// ist erstes Segment wirklich root?
+	    				// this assumes that the order of the xml file is preserved in getRootSegmentsArray() so that
+	    				// the first segment is the 'root segment'
 	    				if(currentRootSegment.getParentID() == -1)
 	    				{
 	    					root = new RadiusNode(xmlStart.getX(), xmlStart.getY(), currentLayer, currentRootSegment.getStartRadius());
-	    					currentParent = new RadiusNode(xmlEnd.getX(), xmlEnd.getY(), currentLayer, currentRootSegment.getEndRadius());
-	    					
-	    					Utils.log("if "+k);
-	    					Utils.log("added root: " + treeline.addNode(null, root, (byte) 1)); // TODO confidence
-	    					Utils.log("added child: " + treeline.addNode(root, currentParent, (byte) 1)); // TODO confidence
+	    					nodeAfterRoot = new RadiusNode(xmlEnd.getX(), xmlEnd.getY(), currentLayer, currentRootSegment.getEndRadius());
+
+//	    					Utils.log("added root: " + treeline.addNode(null, root, (byte) 0) + " " + root); // TODO custom status vs enums
+//	    					Utils.log("currentParent: " + treeline.getLastAddedNode() );
+//	    					Utils.log("added child: " + treeline.addNode(treeline.getLastAddedNode(), nodeAfterRoot, (byte) 0)); // TODO custom status vs enums
+	    					treeline.addNode(null, root, (byte) 0);
+	    					treeline.addNode(treeline.getLastAddedNode(), nodeAfterRoot, (byte) 0);
 	    					treeline.setRoot(root);
-	    					
 	    				}
 	    				else
 	    				{
 	    					RadiusNode child = new RadiusNode(xmlEnd.getX(), xmlEnd.getY(), currentLayer, currentRootSegment.getEndRadius());
-	    					Utils.log("else "+k);
-	    					Utils.log("added child: " + treeline.addNode(currentParent, child, (byte) 1)); 
 	    					
-	    					currentParent = child;
+//	    					Utils.log("else "+k + ", xml coordinates: " + child.getX() + " " + child.getY());
+//	    					Utils.log("currentParent: " + treeline.getLastAddedNode() + " " + treeline.getLastAddedNode().getX());
+//	    					Utils.log("added child: " + treeline.addNode(treeline.getLastAddedNode(), child, (byte) 1)); 
+	    					treeline.addNode(treeline.getLastAddedNode(), child, (byte) 0);
 	    				}
-	    				treeline.repaint();
-//	    				treeline.clearState();
-	    				treeline.updateCache();
 	    			}
 	    			
+	    			treeline.updateCache();
 	    			Utils.log("treeline"+j+"; set layer at "+treeline.getLayer() + " " + treeline.getFirstLayer());
 	    			Utils.log(treeline.getNodesAt(currentLayer).size()); 
 				}
@@ -2151,7 +2205,6 @@ public class RhizoAddons
 			Utils.log(e.getLocalizedMessage());
 		} 
 
-		
 	}
 	
 	/**

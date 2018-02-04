@@ -1210,10 +1210,10 @@ public abstract class Node<T> implements Taggable {
 	
 	//actyc: get the righ color aka wheter non, first or seconded highlight
 	private Color getCorrectedColor(){
-		Utils.log("current high= " + high[0]+"-"+high[1]);
+//		Utils.log("current high= " + high[0]+"-"+high[1]);
 		Color result = RhizoAddons.confidencColors.get(this.getConfidence());
 //		if(high>0){
-//			result = RhizoAddons.confidencColors.get((byte) 11);
+//			result = RhizoAddons.confidencColorsget((byte) 11);
 //			if(high>1){
 //				Utils.log("even more highlighted");
 //				result = Color.red;

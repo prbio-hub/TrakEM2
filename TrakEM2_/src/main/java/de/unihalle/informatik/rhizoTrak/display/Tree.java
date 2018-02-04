@@ -324,6 +324,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		return b;
 	}
 
+	// aeekz - added workaround for reading mtbxml
 	@Override
 	public boolean calculateBoundingBox(final Layer la) {
 		try {
@@ -344,11 +345,15 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				return false;
 			}
 
+			// TODO: this is a workaround for the repainting issues that occur when creating a new nodes out of a mtbxml file
+			if(la.mtbxml) return false;
+			
 			synchronized (node_layer_map) {
 				// now adjust points to make min_x,min_y be the x,y
 				for (final Collection<Node<T>> nodes : node_layer_map.values()) {
 					for (final Node<T> nd : nodes) {
-						nd.translate(-box.x, -box.y); }}
+						nd.translate(-box.x, -box.y);
+						Utils.log("@calculateBoundingBox2" + nd);}}
 			}
 			this.at.translate(box.x, box.y); // not using super.translate(...) because a preConcatenation is not needed; here we deal with the data.
 
@@ -967,6 +972,11 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	public Coordinate<Node<T>> getLastAdded() {
 		return createCoordinate(last_added);
 	}
+	
+	// aeekz
+	public Node<T> getLastAddedNode() {
+		return last_added;
+	}
 
 	/** Find an edge near the world coords x,y,layer with precision depending upon magnification,
 	 *  and adjust its confidence to @param confidence.
@@ -1243,6 +1253,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				cacheSubtree(subtree);
 
 				setLastAdded(child);
+				Utils.log("@addNode1: " + child);
 
 				added = true;
 
@@ -1253,7 +1264,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		if (added) {
 			repaint(true, child.la);
 			updateView();
-
+			Utils.log("@addNode2: " + child);
 			if (null != subtree) {
 				synchronized (tolink) {
 					tolink.addAll(subtree);
