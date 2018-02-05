@@ -2167,6 +2167,19 @@ public class RhizoAddons
 	    				
 	    				RadiusNode root = null;
 	    				RadiusNode nodeAfterRoot = null;
+
+    					// TODO: this is temporary
+	    				byte s = 0;
+	    				
+	    				if(statusFileExists)
+	    				{
+		    				if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.LIVING) s = (byte) statusList.indexOf("LIVING");
+		    				else if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.DEAD) s = (byte) statusList.indexOf("DEAD");
+		    				else if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.GAP) s = (byte) statusList.indexOf("GAP");
+		    				else if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.DECAYED) s = (byte) statusList.indexOf("DECAYED");
+	    				}
+
+    					if(s == -1) s = 0;
 	    				
 	    				// this assumes that the order of the xml file is preserved in getRootSegmentsArray() so that
 	    				// the first segment is the 'root segment'
@@ -2178,8 +2191,9 @@ public class RhizoAddons
 //	    					Utils.log("added root: " + treeline.addNode(null, root, (byte) 0) + " " + root); // TODO custom status vs enums
 //	    					Utils.log("currentParent: " + treeline.getLastAddedNode() );
 //	    					Utils.log("added child: " + treeline.addNode(treeline.getLastAddedNode(), nodeAfterRoot, (byte) 0)); // TODO custom status vs enums
-	    					treeline.addNode(null, root, (byte) 0);
-	    					treeline.addNode(treeline.getLastAddedNode(), nodeAfterRoot, (byte) 0);
+
+	    					treeline.addNode(null, root, s);
+	    					treeline.addNode(treeline.getLastAddedNode(), nodeAfterRoot, s);
 	    					treeline.setRoot(root);
 	    				}
 	    				else
@@ -2189,7 +2203,7 @@ public class RhizoAddons
 //	    					Utils.log("else "+k + ", xml coordinates: " + child.getX() + " " + child.getY());
 //	    					Utils.log("currentParent: " + treeline.getLastAddedNode() + " " + treeline.getLastAddedNode().getX());
 //	    					Utils.log("added child: " + treeline.addNode(treeline.getLastAddedNode(), child, (byte) 1)); 
-	    					treeline.addNode(treeline.getLastAddedNode(), child, (byte) 0);
+	    					treeline.addNode(treeline.getLastAddedNode(), child, s);
 	    				}
 	    			}
 	    			
