@@ -2022,8 +2022,18 @@ public class RhizoAddons
 				xmlEnd.setY((float) end.getY());
 				rootSegment.setEndPoint(xmlEnd);
 				rootSegment.setEndRadius(endRadius);
-
-				rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING); // TODO: custom status vs enums?
+				
+				// TODO: this is temporary
+				if(statusFileExists && n.getConfidence() < statusList.size())
+				{
+					String status = statusList.get(n.getConfidence());
+					if(status.equals("DEAD")) rootSegment.setType(MTBXMLRootSegmentStatusType.DEAD);
+					else if(status.equals("DECAYED")) rootSegment.setType(MTBXMLRootSegmentStatusType.DECAYED);
+					else if(status.equals("GAP")) rootSegment.setType(MTBXMLRootSegmentStatusType.GAP);
+					else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING);
+				}
+				else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING); // TODO: custom status vs enums?
+				
 				rootSegmentsArray[i] = rootSegment;
 			}
 		}
