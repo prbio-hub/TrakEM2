@@ -2120,10 +2120,9 @@ public class RhizoAddons
 			LayerSet layerSet = display.getLayerSet();  
 			ArrayList<Layer> layers = layerSet.getLayers();
 			
-			// TODO: do we care about the image names?
-			while(rootSets.length != layers.size())
+			while(rootSets.length > layers.size())
 			{
-				Utils.showMessage("Number of rootSets in the xml file does not match the number of layers.");
+				Utils.showMessage("Number of rootSets in the xml file is greater than the number of layers.");
 				filepath = Utils.selectFile("test");
 				file = new File(filepath[0] + filepath[1]);
 				
