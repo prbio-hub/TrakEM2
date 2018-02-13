@@ -35,6 +35,7 @@ import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.parallel.ExecutorProvider;
+import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.Filter;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.IJ;
@@ -302,6 +303,8 @@ public class RegularizedAffineLayerAlignment
 		}
 		catch ( final Exception e )
 		{
+			e.printStackTrace();
+			IJError.print( e );
 			return;
 		}
 

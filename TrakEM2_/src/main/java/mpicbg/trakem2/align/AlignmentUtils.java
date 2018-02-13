@@ -18,7 +18,6 @@ package mpicbg.trakem2.align;
 
 
 import ij.IJ;
-import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
 import java.io.Serializable;
@@ -34,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.parallel.ExecutorProvider;
+import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.Filter;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import mpicbg.ij.SIFT;
@@ -150,6 +150,7 @@ final public class AlignmentUtils
 		catch ( final InterruptedException e )
 		{
 			Utils.log( "Feature extraction interrupted." );
+			IJError.print( e );
 			siftTasks.clear();
 			//exec.shutdownNow();
 			throw e;
@@ -157,6 +158,7 @@ final public class AlignmentUtils
 		catch ( final ExecutionException e )
 		{
 			Utils.log( "Execution exception during feature extraction." );
+			IJError.print( e );
 			siftTasks.clear();
 			//exec.shutdownNow();
 			throw e;
@@ -213,8 +215,7 @@ final public class AlignmentUtils
                 final FloatArray2DSIFT sift = new FloatArray2DSIFT( siftParam );
                 final SIFT ijSIFT = new SIFT( sift );
                 fs = new ArrayList< Feature >();
-                final ImageProcessor ip = Patch.makeFlatGreyImage( patches, finalBox, 0, scale );
-                ijSIFT.extractFeatures( ip, fs );
+                ijSIFT.extractFeatures( Patch.makeFlatGrayImage( patches, finalBox, 0, scale ), fs );
                 Utils.log( fs.size() + " features extracted for " + layerName );
 
                 if ( !mpicbg.trakem2.align.Util.serializeFeatures( layer.getProject(), siftParam, "layer", layer.getId(), fs ) )
