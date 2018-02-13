@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -2020,6 +2021,7 @@ public class RhizoAddons
 				Point2D end = treeline.getAffineTransform().transform(new Point2D.Float(n.getX(), n.getY()), null);
 				xmlEnd.setX((float) end.getX());
 				xmlEnd.setY((float) end.getY());
+				
 				rootSegment.setEndPoint(xmlEnd);
 				rootSegment.setEndRadius(endRadius);
 				
@@ -2168,15 +2170,32 @@ public class RhizoAddons
 	    			MTBXMLRootSegmentType[] rootSegments = currentRoot.getRootSegmentsArray();
 //	    			Utils.log("@readMTBXML: number of segments in root "+ j + " in rootset "+ i + ": " + rootSegments.length);
 	    			
+	    			// create node -> ID map to later assign parents and children according to segment IDs and parent IDs
+	    			HashMap<Integer, RadiusNode> nodeIDmap = new HashMap<Integer, RadiusNode>();
 	    			for(int k = 0; k < rootSegments.length; k++)
 	    			{
 	    				MTBXMLRootSegmentType currentRootSegment = rootSegments[k];
 	    				MTBXMLRootSegmentPointType xmlStart = currentRootSegment.getStartPoint();
 	    				MTBXMLRootSegmentPointType xmlEnd = currentRootSegment.getEndPoint();
-	    				
-	    				RadiusNode root = null;
-	    				RadiusNode nodeAfterRoot = null;
 
+	    				if(currentRootSegment.getParentID() == -1)
+	    				{
+	    					RadiusNode root = new RadiusNode(xmlStart.getX(), xmlStart.getY(), currentLayer, currentRootSegment.getStartRadius());
+	    					RadiusNode currentNode = new RadiusNode(xmlEnd.getX(), xmlEnd.getY(), currentLayer, currentRootSegment.getEndRadius());
+	    					nodeIDmap.put(-1, root);
+	    					nodeIDmap.put(currentRootSegment.getSegmentID(), currentNode);
+	    				}
+	    				else
+	    				{
+	    					RadiusNode currentNode = new RadiusNode(xmlEnd.getX(), xmlEnd.getY(), currentLayer, currentRootSegment.getEndRadius());
+	    					nodeIDmap.put(currentRootSegment.getSegmentID(), currentNode);
+	    				}
+	    			}
+	    			
+	    			for(int k = 0; k < rootSegments.length; k++)
+	    			{
+	    				MTBXMLRootSegmentType currentRootSegment = rootSegments[k];
+	    				
     					// TODO: this is temporary
 	    				byte s = 0;
 	    				
@@ -2190,29 +2209,17 @@ public class RhizoAddons
 
     					if(s == -1) s = 0;
 	    				
-	    				// this assumes that the order of the xml file is preserved in getRootSegmentsArray() so that
-	    				// the first segment is the 'root segment'
+
 	    				if(currentRootSegment.getParentID() == -1)
 	    				{
-	    					root = new RadiusNode(xmlStart.getX(), xmlStart.getY(), currentLayer, currentRootSegment.getStartRadius());
-	    					nodeAfterRoot = new RadiusNode(xmlEnd.getX(), xmlEnd.getY(), currentLayer, currentRootSegment.getEndRadius());
-
-//	    					Utils.log("added root: " + treeline.addNode(null, root, (byte) 0) + " " + root); // TODO custom status vs enums
-//	    					Utils.log("currentParent: " + treeline.getLastAddedNode() );
-//	    					Utils.log("added child: " + treeline.addNode(treeline.getLastAddedNode(), nodeAfterRoot, (byte) 0)); // TODO custom status vs enums
-
-	    					treeline.addNode(null, root, s);
-	    					treeline.addNode(treeline.getLastAddedNode(), nodeAfterRoot, s);
-	    					treeline.setRoot(root);
+	    					treeline.addNode(null, nodeIDmap.get(currentRootSegment.getParentID()), s);
+	    					treeline.addNode(nodeIDmap.get(currentRootSegment.getParentID()), nodeIDmap.get(currentRootSegment.getSegmentID()), s);
+	    					treeline.setRoot(nodeIDmap.get(currentRootSegment.getParentID()));
+	    			
 	    				}
 	    				else
 	    				{
-	    					RadiusNode child = new RadiusNode(xmlEnd.getX(), xmlEnd.getY(), currentLayer, currentRootSegment.getEndRadius());
-	    					
-//	    					Utils.log("else "+k + ", xml coordinates: " + child.getX() + " " + child.getY());
-//	    					Utils.log("currentParent: " + treeline.getLastAddedNode() + " " + treeline.getLastAddedNode().getX());
-//	    					Utils.log("added child: " + treeline.addNode(treeline.getLastAddedNode(), child, (byte) 1)); 
-	    					treeline.addNode(treeline.getLastAddedNode(), child, s);
+	    					treeline.addNode(nodeIDmap.get(currentRootSegment.getParentID()), nodeIDmap.get(currentRootSegment.getSegmentID()), s);
 	    				}
 	    			}
 	    			
