@@ -5,6 +5,20 @@
 			     http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <!--
+    # The rhizoTrak project and Fiji plugin is substantially based on the TrakEM2 plugin for ImageJ/Fiji:
+    #   
+    #     https://imagej.net/TrakEM2
+    #
+    # The original project and it's source code can be found on Github:
+    #
+    #     https://github.com/trakem2/TrakEM2/wiki
+    #
+    # Both projects are released under GPLv3.
+    #
+    # Contact: rhizoTrak@informatik.uni-halle.de
+  -->
+  
   <groupId>de.unihalle.informatik.rhizoTrak</groupId>
   <artifactId>rhizoTrak_</artifactId>
   <version>1.0-SNAPSHOT</version>
@@ -199,13 +213,7 @@
     <repository>
       <id>snapshots</id>
       <name>Archiva Public Snapshot Repository on 'moon'</name>
-      <url>https://moon.informatik.uni-halle.de/archiva/repository/snapshots/</url>
-      <layout>default</layout>
-    </repository>
-    <repository>
-      <id>internal</id>
-      <name>Archiva Internal Repository on 'moon'</name>
-      <url>https://moon.informatik.uni-halle.de/archiva/repository/internal/</url>
+      <url>https://moon.informatik.uni-halle.de/archiva/repository/snapshots-pub/</url>
       <layout>default</layout>
     </repository>
     <repository>
