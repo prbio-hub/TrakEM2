@@ -1,0 +1,46 @@
+############################################################################################
+#
+# rhizoTrak
+# Copyright (C) 2018 - @YEAR@ by the rhizoTrak development team
+#
+# rhizoTrak is a tool for manual and semi-automated annotation of root images.
+# It is implemented as plugin for Fiji (https://fiji.sc).
+#
+# The code of this project is substantially based on the TrakEM2 (https://imagej.net/TrakEM2)
+# plugin for ImageJ/Fiji, i.e. it extends TrakEM2's functionality for the specifics
+# of root image annotation. For example, rhizoTrak adds support for importing and exporting
+# annotation data in RSML format ( https://rootsystemml.github.io/data), extends the
+# connector concept from purely geometric to object-based links, and adds several additional
+# configuration options.
+#
+# TrakEM2 as well as rhizoTrak are both released under the General Public License version
+# 3.0 or later, please find the License file included in this jar.
+#
+# For more information please visit 
+# https://github.com/prbio-hub/rhizoTrak/wiki
+# 
+# Please send questions and suggestions to
+# <rhizoTrak@informatik.uni-halle.de>.
+# 
+# Please report bugs using 
+# https://github.com/prbio-hub/rhizoTrak/issues
+# 
+############################################################################################
+
+==== PREREQUISITES ====
+rhizoTrak requires an up-to-date version of Fiji to be run.
+In addition, Java 1.8 is necessary.
+
+==== INSTALLATION INSTRUCTIONS ====
+For installing rhizoTrak in your Fiji installation, you have two options:
+
+  a) copy this jar to the plugins folder of your installation
+
+     or
+
+  b) activate the update site of rhizoTrak within your Fiji
+
+If you require additional information please take a look at rhizoTrak's website (see above).
+
+To contact us, simply write us an email: rhizoTrak@informatik.uni-halle.de
+
