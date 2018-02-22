@@ -188,6 +188,34 @@
 
   <build>
     <plugins>
+
+      <plugin>
+        <groupId>org.jvnet.jaxb2.maven2</groupId>
+	<artifactId>maven-jaxb2-plugin</artifactId>
+	<version>0.13.3</version>
+        <executions>
+          <execution>
+            <id>xjc-rsml</id>
+            <phase>process-resources</phase>
+	    <goals>
+	      <goal>generate</goal>
+	    </goals>
+            <configuration>
+	      <schemas>
+		<schema>
+		  <url>https://raw.githubusercontent.com/RootSystemML/RSMLValidator/master/rsml.xsd</url>
+		</schema>
+	      </schemas>
+	      <generatePackage>de.unihalle.informatik.rhizoTrak.rsml</generatePackage>
+	      <writeCode>true</writeCode>
+	      <noFileHeader>false</noFileHeader>
+	      <removeOldOutput>true</removeOldOutput>
+	      <enableIntrospection>true</enableIntrospection>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
 	<groupId>org.apache.maven.plugins</groupId>
 	<artifactId>maven-compiler-plugin</artifactId>
@@ -200,9 +228,10 @@
 	  <compilerArgument>-proc:none</compilerArgument>
 	</configuration>
       </plugin>
+      
     </plugins>
   </build>
-  
+
   <repositories>
     <!-- NB: for project parent -->
     <repository>
