@@ -102,6 +102,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
@@ -6332,7 +6333,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		} 
 		// rhizo commands start
 		else if(command.equals("Copy treelines")){
-			RhizoAddons.copyTreeLine();
+			int answer = JOptionPane.showConfirmDialog(null, "This will copy every treeline from the current layer to the next layer and may not be undone.\nAre you sure?", 
+														"", JOptionPane.YES_NO_OPTION);
+			if(answer == JOptionPane.YES_OPTION) RhizoAddons.copyTreeLine();
 		}
 		else if(command.equals("Load images")){
 			RhizoAddons.imageLoader();
