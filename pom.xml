@@ -180,6 +180,7 @@
   </issueManagement>
 
   <properties>
+    <YEAR>2018</YEAR>
     <license.licenseName>gpl_v3</license.licenseName>
     <license.copyrightOwners>Albert Cardona, Stephan Saalfeld and others.</license.copyrightOwners>
     <jython-shaded.version>2.7.0</jython-shaded.version>
@@ -188,6 +189,57 @@
 
   <build>
     <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+	<version>3.0.2</version>
+      	<configuration>
+	  <includeEmptyDirs>true</includeEmptyDirs>
+	</configuration>
+	<dependencies>
+	  <dependency>
+	    <groupId>org.apache.maven.shared</groupId>
+	    <artifactId>maven-filtering</artifactId>
+	    <version>3.1.1</version>
+	  </dependency>
+	</dependencies>
+        <executions>
+          <!-- files needed for execution -->
+          <execution>
+            <id>copy-resources-for-execution</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+	      <delimiters>
+	        <delimiter>${*}</delimiter> <!-- to keep the default behavior --> 
+	        <delimiter>@*@</delimiter>  <!-- to add Ant-like tokens style --> 
+	      </delimiters>
+              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+	      <includeEmptyDirs>true</includeEmptyDirs>
+              <resources>
+                <resource>
+	          <directory>src/main/resources</directory>
+	          <includes>
+                    <include>README.rhizoTrak</include>
+                    <exclude>plugins.config</exclude>
+	          </includes>
+	          <filtering>true</filtering>
+                </resource>
+                <resource>
+	          <directory>src/main/java</directory>
+	          <filtering>true</filtering>
+	          <includes>
+                    <include>**/*.java</include>
+	          </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
       <plugin>
         <groupId>org.jvnet.jaxb2.maven2</groupId>
