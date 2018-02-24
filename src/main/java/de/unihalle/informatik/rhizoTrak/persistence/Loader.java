@@ -3540,6 +3540,8 @@ while (it.hasNext()) {
 					if (null != p) {
 						synchronized (layer) {
 							layer.add(p);
+							//actyc: lock all new imported images
+							p.setLocked(true);
 						}
 						layer.getParent().enlargeToFit(p, LayerSet.NORTHWEST);
 					}

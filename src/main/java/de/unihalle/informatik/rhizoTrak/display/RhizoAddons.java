@@ -81,7 +81,6 @@ import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.Box;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -93,7 +92,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
@@ -205,6 +203,9 @@ public class RhizoAddons
 				Utils.log2("restoring status conventions...");
 				loadStatusFile(file.getAbsolutePath().replace(".xml", ".status"));
 				Utils.log2("done");
+                                
+                                //lock all images
+                                lockAllImagesInAllProjects();
 				
 				return;
 			}
@@ -453,6 +454,29 @@ public class RhizoAddons
 		}
 	}
 	
+        /**
+         * Methods to lock all images/patches on project opening
+         * @author Axel
+         */
+        private static void lockAllImagesInAllProjects()
+        {
+            List<Project> projects = Project.getProjects();
+            projects.stream().forEach((project) -> {
+                lockAllImageInLayerSet(project.getRootLayerSet());
+            });
+        }
+        
+        private static void lockAllImageInLayerSet(LayerSet layerSet)
+        {
+            List<Displayable> patches = layerSet.getDisplayables(Patch.class);
+            
+            if(patches.size() == 0){return;}
+            
+            patches.stream().forEach((patch) -> {
+                patch.setLocked(true);
+            });
+        }
+        
 	/**
 	 * Main method for saving user settings and connector data
 	 * @param file - The project save file
@@ -1453,10 +1477,6 @@ public class RhizoAddons
 				parent.add(layer);
 				layer.recreateBuckets();
 				layer.updateLayerTree();
-				//project.getLayerTree().addLayer(parent, layer);
-				//layer.updateLayerTree();
-				//parent.recreateBuckets(layer, true);
-				//parent.updateLayerTree();
 				firstEmptyAtBack=realLast+1;
 				numberToAdd--;
 			}
@@ -1465,14 +1485,7 @@ public class RhizoAddons
 				parent.add(layer);
 				layer.recreateBuckets();
 				layer.updateLayerTree();
-				//project.getLayerTree().addLayer(parent, layer);
-				//layer.updateLayerTree();
-				//parent.recreateBuckets(layer, true);
-				//parent.updateLayerTree();
 			}
-			//parent.updateLayerTree();
-			//parent.recreateBuckets(false);
-			
 			//now we have enough empty layers starting from z=firstEmptyAtBack
 			
 			Loader loader = project.getLoader();
