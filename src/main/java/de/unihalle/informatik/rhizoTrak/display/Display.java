@@ -2272,10 +2272,14 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	}
 
 	protected void choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final Class<?> c) {
-		choose(screen_x_p, screen_y_p, x_p, y_p, false, c);
+            //atyc: change to the modified RhizoTrak version of choose
+            //choose(screen_x_p, screen_y_p, x_p, y_p, false, c);
+            RhizoAddons.choose(screen_x_p, screen_y_p, x_p, y_p, false, c,this);
 	}
 	protected void choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p) {
-		choose(screen_x_p, screen_y_p, x_p, y_p, false, null);
+            //atyc: change to the modified RhizoTrak version of choose
+            //choose(screen_x_p, screen_y_p, x_p, y_p, false, null);
+            RhizoAddons.choose(screen_x_p, screen_y_p, x_p, y_p, false, null,this);
 	}
 
 	/** Find a Displayable to add to the selection under the given point (which is in offscreen coords); will use a popup menu to give the user a range of Displayable objects to select from. */

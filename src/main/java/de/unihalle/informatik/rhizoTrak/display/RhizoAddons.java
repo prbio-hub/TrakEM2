@@ -1686,19 +1686,27 @@ public class RhizoAddons
 		ArrayList<Displayable> alternatedList = new ArrayList<Displayable>();
 		for (Displayable displayable : al)
 		{
-			if (displayable.getClass() == Treeline.class)
-			{
-				Treeline currentTreeline = (Treeline) displayable;
-				double transX = x_p - currentTreeline.getAffineTransform().getTranslateX();
-				double transY = y_p - currentTreeline.getAffineTransform().getTranslateY();
-				Node<Float> nearestNode = currentTreeline.findNearestNode((float) transX, (float) transY, layer);
-				// Utils.log(nearestNode);
-				//check if treeline is clickable if not add it to the remove list
-				if (RhizoAddons.treeLineClickable[(int) nearestNode.getConfidence()] == false)
-				{
-					alternatedList.add(displayable);
-				}
-			}
+			if (displayable.getClass() == Treeline.class && displayable.getClass() != Connector.class)
+                        {
+                            Treeline currentTreeline = (Treeline) displayable;
+                            double transX = x_p - currentTreeline.getAffineTransform().getTranslateX();
+                            double transY = y_p - currentTreeline.getAffineTransform().getTranslateY();
+                            Node<Float> nearestNode = currentTreeline.findNearestNode((float) transX, (float) transY, layer);
+                            if(nearestNode==null){
+                                alternatedList.add(displayable);
+                                continue;
+                            }
+                            if (RhizoAddons.treeLineClickable[(int) nearestNode.getConfidence()] == false)
+                            {
+                                alternatedList.add(displayable);
+                            }
+                        }
+                        if(displayable.getClass()== Patch.class)
+                        {
+                            if(displayable.isLocked2()==true){
+                                alternatedList.add(displayable);
+                            }
+                        }
 		}
 		al.removeAll(alternatedList);
 
