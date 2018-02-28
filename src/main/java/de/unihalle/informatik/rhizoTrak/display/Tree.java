@@ -2037,8 +2037,12 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
                     switch(keyCode){
                         case KeyEvent.VK_G:
                             //Utils.log2("Listsize() = "+ RhizoAddons.statusList.size());
-                            Connector currentCon = this.getTreeEventListener().get(0).getConnector();
-                            Display.getFront().select(currentCon);
+                            List<TreeEventListener> treeEL = this.getTreeEventListener();
+                            if(treeEL.size()>0)
+                            {
+                                Connector currentCon = treeEL.get(0).getConnector();
+                                Display.getFront().select(currentCon);
+                            }
                             ke.consume();
                             return;
                     }
