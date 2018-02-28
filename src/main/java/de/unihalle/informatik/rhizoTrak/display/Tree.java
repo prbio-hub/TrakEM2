@@ -2032,6 +2032,17 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				ke.consume();
 				return;
 		}
+                //actyc: new shortcut for finding connector
+                if((modifiers ^ KeyEvent.CTRL_MASK)==0){
+                    switch(keyCode){
+                        case KeyEvent.VK_G:
+                            //Utils.log2("Listsize() = "+ RhizoAddons.statusList.size());
+                            Connector currentCon = this.getTreeEventListener().get(0).getConnector();
+                            Display.getFront().select(currentCon);
+                            ke.consume();
+                            return;
+                    }
+                }
 
 		if (0 == modifiers) {
 			switch (keyCode) {
