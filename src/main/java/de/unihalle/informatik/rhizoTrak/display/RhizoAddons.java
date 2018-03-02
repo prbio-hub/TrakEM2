@@ -770,6 +770,10 @@ public class RhizoAddons
 	{
 		if(toBeHigh instanceof Treeline){
 			Treeline tree = (Treeline) toBeHigh;
+                        if(tree.getRoot()==null)
+                        {
+                            return;
+                        }
 			for (Node<Float> cnode : tree.getRoot().getSubtreeNodes())
 			{
 				if(choose){
@@ -805,6 +809,10 @@ public class RhizoAddons
 	{
 		if(notToBeHigh instanceof Treeline){
 			Treeline tree = (Treeline) notToBeHigh;
+                        if(tree.getRoot()==null)
+                        {
+                            return;
+                        }
 			for (Node<Float> cnode : tree.getRoot().getSubtreeNodes())
 			{
 				if(choose){

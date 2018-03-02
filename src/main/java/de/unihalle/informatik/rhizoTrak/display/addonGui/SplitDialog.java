@@ -49,6 +49,7 @@
 
 package de.unihalle.informatik.rhizoTrak.display.addonGui;
 
+import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -152,7 +153,6 @@ public class SplitDialog extends JDialog implements ActionListener {
 			//new connector for upstream root
 			RhizoAddons.giveNewConnector(trees.get(0),null);
 			RhizoAddons.splitDialog = false;
-			this.dispose();
 		}
 		
 		
@@ -161,8 +161,8 @@ public class SplitDialog extends JDialog implements ActionListener {
 			//new connector for downstream root
 			RhizoAddons.giveNewConnector(trees.get(1),trees.get(0));
 			RhizoAddons.splitDialog = false;
-			this.dispose();
 		}
+                this.dispose();
 	}
 	
 

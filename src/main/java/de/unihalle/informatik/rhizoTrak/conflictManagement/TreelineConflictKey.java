@@ -90,4 +90,12 @@ public class TreelineConflictKey {
 	public void setLayer(Layer layer) {
 		this.layer = layer;
 	}
+        
+        public boolean equalKey(TreelineConflictKey tck){
+            if(this.getLayer().equals(tck.getLayer()) && this.getConnector().equals(tck.getConnector()))
+            {
+                return true;
+            }
+            return false;
+        }
 }

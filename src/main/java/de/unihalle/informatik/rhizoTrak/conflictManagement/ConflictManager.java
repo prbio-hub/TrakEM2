@@ -64,7 +64,6 @@ import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
-import de.unihalle.informatik.rhizoTrak.display.Tree;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.ConflictPanel;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
@@ -302,16 +301,20 @@ public class ConflictManager {
 		connectorConflictHash.remove(treeline);
 	}
 	
-	public static void  removeTreelineConflict(TreelineConflictKey treeConKey){
-		TreelineConflict currentConflict = treelineConflictHash.get(treeConKey);
-		
-		if(currentConflict!=null && currentConflict.equals(ConflictManager.getCurrentSolvingConflict()))
-		{
-			ConflictManager.abortCurrentSolving();
-		}
-		
-		treelineConflictHash.remove(treeConKey);
-	}
+    public static void removeTreelineConflict(TreelineConflictKey treeConKey) {
+        TreelineConflict currentConflict = treelineConflictHash.get(treeConKey);
+        if (ConflictManager.currentConflictIsTreelineConflict()) {
+            TreelineConflict currentSolving = (TreelineConflict) ConflictManager.getCurrentSolvingConflict();
+            if (currentConflict == null) {
+                return;
+            }
+            if (currentConflict.equalsConflict(currentSolving)) {
+                ConflictManager.abortCurrentSolving();
+            }
+        }
+
+        treelineConflictHash.remove(treeConKey);
+    }
 	
 	//restore conflicts
 	public static void restorConflicts()
