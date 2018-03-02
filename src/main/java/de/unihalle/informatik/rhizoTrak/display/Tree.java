@@ -395,7 +395,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 			}
 
 			// TODO: this is a workaround for the repainting issues that occur when creating a new nodes out of a mtbxml file
-			if(la.mtbxml) return false;
+			if(la!=null && la.mtbxml) return false;
 			
 			synchronized (node_layer_map) {
 				// now adjust points to make min_x,min_y be the x,y
