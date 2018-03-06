@@ -85,6 +85,7 @@ import ij.ImageStack;
 import ij.io.FileInfo;
 import ij.io.OpenDialog;
 import ij.process.ImageProcessor;
+import legacy.mpi.fruitfly.general.MultiThreading;
 
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -93,8 +94,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import mpi.fruitfly.general.MultiThreading;
 
 /** Parses an amira labelfield and imports the labels as AreaList instances into the project tree.*/
 public class AmiraImporter {

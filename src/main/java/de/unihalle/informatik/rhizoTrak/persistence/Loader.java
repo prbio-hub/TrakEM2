@@ -182,13 +182,13 @@ import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
 import ij.process.StackStatistics;
+import legacy.mpi.fruitfly.general.MultiThreading;
+import legacy.mpi.fruitfly.math.datastructures.FloatArray2D;
+import legacy.mpi.fruitfly.registration.ImageFilter;
+import legacy.mpicbg.trakem2.transform.ExportUnsignedShort;
 import loci.formats.ChannelSeparator;
 import loci.formats.FormatException;
 import loci.formats.IFormatReader;
-import mpi.fruitfly.general.MultiThreading;
-import mpi.fruitfly.math.datastructures.FloatArray2D;
-import mpi.fruitfly.registration.ImageFilter;
-import mpicbg.trakem2.transform.ExportUnsignedShort;
 import mpicbg.trakem2.util.Triple;
 
 /** Handle all data-related issues with a virtualization engine, including load/unload and saving, saving as and overwriting. */

@@ -75,6 +75,13 @@ import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import ij.gui.Roi;
 import ij.process.ImageProcessor;
+import legacy.mpi.fruitfly.math.datastructures.FloatArray2D;
+import legacy.mpi.fruitfly.registration.CrossCorrelation2D;
+import legacy.mpi.fruitfly.registration.ImageFilter;
+import legacy.mpicbg.trakem2.align.AbstractAffineTile2D;
+import legacy.mpicbg.trakem2.align.Align;
+import legacy.mpicbg.trakem2.align.AlignTask;
+import legacy.mpicbg.trakem2.align.TranslationTile2D;
 
 import java.awt.Image;
 import java.awt.Rectangle;
@@ -94,19 +101,12 @@ import de.unihalle.informatik.rhizoTrak.utils.Bureaucrat;
 import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import de.unihalle.informatik.rhizoTrak.utils.Worker;
-import mpi.fruitfly.math.datastructures.FloatArray2D;
-import mpi.fruitfly.registration.CrossCorrelation2D;
-import mpi.fruitfly.registration.ImageFilter;
 import mpicbg.imglib.algorithm.fft.PhaseCorrelationPeak;
 import mpicbg.models.ErrorStatistic;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
 import mpicbg.models.Tile;
 import mpicbg.models.TranslationModel2D;
-import mpicbg.trakem2.align.AbstractAffineTile2D;
-import mpicbg.trakem2.align.Align;
-import mpicbg.trakem2.align.AlignTask;
-import mpicbg.trakem2.align.TranslationTile2D;
 
 
 /** Given:
@@ -405,7 +405,7 @@ public class StitchingTEM {
 
 						interestingTiles = new ArrayList< AbstractAffineTile2D< ? > >();
 						for ( final Tile< ? > t : largestGraph )
-							interestingTiles.add( ( AbstractAffineTile2D< ? > )t );
+							interestingTiles.add( (legacy.mpicbg.trakem2.align.AbstractAffineTile2D< ? > )t );
 
 						if ( param.hide_disconnected )
 							for ( final AbstractAffineTile2D< ? > t : al_tiles )

@@ -107,7 +107,7 @@ public class RobustNormalizeLocalContrast implements IFilter
 	@Override
 	public ImageProcessor process(final ImageProcessor ip) {
 		try {
-			mpicbg.trakem2.util.RobustNormalizeLocalContrast.run(
+			legacy.mpicbg.trakem2.util.RobustNormalizeLocalContrast.run(
 					ip, scaleLevel, brx1, bry1, stds1, brx2, bry2, stds2);
 		} catch (final Exception e) {
 			e.printStackTrace();

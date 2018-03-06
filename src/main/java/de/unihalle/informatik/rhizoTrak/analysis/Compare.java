@@ -138,7 +138,7 @@ import ij.process.ByteProcessor;
 import ij3d.Content;
 import ini.trakem2.vector.Editions;
 import ini.trakem2.vector.VectorString3D;
-import mpi.fruitfly.general.MultiThreading;
+import legacy.mpi.fruitfly.general.MultiThreading;
 import mpicbg.imglib.container.cell.Cell;
 import mpicbg.models.AffineModel3D;
 import mpicbg.models.MovingLeastSquaresTransform;
