@@ -566,8 +566,12 @@ public class Project extends DBObject {
 
 			// aeekz
 			final OpenDialog od = new OpenDialog("Select status file", dir_project, null);
-			RhizoAddons.loadStatusFile(od.getPath());
-			if(RhizoAddons.userSettingFile.exists()) RhizoAddons.loadUserSettings();
+			RhizoAddons.loadConfigFile(od.getPath());
+			if(RhizoAddons.userSettingsFile.exists())
+			{
+				Utils.log("@Project: called loadUserSettings(");
+				RhizoAddons.loadUserSettings();
+			}
 	
 			// help the helpless users:
 			if (autocreate_one_layer && null != project && ControlWindow.isGUIEnabled()) {

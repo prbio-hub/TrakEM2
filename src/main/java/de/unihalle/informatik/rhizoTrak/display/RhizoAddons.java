@@ -67,6 +67,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -95,8 +96,10 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-
-import com.google.common.io.Files;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootAssociationType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootImageAnnotationType;
@@ -104,10 +107,15 @@ import de.unihalle.informatik.MiToBo_xml.MTBXMLRootProjectDocument;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootProjectType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootReferenceType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentPointType;
-import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentStatusType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootType;
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.config.Config;
+import de.unihalle.informatik.rhizoTrak.config.Config.StatusList;
+import de.unihalle.informatik.rhizoTrak.config.Config.StatusList.Status;
+import de.unihalle.informatik.rhizoTrak.config.GlobalSettings;
+import de.unihalle.informatik.rhizoTrak.config.GlobalSettings.GlobalStatusList.GlobalStatus;
+import de.unihalle.informatik.rhizoTrak.config.GlobalSettings.GlobalStatusList;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.ImageImport;
@@ -128,47 +136,61 @@ public class RhizoAddons
 	public static File imageDir = null;
 
 	static boolean test = true;
-	public static boolean[] treeLineClickable = { true, true, true, true, true, true, true, true, true, true, true };
-	static int[] treelineSlider ={255,255,255,255,255,255,255,255,255,255,255};
+
 	static String relativPatchDir="/_images";
-	static boolean ini = false;
+
+	public static File userSettingsFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings.xml");
 	
-	private static File statusFile;
-	public static boolean statusFileExists = false;
+	public static List<GlobalStatus> globalStatusList = new ArrayList<GlobalStatus>();
+	public static List<Status> statusList = new ArrayList<Status>();
 	
-	public static File userSettingFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings");
-	
-	public static List<String> statusList = new ArrayList<String>();
-	public static List<String> statusListAbbr = new ArrayList<String>();
+	// used for drawing, GUI and save/load operations
+	public static HashMap<Integer, Status> statusMap = new HashMap<Integer, Status>();
 	
 	public static Node lastEditedOrActiveNode = null;
 	
 	private static JFrame colorFrame, imageLoaderFrame;
 	
-	public static Hashtable<Byte, Color> confidencColors = new Hashtable<Byte, Color>();
 	static AddonGui guiAddons;
-	
-	/* initialization and termination stuff */
-	
+
 	/**
-	 * Initializes GUI
-	 * @author Axel 
+	 * Initializes GUI and 
+	 * @author Axel, Tino
 	 */
 	public static void init()
 	{
-		if (ini == false)
-		{
-			for (int i = 0; i < 11; i++)
-			{
-				confidencColors.put((byte) i, Color.YELLOW);
-			}
-			// confi Color 11 is used to mark treelines of current interest
-			confidencColors.put((byte) 11, Color.CYAN);
-			ini = true;
-		}
-		
 		guiAddons = new AddonGui();
+		
+		// Standard status - always included
+		Status undefined = new Status();
+		undefined.setFullName("UNDEFINED");
+		undefined.setAbbreviation("U");
+		undefined.setRed(BigInteger.valueOf(255));
+		undefined.setBlue(BigInteger.valueOf(255));
+		undefined.setGreen(BigInteger.valueOf(0));
+		undefined.setAlpha(BigInteger.valueOf(255));
+
+		statusMap.put(-1, undefined);
+		
+		Status virtual = new Status();
+		virtual.setFullName("VIRTUAL");
+		virtual.setAbbreviation("V");
+		virtual.setRed(BigInteger.valueOf(255));
+		virtual.setBlue(BigInteger.valueOf(255));
+		virtual.setGreen(BigInteger.valueOf(0));
+		virtual.setAlpha(BigInteger.valueOf(255));
+		statusMap.put(-2, virtual);
+		
+		Status connector = new Status();
+		connector.setFullName("CONNECTOR");
+		connector.setAbbreviation("C");
+		connector.setRed(BigInteger.valueOf(255));
+		connector.setBlue(BigInteger.valueOf(255));
+		connector.setGreen(BigInteger.valueOf(0));
+		connector.setAlpha(BigInteger.valueOf(255));
+		statusMap.put(-3, connector);
 	}
+	
 	
 	/**
 	 * Calls load methods when opening a project
@@ -201,11 +223,13 @@ public class RhizoAddons
 				Utils.log2("done");
 				
 				Utils.log2("restoring status conventions...");
-				loadStatusFile(file.getAbsolutePath().replace(".xml", ".status"));
+				loadConfigFile(file.getAbsolutePath());
 				Utils.log2("done");
                                 
-                                //lock all images
-                                lockAllImagesInAllProjects();
+				//lock all images
+				lockAllImagesInAllProjects();
+				
+				//
 				
 				return;
 			}
@@ -220,121 +244,111 @@ public class RhizoAddons
 	
 	/**
 	 * Loads the user settings (color, visibility etc.)
-	 * @author Axel
+	 * @author Axel, Tino
 	 */
 	public static void loadUserSettings()
 	{
-
-		if (!userSettingFile.exists())
+		if (!userSettingsFile.exists())
 		{
+			setDefaultGlobalStatus();
 			Utils.log("unable to load user settings: file not found");
 			return;
 		}
 
-		String savetxt = readFileToString(userSettingFile);
-		ArrayList<String> content = stringToLineArray(savetxt);
-
-		Utils.log(savetxt);
-
-		if (content.size() != 12)
+		try 
 		{
-			Utils.log("unable to load user settings: incorrect content size");
-			return;
-		}
-
-		for (int i = 0; i < 11; i++)
-		{
-			String[] currentLine = content.get(i).split(";");
-			if (currentLine.length != 5)
-			{
-				Utils.log("unable to load user settings: incorrect line length (1)");
-				return;
-			}
-			
-			Color currentColor = stringToColor(currentLine[0] + ";" + currentLine[1] + ";" + currentLine[2] + ";" + currentLine[3]);
-
-			boolean currentBool = false;
-			if (currentLine[4].equals("true"))
-			{
-				currentBool = true;
-			}
-
-			confidencColors.put((byte) i, currentColor);
-			treeLineClickable[i] = currentBool;
-		}
-		
-		String[] currentLine = content.get(11).split(";");
-		
-		if (currentLine.length != 4)
-		{
-			Utils.log("Unable to load user settings: incorrect line length (2)");
-			return;
-		}
-		Color currentColor = stringToColor(currentLine[0] + ";" + currentLine[1] + ";" + currentLine[2] + ";" + currentLine[3]);
-		
-		confidencColors.put((byte) 11, currentColor);
-		ini = true;
-	}
-	
-	/**
-	 * Reads the status file with the status conventions when a project is opened or a new one is created.
-	 * 
-	 * @param path - The project status file path
-	 * @author Tino
-	 */
-	public static void loadStatusFile(String path)
-	{
-		if(null != path) statusFile = new File(path);
-		else return; // the user cancels the open file dialog
-		
-		
-		// TODO: add popup dialogs
-		if(!statusFile.exists()) return; // can't find status file within the same directory as the xml file
-		if(!path.endsWith(".status")) return; // selected file does not end with .status
-		
-		try
-		{
-			FileReader fr = new FileReader(statusFile);
-			BufferedReader br = new BufferedReader(fr);
-			
-			String line = "";
-			while((line = br.readLine()) != null)
-			{
-				if(!line.startsWith("#") && line.split("\t").length == 2)
-				{
-					String[] temp = line.split("\t");
-					statusListAbbr.add(temp[0]);
-					statusList.add(temp[1]);
-				}
-			}
-
-			br.close();
+			JAXBContext context = JAXBContext.newInstance(GlobalSettings.class);
+	        Unmarshaller um = context.createUnmarshaller();
+	        GlobalSettings gs = (GlobalSettings) um.unmarshal(userSettingsFile);
+	        globalStatusList.addAll(gs.getGlobalStatusList().getGlobalStatus());
+	        Utils.log(globalStatusList.size());
+	        
+	        updateStatusMap();
 		} 
-		catch (Exception e)
+		catch (JAXBException e) 
 		{
 			e.printStackTrace();
 		}
-		
-		statusFileExists = true;
-		Node.MAX_EDGE_CONFIDENCE = getStatusListSize();
 	}
 	
-	/**
-	 * Returns the size of the status list or a default value
-	 * @return Size of the list or default 10
-	 */
-	public static byte getStatusListSize()
+	public static void updateStatusMap() 
 	{
+		// local status list
+		for(int i = 0; i < statusList.size(); i++)
+		{
+			Status s = statusList.get(i);
+			
+			for(GlobalStatus gs: globalStatusList)
+			{
+				if(s.getFullName().equals(gs.getFullName()))
+				{
+					Status sTemp = statusMap.get(i);
+					sTemp.setRed(gs.getRed());
+					sTemp.setGreen(gs.getGreen());
+					sTemp.setBlue(gs.getBlue());
+					sTemp.setAlpha(gs.getAlpha());
+					sTemp.setSelectable(gs.isSelectable());
+					statusMap.put(i, sTemp);
+				}
+			}
+		}
 		
-		if(statusFileExists) return (byte) (statusList.size() - 1);
-		else return (byte) 10;
+	}
+
+
+	/**
+	 * 
+	 * 
+	 * @param path - The project file
+	 * @author Tino
+	 */
+	public static void loadConfigFile(String path)
+	{
+		// TODO: add popup warnings
+		// New project..
+		if(null == path) // user cancelled the open file dialog
+		{
+			setDefaultStatus();
+			return;
+		}
+		
+		// TODO: check file ending if coming from file chooser
+		// Open project..
+		File configFile = new File(path.replace(".xml", ".cfg")); // looking for cfg file in directory
+		
+		if(!configFile.exists())
+		{
+			setDefaultStatus();
+			return;
+		}
+		
+		try 
+		{
+			JAXBContext context = JAXBContext.newInstance(Config.class);
+	        Unmarshaller um = context.createUnmarshaller();
+	        Config config = (Config) um.unmarshal(configFile);
+	        statusList.addAll(config.getStatusList().getStatus());
+	        
+	        for(int i = 0; i < statusList.size(); i++)
+	        {
+	        	statusMap.put(i, statusList.get(i));
+	        }
+	        
+	        updateStatusMap();
+		} 
+		catch (JAXBException e) 
+		{
+			e.printStackTrace();
+		}
+
+		Node.MAX_EDGE_CONFIDENCE = getStatusListSize();
 	}
 	
 	/**
 	 * Loads the connector file
 	 * @param file - The project save file
 	 * @author Axel
-	 */
+	 */	
 	public static void loadConnector(File file)
 	{
 		// read the save file
@@ -489,30 +503,39 @@ public class RhizoAddons
 		//save connector data
 		saveConnectorData(file);
 		
-		// if for some reason the selected status file is not in the project folder or the saved project file has
-		// a different name than the status file create a new one
-		if(statusFileExists && 
-				(!statusFile.getParent().equals(file.getParent()) || 
-						!statusFile.getName().replace(".status", "").equals(file.getName().replace(".xml", "")))) 
-			saveStatusFile(file);
+		saveConfigFile(file);
 		
 		return;		
 	}
 	
 	/**
-	 * Creates a new status file in the project directory when the original status file has been selected from another
-	 * directory. The content will be identical but the name will be changed to the name of the project file.
+	 * Crates a new config file (.cfg) or overwrites an existing one in the same directory and with the same name as the project file. 
 	 * 
 	 * @param file - The project xml file
 	 * @author Tino
 	 */
-	public static void saveStatusFile(File file) 
+	public static void saveConfigFile(File file) 
 	{
+		// TODO: add warnings
+		if(null == file) return;
+		
+		File configFile = new File(file.getAbsolutePath().replace(".xml", ".cfg"));
+		
 		try 
 		{
-			Files.copy(statusFile, new File(file.getAbsolutePath().replace(".xml", ".status")));
+			JAXBContext context = JAXBContext.newInstance(Config.class);
+	        Marshaller m = context.createMarshaller();
+	        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+	        
+	        StatusList sl = new StatusList();
+	        sl.getStatus().addAll(statusList);
+	        
+	        Config config = new Config();
+	        config.setStatusList(sl);
+	        
+	        m.marshal(config, configFile);
 		}
-		catch (IOException e) 
+		catch (Exception e) 
 		{
 			e.printStackTrace();
 		}
@@ -520,33 +543,76 @@ public class RhizoAddons
 
 	/**
 	 * Saves the user settings
-	 * @author Axel
+	 * @author Axel, Tino
 	 */
 	public static void saveUserSettings()
 	{
-		StringBuilder sb = new StringBuilder();
+		// string list for easy comparisons
+		List<String> temp = new ArrayList<String>();
 		
-		for (int i = 0; i < 11; i++)
+		// global status list
+		for(GlobalStatus s: globalStatusList)
 		{
-			// color
-			sb.append(colorToString(confidencColors.get((byte) i)));
-			sb.append(";" + treeLineClickable[i]);
-			sb.append("\n");
+			temp.add(s.getFullName());
 		}
-		sb.append(colorToString(confidencColors.get((byte) 11)));
-
-		File userSettingfolder = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings");
-		userSettingfolder.mkdirs();
 		
-		if (!userSettingfolder.exists())
+		// local status list
+		for(int i = 0; i < statusList.size(); i++)
 		{
-			Utils.log("unable to save user settings");
-			return;
+			Status s = statusList.get(i);
+			
+			if(!temp.contains(s.getFullName())) // add new global status
+			{
+				GlobalStatus gStatus = new GlobalStatus();
+				gStatus.setAbbreviation(s.getAbbreviation());
+				gStatus.setFullName(s.getFullName());
+				gStatus.setRed(s.getRed());
+				gStatus.setGreen(s.getGreen());
+				gStatus.setBlue(s.getBlue());
+				gStatus.setAlpha(s.getAlpha());
+				gStatus.setSelectable(s.isSelectable());
+			
+				globalStatusList.add(gStatus);
+			}
+			else // update existing global status
+			{
+				for(GlobalStatus g: globalStatusList)
+				{
+					if(g.getFullName().equals(s.getFullName()))
+					{
+						g.setAbbreviation(s.getAbbreviation());
+						g.setRed(s.getRed());
+						g.setGreen(s.getGreen());
+						g.setBlue(s.getBlue());
+						g.setAlpha(s.getAlpha());
+						g.setSelectable(s.isSelectable());
+					}
+				}
+			}
 		}
+		
+		try
+		{
+			if(!userSettingsFile.getParentFile().exists()) userSettingsFile.getParentFile().mkdirs();
 
-		File userSettingFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings");
+			JAXBContext context = JAXBContext.newInstance(GlobalSettings.class);
+			Marshaller m = context.createMarshaller();
+			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
-		writeStringToFile(userSettingFile, sb.toString());
+			
+	        GlobalStatusList gsl = new GlobalStatusList();
+	        gsl.getGlobalStatus().addAll(globalStatusList);
+	        
+	        GlobalSettings gs = new GlobalSettings();
+	        gs.setGlobalStatusList(gsl);
+			
+			m.marshal(gs, userSettingsFile);
+		}
+		catch(Exception e) 
+		{
+			e.printStackTrace();
+		}
+		
 	}
 	
 	/**
@@ -598,8 +664,139 @@ public class RhizoAddons
 			tempconFile.renameTo(conFile);
 		}
 	}
+	
+
+	// only gets called when no global settings exist yet
+	public static void setDefaultGlobalStatus() 
+	{
+		GlobalStatus undefined = new GlobalStatus();
+		undefined.setFullName("UNDEFINED");
+		undefined.setAbbreviation("U");
+		undefined.setRed(BigInteger.valueOf(0));
+		undefined.setGreen(BigInteger.valueOf(255));
+		undefined.setBlue(BigInteger.valueOf(255));
+		undefined.setAlpha(BigInteger.valueOf(255));
+		undefined.setSelectable(true);
+		globalStatusList.add(undefined);
+		
+		GlobalStatus connector = new GlobalStatus();
+		connector.setFullName("CONNECTOR");
+		connector.setAbbreviation("C");
+		connector.setRed(BigInteger.valueOf(0));
+		connector.setGreen(BigInteger.valueOf(255));
+		connector.setBlue(BigInteger.valueOf(255));
+		connector.setAlpha(BigInteger.valueOf(255));
+		connector.setSelectable(true);
+		globalStatusList.add(connector);
+		
+		GlobalStatus virtual = new GlobalStatus();
+		virtual.setFullName("VIRTUAL");
+		virtual.setAbbreviation("V");
+		virtual.setRed(BigInteger.valueOf(0));
+		virtual.setGreen(BigInteger.valueOf(255));
+		virtual.setBlue(BigInteger.valueOf(255));
+		virtual.setAlpha(BigInteger.valueOf(255));
+		virtual.setSelectable(true);
+		globalStatusList.add(virtual);
+		
+		GlobalStatus living = new GlobalStatus();
+		living.setFullName("LIVING");
+		living.setAbbreviation("L");
+		living.setRed(BigInteger.valueOf(0));
+		living.setGreen(BigInteger.valueOf(255));
+		living.setBlue(BigInteger.valueOf(255));
+		living.setAlpha(BigInteger.valueOf(255));
+		living.setSelectable(true);
+		globalStatusList.add(living);
+		
+		GlobalStatus dead = new GlobalStatus();
+		dead.setFullName("DEAD");
+		dead.setAbbreviation("D");
+		dead.setRed(BigInteger.valueOf(0));
+		dead.setGreen(BigInteger.valueOf(255));
+		dead.setBlue(BigInteger.valueOf(255));
+		dead.setAlpha(BigInteger.valueOf(255));
+		dead.setSelectable(true);
+		globalStatusList.add(dead);
+		
+		GlobalStatus decayed = new GlobalStatus();
+		decayed.setFullName("DECAYED");
+		decayed.setAbbreviation("Y");
+		decayed.setRed(BigInteger.valueOf(0));
+		decayed.setGreen(BigInteger.valueOf(255));
+		decayed.setBlue(BigInteger.valueOf(255));
+		decayed.setAlpha(BigInteger.valueOf(255));
+		decayed.setSelectable(true);
+		globalStatusList.add(decayed);
+		
+		GlobalStatus gap = new GlobalStatus();
+		gap.setFullName("GAP");
+		gap.setAbbreviation("G");
+		gap.setRed(BigInteger.valueOf(0));
+		gap.setGreen(BigInteger.valueOf(255));
+		gap.setBlue(BigInteger.valueOf(255));
+		gap.setAlpha(BigInteger.valueOf(255));
+		gap.setSelectable(true);
+		globalStatusList.add(gap);
+	}
+	
+	public static void setDefaultStatus() 
+	{
+		Status living = new Status();
+		living.setFullName("LIVING");
+		living.setAbbreviation("L");
+		living.setRed(BigInteger.valueOf(0));
+		living.setGreen(BigInteger.valueOf(255));
+		living.setBlue(BigInteger.valueOf(255));
+		living.setAlpha(BigInteger.valueOf(255));
+		living.setSelectable(true);
+		statusList.add(living);
+		
+		Status dead = new Status();
+		dead.setFullName("DEAD");
+		dead.setAbbreviation("D");
+		dead.setRed(BigInteger.valueOf(0));
+		dead.setGreen(BigInteger.valueOf(255));
+		dead.setBlue(BigInteger.valueOf(255));
+		dead.setAlpha(BigInteger.valueOf(255));
+		dead.setSelectable(true);
+		statusList.add(dead);
+		
+		Status decayed = new Status();
+		decayed.setFullName("DECAYED");
+		decayed.setAbbreviation("Y");
+		decayed.setRed(BigInteger.valueOf(0));
+		decayed.setGreen(BigInteger.valueOf(255));
+		decayed.setBlue(BigInteger.valueOf(255));
+		decayed.setAlpha(BigInteger.valueOf(255));
+		decayed.setSelectable(true);
+		statusList.add(decayed);
+		
+		Status gap = new Status();
+		gap.setFullName("GAP");
+		gap.setAbbreviation("G");
+		gap.setRed(BigInteger.valueOf(0));
+		gap.setGreen(BigInteger.valueOf(255));
+		gap.setBlue(BigInteger.valueOf(255));
+		gap.setAlpha(BigInteger.valueOf(255));
+		gap.setSelectable(true);
+		statusList.add(gap);
+		
+		for(int i = 0; i < statusList.size(); i++)
+		{
+			statusMap.put(i, statusList.get(i));
+		}
+	}
 
 	/* helpers below */
+	
+	public static Color getColorFromStatusMap(int i)
+	{
+		Status s = statusMap.get(i);
+		if(null == s) return Color.BLACK;
+		return new Color(s.getRed().intValue(), s.getGreen().intValue(), s.getBlue().intValue(), s.getAlpha().intValue());
+	}
+	
 	
 	/**
 	 * 
@@ -701,7 +898,11 @@ public class RhizoAddons
 	public static void colorChooser(int i, JList list)
 	{
 		Color newColor = JColorChooser.showDialog(list, "Choose color", Color.WHITE);
-		confidencColors.put((byte) i, newColor);
+		Status s = statusMap.get(i);
+		s.setRed(BigInteger.valueOf(newColor.getRed()));
+		s.setGreen(BigInteger.valueOf(newColor.getGreen()));
+		s.setBlue(BigInteger.valueOf(newColor.getBlue()));
+		s.setAlpha(BigInteger.valueOf(newColor.getAlpha()));
 		
 		Display display = Display.getFront();
 		Layer currentLayer = display.getLayer();
@@ -745,9 +946,9 @@ public class RhizoAddons
 			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes())
 			{
 				byte currentConfi = cnode.getConfidence();
-				Color newColor = confidencColors.get(currentConfi);
+				Color newColor = getColorFromStatusMap(currentConfi);
 
-				if (cnode.getColor() != newColor) 
+				if (!cnode.getColor().equals(newColor))
 				{
 					cnode.setColor(newColor);
 					repaint = true;
@@ -760,20 +961,20 @@ public class RhizoAddons
 		}
 	}
 	
-	
 	/**
 	 * 
 	 * @param toBeHigh - Treeline to be highlighted
 	 * @author Axel
 	 */
-	public static void highlight(Displayable toBeHigh,boolean choose)
+	public static void highlight(Displayable toBeHigh, boolean choose)
 	{
-		if(toBeHigh instanceof Treeline){
+		if(toBeHigh instanceof Treeline)
+		{
 			Treeline tree = (Treeline) toBeHigh;
-                        if(tree.getRoot()==null)
-                        {
-                            return;
-                        }
+			if(tree.getRoot()==null)
+			{
+				return;
+			}
 			for (Node<Float> cnode : tree.getRoot().getSubtreeNodes())
 			{
 				if(choose){
@@ -792,7 +993,7 @@ public class RhizoAddons
 	 * @param toBeHigh - Treeline to be highlighted
 	 * @author Axel
 	 */
-	public static void highlight(List<Displayable> toBeHigh,boolean choose)
+	public static void highlight(List<Displayable> toBeHigh, boolean choose)
 	{		
 		for (Displayable disp : toBeHigh)
 		{
@@ -899,7 +1100,8 @@ public class RhizoAddons
 					copy.setLayer(nextLayer, true);
 					for (Node<Float> cnode : copy.getRoot().getSubtreeNodes()) {
 						cnode.setLayer(nextLayer);
-						cnode.setColor(confidencColors.get(cnode.getConfidence()));
+						Color col = getColorFromStatusMap(cnode.getConfidence());
+						cnode.setColor(col);
 					}
 					copy.setTitle("treeline");
 					copy.clearState();
@@ -1695,26 +1897,27 @@ public class RhizoAddons
 		for (Displayable displayable : al)
 		{
 			if (displayable.getClass() == Treeline.class && displayable.getClass() != Connector.class)
-                        {
-                            Treeline currentTreeline = (Treeline) displayable;
-                            double transX = x_p - currentTreeline.getAffineTransform().getTranslateX();
-                            double transY = y_p - currentTreeline.getAffineTransform().getTranslateY();
-                            Node<Float> nearestNode = currentTreeline.findNearestNode((float) transX, (float) transY, layer);
-                            if(nearestNode==null){
-                                alternatedList.add(displayable);
-                                continue;
-                            }
-                            if (RhizoAddons.treeLineClickable[(int) nearestNode.getConfidence()] == false)
-                            {
-                                alternatedList.add(displayable);
-                            }
-                        }
-                        if(displayable.getClass()== Patch.class)
-                        {
-                            if(displayable.isLocked2()==true){
-                                alternatedList.add(displayable);
-                            }
-                        }
+			{
+				Treeline currentTreeline = (Treeline) displayable;
+				double transX = x_p - currentTreeline.getAffineTransform().getTranslateX();
+				double transY = y_p - currentTreeline.getAffineTransform().getTranslateY();
+				Node<Float> nearestNode = currentTreeline.findNearestNode((float) transX, (float) transY, layer);
+				if(nearestNode == null)
+				{
+					alternatedList.add(displayable);
+					continue;
+				}
+				if(nearestNode.getConfidence() > 0 && !statusMap.get((int) nearestNode.getConfidence()).isSelectable())
+				{
+					alternatedList.add(displayable);
+				}
+			}
+			if(displayable.getClass()== Patch.class)
+			{
+				if(displayable.isLocked2()==true){
+					alternatedList.add(displayable);
+				}
+			}
 		}
 		al.removeAll(alternatedList);
 
@@ -2104,15 +2307,15 @@ public class RhizoAddons
 				rootSegment.setEndRadius(endRadius);
 				
 				// TODO: this is temporary
-				if(statusFileExists && n.getConfidence() < statusList.size())
-				{
-					String status = statusList.get(n.getConfidence());
-					if(status.equals("DEAD")) rootSegment.setType(MTBXMLRootSegmentStatusType.DEAD);
-					else if(status.equals("DECAYED")) rootSegment.setType(MTBXMLRootSegmentStatusType.DECAYED);
-					else if(status.equals("GAP")) rootSegment.setType(MTBXMLRootSegmentStatusType.GAP);
-					else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING);
-				}
-				else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING); // TODO: custom status vs enums?
+//				if(statusFileExists && n.getConfidence() < statusList.size())
+//				{
+//					String status = statusList.get(n.getConfidence());
+//					if(status.equals("DEAD")) rootSegment.setType(MTBXMLRootSegmentStatusType.DEAD);
+//					else if(status.equals("DECAYED")) rootSegment.setType(MTBXMLRootSegmentStatusType.DECAYED);
+//					else if(status.equals("GAP")) rootSegment.setType(MTBXMLRootSegmentStatusType.GAP);
+//					else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING);
+//				}
+//				else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING); // TODO: custom status vs enums?
 				
 				rootSegmentsArray[i] = rootSegment;
 			}
@@ -2277,13 +2480,13 @@ public class RhizoAddons
     					// TODO: this is temporary
 	    				byte s = 0;
 	    				
-	    				if(statusFileExists)
-	    				{
-		    				if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.LIVING) s = (byte) statusList.indexOf("LIVING");
-		    				else if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.DEAD) s = (byte) statusList.indexOf("DEAD");
-		    				else if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.GAP) s = (byte) statusList.indexOf("GAP");
-		    				else if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.DECAYED) s = (byte) statusList.indexOf("DECAYED");
-	    				}
+//	    				if(statusFileExists)
+//	    				{
+//		    				if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.LIVING) s = (byte) statusList.indexOf("LIVING");
+//		    				else if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.DEAD) s = (byte) statusList.indexOf("DEAD");
+//		    				else if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.GAP) s = (byte) statusList.indexOf("GAP");
+//		    				else if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.DECAYED) s = (byte) statusList.indexOf("DECAYED");
+//	    				}
 
     					if(s == -1) s = 0;
 	    				
@@ -2393,8 +2596,7 @@ public class RhizoAddons
      */
     public static void clearColorVisibilityLists()
     {
-    	statusList = new ArrayList<String>();
-    	statusListAbbr = new ArrayList<String>();
+    	statusList = new ArrayList<Status>();
     }
     
     /**
@@ -2427,6 +2629,11 @@ public class RhizoAddons
 	 */
 	public static void setRelativPatchDir(String relativPatchDir) {
 		RhizoAddons.relativPatchDir = relativPatchDir;
+	}
+
+	public static byte getStatusListSize() 
+	{
+		return (byte) (statusList.size() - 1);
 	}
 }
 
@@ -2503,46 +2710,6 @@ class Segment
 		tube = split[1];
 		timepoint = split[5];
 	}
-
-//	public RadiusNode getChild()
-//	{
-//		return child;
-//	}
-//
-//	public RadiusNode getParent()
-//	{
-//		return parent;
-//	}
-//
-//	public float getLength()
-//	{
-//		return length;
-//	}
-//
-//	public float getAvgRadius()
-//	{
-//		return avgRadius;
-//	}
-//
-//	public float getSurfaceArea()
-//	{
-//		return surfaceArea;
-//	}
-//
-//	public float getVolume()
-//	{
-//		return volume;
-//	}
-//
-//	public int getNumberOfChildren()
-//	{
-//		return numberOfChildren;
-//	}
-//
-//	public int getState()
-//	{
-//		return state;
-//	}
 
 	public String getStatistics(String sep)
 	{

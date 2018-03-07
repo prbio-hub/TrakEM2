@@ -417,10 +417,9 @@ public abstract class Node<T> implements Taggable {
 				// Draw confidence half-way through the edge
 				
 				// aeekz
-				int i = (int) confidence;
-				String s = "";
-				if(RhizoAddons.statusFileExists) s = RhizoAddons.statusListAbbr.get(i);
-				else s = Integer.toString(i);
+				int i = (int) this.getConfidence();
+				if(i > RhizoAddons.getStatusListSize()) Utils.log("@Node: confidence is higher than status list size");
+				String s = RhizoAddons.statusList.get(i).getAbbreviation();
 				
 				final Dimension dim = Utils.getDimensions(s, g.getFont());
 				g.setColor(Color.white);
@@ -1270,7 +1269,7 @@ public abstract class Node<T> implements Taggable {
 	//actyc: get the righ color aka wheter non, first or seconded highlight
 	private Color getCorrectedColor(){
 //		Utils.log("current high= " + high[0]+"-"+high[1]);
-		Color result = RhizoAddons.confidencColors.get(this.getConfidence());
+		Color result = RhizoAddons.getColorFromStatusMap(this.getConfidence());
 //		if(high>0){
 //			result = RhizoAddons.confidencColorsget((byte) 11);
 //			if(high>1){
@@ -1278,14 +1277,8 @@ public abstract class Node<T> implements Taggable {
 //				result = Color.red;
 //			}
 //		}
-		if(high[0]){
-			result = RhizoAddons.confidencColors.get((byte) 11);
-		}
-		if(high[1]){
-			Color cC = RhizoAddons.confidencColors.get((byte) 11);
-			result = Color.pink;
-			//result = new Color(cC.getRed()+10,cC.getGreen(),cC.getBlue()+10);
-		}
+		if(high[0]) return Color.ORANGE; // Tino - may be temporary
+		if(high[1]) return Color.PINK;
 		return result;
 	}
 }

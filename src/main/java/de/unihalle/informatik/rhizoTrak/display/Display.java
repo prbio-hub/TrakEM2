@@ -2297,7 +2297,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				Node<Float> nearestNode = currentTreeline.findNearestNode((float)transX,(float) transY, layer);
 				//Utils.log(nearestNode);
 				//check if treeline is clickable if not add it to the remove list
-				if(RhizoAddons.treeLineClickable[(int)nearestNode.getConfidence()]==false){
+				if(nearestNode.getConfidence() > 0 && !RhizoAddons.statusMap.get((int) nearestNode.getConfidence()).isSelectable()) {
 					alternatedList.add(displayable);
 				}
 			}
