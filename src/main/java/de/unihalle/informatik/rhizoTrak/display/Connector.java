@@ -718,6 +718,7 @@ public class Connector extends Treeline  implements TreeEventListener{
                 if(currentTree != null)
                 {
                     currentTree.removeTreeEventListener(this);
+                    ConflictManager.processChange(currentTree, this);
                     it.remove();
                     //this.removeConTreeline(currentTree);
                 }
