@@ -917,6 +917,12 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				Rectangle box2;
 				switch (tool) {
 				case ProjectToolbar.SELECT:
+                    if(active instanceof Tree)
+                    {
+                           Tree tree = (Tree) active;
+                           tree.dragged();
+                    }
+                                                
 					display.getMode().mouseDragged(me, x_p, y_p, x_d, y_d, x_d_old, y_d_old);
 					box2 = display.getMode().getRepaintBounds();
 					box.add(box2);

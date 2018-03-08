@@ -1800,9 +1800,6 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	@Override
 	public void mouseDragged(final MouseEvent me, final Layer la, final int x_p, final int y_p, final int x_d, final int y_d, final int x_d_old, final int y_d_old) {
 		translateActive(me, la, x_d, y_d, x_d_old, y_d_old);
-		//actyc: drag event to stimulate a sanity check
-		TreeEvent te = new TreeEvent((Treeline) this,"drag",null,null);
-		treeAction(te);
 	}
 
 	@Override
@@ -1838,6 +1835,9 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		active.translate(x_d - x_d_old, y_d - y_d_old);
 		repaint(false, la);
 		setLastEdited(active);
+                //actyc: drag event to stimulate a sanity check
+		TreeEvent te = new TreeEvent((Treeline) this,"drag",null,null);
+		treeAction(te);
 	}
 
 	static private Node<?> to_tag = null;
@@ -4114,4 +4114,10 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	public List<TreeEventListener> getTreeEventListener() {
 		return treeEventListener;
 	}
+        
+        public void dragged(){
+                //actyc: drag event to stimulate a sanity check
+		TreeEvent te = new TreeEvent((Treeline) this,"drag",null,null);
+		treeAction(te);
+        }
 }

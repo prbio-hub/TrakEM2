@@ -804,7 +804,7 @@ public class AffineTransformMode implements Mode {
 		// compute translation
 		final int dx = x_d - x_d_old;
 		final int dy = y_d - y_d_old;
-
+                
 		execDrag(me, dx, dy);
 		display.getCanvas().repaint(true);
 
