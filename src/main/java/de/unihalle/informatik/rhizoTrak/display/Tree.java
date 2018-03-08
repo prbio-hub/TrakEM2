@@ -2441,8 +2441,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 
 	@Override
 	public boolean remove2(final boolean check) {
-		Utils.log("remove something");
-		//actyct: fire remove event or if tree is a connector remove all references
+		//actyc: fire remove event or if tree is a connector remove all references
 		if(this instanceof Treeline)
 		{
 			TreeEvent te = new TreeEvent((Treeline) this,"remove",null,null);
@@ -2461,6 +2460,8 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 					tndv = null;
 				}
 			}
+                        //actyc: manualy call paint since the Connectors are not removed correctly
+                        Display.repaint(this.layer);
 			return true;
 		}
 		return false;
@@ -4085,7 +4086,9 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	}
 	
 	public void treeAction(TreeEvent te){
-		for(TreeEventListener tEL: treeEventListener){
+                List<TreeEventListener> currentList = new ArrayList<TreeEventListener>();
+                currentList.addAll(treeEventListener);
+		for(TreeEventListener tEL: currentList){
 			tEL.eventAppeared(te);
 		}
 	}

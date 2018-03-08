@@ -1386,6 +1386,7 @@ public class RhizoAddons
 				
 
 				target.remove2(false);
+                                Display.updateVisibleTabs();
 				
 				Display.repaint(display.getLayerSet());
 				

@@ -77,6 +77,7 @@ import de.unihalle.informatik.rhizoTrak.utils.ProjectToolbar;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.measure.Calibration;
 import ij.measure.ResultsTable;
+import java.util.Iterator;
 
 /** A one-to-many connection, represented by one source point and one or more target points. The connector is drawn by click+drag+release, defining the origin at click and the target at release. By clicking anywhere else, the connector can be given another target. Points can be dragged and removed.
  * Connectors are meant to represent synapses, in particular polyadic synapses. */
@@ -700,6 +701,10 @@ public class Connector extends Treeline  implements TreeEventListener{
 		}
 		if(te.getEventMessage().equals("remove")){
 			removeConTreeline((Treeline) te.getSource());
+                        if(conTreelines.size()==0)
+                        {
+                            this.remove2(false);
+                        }
 		}
 	}
 	
@@ -708,12 +713,15 @@ public class Connector extends Treeline  implements TreeEventListener{
 	}
 	
 	public void removeAllTreelines(){
-		for(Treeline currentTree: conTreelines){
-			if(currentTree != null)
-			{
-				this.removeConTreeline(currentTree);
-			}
-		}
+            for (Iterator<Treeline> it = conTreelines.iterator(); it.hasNext();) {
+                Treeline currentTree = it.next();
+                if(currentTree != null)
+                {
+                    currentTree.removeTreeEventListener(this);
+                    it.remove();
+                    //this.removeConTreeline(currentTree);
+                }
+            }
 	}
 	
 	
