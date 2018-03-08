@@ -68,6 +68,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
@@ -180,6 +181,7 @@ public class VisibilityPanel extends JPanel
 			panel.add(button);
 
 			add(panel);
+			if(i == RhizoAddons.getStatusMapSize()) add(new JSeparator());
 		}
 
 	}

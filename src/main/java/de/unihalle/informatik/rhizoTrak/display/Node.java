@@ -84,7 +84,7 @@ import de.unihalle.informatik.rhizoTrak.utils.Utils;
 /** Can only have one parent, so there aren't cyclic graphs. */
 public abstract class Node<T> implements Taggable {
 	/** Maximum possible confidence in an edge (ranges from 0 to 5, inclusive).*/
-	// actyc: changed maximum to 10
+
 	// aeekz: is changed when a status file exists
 	static public byte MAX_EDGE_CONFIDENCE = 10;
 	
@@ -115,9 +115,11 @@ public abstract class Node<T> implements Taggable {
 	 *  in other words, how much this node can be trusted to continue from its parent node.
 	 *  Defaults to MAX_EDGE_CONFIDENCE for full trust, and 0 for none. */
 	protected byte confidence = RhizoAddons.getStatusMapSize();
+	
+	// aeekz: removed lower bounds check
 	public byte getConfidence() 
 	{
-		if(confidence < 0 || confidence > RhizoAddons.getStatusMapSize())
+		if(confidence > RhizoAddons.getStatusMapSize())
 		{
 			return RhizoAddons.getStatusMapSize();
 		}

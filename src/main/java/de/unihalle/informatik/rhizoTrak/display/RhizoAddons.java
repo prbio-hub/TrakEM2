@@ -147,6 +147,8 @@ public class RhizoAddons
 	// used for drawing, GUI and save/load operations
 	public static LinkedHashMap<Integer, Status> statusMap = new LinkedHashMap<Integer, Status>();
 	
+	public static final int FIXEDSTATUSSIZE = 3;
+	
 	public static Node lastEditedOrActiveNode = null;
 	
 	private static JFrame colorFrame, imageLoaderFrame;
@@ -305,12 +307,12 @@ public class RhizoAddons
 	        Config config = (Config) um.unmarshal(configFile);
 	        List<Status> sl = config.getStatusList().getStatus();
 	        
-	        setFixedStatus();
 	        for(int i = 0; i < sl.size(); i++)
 	        {
 	        	statusMap.put(i, sl.get(i));
 	        }
 	        
+	        setFixedStatus();
 	        updateStatusMap();
 		} 
 		catch (JAXBException e) 
@@ -681,9 +683,9 @@ public class RhizoAddons
 		GlobalStatus living = new GlobalStatus();
 		living.setFullName("LIVING");
 		living.setAbbreviation("L");
-		living.setRed(BigInteger.valueOf(0));
+		living.setRed(BigInteger.valueOf(255));
 		living.setGreen(BigInteger.valueOf(255));
-		living.setBlue(BigInteger.valueOf(255));
+		living.setBlue(BigInteger.valueOf(0));
 		living.setAlpha(BigInteger.valueOf(255));
 		living.setSelectable(true);
 		globalStatusList.add(living);
@@ -691,9 +693,9 @@ public class RhizoAddons
 		GlobalStatus dead = new GlobalStatus();
 		dead.setFullName("DEAD");
 		dead.setAbbreviation("D");
-		dead.setRed(BigInteger.valueOf(0));
+		dead.setRed(BigInteger.valueOf(255));
 		dead.setGreen(BigInteger.valueOf(255));
-		dead.setBlue(BigInteger.valueOf(255));
+		dead.setBlue(BigInteger.valueOf(0));
 		dead.setAlpha(BigInteger.valueOf(255));
 		dead.setSelectable(true);
 		globalStatusList.add(dead);
@@ -701,9 +703,9 @@ public class RhizoAddons
 		GlobalStatus decayed = new GlobalStatus();
 		decayed.setFullName("DECAYED");
 		decayed.setAbbreviation("Y");
-		decayed.setRed(BigInteger.valueOf(0));
+		decayed.setRed(BigInteger.valueOf(255));
 		decayed.setGreen(BigInteger.valueOf(255));
-		decayed.setBlue(BigInteger.valueOf(255));
+		decayed.setBlue(BigInteger.valueOf(0));
 		decayed.setAlpha(BigInteger.valueOf(255));
 		decayed.setSelectable(true);
 		globalStatusList.add(decayed);
@@ -711,9 +713,9 @@ public class RhizoAddons
 		GlobalStatus gap = new GlobalStatus();
 		gap.setFullName("GAP");
 		gap.setAbbreviation("G");
-		gap.setRed(BigInteger.valueOf(0));
+		gap.setRed(BigInteger.valueOf(255));
 		gap.setGreen(BigInteger.valueOf(255));
-		gap.setBlue(BigInteger.valueOf(255));
+		gap.setBlue(BigInteger.valueOf(0));
 		gap.setAlpha(BigInteger.valueOf(255));
 		gap.setSelectable(true);
 		globalStatusList.add(gap);
@@ -726,15 +728,14 @@ public class RhizoAddons
 	 */
 	public static void setDefaultStatus() 
 	{
-		setFixedStatus();
 		
 		List<Status> statusList = new ArrayList<Status>();
 		Status living = new Status();
 		living.setFullName("LIVING");
 		living.setAbbreviation("L");
-		living.setRed(BigInteger.valueOf(0));
+		living.setRed(BigInteger.valueOf(255));
 		living.setGreen(BigInteger.valueOf(255));
-		living.setBlue(BigInteger.valueOf(255));
+		living.setBlue(BigInteger.valueOf(0));
 		living.setAlpha(BigInteger.valueOf(255));
 		living.setSelectable(true);
 		statusList.add(living);
@@ -742,9 +743,9 @@ public class RhizoAddons
 		Status dead = new Status();
 		dead.setFullName("DEAD");
 		dead.setAbbreviation("D");
-		dead.setRed(BigInteger.valueOf(0));
+		dead.setRed(BigInteger.valueOf(255));
 		dead.setGreen(BigInteger.valueOf(255));
-		dead.setBlue(BigInteger.valueOf(255));
+		dead.setBlue(BigInteger.valueOf(0));
 		dead.setAlpha(BigInteger.valueOf(255));
 		dead.setSelectable(true);
 		statusList.add(dead);
@@ -752,9 +753,9 @@ public class RhizoAddons
 		Status decayed = new Status();
 		decayed.setFullName("DECAYED");
 		decayed.setAbbreviation("Y");
-		decayed.setRed(BigInteger.valueOf(0));
+		decayed.setRed(BigInteger.valueOf(255));
 		decayed.setGreen(BigInteger.valueOf(255));
-		decayed.setBlue(BigInteger.valueOf(255));
+		decayed.setBlue(BigInteger.valueOf(0));
 		decayed.setAlpha(BigInteger.valueOf(255));
 		decayed.setSelectable(true);
 		statusList.add(decayed);
@@ -762,9 +763,9 @@ public class RhizoAddons
 		Status gap = new Status();
 		gap.setFullName("GAP");
 		gap.setAbbreviation("G");
-		gap.setRed(BigInteger.valueOf(0));
+		gap.setRed(BigInteger.valueOf(255));
 		gap.setGreen(BigInteger.valueOf(255));
-		gap.setBlue(BigInteger.valueOf(255));
+		gap.setBlue(BigInteger.valueOf(0));
 		gap.setAlpha(BigInteger.valueOf(255));
 		gap.setSelectable(true);
 		statusList.add(gap);
@@ -773,6 +774,8 @@ public class RhizoAddons
 		{
 			statusMap.put(i, statusList.get(i));
 		}
+		
+		setFixedStatus();
 	}
 	
 	/**
@@ -1212,7 +1215,7 @@ public class RhizoAddons
 				return false;
 			}
 			Node<Float> newRoot = pCon.newNode(pTreeRoot.getX(), pTreeRoot.getY(), pTreeRoot.getLayer(), null);
-			pCon.addNode(null, newRoot, pTreeRoot.getConfidence());
+			pCon.addNode(null, newRoot, (byte) -3); // aeekz - TODO: -3 does not work why? 
 			pCon.setRoot(newRoot);
 			pCon.setAffineTransform(ptree.getAffineTransform());
 			boolean suc = pCon.addConTreeline(ptree);
@@ -2662,7 +2665,7 @@ public class RhizoAddons
 
 	public static byte getStatusMapSize() 
 	{
-		return (byte) (statusMap.size() - 4);
+		return (byte) (statusMap.size() - FIXEDSTATUSSIZE - 1);
 	}
 }
 

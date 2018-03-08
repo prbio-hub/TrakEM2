@@ -484,7 +484,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 					// Add new target point to root:
 					found = newNode(x_pl, y_pl, layer, root);
 					((ConnectorNode)found).setData(last_radius);
-					addNode(root, found, Node.MAX_EDGE_CONFIDENCE);
+					addNode(root, found, (byte) -3); // aeekz
 					setActive(found);
 					repaint(true, layer);
 				}
