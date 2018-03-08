@@ -55,6 +55,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -140,13 +141,14 @@ public class VisibilityPanel extends JPanel
 		
 		// TODO: add 3 default status first
 
-		List<Status> status = RhizoAddons.statusList;
-		for(int i = 0; i < status.size(); i++)
+		HashMap<Integer, Status> map = RhizoAddons.statusMap;
+		for(int i: RhizoAddons.statusMap.keySet())
 		{
+			Status s = map.get(i);
 			JPanel panel = new JPanel();
 			panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 			
-			String temp = status.get(i).getAbbreviation()+" | "+status.get(i).getFullName();
+			String temp = s.getAbbreviation()+" | "+s.getFullName();
 			JLabel lab = new JLabel(temp);
 			panel.add(lab);
 			
@@ -157,7 +159,7 @@ public class VisibilityPanel extends JPanel
 			slider.setMinimum(0);
 			slider.setName(Integer.toString(i));
 			slider.setMaximum(255);
-			slider.setValue(status.get(i).getAlpha().intValue());
+			slider.setValue(s.getAlpha().intValue());
 			slider.addChangeListener(sliderAction);
 			panel.add(slider);
 			
@@ -191,7 +193,7 @@ public class VisibilityPanel extends JPanel
 			Color selectedColor = JColorChooser.showDialog(source, "Choose color", Color.WHITE);
 			if (selectedColor != null) 
 			{
-				Status s = RhizoAddons.statusList.get(index);
+				Status s = RhizoAddons.statusMap.get(index);
 				s.setRed(BigInteger.valueOf(selectedColor.getRed()));
 				s.setGreen(BigInteger.valueOf(selectedColor.getGreen()));
 				s.setBlue(BigInteger.valueOf(selectedColor.getBlue()));
@@ -211,7 +213,7 @@ public class VisibilityPanel extends JPanel
 			JSlider currentSlider = (JSlider) e.getSource();
 			int index = Integer.parseInt(currentSlider.getName()); // name will always be an integer
 			
-			Status s = RhizoAddons.statusList.get(index);
+			Status s = RhizoAddons.statusMap.get(index);
 			s.setAlpha(BigInteger.valueOf(currentSlider.getValue()));
 			RhizoAddons.statusMap.put(index, s);
 			
@@ -225,7 +227,7 @@ public class VisibilityPanel extends JPanel
 			int index = Integer.parseInt(e.getActionCommand());
 			JCheckBox source = (JCheckBox) e.getSource();
 
-			Status s = RhizoAddons.statusList.get(index);
+			Status s = RhizoAddons.statusMap.get(index);
 			s.setSelectable(source.isSelected());
 			RhizoAddons.statusMap.put(index, s);
 		}

@@ -114,18 +114,18 @@ public abstract class Node<T> implements Taggable {
 	/** The confidence value of the edge towards the parent;
 	 *  in other words, how much this node can be trusted to continue from its parent node.
 	 *  Defaults to MAX_EDGE_CONFIDENCE for full trust, and 0 for none. */
-	protected byte confidence = RhizoAddons.getStatusListSize();
+	protected byte confidence = RhizoAddons.getStatusMapSize();
 	public byte getConfidence() 
-        {
-            if(confidence < 0 || confidence > RhizoAddons.getStatusListSize())
-            {
-                return RhizoAddons.getStatusListSize();
-            }
-            else
-            {
-             return confidence;    
-            }
-        }
+	{
+		if(confidence < 0 || confidence > RhizoAddons.getStatusMapSize())
+		{
+			return RhizoAddons.getStatusMapSize();
+		}
+		else
+		{
+			return confidence;    
+		}
+	}
 
 	protected Layer la;
 	public Layer getLayer() { return la; }
@@ -418,8 +418,8 @@ public abstract class Node<T> implements Taggable {
 				
 				// aeekz
 				int i = (int) this.getConfidence();
-				if(i > RhizoAddons.getStatusListSize()) Utils.log("@Node: confidence is higher than status list size");
-				String s = RhizoAddons.statusList.get(i).getAbbreviation();
+				if(i > RhizoAddons.getStatusMapSize()) Utils.log("@Node: confidence is higher than status list size");
+				String s = RhizoAddons.statusMap.get(i).getAbbreviation();
 				
 				final Dimension dim = Utils.getDimensions(s, g.getFont());
 				g.setColor(Color.white);

@@ -77,6 +77,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -142,10 +143,9 @@ public class RhizoAddons
 	public static File userSettingsFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings.xml");
 	
 	public static List<GlobalStatus> globalStatusList = new ArrayList<GlobalStatus>();
-	public static List<Status> statusList = new ArrayList<Status>();
 	
 	// used for drawing, GUI and save/load operations
-	public static HashMap<Integer, Status> statusMap = new HashMap<Integer, Status>();
+	public static LinkedHashMap<Integer, Status> statusMap = new LinkedHashMap<Integer, Status>();
 	
 	public static Node lastEditedOrActiveNode = null;
 	
@@ -154,41 +154,12 @@ public class RhizoAddons
 	static AddonGui guiAddons;
 
 	/**
-	 * Initializes GUI and 
-	 * @author Axel, Tino
+	 * Initializes GUI 
+	 * @author Axel
 	 */
 	public static void init()
 	{
 		guiAddons = new AddonGui();
-		
-		// Standard status - always included
-		Status undefined = new Status();
-		undefined.setFullName("UNDEFINED");
-		undefined.setAbbreviation("U");
-		undefined.setRed(BigInteger.valueOf(255));
-		undefined.setBlue(BigInteger.valueOf(255));
-		undefined.setGreen(BigInteger.valueOf(0));
-		undefined.setAlpha(BigInteger.valueOf(255));
-
-		statusMap.put(-1, undefined);
-		
-		Status virtual = new Status();
-		virtual.setFullName("VIRTUAL");
-		virtual.setAbbreviation("V");
-		virtual.setRed(BigInteger.valueOf(255));
-		virtual.setBlue(BigInteger.valueOf(255));
-		virtual.setGreen(BigInteger.valueOf(0));
-		virtual.setAlpha(BigInteger.valueOf(255));
-		statusMap.put(-2, virtual);
-		
-		Status connector = new Status();
-		connector.setFullName("CONNECTOR");
-		connector.setAbbreviation("C");
-		connector.setRed(BigInteger.valueOf(255));
-		connector.setBlue(BigInteger.valueOf(255));
-		connector.setGreen(BigInteger.valueOf(0));
-		connector.setAlpha(BigInteger.valueOf(255));
-		statusMap.put(-3, connector);
 	}
 	
 	
@@ -271,18 +242,22 @@ public class RhizoAddons
 		}
 	}
 	
+	
+	/**
+	 * Updates the local status map with the global user settings
+	 * @author Tino
+	 */
 	public static void updateStatusMap() 
 	{
-		// local status list
-		for(int i = 0; i < statusList.size(); i++)
+		for(int i: statusMap.keySet())
 		{
-			Status s = statusList.get(i);
+			Status s = statusMap.get(i);
 			
 			for(GlobalStatus gs: globalStatusList)
 			{
 				if(s.getFullName().equals(gs.getFullName()))
 				{
-					Status sTemp = statusMap.get(i);
+					Status sTemp = s;
 					sTemp.setRed(gs.getRed());
 					sTemp.setGreen(gs.getGreen());
 					sTemp.setBlue(gs.getBlue());
@@ -298,7 +273,7 @@ public class RhizoAddons
 
 	/**
 	 * 
-	 * 
+	 * Loads the user settings on project file level.
 	 * @param path - The project file
 	 * @author Tino
 	 */
@@ -322,16 +297,18 @@ public class RhizoAddons
 			return;
 		}
 		
+		
 		try 
 		{
 			JAXBContext context = JAXBContext.newInstance(Config.class);
 	        Unmarshaller um = context.createUnmarshaller();
 	        Config config = (Config) um.unmarshal(configFile);
-	        statusList.addAll(config.getStatusList().getStatus());
+	        List<Status> sl = config.getStatusList().getStatus();
 	        
-	        for(int i = 0; i < statusList.size(); i++)
+	        setFixedStatus();
+	        for(int i = 0; i < sl.size(); i++)
 	        {
-	        	statusMap.put(i, statusList.get(i));
+	        	statusMap.put(i, sl.get(i));
 	        }
 	        
 	        updateStatusMap();
@@ -341,7 +318,7 @@ public class RhizoAddons
 			e.printStackTrace();
 		}
 
-		Node.MAX_EDGE_CONFIDENCE = getStatusListSize();
+		Node.MAX_EDGE_CONFIDENCE = getStatusMapSize();
 	}
 	
 	/**
@@ -467,42 +444,39 @@ public class RhizoAddons
 			e.printStackTrace();
 		}
 	}
-	
-        /**
-         * Methods to lock all images/patches on project opening
-         * @author Axel
-         */
-        private static void lockAllImagesInAllProjects()
-        {
-            List<Project> projects = Project.getProjects();
-            projects.stream().forEach((project) -> {
-                lockAllImageInLayerSet(project.getRootLayerSet());
-            });
-        }
-        
-        private static void lockAllImageInLayerSet(LayerSet layerSet)
-        {
-            List<Displayable> patches = layerSet.getDisplayables(Patch.class);
-            
-            if(patches.size() == 0){return;}
-            
-            patches.stream().forEach((patch) -> {
-                patch.setLocked(true);
-            });
-        }
-        
+
 	/**
-	 * Main method for saving user settings and connector data
+	 * Methods to lock all images/patches on project opening
+	 * @author Axel
+	 */
+	private static void lockAllImagesInAllProjects()
+	{
+		List<Project> projects = Project.getProjects();
+		projects.stream().forEach((project) -> {
+			lockAllImageInLayerSet(project.getRootLayerSet());
+		});
+	}
+
+	private static void lockAllImageInLayerSet(LayerSet layerSet)
+	{
+		List<Displayable> patches = layerSet.getDisplayables(Patch.class);
+
+		if(patches.size() == 0){return;}
+
+		patches.stream().forEach((patch) -> {
+			patch.setLocked(true);
+		});
+	}
+
+	/**
+	 * Main method for saving local and global settings. Is called when the project is saved.
 	 * @param file - The project save file
 	 * @author Axel
 	 */
 	public static void addonSaver(File file)
 	{
-		//save user settings
 		saveUserSettings();
-		//save connector data
 		saveConnectorData(file);
-		
 		saveConfigFile(file);
 		
 		return;		
@@ -528,8 +502,12 @@ public class RhizoAddons
 	        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 	        
 	        StatusList sl = new StatusList();
-	        sl.getStatus().addAll(statusList);
-	        
+	        for(int i: statusMap.keySet())
+	        {
+	        	// ignore undefined, virtual and connector
+	        	if(i >= 0) sl.getStatus().add(statusMap.get(i));
+	        }
+
 	        Config config = new Config();
 	        config.setStatusList(sl);
 	        
@@ -542,7 +520,7 @@ public class RhizoAddons
 	}
 
 	/**
-	 * Saves the user settings
+	 * Saves the global user settings in the users home folder.
 	 * @author Axel, Tino
 	 */
 	public static void saveUserSettings()
@@ -557,10 +535,8 @@ public class RhizoAddons
 		}
 		
 		// local status list
-		for(int i = 0; i < statusList.size(); i++)
+		for(Status s: statusMap.values())
 		{
-			Status s = statusList.get(i);
-			
 			if(!temp.contains(s.getFullName())) // add new global status
 			{
 				GlobalStatus gStatus = new GlobalStatus();
@@ -666,7 +642,10 @@ public class RhizoAddons
 	}
 	
 
-	// only gets called when no global settings exist yet
+	/**
+	 * Sets up the default global status list. Only gets called if no settings file exists in the users home folder.
+	 * @author Tino
+	 */
 	public static void setDefaultGlobalStatus() 
 	{
 		GlobalStatus undefined = new GlobalStatus();
@@ -740,8 +719,16 @@ public class RhizoAddons
 		globalStatusList.add(gap);
 	}
 	
+	/**
+	 * Sets up the default status map. Only gets called if the user cancels the file dialog to select a .cfg file or
+	 * no .cfg file is found when opening a project.
+	 * @author Tino
+	 */
 	public static void setDefaultStatus() 
 	{
+		setFixedStatus();
+		
+		List<Status> statusList = new ArrayList<Status>();
 		Status living = new Status();
 		living.setFullName("LIVING");
 		living.setAbbreviation("L");
@@ -787,9 +774,50 @@ public class RhizoAddons
 			statusMap.put(i, statusList.get(i));
 		}
 	}
+	
+	/**
+	 * Puts the fixed status UNDEFINED, VIRTUAL and CONNECTOR to the status map. Always included.
+	 * @author Tino
+	 */
+	private static void setFixedStatus()
+	{
+		// Standard status - always included
+		Status undefined = new Status();
+		undefined.setFullName("UNDEFINED");
+		undefined.setAbbreviation("U");
+		undefined.setRed(BigInteger.valueOf(255));
+		undefined.setBlue(BigInteger.valueOf(255));
+		undefined.setGreen(BigInteger.valueOf(0));
+		undefined.setAlpha(BigInteger.valueOf(255));
+		statusMap.put(-1, undefined);
+
+		Status virtual = new Status();
+		virtual.setFullName("VIRTUAL");
+		virtual.setAbbreviation("V");
+		virtual.setRed(BigInteger.valueOf(255));
+		virtual.setBlue(BigInteger.valueOf(255));
+		virtual.setGreen(BigInteger.valueOf(0));
+		virtual.setAlpha(BigInteger.valueOf(255));
+		statusMap.put(-2, virtual);
+
+		Status connector = new Status();
+		connector.setFullName("CONNECTOR");
+		connector.setAbbreviation("C");
+		connector.setRed(BigInteger.valueOf(255));
+		connector.setBlue(BigInteger.valueOf(255));
+		connector.setGreen(BigInteger.valueOf(0));
+		connector.setAlpha(BigInteger.valueOf(255));
+		statusMap.put(-3, connector);
+	}
 
 	/* helpers below */
 	
+	/**
+	 * Converts RGBA from a status object to a color object.
+	 * @param i - Node confidence value
+	 * @return A color object with the retrieved RGBA values.
+	 * @author Tino
+	 */
 	public static Color getColorFromStatusMap(int i)
 	{
 		Status s = statusMap.get(i);
@@ -893,7 +921,7 @@ public class RhizoAddons
 	 * Creates a color chooser dialogue and applies colors to treelines with the corresponding confidence value
 	 * @param i - Confidence value
 	 * @param list - Parent component for the chooser
-	 * @author Axel
+	 * @author Axel, Tino
 	 */
 	public static void colorChooser(int i, JList list)
 	{
@@ -925,10 +953,11 @@ public class RhizoAddons
 	}
 	
 	/**
-	 * Updates the color for all treelines and repaints them
+	 * Updates the color for all treelines and repaints them.
 	 * @author Axel
 	 */
-	public static void applyCorrespondingColor() {
+	public static void applyCorrespondingColor() 
+	{
 		Display display = Display.getFront();
 		Layer currentLayer = display.getLayer();
 		LayerSet currentLayerSet = currentLayer.getParent();
@@ -2596,7 +2625,7 @@ public class RhizoAddons
      */
     public static void clearColorVisibilityLists()
     {
-    	statusList = new ArrayList<Status>();
+    	statusMap.clear();
     }
     
     /**
@@ -2631,9 +2660,9 @@ public class RhizoAddons
 		RhizoAddons.relativPatchDir = relativPatchDir;
 	}
 
-	public static byte getStatusListSize() 
+	public static byte getStatusMapSize() 
 	{
-		return (byte) (statusList.size() - 1);
+		return (byte) (statusMap.size() - 4);
 	}
 }
 
