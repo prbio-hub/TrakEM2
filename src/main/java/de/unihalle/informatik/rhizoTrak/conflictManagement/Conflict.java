@@ -50,5 +50,11 @@
 package de.unihalle.informatik.rhizoTrak.conflictManagement;
 
 public class Conflict {
+    public ConflictManager conflictManager = null;
+    
+    public Conflict(ConflictManager conflictManager) {
+        this.conflictManager=conflictManager;
+    }
+    
 
 }

@@ -121,40 +121,57 @@ import ij.ImagePlus;
 
 public class RhizoAddons
 {
-	static boolean chooseReady = false;
+	 boolean chooseReady = false;
 	
-	public static boolean splitDialog = false;
+	public  boolean splitDialog = false;
 	
-	public static File imageDir = null;
+	public  File imageDir = null;
 
 	static boolean test = true;
-	public static boolean[] treeLineClickable = { true, true, true, true, true, true, true, true, true, true, true };
-	static int[] treelineSlider ={255,255,255,255,255,255,255,255,255,255,255};
-	static String relativPatchDir="/_images";
-	static boolean ini = false;
+	public  boolean[] treeLineClickable = { true, true, true, true, true, true, true, true, true, true, true };
+	 int[] treelineSlider ={255,255,255,255,255,255,255,255,255,255,255};
+	 String relativPatchDir="/_images";
+	 boolean ini = false;
 	
-	private static File statusFile;
-	public static boolean statusFileExists = false;
+	private  File statusFile;
+	public  boolean statusFileExists = false;
 	
 	public static File userSettingFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings");
 	
-	public static List<String> statusList = new ArrayList<String>();
-	public static List<String> statusListAbbr = new ArrayList<String>();
+	public  List<String> statusList = new ArrayList<String>();
+	public  List<String> statusListAbbr = new ArrayList<String>();
 	
-	public static Node lastEditedOrActiveNode = null;
+	public  Node lastEditedOrActiveNode = null;
 	
-	private static JFrame colorFrame, imageLoaderFrame;
+	private  JFrame colorFrame, imageLoaderFrame;
 	
-	public static Hashtable<Byte, Color> confidencColors = new Hashtable<Byte, Color>();
+	public  Hashtable<Byte, Color> confidencColors = new Hashtable<Byte, Color>();
 	static AddonGui guiAddons;
-	
+        
+        private ConflictManager conflictManager = null;
+
+        public Project project = null;
+
+    public RhizoAddons(Project project) {
+        this.project = project;
+        this.conflictManager = new ConflictManager(this);
+    }
+
+    public void setConflictManager(ConflictManager conflictManager) {
+        this.conflictManager = conflictManager;
+    }
+
+    public ConflictManager getConflictManager() {
+        return conflictManager;
+    }
+        
 	/* initialization and termination stuff */
 	
 	/**
 	 * Initializes GUI
 	 * @author Axel 
 	 */
-	public static void init()
+	public void init()
 	{
 		if (ini == false)
 		{
@@ -175,7 +192,7 @@ public class RhizoAddons
 	 * @param file - saved project file
 	 * @author Axel
 	 */
-	public static Thread addonLoader(File file)
+	public Thread addonLoader(File file,Project project)
 	{
 		Thread loader = new Thread()
 		{
@@ -197,7 +214,8 @@ public class RhizoAddons
 				Utils.log2("done");
 				
 				Utils.log2("restoring conflicts...");
-				ConflictManager.restorConflicts();
+                                //TODO: have to be restored for every Project
+				conflictManager.restorConflicts(project);
 				Utils.log2("done");
 				
 				Utils.log2("restoring status conventions...");
@@ -222,7 +240,7 @@ public class RhizoAddons
 	 * Loads the user settings (color, visibility etc.)
 	 * @author Axel
 	 */
-	public static void loadUserSettings()
+	public void loadUserSettings()
 	{
 
 		if (!userSettingFile.exists())
@@ -282,7 +300,7 @@ public class RhizoAddons
 	 * @param path - The project status file path
 	 * @author Tino
 	 */
-	public static void loadStatusFile(String path)
+	public void loadStatusFile(String path)
 	{
 		if(null != path) statusFile = new File(path);
 		else return; // the user cancels the open file dialog
@@ -323,136 +341,89 @@ public class RhizoAddons
 	 * Returns the size of the status list or a default value
 	 * @return Size of the list or default 10
 	 */
-	public static byte getStatusListSize()
+	public byte getStatusListSize()
 	{
 		
 		if(statusFileExists) return (byte) (statusList.size() - 1);
 		else return (byte) 10;
 	}
 	
-	/**
-	 * Loads the connector file
-	 * @param file - The project save file
-	 * @author Axel
-	 */
-	public static void loadConnector(File file)
-	{
-		// read the save file
-		File conFile = new File(file.getParentFile().getAbsolutePath() + File.separator + file.getName().replace(".xml", ".con"));
-																													
-		if (!conFile.exists())
-		{
-			// no con file create a new
-			try
-			{
-				conFile.createNewFile();
-				return;
-			} 
-			catch (IOException e)
-			{
-				Utils.log("error: no *.con file found creating new one");
-				e.printStackTrace();
-				return;
-			}
-		}
+    //TODO: needs to be recode for non-static behavior
+    /**
+     * Loads the connector file
+     *
+     * @param file - The project save file
+     * @author Axel
+     */
+    public void loadConnector(File file) {
+        // read the save file
+        File conFile = new File(file.getParentFile().getAbsolutePath() + File.separator + file.getName().replace(".xml", ".con"));
 
-		// get all the projects
-		ArrayList<Project> allProjects = Project.getProjects();
-		int currentProjectID = 0;
+        if (!conFile.exists()) {
+            // no con file create a new
+            try {
+                conFile.createNewFile();
+                return;
+            } catch (IOException e) {
+                Utils.log("error: no *.con file found creating new one");
+                e.printStackTrace();
+                return;
+            }
+        }
 
-		FileReader fr;
-		try
-		{
-			fr = new FileReader(conFile);
-			BufferedReader br = new BufferedReader(fr);
+        FileReader fr;
+        try {
+            fr = new FileReader(conFile);
+            BufferedReader br = new BufferedReader(fr);
 
-			String line = br.readLine();
-			while (line != null)
-			{
-				if (line.equals("###"))
-				{
-					currentProjectID++;
-					line = br.readLine();
-					break;
-				}
-				
-				if (allProjects.get(currentProjectID) != null)
-				{
-					LayerSet layerSet = allProjects.get(currentProjectID).getRootLayerSet();
-					List<Displayable> trees = layerSet.get(Treeline.class);
-					List<Displayable> connector = layerSet.get(Connector.class);
+            String line = br.readLine();
+            while (line != null) {
+                if (line.equals("###")) {
+                    line = br.readLine();
+                    break;
+                }
 
-					// load the line
-					String[] content = line.split(";");
-					if (content.length > 1)
-					{
-						long currentConID = Long.parseLong(content[0]);
-						ArrayList<Treeline> conTrees = new ArrayList<Treeline>();
+                if (project != null) {
+                    LayerSet layerSet = project.getRootLayerSet();
+                    List<Displayable> trees = layerSet.get(Treeline.class);
+                    List<Displayable> connector = layerSet.get(Connector.class);
 
-						Connector rightConn=null;
-						
-						for (Displayable conn : connector)
-						{
-							if (conn.getId() == currentConID)
-							{
-								rightConn = (Connector) conn;
-							}
-						}
-						
-						for (int i = 1; i < content.length; i++)
-						{
-							long currentID = Long.parseLong(content[i]);
-							
-							for (Displayable tree : trees)
-							{
-								if (tree.getId() == currentID && tree.getClass().equals(Treeline.class) && rightConn!=null)
-								{
-									rightConn.addConTreeline( (Treeline) tree);
-								}
-							}
-						}
+                    // load the line
+                    String[] content = line.split(";");
+                    if (content.length > 1) {
+                        long currentConID = Long.parseLong(content[0]);
+                        ArrayList<Treeline> conTrees = new ArrayList<Treeline>();
 
+                        Connector rightConn = null;
 
-						
-//						for (int i = 1; i < content.length; i++)
-//						{
-//							long currentID = Long.parseLong(content[i]);
-//							
-//							for (Displayable tree : trees)
-//							{
-//								if (tree.getId() == currentID)
-//								{
-//									conTrees.add((Treeline) tree);
-//								}
-//							}
-//						}
-//						
-//						for (Displayable conn : connector)
-//						{
-//							if (conn.getId() == currentConID)
-//							{
-//								Connector rightConn = (Connector) conn;
-//								rightConn.setConTreelines(conTrees);
-//							}
-//						}
+                        for (Displayable conn : connector) {
+                            if (conn.getId() == currentConID) {
+                                rightConn = (Connector) conn;
+                            }
+                        }
 
-					}
-				}
+                        for (int i = 1; i < content.length; i++) {
+                            long currentID = Long.parseLong(content[i]);
 
-				// read the next line
-				line = br.readLine();
-			}
-			br.close();
-		} 
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
-		} 
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-	}
+                            for (Displayable tree : trees) {
+                                if (tree.getId() == currentID && tree.getClass().equals(Treeline.class) && rightConn != null) {
+                                    rightConn.addConTreeline((Treeline) tree);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // read the next line
+                line = br.readLine();
+            }
+            br.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 	
         /**
          * Methods to lock all images/patches on project opening
@@ -482,7 +453,7 @@ public class RhizoAddons
 	 * @param file - The project save file
 	 * @author Axel
 	 */
-	public static void addonSaver(File file)
+	public void addonSaver(File file)
 	{
 		//save user settings
 		saveUserSettings();
@@ -506,7 +477,7 @@ public class RhizoAddons
 	 * @param file - The project xml file
 	 * @author Tino
 	 */
-	public static void saveStatusFile(File file) 
+	public void saveStatusFile(File file) 
 	{
 		try 
 		{
@@ -517,12 +488,12 @@ public class RhizoAddons
 			e.printStackTrace();
 		}
 	}
-
+        //TODO: needs to be recoded for non-static- and xml-compatible behavior
 	/**
 	 * Saves the user settings
 	 * @author Axel
 	 */
-	public static void saveUserSettings()
+	public void saveUserSettings()
 	{
 		StringBuilder sb = new StringBuilder();
 		
@@ -549,55 +520,43 @@ public class RhizoAddons
 		writeStringToFile(userSettingFile, sb.toString());
 	}
 	
-	/**
-	 * Saves the connector data
-	 * @param file - The project save file
-	 * @author Axel
-	 */
-	public static void saveConnectorData(File file)
-	{
-		StringBuilder saveBuilder = new StringBuilder();
-		for (Project pro : Project.getProjects())
-		{
-			LayerSet layerSet = pro.getRootLayerSet();
+    /**
+     * Saves the connector data
+     *
+     * @param file - The project save file
+     * @author Axel
+     */
+    public void saveConnectorData(File file) {
+        LayerSet layerSet = project.getRootLayerSet();
 
-			StringBuilder sb = new StringBuilder(); // content of the save file
-			// for each Connector
-			List<Displayable> connectors = layerSet.get(Connector.class);
+        StringBuilder sb = new StringBuilder(); // content of the save file
+        List<Displayable> connectors = layerSet.get(Connector.class);
 
-			for (int i = 0; i < connectors.size(); i++)
-			{
-				Connector currentConnector = (Connector) connectors.get(i);
-				long id = currentConnector.getId();
-				sb.append(id + ";");
-				ArrayList<Treeline> conTrees = currentConnector.getConTreelines();
-				for (Treeline treeline : conTrees)
-				{
-					sb.append(treeline.getId() + ";");
-				}
-				sb.append("\n");
-			}
-			String saveText = sb.toString();
-			saveBuilder.append(saveText);
-			saveBuilder.append("###" + "\n");
+        for (int i = 0; i < connectors.size(); i++) {
+            Connector currentConnector = (Connector) connectors.get(i);
+            long id = currentConnector.getId();
+            sb.append(id + ";");
+            ArrayList<Treeline> conTrees = currentConnector.getConTreelines();
+            for (Treeline treeline : conTrees) {
+                sb.append(treeline.getId() + ";");
+            }
+            sb.append("\n");
+        }
+        sb.append("###" + "\n");
+        String saveText = sb.toString();
 
-		}
-		String saveText = saveBuilder.toString();
+        File conFile = new File(file.getParentFile().getAbsolutePath() + File.separator + file.getName().split("\\.")[0] + ".con");																														// file
+        File tempconFile = new File(file.getParentFile().getAbsolutePath() + File.separator + "temp_" + file.getName().split("\\.")[0] + ".con");
 
-		File conFile = new File(file.getParentFile().getAbsolutePath() + File.separator + file.getName().split("\\.")[0] + ".con");																														// file
-		File tempconFile = new File(file.getParentFile().getAbsolutePath() + File.separator + "temp_" + file.getName().split("\\.")[0] + ".con");
+        if (conFile.exists()) {
+            String old = readFileToString(conFile); // read current file
+            writeStringToFile(tempconFile, old); // and save to temp
+        }
 
-		if (conFile.exists())
-		{
-			String old = readFileToString(conFile); // read current file
-			writeStringToFile(tempconFile, old); // and save to temp
-		}
-
-		if (!writeStringToFile(conFile, saveText) && tempconFile.exists())
-		{
-			tempconFile.renameTo(conFile);
-		}
-	}
+        if (!writeStringToFile(conFile, saveText) && tempconFile.exists()) {
+            tempconFile.renameTo(conFile);
+        }
+    }
 
 	/* helpers below */
 	
@@ -698,7 +657,7 @@ public class RhizoAddons
 	 * @param list - Parent component for the chooser
 	 * @author Axel
 	 */
-	public static void colorChooser(int i, JList list)
+	public void colorChooser(int i, JList list)
 	{
 		Color newColor = JColorChooser.showDialog(list, "Choose color", Color.WHITE);
 		confidencColors.put((byte) i, newColor);
@@ -727,7 +686,7 @@ public class RhizoAddons
 	 * Updates the color for all treelines and repaints them
 	 * @author Axel
 	 */
-	public static void applyCorrespondingColor() {
+	public void applyCorrespondingColor() {
 		Display display = Display.getFront();
 		Layer currentLayer = display.getLayer();
 		LayerSet currentLayerSet = currentLayer.getParent();
@@ -847,12 +806,12 @@ public class RhizoAddons
 	 * Opens the color and visibility panel
 	 * @author Axel
 	 */
-	public static void setVisibility()
+	public void setVisibility()
 	{
-		colorFrame = new JFrame("Color & Visibility");
+		colorFrame = new JFrame("Color & Visibility: " + project.getTitle());
 		
 		colorFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-		JPanel temp = new VisibilityPanel();
+		JPanel temp = new VisibilityPanel(this);
 		//JPanel temp = guiAddons.visibilityPanel();
 		colorFrame.add(temp);
 		colorFrame.setSize(320, 450);
@@ -867,7 +826,7 @@ public class RhizoAddons
 	 * Copies treelines from the current layer to the next one
 	 * @author Axel
 	 */
-	public static void copyTreeLine()
+	public void copyTreeLine()
 	{
 		Display display = Display.getFront();
 		// Layer frontLayer = Display.getFrontLayer();
@@ -1055,7 +1014,7 @@ public class RhizoAddons
 	 * @param me - MouseEvent
 	 * @author Axel
 	 */
-	public static void mergeTool(final Layer la, final int x_p, final int y_p, double mag, RadiusNode anode, Treeline parentTl, MouseEvent me)
+	public void mergeTool(final Layer la, final int x_p, final int y_p, double mag, RadiusNode anode, Treeline parentTl, MouseEvent me)
 	{
 		Thread mergeRun = new Thread()
 		{
@@ -1071,7 +1030,7 @@ public class RhizoAddons
 				final Point po = dc.getCursorLoc();
 				// Utils.log(display.getActive());
 				Displayable oldActive = display.getActive();
-				Thread t = RhizoAddons.choose(me.getX(), me.getY(), x_p, y_p, Treeline.class, display);
+				Thread t = choose(me.getX(), me.getY(), x_p, y_p, Treeline.class, display);
 				t.start();
 				try
 				{
@@ -1137,7 +1096,9 @@ public class RhizoAddons
 				for(Connector currentCon: connectorList)
 				{
 					currentCon.removeConTreeline(target);
-					ConflictManager.processChange(target, currentCon);
+                                        RhizoAddons rhizoAddons = currentCon.getProject().getRhizoAddons();
+                                        ConflictManager conflictManager = rhizoAddons.getConflictManager();
+					conflictManager.processChange(target, currentCon);
 				}
 				
 				//targetConnector.removeConTreeline(target);
@@ -1146,7 +1107,9 @@ public class RhizoAddons
 				for(Connector currentCon: connectorList)
 				{
 					currentCon.addConTreeline(parentTl);
-					ConflictManager.processChange(parentTl, currentCon);
+                                        RhizoAddons rhizoAddons = currentCon.getProject().getRhizoAddons();
+                                        ConflictManager conflictManager = rhizoAddons.getConflictManager();
+					conflictManager.processChange(parentTl, currentCon);
 				}
 				
 
@@ -1171,7 +1134,7 @@ public class RhizoAddons
 	 * @param me - MouseEvent
 	 * @author Axel
 	 */
-	public static void bindConnectorToTreeline(final Layer la, final int x_p, final int y_p, double mag, Connector parentConnector, MouseEvent me)
+	public void bindConnectorToTreeline(final Layer la, final int x_p, final int y_p, double mag, Connector parentConnector, MouseEvent me)
 	{
 		Thread bindRun = new Thread()
 		{
@@ -1183,11 +1146,13 @@ public class RhizoAddons
 			public void run()
 			{
 				Display display = Display.getFront();
+                                RhizoAddons rhizoAddons = display.getProject().getRhizoAddons();
+                                ConflictManager conflictManager = rhizoAddons.getConflictManager();
 				DisplayCanvas dc = display.getCanvas();
 				final Point po = dc.getCursorLoc();
 				// Utils.log(display.getActive());
 				Displayable oldActive = display.getActive();
-				Thread t = RhizoAddons.choose(me.getX(), me.getY(), x_p, y_p, Treeline.class, display);
+				Thread t = choose(me.getX(), me.getY(), x_p, y_p, Treeline.class, display);
 				t.start();
 				try
 				{
@@ -1218,7 +1183,7 @@ public class RhizoAddons
 						if (Utils.check("Really remove connection between " + parentConnector.getId() + " and " + target.getId() + " ?"))
 						{
 							parentConnector.removeConTreeline(target);
-							ConflictManager.processChange(target, parentConnector);
+							conflictManager.processChange(target, parentConnector);
 						}
 						display.setActive(parentConnector);
 						return;
@@ -1226,7 +1191,7 @@ public class RhizoAddons
 				}
 				parentConnector.addConTreeline(target);
 				display.setActive(parentConnector);
-				ConflictManager.processChange(target, parentConnector);
+				conflictManager.processChange(target, parentConnector);
 			};
 		};
 		bindRun.start();
@@ -1239,14 +1204,14 @@ public class RhizoAddons
 	 * Open image loading dialogue
 	 * @author Axel
 	 */
-	public static void imageLoader()
+	public void imageLoader()
 	{
 		String title = "Image Loader";
 		if(null != imageDir) title = "Image Loader - " + imageDir.getAbsolutePath();
 		
 		imageLoaderFrame = new JFrame(title);
 		imageLoaderFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		JPanel temp = new ImageImport();
+		JPanel temp = new ImageImport(this);
 		imageLoaderFrame.add(temp);
 		imageLoaderFrame.pack();
 		imageLoaderFrame.setVisible(true);
@@ -1553,7 +1518,7 @@ public class RhizoAddons
 	 * @author actyc
 	 * @return String representing the relative patches directory
 	 */
-	public static String convertToRelativPath(String currentPathString){
+	public String convertToRelativPath(String currentPathString){
 		if(currentPathString.contains(File.separator) && !currentPathString.contains(".")){
 			Path currentPath = Paths.get(currentPathString);
 			Path base = Paths.get(imageDir.getAbsolutePath());
@@ -1650,12 +1615,12 @@ public class RhizoAddons
 	}
 	
 	
-	protected static Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final Class<?> c, final Display currentDisplay)
+	protected Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final Class<?> c, final Display currentDisplay)
 	{
 		return choose(screen_x_p, screen_y_p, x_p, y_p, false, c, currentDisplay);
 	}
 
-	protected static Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final Display currentDisplay)
+	protected Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final Display currentDisplay)
 	{
 		return choose(screen_x_p, screen_y_p, x_p, y_p, false, null, currentDisplay);
 	}
@@ -1672,7 +1637,7 @@ public class RhizoAddons
 	 * @return Thread created by clicking overlapping nodes
 	 * @author Axel
 	 */
-	protected static Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final boolean shift_down, final Class<?> c, Display currentDisplay)
+	protected Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final boolean shift_down, final Class<?> c, Display currentDisplay)
 	{
 		// Utils.log("Display.choose: x,y " + x_p + "," + y_p);
 		Thread t = new Thread()
@@ -1687,6 +1652,10 @@ public class RhizoAddons
 			};
 		};
 		Layer layer = currentDisplay.getFrontLayer();
+                
+                RhizoAddons rhizoAddons = layer.getProject().getRhizoAddons();
+                ConflictManager conflictManager = rhizoAddons.getConflictManager();
+                
 		final ArrayList<Displayable> al = new ArrayList<Displayable>(layer.find(x_p, y_p, true));
 		al.addAll(layer.getParent().findZDisplayables(layer, x_p, y_p, true)); // only visible ones
 
@@ -1704,7 +1673,7 @@ public class RhizoAddons
                                 alternatedList.add(displayable);
                                 continue;
                             }
-                            if (RhizoAddons.treeLineClickable[(int) nearestNode.getConfidence()] == false)
+                            if (treeLineClickable[(int) nearestNode.getConfidence()] == false)
                             {
                                 alternatedList.add(displayable);
                             }
@@ -1737,16 +1706,16 @@ public class RhizoAddons
 				return t;
 			}
 			
-			if(ConflictManager.isSolving()){
-				if(ConflictManager.isPartOfSolution(d))
+			if(conflictManager.isSolving()){
+				if(conflictManager.isPartOfSolution(d))
 				{
 					currentDisplay.select(d, shift_down);
 				}
 				else
 				{
-					if(ConflictManager.userAbort())
+					if(conflictManager.userAbort())
 					{
-						ConflictManager.abortCurrentSolving();
+						conflictManager.abortCurrentSolving();
 						currentDisplay.select(d, shift_down);
 					}
 					else
@@ -1895,17 +1864,20 @@ public class RhizoAddons
 				}
 				
 				//check if there is a solving situation is running
+                                
+                                RhizoAddons rhizoAddons = currentDisplay.getProject().getRhizoAddons();
+                                ConflictManager conflictManager = rhizoAddons.getConflictManager();
 				
-				if(ConflictManager.isSolving()){
-					if(ConflictManager.isPartOfSolution(d))
+				if(conflictManager.isSolving()){
+					if(conflictManager.isPartOfSolution(d))
 					{
 						currentDisplay.select(d, shift_down);
 					}
 					else
 					{
-						if(ConflictManager.userAbort())
+						if(conflictManager.userAbort())
 						{
-							ConflictManager.abortCurrentSolving();
+							conflictManager.abortCurrentSolving();
 							currentDisplay.select(d, shift_down);
 						}
 					}
@@ -1935,7 +1907,7 @@ public class RhizoAddons
      *  Writes the current project to a xmlbeans file. In contrast to the standard TrakEM xml format, this file may be opened with MiToBo
      *  @author Tino
      */
-    public static void writeMTBXML()
+    public void writeMTBXML()
 	{
 		try 
 		{
@@ -2053,7 +2025,7 @@ public class RhizoAddons
      * @return MTBXMLRootType
      * @author Tino
      */
-	private static MTBXMLRootType treelineToXMLType(Treeline treeline, Layer currentLayer, int rootId)
+	private MTBXMLRootType treelineToXMLType(Treeline treeline, Layer currentLayer, int rootId)
 	{
 		MTBXMLRootType xmlRoot = MTBXMLRootType.Factory.newInstance();
 
@@ -2171,7 +2143,7 @@ public class RhizoAddons
 	 * INCOMPLETE - TODO: add connectors, image names, find better workaround
 	 * @author Tino
 	 */
-	public static void readMTBXML()
+	public void readMTBXML()
 	{
 		String[] filepath = Utils.selectFile("test");
 		File file = new File(filepath[0] + filepath[1]);
@@ -2391,7 +2363,7 @@ public class RhizoAddons
     /**
      * 
      */
-    public static void clearColorVisibilityLists()
+    public void clearColorVisibilityLists()
     {
     	statusList = new ArrayList<String>();
     	statusListAbbr = new ArrayList<String>();
@@ -2401,32 +2373,66 @@ public class RhizoAddons
      * Used for disposing JFrames when closing the control window
      * @return The color and visbility JFrame
      */
-    public static JFrame getColorVisibilityFrame()
+    public JFrame getColorVisibilityFrame()
     {
     	return colorFrame;
+    }
+    
+     /**
+     * call to dispose the ColorVisibilityFrame
+     */
+    public void disposeColorVisibilityFrame()
+    {
+        if(colorFrame==null){
+            return;
+        }
+        clearColorVisibilityLists();
+    	colorFrame.dispose();
+    }
+    
+     /**
+     * Used for disposing JFrames when closing the control window
+     * @return The image loader JFrame
+     */
+    public void disposeGui()
+    {
+    	disposeColorVisibilityFrame();
+        disposeImageLoaderFrame();
+        conflictManager.disposeConflictFrame();
     }
     
     /**
      * Used for disposing JFrames when closing the control window
      * @return The image loader JFrame
      */
-    public static JFrame getImageLoaderFrame()
+    public JFrame getImageLoaderFrame()
     {
     	return imageLoaderFrame;
+    }
+    
+     /**
+     * call to dispose the ColorVisibilityFrame
+     */
+    public void disposeImageLoaderFrame()
+    {
+        if(imageLoaderFrame==null){
+            return;
+        }
+    	imageLoaderFrame.dispose();
     }
 
 	/**
 	 * @return the relativPatchDir
 	 */
-	public static String getRelativPatchDir() {
+	public String getRelativPatchDir() {
 		return relativPatchDir;
 	}
 
 	/**
 	 * @param relativPatchDir the relativPatchDir to set
 	 */
-	public static void setRelativPatchDir(String relativPatchDir) {
-		RhizoAddons.relativPatchDir = relativPatchDir;
+	public void setRelativPatchDir(String relativPatchDir) {
+		this.relativPatchDir = relativPatchDir;
 	}
 }
 

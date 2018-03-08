@@ -103,9 +103,12 @@ public class ImageImport extends JPanel {
 	//image filter ini: constant_part > constant across all images; sort_part > part that is used to reconstruct the timeline
 	private String filterReg_constant_part = "_(T|t)\\d*";
 	private String filterReg_sort_part = "_\\d{3}";
+        
+        private RhizoAddons rhizoAddons = null;
 
-	public ImageImport() 
+	public ImageImport(RhizoAddons rhizoAddons) 
 	{
+            this.rhizoAddons = rhizoAddons;
 		iniComponents();
 	}
 
@@ -206,7 +209,7 @@ public class ImageImport extends JPanel {
 //			imgDir.setText(RhizoAddons.imageDir.getAbsolutePath());
 //		}
 		JFrame parentFrame = (JFrame) SwingUtilities.getRoot(this);
-		if(null != parentFrame && null != RhizoAddons.imageDir) parentFrame.setTitle("Image Loader - "+ RhizoAddons.imageDir.getAbsolutePath());
+		if(null != parentFrame && null != rhizoAddons.imageDir) parentFrame.setTitle("Image Loader - "+ rhizoAddons.imageDir.getAbsolutePath());
 		
 		
 		add(jPanel1, BorderLayout.EAST);
@@ -310,10 +313,10 @@ public class ImageImport extends JPanel {
 		if(indicator == JFileChooser.APPROVE_OPTION)
 		{
 			File dir = dialog.getSelectedFile();
-			RhizoAddons.imageDir=dir;
+			rhizoAddons.imageDir=dir;
 //			imgDir.setText(RhizoAddons.imageDir.getAbsolutePath());
 			JFrame parentFrame = (JFrame) SwingUtilities.getRoot(this);
-			if(null != parentFrame) parentFrame.setTitle("Image Loader - "+ RhizoAddons.imageDir.getAbsolutePath());
+			if(null != parentFrame) parentFrame.setTitle("Image Loader - "+ rhizoAddons.imageDir.getAbsolutePath());
 		}
 		
 	}
@@ -322,7 +325,7 @@ public class ImageImport extends JPanel {
 	private void autoImport()
 	{
 		Utils.log2("Start auto import:");
-		File imageDir = RhizoAddons.imageDir;
+		File imageDir = rhizoAddons.imageDir;
 		if(imageDir==null)
 		{
 			return;

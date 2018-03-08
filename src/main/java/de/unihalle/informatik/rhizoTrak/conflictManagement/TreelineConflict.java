@@ -65,16 +65,18 @@ public class TreelineConflict extends Conflict {
 	 * @param treelineList
 	 * @param layer
 	 */
-	public TreelineConflict(TreelineConflictKey treeConKey, ArrayList<Treeline> treelineList) {
-		this.treeConKey = treeConKey;
-		this.treelineList = treelineList;
+	public TreelineConflict(ConflictManager conflictManager,TreelineConflictKey treeConKey, ArrayList<Treeline> treelineList) {
+            super(conflictManager);
+            this.treeConKey = treeConKey;
+            this.treelineList = treelineList;
 	}
 	
 	/**
 	 * @param connector
 	 * @param layer
 	 */
-	public TreelineConflict(TreelineConflictKey treeConKey) {
+	public TreelineConflict(ConflictManager conflictManager,TreelineConflictKey treeConKey) {
+                super(conflictManager);
 		this.treeConKey = treeConKey;
 		update();
 	}
@@ -91,6 +93,7 @@ public class TreelineConflict extends Conflict {
 	 * @return the connected Treelines
 	 */
 	public ArrayList<Treeline> getTreelineOne() {
+                Utils.log(treelineList);
 		return treelineList;
 	}
 
@@ -120,7 +123,7 @@ public class TreelineConflict extends Conflict {
 		if(this.treelineList.size()<2)
 		{
 			//no real issue here
-			ConflictManager.removeTreelineConflict(this.treeConKey);
+			conflictManager.removeTreelineConflict(this.treeConKey);
 		}
 	}
 	

@@ -110,21 +110,22 @@ public abstract class Node<T> implements Taggable {
 		this.x = p[0];
 		this.y = p[1];
 	}
-
-	/** The confidence value of the edge towards the parent;
-	 *  in other words, how much this node can be trusted to continue from its parent node.
-	 *  Defaults to MAX_EDGE_CONFIDENCE for full trust, and 0 for none. */
-	protected byte confidence = RhizoAddons.getStatusListSize();
-	public byte getConfidence() 
-        {
-            if(confidence < 0 || confidence > RhizoAddons.getStatusListSize())
-            {
-                return RhizoAddons.getStatusListSize();
-            }
-            else
-            {
-             return confidence;    
-            }
+        public RhizoAddons rhizoAddons;
+	//protected byte confidence = rhizoAddons.getStatusListSize();
+        public byte confidence = MAX_EDGE_CONFIDENCE;
+//	public byte getConfidence() 
+//        {
+//            if(confidence < 0 || confidence > rhizoAddons.getStatusListSize())
+//            {
+//                return rhizoAddons.getStatusListSize();
+//            }
+//            else
+//            {
+//             return confidence;    
+//            }
+//        }
+        public byte getConfidence(){
+            return confidence;
         }
 
 	protected Layer la;
@@ -182,6 +183,7 @@ public abstract class Node<T> implements Taggable {
 	}
 	public void setLayer(final Layer la) {
 		this.la = la;
+                this.rhizoAddons=la.getProject().getRhizoAddons();
 	}
 	/** Returns -1 when not added (e.g. if child is null). */
 	synchronized public final int add(final Node<T> child, final byte conf) {
@@ -416,12 +418,15 @@ public abstract class Node<T> implements Taggable {
 			if (null != parent && active && with_confidence_boxes && (active_layer == this.la || active_layer == parent.la || (thisZ < actZ && actZ < parent.la.getZ()))) {
 				// Draw confidence half-way through the edge
 				
-				// aeekz
-				int i = (int) confidence;
-				String s = "";
-				if(RhizoAddons.statusFileExists) s = RhizoAddons.statusListAbbr.get(i);
+                                // aeekz actyc
+                                int i = (int) confidence;
+                                String s = "";
+                                if(rhizoAddons!=null){
+                                    if(rhizoAddons.statusFileExists) s = rhizoAddons.statusListAbbr.get(i);
+                                    else s = Integer.toString(i);
+                                }
 				else s = Integer.toString(i);
-				
+								
 				final Dimension dim = Utils.getDimensions(s, g.getFont());
 				g.setColor(Color.white);
 				final int xc = (int)(parent_x + (x - parent_x)/2),
@@ -1269,20 +1274,19 @@ public abstract class Node<T> implements Taggable {
 	
 	//actyc: get the righ color aka wheter non, first or seconded highlight
 	private Color getCorrectedColor(){
-//		Utils.log("current high= " + high[0]+"-"+high[1]);
-		Color result = RhizoAddons.confidencColors.get(this.getConfidence());
-//		if(high>0){
-//			result = RhizoAddons.confidencColorsget((byte) 11);
-//			if(high>1){
-//				Utils.log("even more highlighted");
-//				result = Color.red;
-//			}
-//		}
+                if(rhizoAddons==null){
+                    if(this.getLayer()!=null){
+                        this.rhizoAddons=this.getLayer().getProject().getRhizoAddons();
+                    } else{
+                         return Color.LIGHT_GRAY;
+                    }     
+                }
+		Color result = rhizoAddons.confidencColors.get(this.getConfidence());
 		if(high[0]){
-			result = RhizoAddons.confidencColors.get((byte) 11);
+			result = rhizoAddons.confidencColors.get((byte) 11);
 		}
 		if(high[1]){
-			Color cC = RhizoAddons.confidencColors.get((byte) 11);
+			Color cC = rhizoAddons.confidencColors.get((byte) 11);
 			result = Color.pink;
 			//result = new Color(cC.getRed()+10,cC.getGreen(),cC.getBlue()+10);
 		}

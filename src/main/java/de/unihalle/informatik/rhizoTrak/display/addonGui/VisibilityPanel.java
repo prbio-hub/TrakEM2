@@ -79,11 +79,13 @@ import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 public class VisibilityPanel extends JPanel {
 
-	public VisibilityPanel() {
+	public VisibilityPanel(RhizoAddons rhizoAddons) {
+                this.rhizoAddons = rhizoAddons;
 		initComponents();
 	}
 
 	private void initComponents() {
+                checkBoxArray = rhizoAddons.treeLineClickable;
 
 		jPanelNames = new javax.swing.JPanel();
 		jLabel31 = new javax.swing.JLabel();
@@ -181,10 +183,10 @@ public class VisibilityPanel extends JPanel {
 
 		add(jPanelNames);
 
-		if(RhizoAddons.statusFileExists)
+		if(rhizoAddons.statusFileExists)
 		{
-			List<String> status = RhizoAddons.statusList;
-			List<String> statusAbbr = RhizoAddons.statusListAbbr;
+			List<String> status = rhizoAddons.statusList;
+			List<String> statusAbbr = rhizoAddons.statusListAbbr;
 			
 			for(int i = 0; i < status.size(); i++)
 			{
@@ -220,7 +222,7 @@ public class VisibilityPanel extends JPanel {
 				button.setPreferredSize(new java.awt.Dimension(33, 12));
 				button.setContentAreaFilled(false);
 				button.setOpaque(true);
-				button.setBackground(RhizoAddons.confidencColors.get((byte) i));
+				button.setBackground(rhizoAddons.confidencColors.get((byte) i));
 				panel.add(button);
 				
 				Component[] c = { slider, button };
@@ -256,7 +258,7 @@ public class VisibilityPanel extends JPanel {
 			jButton1.setPreferredSize(new java.awt.Dimension(33, 12));
 			jButton1.setContentAreaFilled(false);
 			jButton1.setOpaque(true);
-			jButton1.setBackground(RhizoAddons.confidencColors.get((byte) 10));
+			jButton1.setBackground(rhizoAddons.confidencColors.get((byte) 10));
 			jPanel1.add(jButton1);
 
 			Component[] c1 = { jSlider1, jButton1 };
@@ -290,7 +292,7 @@ public class VisibilityPanel extends JPanel {
 			jButton2.setPreferredSize(new java.awt.Dimension(33, 12));
 			jButton2.setContentAreaFilled(false);
 			jButton2.setOpaque(true);
-			jButton2.setBackground(RhizoAddons.confidencColors.get((byte) 9));
+			jButton2.setBackground(rhizoAddons.confidencColors.get((byte) 9));
 			jPanel2.add(jButton2);
 
 			Component[] c2 = { jSlider2, jButton2 };
@@ -323,7 +325,7 @@ public class VisibilityPanel extends JPanel {
 			jButton3.setPreferredSize(new java.awt.Dimension(33, 12));
 			jButton3.setContentAreaFilled(false);
 			jButton3.setOpaque(true);
-			jButton3.setBackground(RhizoAddons.confidencColors.get((byte) 8));
+			jButton3.setBackground(rhizoAddons.confidencColors.get((byte) 8));
 			jPanel3.add(jButton3);
 
 			Component[] c3 = { jSlider3, jButton3 };
@@ -356,7 +358,7 @@ public class VisibilityPanel extends JPanel {
 			jButton4.setPreferredSize(new java.awt.Dimension(33, 12));
 			jButton4.setContentAreaFilled(false);
 			jButton4.setOpaque(true);
-			jButton4.setBackground(RhizoAddons.confidencColors.get((byte) 7));
+			jButton4.setBackground(rhizoAddons.confidencColors.get((byte) 7));
 			jPanel4.add(jButton4);
 
 			Component[] c4 = { jSlider4, jButton4 };
@@ -389,7 +391,7 @@ public class VisibilityPanel extends JPanel {
 			jButton5.setPreferredSize(new java.awt.Dimension(33, 12));
 			jButton5.setContentAreaFilled(false);
 			jButton5.setOpaque(true);
-			jButton5.setBackground(RhizoAddons.confidencColors.get((byte) 6));
+			jButton5.setBackground(rhizoAddons.confidencColors.get((byte) 6));
 			jPanel5.add(jButton5);
 
 			Component[] c5 = { jSlider5, jButton5 };
@@ -422,7 +424,7 @@ public class VisibilityPanel extends JPanel {
 			jButton6.setPreferredSize(new java.awt.Dimension(33, 12));
 			jButton6.setContentAreaFilled(false);
 			jButton6.setOpaque(true);
-			jButton6.setBackground(RhizoAddons.confidencColors.get((byte) 5));
+			jButton6.setBackground(rhizoAddons.confidencColors.get((byte) 5));
 			jPanel6.add(jButton6);
 
 			Component[] c6 = { jSlider6, jButton6 };
@@ -455,7 +457,7 @@ public class VisibilityPanel extends JPanel {
 			jButton7.setPreferredSize(new java.awt.Dimension(33, 12));
 			jButton7.setContentAreaFilled(false);
 			jButton7.setOpaque(true);
-			jButton7.setBackground(RhizoAddons.confidencColors.get((byte) 4));
+			jButton7.setBackground(rhizoAddons.confidencColors.get((byte) 4));
 			jPanel7.add(jButton7);
 
 			Component[] c7 = { jSlider7, jButton7 };
@@ -488,7 +490,7 @@ public class VisibilityPanel extends JPanel {
 			jButton8.setPreferredSize(new java.awt.Dimension(33, 12));
 			jButton8.setContentAreaFilled(false);
 			jButton8.setOpaque(true);
-			jButton8.setBackground(RhizoAddons.confidencColors.get((byte) 3));
+			jButton8.setBackground(rhizoAddons.confidencColors.get((byte) 3));
 			jPanel8.add(jButton8);
 
 			Component[] c8 = { jSlider8, jButton8 };
@@ -521,7 +523,7 @@ public class VisibilityPanel extends JPanel {
 			jButton9.setPreferredSize(new java.awt.Dimension(33, 12));
 			jButton9.setContentAreaFilled(false);
 			jButton9.setOpaque(true);
-			jButton9.setBackground(RhizoAddons.confidencColors.get((byte) 2));
+			jButton9.setBackground(rhizoAddons.confidencColors.get((byte) 2));
 			jPanel9.add(jButton9);
 
 			Component[] c9 = { jSlider9, jButton9 };
@@ -554,7 +556,7 @@ public class VisibilityPanel extends JPanel {
 			jButton10.setPreferredSize(new java.awt.Dimension(33, 12));
 			jButton10.setContentAreaFilled(false);
 			jButton10.setOpaque(true);
-			jButton10.setBackground(RhizoAddons.confidencColors.get((byte) 1));
+			jButton10.setBackground(rhizoAddons.confidencColors.get((byte) 1));
 			jPanel10.add(jButton10);
 
 			Component[] c10 = { jSlider10, jButton10 };
@@ -587,7 +589,7 @@ public class VisibilityPanel extends JPanel {
 			jButton11.setPreferredSize(new java.awt.Dimension(33, 12));
 			jButton11.setContentAreaFilled(false);
 			jButton11.setOpaque(true);
-			jButton11.setBackground(RhizoAddons.confidencColors.get((byte) 0));
+			jButton11.setBackground(rhizoAddons.confidencColors.get((byte) 0));
 			jPanel11.add(jButton11);
 
 			Component[] c11 = { jSlider11, jButton11 };
@@ -613,7 +615,7 @@ public class VisibilityPanel extends JPanel {
 		jButton12.setPreferredSize(new java.awt.Dimension(33, 12));
 		jButton12.setContentAreaFilled(false);
 		jButton12.setOpaque(true);
-		jButton12.setBackground(RhizoAddons.confidencColors.get((byte) 11));
+		jButton12.setBackground(rhizoAddons.confidencColors.get((byte) 11));
 		jPanel12.add(jButton12);
 
 		Component[] c12 = { null, jButton12 };
@@ -687,9 +689,11 @@ public class VisibilityPanel extends JPanel {
 	private javax.swing.JSlider jSlider7;
 	private javax.swing.JSlider jSlider8;
 	private javax.swing.JSlider jSlider9;
+        
+        private RhizoAddons rhizoAddons;
 	// component hash
 	private Hashtable<Integer, Component[]> componentCollection_hash = new Hashtable<Integer, Component[]>();
-	private boolean[] checkBoxArray = RhizoAddons.treeLineClickable;
+	private boolean[] checkBoxArray;
 
 	// Color change button action
 	Action colorChangeButton = new AbstractAction("colorChangeButton") {
@@ -709,8 +713,8 @@ public class VisibilityPanel extends JPanel {
 				int blue = currentColor.getBlue();
 				Color newColor = new Color(red, green, blue, alpha);
 
-				RhizoAddons.confidencColors.put((byte) state, newColor);
-				RhizoAddons.applyCorrespondingColor();
+				rhizoAddons.confidencColors.put((byte) state, newColor);
+				rhizoAddons.applyCorrespondingColor();
 				source.setBackground(newColor);
 			}
 		}
@@ -761,15 +765,15 @@ public class VisibilityPanel extends JPanel {
 
 			// javax.swing.JButton cButton = (JButton)
 			// componentCollection_hash.get(state)[1];
-			Color currentColor = RhizoAddons.confidencColors.get((byte) state);
+			Color currentColor = rhizoAddons.confidencColors.get((byte) state);
 			int alpha = currentSlider.getValue();
 			int red = currentColor.getRed();
 			int green = currentColor.getGreen();
 			int blue = currentColor.getBlue();
 			Color newColor = new Color(red, green, blue, alpha);
 
-			RhizoAddons.confidencColors.put((byte) state, newColor);
-			RhizoAddons.applyCorrespondingColor();
+			rhizoAddons.confidencColors.put((byte) state, newColor);
+			rhizoAddons.applyCorrespondingColor();
 			// cButton.setBackground(newColor);
 
 		}
@@ -781,7 +785,7 @@ public class VisibilityPanel extends JPanel {
 			int state = Integer.parseInt(e.getActionCommand());
 			javax.swing.JCheckBox source = (JCheckBox) e.getSource();
 
-			RhizoAddons.treeLineClickable[state] = source.isSelected();
+			rhizoAddons.treeLineClickable[state] = source.isSelected();
 		}
 	};
 }

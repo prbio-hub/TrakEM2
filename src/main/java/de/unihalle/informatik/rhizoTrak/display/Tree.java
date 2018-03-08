@@ -513,7 +513,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		nd.setColor(modelNode.getColor());
 		return nd;
 	}
-
+        
 	/** To reconstruct from XML. */
 	abstract public Node<T> newNode(HashMap<String,String> ht_attr);
 
@@ -1112,29 +1112,37 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	/** Also sets the last visited and the receiver node. This is a GUI method. */
 	protected Layer toClosestPaintedNode(final Layer active_layer, final float wx, final float wy, final double magnification) {
 		final Node<T> nd = findClosestNodeW(getNodesToPaint(active_layer), wx, wy, magnification);
-		if (null != nd) {
+                RhizoAddons rhizoAddons = Display.getFront().getProject().getRhizoAddons();
+                ConflictManager conflictManager = rhizoAddons.getConflictManager();
+                if (null != nd) {
 			
 			//actyc: check if your in a solving situation and the tree is helpful
-			if(!ConflictManager.isSolving()){
+			if(!conflictManager.isSolving()){
 				setLastVisited(nd);
 				return nd.la;
 			}
 			else
 			{
-				boolean rightConflictTyp = ConflictManager.currentConflictIsTreelineConflict();
+				boolean rightConflictTyp = conflictManager.currentConflictIsTreelineConflict();
+                                Utils.log("current Tree: " + this.toString());
+                                Utils.log("is it the right ConflictType? " + rightConflictTyp);
 				boolean rightInstance = false;
 				boolean rightTree = false;		
 				if(this instanceof Treeline)
 				{
 					rightInstance=true;
+                                        Utils.log("its the right instance");
 				}
+                                
 				if(rightConflictTyp && rightInstance)
 				{
-					TreelineConflict currentConflict = (TreelineConflict) ConflictManager.getCurrentSolvingConflict();
+					TreelineConflict currentConflict = (TreelineConflict) conflictManager.getCurrentSolvingConflict();
 					rightTree = currentConflict.getTreelineOne().contains(this);
+                                        Utils.log(this.equals(currentConflict.getTreelineOne().get(0)));
 				}
 				
 				if(rightConflictTyp && rightInstance && rightTree){
+                                        Utils.log("its the right Tree");
 					setLastVisited(nd);
 					return nd.la;
 				}
@@ -1142,7 +1150,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				{
 					if (Utils.check("currently solving ... abort?"))
 					{
-						ConflictManager.abortCurrentSolving();
+						conflictManager.abortCurrentSolving();
 						setLastVisited(nd);
 						return nd.la;
 					}
@@ -1754,8 +1762,8 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 						//addNode(nearest, found, Node.MAX_EDGE_CONFIDENCE);
 						addNode(nearest, found, nearest.getConfidence());
 						
-						RhizoAddons.lastEditedOrActiveNode = found; // Tino - aeekz
-						RhizoAddons.applyCorrespondingColor();
+						project.getRhizoAddons().lastEditedOrActiveNode = found; // Tino - aeekz
+						project.getRhizoAddons().applyCorrespondingColor();
 						
 						//actyc: new node inherits highlight status
 						found.high(nearest.high());
@@ -1771,10 +1779,10 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				root = createNewNode(x_p, y_p, layer, null); // world coords, so calculateBoundingBox will do the right thing
 				addNode(null, root, (byte)0);
 				
-				if(RhizoAddons.lastEditedOrActiveNode != null)// Tino - aeekz 
+				if(project.getRhizoAddons().lastEditedOrActiveNode != null)// Tino - aeekz 
 				{
 					@SuppressWarnings("unchecked")
-					Node<T> temp = (Node<T>) RhizoAddons.lastEditedOrActiveNode;
+					Node<T> temp = (Node<T>) project.getRhizoAddons().lastEditedOrActiveNode;
 					root.setConfidence(temp.getConfidence());
 					root.setData(temp.getData());
 				}
@@ -1788,7 +1796,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				if(this.getClass().equals(Treeline.class)){
 					Utils.log("active node in the parent tree: "+ this.last_visited);
 					this.marked = this.last_visited;
-					RhizoAddons.mergeTool(layer, x_p, y_p,mag, (Treeline.RadiusNode) this.last_visited, (Treeline) this,me);
+					project.getRhizoAddons().mergeTool(layer, x_p, y_p,mag, (Treeline.RadiusNode) this.last_visited, (Treeline) this,me);
 					//RhizoAddons.mergeActive=false; //deprecated
 					return;
 				}
@@ -2195,11 +2203,11 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 
 			Node<T> n = adjustEdgeConfidence(rotation > 0 ? 1 : -1, x, y, la, dc);
 
-			RhizoAddons.applyCorrespondingColor(); // Tino - aeekz
+			project.getRhizoAddons().applyCorrespondingColor(); // Tino - aeekz
 		
 			if(n != null)
 			{
-				RhizoAddons.lastEditedOrActiveNode = n;
+				project.getRhizoAddons().lastEditedOrActiveNode = n;
 			}
 			
 			Display.repaint(this);
@@ -2219,7 +2227,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 			node.setConfidence((byte) (node.getConfidence() +  inc));
 		}
 		
-		RhizoAddons.applyCorrespondingColor();
+		project.getRhizoAddons().applyCorrespondingColor();
 		return nearest;
 	}
 

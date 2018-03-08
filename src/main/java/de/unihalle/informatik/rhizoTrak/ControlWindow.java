@@ -307,12 +307,12 @@ public class ControlWindow {
 							if (!Utils.check("Close " + (1 == ht_projects.size() ? "the project?" : "all projects?"))) {
 								return;
 							}
-							if(RhizoAddons.getColorVisibilityFrame() != null)
-							{
-								RhizoAddons.getColorVisibilityFrame().dispose(); // Tino
-								RhizoAddons.clearColorVisibilityLists();
-							}
-							if(RhizoAddons.getImageLoaderFrame() != null) RhizoAddons.getImageLoaderFrame().dispose(); // Tino
+//							if(RhizoAddons.getColorVisibilityFrame() != null)
+//							{
+//								RhizoAddons.getColorVisibilityFrame().dispose(); // Tino
+//								RhizoAddons.clearColorVisibilityLists();
+//							}
+//							if(RhizoAddons.getImageLoaderFrame() != null) RhizoAddons.getImageLoaderFrame().dispose(); // Tino
 							destroy();
 						}
 					}

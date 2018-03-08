@@ -98,10 +98,12 @@ public class ConflictPanel extends JPanel implements ActionListener {
 	private javax.swing.JScrollPane jScrollPane1;
 	private javax.swing.DefaultListModel<String> listModel;
 	private HashMap<String,Conflict> dataTable= new HashMap<String,Conflict>();
-	File[] files;
+	public File[] files;
+        public ConflictManager conflictManager = null;
 
-	public ConflictPanel() 
+	public ConflictPanel(ConflictManager conflictManager) 
 	{
+                this.conflictManager = conflictManager;
 		iniComponents();
 	}
 
@@ -176,11 +178,11 @@ public class ConflictPanel extends JPanel implements ActionListener {
 			break;
 		
 		case "autoResolveNonAggressiv":
-			ConflictManager.autoResolveConnectorConnflicts(false);
+			conflictManager.autoResolveConnectorConnflicts(false);
 			break;
 			
 		case "autoResolveAggressiv":
-			ConflictManager.autoResolveConnectorConnflicts(true);
+			conflictManager.autoResolveConnectorConnflicts(true);
 			break;
 			
 		case "solve":
@@ -195,17 +197,17 @@ public class ConflictPanel extends JPanel implements ActionListener {
 	
 	public void updateList()
 	{
-		ConflictManager.clearAndUpdate();
+		conflictManager.clearAndUpdate();
 		
 		listModel.removeAllElements();	
-		ArrayList<ConnectorConflict> currentConnectorConflicts = new ArrayList<ConnectorConflict>(ConflictManager.getConnectorConflicts());
+		ArrayList<ConnectorConflict> currentConnectorConflicts = new ArrayList<ConnectorConflict>(conflictManager.getConnectorConflicts());
 		for(ConnectorConflict conflict:currentConnectorConflicts)
 		{
 			conflict.update();
 			listModel.addElement(conflict.toString());
 			dataTable.put(conflict.toString(), conflict);
 		}
-		ArrayList<TreelineConflict> currentTreelineConflicts = new ArrayList<TreelineConflict>(ConflictManager.getTreelineConflicts());
+		ArrayList<TreelineConflict> currentTreelineConflicts = new ArrayList<TreelineConflict>(conflictManager.getTreelineConflicts());
 		for(TreelineConflict conflict:currentTreelineConflicts)
 		{
 			conflict.update();
@@ -216,7 +218,7 @@ public class ConflictPanel extends JPanel implements ActionListener {
 	
 	private void solveButton()
 	{	
-		if(ConflictManager.abortCurrentSolving()) {return;}
+		if(conflictManager.abortCurrentSolving()) {return;}
 		
 		int selection = jList1.getSelectedIndex();
 		
@@ -227,9 +229,9 @@ public class ConflictPanel extends JPanel implements ActionListener {
 			Conflict currentConflict = dataTable.get(selectedConflictString);
 			//case one: Treeline conflict
 			if(currentConflict.getClass().equals(TreelineConflict.class)){
-	
+                                Utils.log("currently solving a treelineConflict");
 				TreelineConflict conflict = (TreelineConflict)currentConflict;
-				ConflictManager.setCurrentSolvingConflict(conflict);
+				conflictManager.setCurrentSolvingConflict(conflict);
 				
 				jButton4.setText("Solving ... abort?");
 				jButton4.setBackground(new Color(255, 0, 0));
@@ -253,4 +255,8 @@ public class ConflictPanel extends JPanel implements ActionListener {
 		jButton4.setText("Solve");
 		jButton4.setBackground(jButton3.getBackground());
 	}
+        
+        public void clearList(){
+            listModel.clear();
+        }
 }

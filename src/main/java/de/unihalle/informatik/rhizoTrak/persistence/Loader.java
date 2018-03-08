@@ -3913,12 +3913,12 @@ while (it.hasNext()) {
 	/** Exports the project and its images (optional); if export_images is true, it will be asked for confirmation anyway -beware: for FSLoader, images are not exported since it doesn't own them; only their path.*/
 	protected String export(final Project project, final File fxml, final XMLOptions options) {
 		
-		//actyc: if the main project saves, save the addon stuff  
-		RhizoAddons.addonSaver(fxml);
-		
 		String path = null;
 		if (null == project || null == fxml) return null;
 
+                //actyc: if the main project saves, save the addon stuff
+		project.getRhizoAddons().addonSaver(fxml);
+                
 		releaseToFit(estimateXMLFileSize(fxml));
 
 		try {
@@ -4103,7 +4103,7 @@ while (it.hasNext()) {
 		//
 		
 		// aeekz - only makes sense if xml file is saved in the storage folder
-		RhizoAddons.imageDir = new File(storage_dir);
+		project.getRhizoAddons().imageDir = new File(storage_dir);
 		
 		return path;
 	}

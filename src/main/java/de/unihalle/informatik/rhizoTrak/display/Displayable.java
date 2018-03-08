@@ -2271,4 +2271,25 @@ public abstract class Displayable extends DBObject implements Paintable  {
 	 *  If multiple displays have the same Displayable in their Selection,
 	 *  this Diplayabale is to act as if it has been deselected from all. */
 	public void deselect() {}
+        
+            //actyc: equals implementation based on id's
+    @Override
+    public int hashCode() {
+        int hash = 19;
+        hash = 37 * hash + (int)this.getId();
+        return hash;
+
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this==obj){
+            return true;
+        }
+        if(obj==null || this.getClass()!=obj.getClass()){
+            return false;
+        }
+        Displayable d = (Displayable) obj;
+        return d.getId() == this.getId();
+    }
 }

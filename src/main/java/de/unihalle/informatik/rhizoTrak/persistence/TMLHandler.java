@@ -801,6 +801,8 @@ public class TMLHandler extends DefaultHandler {
 					throw new NullPointerException("Can't create a node for null last_tree!");
 				}
 				final Node<?> node = last_tree.newNode(ht_attributes);
+                                //actyc: set the rhizoAddons object
+                                node.rhizoAddons=project.getRhizoAddons();
 				taggables.add(node);
 				// Put node into the list of nodes with that layer id, to update to proper Layer pointer later
 				final long ndlid = Long.parseLong(ht_attributes.get("lid"));

@@ -318,6 +318,13 @@ public class Project extends DBObject {
 	private final HashMap<String,String> ht_props = new HashMap<String,String>();
 	
 	private int mipmaps_mode = Loader.DEFAULT_MIPMAPS_MODE;
+        
+        //actyc: refrence to the addon class of the project
+        public RhizoAddons rhizoAddons;
+
+    public RhizoAddons getRhizoAddons() {
+        return rhizoAddons;
+    }
 
 	/** The constructor used by the static methods present in this class. */
 	private Project(Loader loader) {
@@ -326,6 +333,8 @@ public class Project extends DBObject {
 		this.loader = loader;
 		this.project = this; // for the superclass DBObject
 		loader.addToDatabase(this);
+                //actyc: ini the rhizoAddons
+                this.rhizoAddons= new RhizoAddons(project);
 	}
 
 	/** Constructor used by the Loader to find projects. These projects contain no loader. */
@@ -334,6 +343,7 @@ public class Project extends DBObject {
 		ControlWindow.getInstance(); // init
 		this.title = title;
 		this.project = this;
+                this.rhizoAddons= new RhizoAddons(project);
 	}
 
 	private ScheduledFuture<?> autosaving = null;
@@ -566,8 +576,8 @@ public class Project extends DBObject {
 
 			// aeekz
 			final OpenDialog od = new OpenDialog("Select status file", dir_project, null);
-			RhizoAddons.loadStatusFile(od.getPath());
-			if(RhizoAddons.userSettingFile.exists()) RhizoAddons.loadUserSettings();
+			project.getRhizoAddons().loadStatusFile(od.getPath());
+			if(project.getRhizoAddons().userSettingFile.exists()) project.getRhizoAddons().loadUserSettings();
 	
 			// help the helpless users:
 			if (autocreate_one_layer && null != project && ControlWindow.isGUIEnabled()) {
@@ -710,7 +720,7 @@ public class Project extends DBObject {
 		try {
 			Utils.log(loader.getProjectXMLPath()); 
 			Utils.log2("start addon loader ...");
-			RhizoAddons.addonLoader(new File(loader.getProjectXMLPath())).join();
+			project.getRhizoAddons().addonLoader(new File(loader.getProjectXMLPath()),project).join();
 			Utils.log2("started");
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -868,6 +878,8 @@ public class Project extends DBObject {
 		Display.close(this);
 		Search.removeTabs(this);
 		synchronized (ptcache) { ptcache.clear(); }
+                //actyc: dispose frames
+                this.getRhizoAddons().disposeGui();
 		return true;
 	}
 
