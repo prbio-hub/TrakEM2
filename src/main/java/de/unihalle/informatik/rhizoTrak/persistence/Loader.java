@@ -4104,6 +4104,7 @@ while (it.hasNext()) {
 		
 		// aeekz - only makes sense if xml file is saved in the storage folder
 		RhizoAddons.imageDir = new File(storage_dir);
+		Utils.log(fxml.getAbsolutePath());
 		
 		return path;
 	}

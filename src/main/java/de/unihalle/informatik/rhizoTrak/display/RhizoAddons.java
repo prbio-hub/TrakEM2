@@ -492,6 +492,7 @@ public class RhizoAddons
 	 */
 	public static void saveConfigFile(File file) 
 	{
+		Utils.log(file.getAbsolutePath());
 		// TODO: add warnings
 		if(null == file) return;
 		

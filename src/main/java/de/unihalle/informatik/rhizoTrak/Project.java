@@ -846,7 +846,8 @@ public class Project extends DBObject {
 			if (ControlWindow.isGUIEnabled()) {
 				final YesNoDialog yn = ControlWindow.makeYesNoDialog("rhizoTrak", "There are unsaved changes in project " + title + ". Save them?");
 				if (yn.yesPressed()) {
-					save();
+					String path = save();
+					RhizoAddons.addonSaver(new File(path));
 				}
 			} else {
 				Utils.log2("WARNING: closing project '" + title  + "' with unsaved changes.");
