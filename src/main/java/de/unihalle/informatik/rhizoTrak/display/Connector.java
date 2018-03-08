@@ -601,10 +601,9 @@ public class Connector extends Treeline  implements TreeEventListener{
 						}
 					}
 					if(!found){
-						Utils.log("inside the new node if");
 						Node<Float> newTarget = newNode((float) result.getX(),(float) result.getY(), treeRoot.getLayer(), root);
 						found = ((ConnectorNode)newTarget).setData(last_radius);
-						found = addNode(root, newTarget, Node.MAX_EDGE_CONFIDENCE);					
+						found = addNode(root, newTarget,(byte)-3);					
 					}
 				}
 				//delete all unused nodes
@@ -619,7 +618,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 					if(result==null) return false;
 					Node<Float> newTarget = newNode((float) result.getX(),(float) result.getY(), treeRoot.getLayer(), root);
 					((ConnectorNode)newTarget).setData(last_radius);
-					if(!addNode(root, newTarget, Node.MAX_EDGE_CONFIDENCE)) return false;
+					if(!addNode(root, newTarget, (byte)-3)) return false;
 				}	
 			}
 		} else {

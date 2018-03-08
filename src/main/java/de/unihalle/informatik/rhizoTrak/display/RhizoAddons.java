@@ -968,20 +968,20 @@ public class RhizoAddons
 
 		// get treelines of current layerset
 		ArrayList<Displayable> trees = currentLayerSet.get(Treeline.class);
+                ArrayList<Displayable> connectors = currentLayerSet.get(Connector.class);
+                trees.addAll(connectors);
 		boolean repaint = false;
 		for (Displayable cObj : trees) 
 		{			
 			Treeline ctree = (Treeline) cObj;
 			if(ctree.getRoot() == null || ctree.getRoot().getSubtreeNodes() == null) continue;
-			Utils.log("active layer_" + display.getLayer());
-			Utils.log("found tree: "+ cObj.getUniqueIdentifier());
 			
 			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes())
 			{
 				byte currentConfi = cnode.getConfidence();
 				Color newColor = getColorFromStatusMap(currentConfi);
 
-				if (!cnode.getColor().equals(newColor))
+				if (cnode.getColor()==null || !cnode.getColor().equals(newColor))
 				{
 					cnode.setColor(newColor);
 					repaint = true;
@@ -1039,27 +1039,29 @@ public class RhizoAddons
 	 * @param notToBeHigh - Treeline to be dehighlighted
 	 * @author Axel
 	 */
-	public static void removeHighlight(Displayable notToBeHigh,boolean choose)
-	{
-		if(notToBeHigh instanceof Treeline){
-			Treeline tree = (Treeline) notToBeHigh;
-                        if(tree.getRoot()==null)
-                        {
-                            return;
-                        }
-			for (Node<Float> cnode : tree.getRoot().getSubtreeNodes())
-			{
-				if(choose){
-					cnode.removeChooseHighlight();
-				} else {
-					cnode.removeHighlight();
-				}				
-			}	
-			Display.repaint(Display.getFrontLayer());
-			//tree.repaint();	
-		}
+    public static void removeHighlight(Displayable notToBeHigh, boolean choose)
+    {
+        Treeline tree=null;
+        if (notToBeHigh instanceof Treeline) {
+            tree = (Treeline) notToBeHigh;
+        }
+        if (notToBeHigh instanceof Connector) {
+            tree = (Treeline) notToBeHigh;
+        }
+        if (tree==null) return;
+        if (tree.getRoot() == null) {
+            return;
+        }
+        for (Node<Float> cnode : tree.getRoot().getSubtreeNodes()) {
+            if (choose) {
+                cnode.removeChooseHighlight();
+            } else {
+                cnode.removeHighlight();
+            }
+        }
+        Display.repaint(Display.getFrontLayer());
 
-	}
+    }
 
 	/**
 	 * Removes highlighting from treelines
@@ -1070,7 +1072,7 @@ public class RhizoAddons
 	{
 		for (Displayable disp : toBeHigh)
 		{
-			if (disp.getClass().equals(Treeline.class))
+			if (disp.getClass().equals(Treeline.class) || disp.getClass().equals(Connector.class))
 			{
 				removeHighlight((Treeline) disp,choose);
 			}
@@ -1930,7 +1932,7 @@ public class RhizoAddons
 		ArrayList<Displayable> alternatedList = new ArrayList<Displayable>();
 		for (Displayable displayable : al)
 		{
-			if (displayable.getClass() == Treeline.class && displayable.getClass() != Connector.class)
+			if (displayable.getClass() == Treeline.class || displayable.getClass() == Connector.class)
 			{
 				Treeline currentTreeline = (Treeline) displayable;
 				double transX = x_p - currentTreeline.getAffineTransform().getTranslateX();
