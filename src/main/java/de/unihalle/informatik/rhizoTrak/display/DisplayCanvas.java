@@ -764,7 +764,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 			//old:
 //			display.choose(me.getX(), me.getY(), x_p, y_p, me.isShiftDown(), null);
 			//new:
-			Thread t = RhizoAddons.choose(me.getX(), me.getY(), x_p, y_p, me.isShiftDown(), null,Display.getFront());
+			Thread t = Display.getFront().getProject().getRhizoAddons().choose(me.getX(), me.getY(), x_p, y_p, me.isShiftDown(), null,Display.getFront());
 			t.start();
 			//end
 		}
@@ -3109,39 +3109,6 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				if (!(zd instanceof Tree<?>)) continue;
 				final Tree<?> t = (Tree<?>)zd;
 				
-				//actyc: [old check code!]check if your in a solving situation and the tree is helpful
-//				Layer la = null;
-//				if(!ConflictManager.isSolving())
-//				{
-//					la = t.toClosestPaintedNode(active_layer, po.x, po.y, magnification);
-//				}
-//				if(ConflictManager.isSolving())
-//				{
-//					boolean rightConflictTyp = ConflictManager.currentConflictIsTreelineConflict();
-//					boolean rightInstance = false;
-//					boolean rightTree = false;		
-//					if(t instanceof Treeline)
-//					{
-//						rightInstance=true;
-//					}
-//					if(rightConflictTyp && rightInstance)
-//					{
-//						TreelineConflict currentConflict = (TreelineConflict) ConflictManager.getCurrentSolvingConflict();
-//						rightTree = currentConflict.getTreelineOne().contains(t);
-//					}
-//					if(rightConflictTyp && rightInstance && rightTree){
-//						la = t.toClosestPaintedNode(active_layer, po.x, po.y, magnification);
-//					}					
-//					else 
-//					{
-//						
-//						if (Utils.check("currently solving ... abort?"))
-//						{
-//							la = t.toClosestPaintedNode(active_layer, po.x, po.y, magnification);
-//							ConflictManager.abortCurrentSolving();
-//						}
-//					}
-//				}
 				final Layer la = t.toClosestPaintedNode(active_layer, po.x, po.y, magnification);
 				if (null == la) continue;
 				// Else:

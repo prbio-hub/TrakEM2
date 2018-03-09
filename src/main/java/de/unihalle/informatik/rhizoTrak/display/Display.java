@@ -2273,12 +2273,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	protected void choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final Class<?> c) {
             //atyc: change to the modified RhizoTrak version of choose
             //choose(screen_x_p, screen_y_p, x_p, y_p, false, c);
-            RhizoAddons.choose(screen_x_p, screen_y_p, x_p, y_p, false, c,this);
+            this.getProject().getRhizoAddons().choose(screen_x_p, screen_y_p, x_p, y_p, false, c,this);
 	}
 	protected void choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p) {
             //atyc: change to the modified RhizoTrak version of choose
             //choose(screen_x_p, screen_y_p, x_p, y_p, false, null);
-            RhizoAddons.choose(screen_x_p, screen_y_p, x_p, y_p, false, null,this);
+            this.getProject().getRhizoAddons().choose(screen_x_p, screen_y_p, x_p, y_p, false, null,this);
 	}
 
 	/** Find a Displayable to add to the selection under the given point (which is in offscreen coords); will use a popup menu to give the user a range of Displayable objects to select from. */
@@ -2297,7 +2297,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				Node<Float> nearestNode = currentTreeline.findNearestNode((float)transX,(float) transY, layer);
 				//Utils.log(nearestNode);
 				//check if treeline is clickable if not add it to the remove list
-				if(nearestNode.getConfidence() > 0 && !RhizoAddons.statusMap.get((int) nearestNode.getConfidence()).isSelectable()) {
+				if(nearestNode.getConfidence() > 0 && !this.getProject().getRhizoAddons().statusMap.get((int) nearestNode.getConfidence()).isSelectable()) {
 					alternatedList.add(displayable);
 				}
 			}
@@ -6387,25 +6387,27 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("Copy treelines")){
 			int answer = JOptionPane.showConfirmDialog(null, "This will copy every treeline from the current layer to the next layer and may not be undone.\nAre you sure?", 
 														"", JOptionPane.YES_NO_OPTION);
-			if(answer == JOptionPane.YES_OPTION) RhizoAddons.copyTreeLine();
+			if(answer == JOptionPane.YES_OPTION) Display.getFront().getProject().getRhizoAddons().copyTreeLine();
 		}
 		else if(command.equals("Load images")){
-			RhizoAddons.imageLoader();
+			Display.getFront().getProject().getRhizoAddons().imageLoader();
 		}
 		else if(command.equals("colVis")){
-			RhizoAddons.setVisibility();
+			Display.getFront().getProject().getRhizoAddons().setVisibility();
 		}
 		else if(command.equals("testtest")){
-			RhizoAddons.test();
+			Display.getFront().getProject().getRhizoAddons().test();
 		}
 		else if(command.equals("readXML")){
-			RhizoAddons.readMTBXML();
+			Display.getFront().getProject().getRhizoAddons().readMTBXML();
 		}
 		else if(command.equals("writeXML")){
-			RhizoAddons.writeMTBXML();
+			Display.getFront().getProject().getRhizoAddons().writeMTBXML();
 		}
 		else if(command.equals("conflictPanel")){
-			ConflictManager.showConflicts();
+                        RhizoAddons rhizoAddons = Display.getFront().getProject().getRhizoAddons();
+                        ConflictManager conflictManager = rhizoAddons.getConflictManager();
+			conflictManager.showConflicts();
 		}
 		else if(command.equals("stat")){
 			RhizoAddons.writeStatistics();
@@ -7144,7 +7146,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     //actyc: new Panel to add more functionality
     private JPanel createExtendedOptionPanel() 
     {
-    	RhizoAddons.init();
+    	this.getProject().getRhizoAddons().init();
     	RhizoAddons.shortyForTreeLine(this.getTabbedPane());
     	//RhizoAddons.shortyForMergeTool(this.getTabbedPane()); //deprecated
     	
@@ -7815,5 +7817,4 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		}
 		return ds;
 	}
-
 }

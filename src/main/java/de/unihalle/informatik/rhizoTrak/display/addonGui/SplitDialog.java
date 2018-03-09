@@ -78,9 +78,12 @@ public class SplitDialog extends JDialog implements ActionListener {
 	
 	
 	private ArrayList<Treeline> trees;
+        
+        private RhizoAddons rhizoAddons;
 	
-	public SplitDialog(ArrayList<Treeline> trees)
+	public SplitDialog(ArrayList<Treeline> trees,RhizoAddons rhizoAddons)
 	{
+                this.rhizoAddons = rhizoAddons;
 		this.setModalityType(JDialog.ModalityType.APPLICATION_MODAL);
 		this.trees = trees;
 		
@@ -152,7 +155,7 @@ public class SplitDialog extends JDialog implements ActionListener {
 			RhizoAddons.transferConnector(trees.get(0), trees.get(1));
 			//new connector for upstream root
 			RhizoAddons.giveNewConnector(trees.get(0),null);
-			RhizoAddons.splitDialog = false;
+			rhizoAddons.splitDialog = false;
 		}
 		
 		
@@ -160,7 +163,7 @@ public class SplitDialog extends JDialog implements ActionListener {
 		{
 			//new connector for downstream root
 			RhizoAddons.giveNewConnector(trees.get(1),trees.get(0));
-			RhizoAddons.splitDialog = false;
+			rhizoAddons.splitDialog = false;
 		}
                 this.dispose();
 	}

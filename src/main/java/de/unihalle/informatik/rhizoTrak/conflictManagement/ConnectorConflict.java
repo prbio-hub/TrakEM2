@@ -56,17 +56,20 @@ import de.unihalle.informatik.rhizoTrak.display.TreeEventListener;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 
 public class ConnectorConflict extends Conflict{
+
 	Treeline conflictTree;
 	ArrayList<Connector> connectorList;
 	
-	ConnectorConflict(Treeline tree, ArrayList<Connector> connectorList){
-		conflictTree = tree;
-		this.connectorList = connectorList;
+	ConnectorConflict(ConflictManager conflictManager,Treeline tree, ArrayList<Connector> connectorList){
+            super(conflictManager);	
+            this.conflictTree = tree;
+            this.connectorList = connectorList;      
 	}
 
-	ConnectorConflict(Treeline tree){
-		conflictTree = tree;
-		update();
+	ConnectorConflict(ConflictManager conflictManager,Treeline tree){
+            super(conflictManager);
+            this.conflictTree = tree;
+            update();
 	}
 	
 	/**
@@ -107,7 +110,7 @@ public class ConnectorConflict extends Conflict{
 		if(this.connectorList.size()<2)
 		{
 			//no real issue here so remove its self
-			ConflictManager.removeConnectorConflict(conflictTree);
+			conflictManager.removeConnectorConflict(conflictTree);
 		}
 	}
 

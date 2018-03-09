@@ -93,9 +93,11 @@ public class VisibilityPanel extends JPanel
 	private JLabel jLabel33;
 	private JLabel jLabel34;
 	private JPanel jPanelNames;
+        public RhizoAddons rhizoAddons=null;
 
-	public VisibilityPanel()
+	public VisibilityPanel(RhizoAddons rhizoAddons)
 	{
+		this.rhizoAddons = rhizoAddons;
 		initComponents();
 	}
 
@@ -142,8 +144,8 @@ public class VisibilityPanel extends JPanel
 		
 		// TODO: add 3 default status first
 
-		HashMap<Integer, Status> map = RhizoAddons.statusMap;
-		for(int i: RhizoAddons.statusMap.keySet())
+		HashMap<Integer, Status> map = rhizoAddons.statusMap;
+		for(int i: rhizoAddons.statusMap.keySet())
 		{
 			Status s = map.get(i);
 			JPanel panel = new JPanel();
@@ -177,15 +179,15 @@ public class VisibilityPanel extends JPanel
 			button.setPreferredSize(new java.awt.Dimension(33, 12));
 			button.setContentAreaFilled(false);
 			button.setOpaque(true);
-			button.setBackground(RhizoAddons.getColorFromStatusMap(i));
+			button.setBackground(rhizoAddons.getColorFromStatusMap(i));
 			panel.add(button);
 
 			add(panel);
-			if(i == RhizoAddons.getStatusMapSize()) add(new JSeparator());
+			if(i == rhizoAddons.getStatusMapSize()) add(new JSeparator());
 		}
-
+		
 	}
-
+        
 	// Color change button action
 	Action colorChangeButton = new AbstractAction("colorChangeButton") {
 		public void actionPerformed(ActionEvent e) {
@@ -195,13 +197,13 @@ public class VisibilityPanel extends JPanel
 			Color selectedColor = JColorChooser.showDialog(source, "Choose color", Color.WHITE);
 			if (selectedColor != null) 
 			{
-				Status s = RhizoAddons.statusMap.get(index);
+				Status s = rhizoAddons.statusMap.get(index);
 				s.setRed(BigInteger.valueOf(selectedColor.getRed()));
 				s.setGreen(BigInteger.valueOf(selectedColor.getGreen()));
 				s.setBlue(BigInteger.valueOf(selectedColor.getBlue()));
-				RhizoAddons.statusMap.put(index, s);
+				rhizoAddons.statusMap.put(index, s);
 
-				RhizoAddons.applyCorrespondingColor();
+				rhizoAddons.applyCorrespondingColor();
 				source.setBackground(selectedColor);
 			}
 		}
@@ -215,11 +217,13 @@ public class VisibilityPanel extends JPanel
 			JSlider currentSlider = (JSlider) e.getSource();
 			int index = Integer.parseInt(currentSlider.getName()); // name will always be an integer
 			
-			Status s = RhizoAddons.statusMap.get(index);
+			Status s = rhizoAddons.statusMap.get(index);
 			s.setAlpha(BigInteger.valueOf(currentSlider.getValue()));
-			RhizoAddons.statusMap.put(index, s);
+			rhizoAddons.statusMap.put(index, s);
 			
-			RhizoAddons.applyCorrespondingColor();
+			rhizoAddons.applyCorrespondingColor();
+			// cButton.setBackground(newColor);
+
 		}
 	};
 
@@ -229,9 +233,9 @@ public class VisibilityPanel extends JPanel
 			int index = Integer.parseInt(e.getActionCommand());
 			JCheckBox source = (JCheckBox) e.getSource();
 
-			Status s = RhizoAddons.statusMap.get(index);
+			Status s = rhizoAddons.statusMap.get(index);
 			s.setSelectable(source.isSelected());
-			RhizoAddons.statusMap.put(index, s);
+			rhizoAddons.statusMap.put(index, s);
 		}
 	};
 }

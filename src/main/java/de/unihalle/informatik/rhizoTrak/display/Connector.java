@@ -512,7 +512,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 				int oldSize = conTreelines.size();
 				
 				if(!me.isShiftDown() && !Utils.isControlDown(me)){
-					RhizoAddons.bindConnectorToTreeline(layer, x_p, y_p, mag, this, me);
+					this.getProject().getRhizoAddons().bindConnectorToTreeline(layer, x_p, y_p, mag, this, me);
 					return;
 				}
 
@@ -662,7 +662,9 @@ public class Connector extends Treeline  implements TreeEventListener{
 		boolean added = conTreelines.add(newTreeline);
 		if(added) newTreeline.addTreeEventListener(this);
 		sanityCheck();
-		ConflictManager.processChange(newTreeline, this);
+                RhizoAddons rhizoAddons = this.getProject().getRhizoAddons();
+                ConflictManager conflictManager = rhizoAddons.getConflictManager();
+		conflictManager.processChange(newTreeline, this);
 		return added;
 	}
 	
@@ -670,7 +672,9 @@ public class Connector extends Treeline  implements TreeEventListener{
 		boolean removed = conTreelines.remove(tobeRemoved);
 		if(removed) tobeRemoved.removeTreeEventListener(this);
 		sanityCheck();
-		ConflictManager.processChange(tobeRemoved, this);
+                RhizoAddons rhizoAddons = this.getProject().getRhizoAddons();
+                ConflictManager conflictManager = rhizoAddons.getConflictManager();
+		conflictManager.processChange(tobeRemoved, this);
 		return removed;
 	}
 	
@@ -690,10 +694,10 @@ public class Connector extends Treeline  implements TreeEventListener{
 		if(te.getEventMessage().equals("split"))
 		{
 			ArrayList<Treeline> trees = te.getInterestingTrees();
-			if(!RhizoAddons.splitDialog)
+			if(!this.getProject().getRhizoAddons().splitDialog)
 			{
-				RhizoAddons.splitDialog = true;
-				new SplitDialog(trees);
+				this.getProject().getRhizoAddons().splitDialog = true;
+				new SplitDialog(trees,project.getRhizoAddons());
 			}
 			
 			
@@ -717,7 +721,7 @@ public class Connector extends Treeline  implements TreeEventListener{
                 if(currentTree != null)
                 {
                     currentTree.removeTreeEventListener(this);
-                    ConflictManager.processChange(currentTree, this);
+                    this.getProject().getRhizoAddons().getConflictManager().processChange(currentTree, this);
                     it.remove();
                     //this.removeConTreeline(currentTree);
                 }
