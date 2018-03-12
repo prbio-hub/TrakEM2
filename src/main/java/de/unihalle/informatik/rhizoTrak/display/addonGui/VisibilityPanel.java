@@ -142,8 +142,6 @@ public class VisibilityPanel extends JPanel
 
 		add(jPanelNames);
 		
-		// TODO: add 3 default status first
-
 		HashMap<Integer, Status> map = rhizoAddons.statusMap;
 		for(int i: rhizoAddons.statusMap.keySet())
 		{

@@ -102,6 +102,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import com.esotericsoftware.kryo.util.Util;
+
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootAssociationType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootImageAnnotationType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootProjectDocument;
@@ -154,37 +156,27 @@ public class RhizoAddons
 	private  JFrame colorFrame, imageLoaderFrame;
 	
 	static AddonGui guiAddons;
-        
-        private ConflictManager conflictManager = null;
 
-        public Project project = null;
+	private ConflictManager conflictManager = null;
 
-        public RhizoAddons(Project project) 
-        {
-                this.project = project;
-                this.conflictManager = new ConflictManager(this);
-        }
+	public Project project = null;
 
-        public void setConflictManager(ConflictManager conflictManager) 
-        {
-                this.conflictManager = conflictManager;
-        }
-
-        public ConflictManager getConflictManager()
-        {
-                return conflictManager;
-        }
-
-	/**
-	 * Initializes GUI
-	 * @author Axel 
-	 */
-	public static void init()
+	public RhizoAddons(Project project) 
 	{
-		guiAddons = new AddonGui();
+		this.project = project;
+		this.conflictManager = new ConflictManager(this);
 	}
-	
-	
+
+	public void setConflictManager(ConflictManager conflictManager) 
+	{
+		this.conflictManager = conflictManager;
+	}
+
+	public ConflictManager getConflictManager()
+	{
+		return conflictManager;
+	}
+
 	/**
 	 * Calls load methods when opening a project
 	 * @param file - saved project file
@@ -853,78 +845,6 @@ public class RhizoAddons
 		return true;
 	}
 	
-	/**
-	 * Converts color to string for the con file format
-	 * @param col
-	 * @return Color string
-	 * @author Axel
-	 */
-	public static String colorToString(Color col)
-	{
-		String result = col.getRed() + ";" + col.getGreen() + ";" + col.getBlue() + ";" + col.getAlpha();
-		return result;
-	}
-
-	/**
-	 * Converts string to color for the con file format
-	 * @param string 
-	 * @return Color
-	 * @author Axel
-	 */
-	public static Color stringToColor(String string)
-	{
-		String[] info = string.split(";");
-		return new Color(Integer.parseInt(info[0]), Integer.parseInt(info[1]), Integer.parseInt(info[2]), Integer.parseInt(info[3]));
-	}
-
-	/**
-	 * Splits a string by newlines
-	 * @param string - String to be split
-	 * @return List of lines
-	 * @author Axel
-	 */
-	public static ArrayList<String> stringToLineArray(String string)
-	{
-		String[] lines = string.split("\\n");
-		return new ArrayList<String>(Arrays.asList(lines));
-	}
-	
-	/* visual stuff */
-
-	/**
-	 * Creates a color chooser dialogue and applies colors to treelines with the corresponding confidence value
-	 * @param i - Confidence value
-	 * @param list - Parent component for the chooser
-	 * @author Axel, Tino
-	 */
-	public void colorChooser(int i, JList list)
-	{
-		Color newColor = JColorChooser.showDialog(list, "Choose color", Color.WHITE);
-		Status s = statusMap.get(i);
-		s.setRed(BigInteger.valueOf(newColor.getRed()));
-		s.setGreen(BigInteger.valueOf(newColor.getGreen()));
-		s.setBlue(BigInteger.valueOf(newColor.getBlue()));
-		s.setAlpha(BigInteger.valueOf(newColor.getAlpha()));
-		
-		Display display = Display.getFront();
-		Layer currentLayer = display.getLayer();
-		LayerSet currentLayerSet = currentLayer.getParent();
-		
-		// get treelines of current layerset
-		ArrayList<Displayable> trees = currentLayerSet.get(Treeline.class);
-		for (Displayable cObj : trees)
-		{
-			Treeline ctree = (Treeline) cObj;
-			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes())
-			{
-				if ((int) cnode.getConfidence() == i)
-				{
-					cnode.setColor(newColor);
-				}
-			}
-			cObj.repaint();
-		}
-	}
 	
 	/**
 	 * Updates the color for all treelines and repaints them.
@@ -1556,7 +1476,8 @@ public class RhizoAddons
 		List<Displayable> trees = null;
 		List<Segment> allSegments = new ArrayList<Segment>();
 		
-		trees = currentLayerSet.get(Treeline.class);
+		if(outputType.equals("All layers")) trees = currentLayerSet.get(Treeline.class);
+		else trees = filterTreelinesByLayer(currentLayer, currentLayerSet.get(Treeline.class));
 		
 		 List<Displayable> connectors = currentLayerSet.get(Connector.class);
 		 
@@ -1579,10 +1500,10 @@ public class RhizoAddons
 				 {
 					 if(!node.equals(ctree.getRoot()))
 					 {
-						 Segment currentSegment = new Segment(this, getPatch(ctree), cObj.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+						 Segment currentSegment = new Segment(this, getPatch(ctree), ctree, cObj.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
 						 segmentID++;
-										
-						 allSegments.add(currentSegment);
+
+						 if(currentSegment.checkNodesInImage()) allSegments.add(currentSegment);
 					 }
 				 }
 			 }
@@ -1601,10 +1522,10 @@ public class RhizoAddons
 			 {
 				 if(!node.equals(tl.getRoot()))
 				 {
-					 Segment currentSegment = new Segment(this, getPatch(tl), tl.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+					 Segment currentSegment = new Segment(this, getPatch(tl), tl, tl.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
 					 segmentID++;
-									
-					 allSegments.add(currentSegment);
+
+					 if(currentSegment.checkNodesInImage()) allSegments.add(currentSegment);
 				 }
 			 }
 		 }
@@ -1615,7 +1536,7 @@ public class RhizoAddons
 			File saveFile = Utils.chooseFile(System.getProperty("user.home"), null, ".csv");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
 			
-			bw.write("experiment"+sep+"tube"+sep+"timepoint"+sep+"rootID"+sep+"segmentID"+sep+"layer"+sep+"status"+sep+"length"+sep+"avgRadius"+sep+"surfaceArea"+sep+"volume"+sep+"children"+sep
+			bw.write("experiment"+sep+"tube"+sep+"timepoint"+sep+"rootID"+sep+"segmentID"+sep+"layer"+sep+"length"+sep+"avgRadius"+sep+"surfaceArea"+sep+"volume"+sep+"children"+sep
 					+"status"+sep+"statusName"+"\n");
 			for (Segment segment : allSegments)
 			{
@@ -2690,15 +2611,16 @@ public class RhizoAddons
  */
 class Segment
 {
-	RadiusNode child;
-	RadiusNode parent;
+	private RadiusNode child;
+	private RadiusNode parent;
 	
-	Layer layer;
+	private Layer layer;
+	private Treeline t;
 	
 	// infos
 	private String imageName, experiment, tube, timepoint;
 	private double length, avgRadius, surfaceArea, volume;
-	private int segmentID, numberOfChildren, state;
+	private int segmentID, numberOfChildren;
 	
 	private int status;
 
@@ -2711,17 +2633,22 @@ class Segment
 	private double r1 = minRadius;
 	private double r2 = minRadius;
 	
-	RhizoAddons r;
+	private Patch p;
+	
+	private RhizoAddons r;
 
 	// TODO: add warning that if no images are present the unit will be pixel
-	public Segment(RhizoAddons r, Patch p, long treeID, int segmentID, RadiusNode child, RadiusNode parent, String unit, int status)
+	public Segment(RhizoAddons r, Patch p, Treeline t, long treeID, int segmentID, RadiusNode child, RadiusNode parent, String unit, int status)
 	{
-		if(unit.equals("inch")) this.scale = p.getImagePlus().getCalibration().pixelWidth;
+		this.p = p;
+		this.t = t;
+		
+		if(null == p) this.scale = 1;
+		else if(unit.equals("inch")) this.scale = p.getImagePlus().getCalibration().pixelWidth;
 		else if(unit.equals("mm")) this.scale = p.getImagePlus().getCalibration().pixelWidth * inchToMM;
 		else this.scale = 1;
 		
 		this.child = child;
-		this.state = child.getConfidence();
 		this.parent = parent;
 		this.layer = child.getLayer();
 		
@@ -2735,14 +2662,20 @@ class Segment
 		
 		this.treeID = treeID;
 		this.segmentID = segmentID;
+		this.status = status;
+		this.r = r;
+		
+		calculate();
+	}
+	
+	private void calculate()
+	{
 		this.length = Math.sqrt(Math.pow(child.getX() - parent.getX(), 2) + Math.pow(child.getY() - parent.getY(), 2)) * scale;
 		this.avgRadius = (r1 + r2) / 2;
 		double s = Math.sqrt(Math.pow((r1 - r2), 2) + Math.pow(this.length, 2));
 		this.surfaceArea = (Math.PI * Math.pow(r1, 2) + Math.PI * Math.pow(r2, 2) + Math.PI * s * (r1 + r2));
 		this.volume = ((Math.PI * length * (Math.pow(r1, 2) + Math.pow(r1, 2) + r1 * r2)) / 3);
 		this.numberOfChildren = child.getChildrenCount();
-		this.status = status;
-		this.r = r;
 	}
 	
 	private void parseImageName(String name)
@@ -2756,6 +2689,14 @@ class Segment
 		}
 		
 		String[] split = name.split("_");
+		if(split.length < 6)
+		{
+			experiment = "NA";
+			tube = "NA";
+			timepoint ="NA";
+			return;
+		}
+		
 		experiment = split[0];
 		tube = split[1];
 		timepoint = split[5];
@@ -2763,10 +2704,74 @@ class Segment
 
 	public String getStatistics(String sep)
 	{
-		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) + sep + Integer.toString(segmentID) + sep + Integer.toString((int) layer.getZ() + 1) + sep + Integer.toString(state) +
+		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) + sep + Integer.toString(segmentID) + sep + Integer.toString((int) layer.getZ() + 1)  +
 				sep + Double.toString(length) + sep + Double.toString(avgRadius) + sep + Double.toString(surfaceArea) +
 				sep + Double.toString(volume) + sep + Integer.toString(numberOfChildren) + sep + status + sep + r.statusMap.get(status).getFullName();
 
 		return result;
+	}
+	
+	public boolean checkNodesInImage()
+	{
+		// no image
+		if(null == p) return true;
+
+		ImagePlus image = p.getImagePlus();
+		
+		AffineTransform at = t.getAffineTransform();
+		Point2D p1 = at.transform(new Point2D.Float(parent.getX(), parent.getY()), null);
+		Point2D p2 = at.transform(new Point2D.Float(child.getX(), child.getY()), null);
+		
+		Utils.log(p1.getX() + " " + p1.getY() + " " + p2.getX() + " " + p2.getY() + "\t" + image.getWidth() + " " + image.getHeight());
+		
+		// both nodes are inside
+		if(p1.getX() < image.getWidth() && p1.getY() < image.getHeight() && p2.getX() < image.getWidth() && p2.getY() < image.getHeight()) return true;
+		// both nodes are outside
+		else if((p1.getX() > image.getWidth() || p1.getY() > image.getHeight()) && (p2.getX() > image.getWidth() || p2.getY() > image.getHeight())) return false; 
+		// parent node is outside, child is inside
+		else if((p1.getX() > image.getWidth() || p1.getY() > image.getHeight()) && (p2.getX() < image.getWidth() || p2.getY() < image.getHeight()))
+		{
+			double m = (p1.getY() - p2.getY())/(p1.getX() - p2.getX());
+			double b = p1.getY() + m*p1.getX();
+			
+			if(p1.getX() > image.getWidth())
+			{
+				double newY = m*image.getWidth() + b;
+				parent = new RadiusNode(image.getWidth(), (float) newY, layer, 1.0f);
+				calculate();
+				return true;
+			}			
+			if(p1.getY() > image.getHeight())
+			{
+				double newX = (image.getHeight() - b) / m;
+				parent = new RadiusNode((float) newX, image.getHeight(), layer, 1.0f);
+				calculate();
+				return true;
+			}
+		}
+		// child node is outside, parent is inside
+		else if((p1.getX() < image.getWidth() || p1.getY() < image.getHeight()) && (p2.getX() > image.getWidth() || p2.getY() > image.getHeight()))
+		{
+			double m = (p1.getY() - p2.getY())/(p1.getX() - p2.getX());
+			double b = p1.getY() + m*p1.getX();
+			
+			if(p2.getX() > image.getWidth())
+			{
+				double newY = m*image.getWidth() + b;
+				parent = new RadiusNode(image.getWidth(), (float) newY, layer, 1.0f);
+				calculate();
+				return true;
+			}			
+			if(p2.getY() > image.getHeight())
+			{
+				double newX = (image.getHeight() - b) / m;
+				parent = new RadiusNode((float) newX, image.getHeight(), layer, 1.0f);
+				calculate();
+				return true;
+			}
+		}
+
+	
+		return false;
 	}
 }
