@@ -6410,7 +6410,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			conflictManager.showConflicts();
 		}
 		else if(command.equals("stat")){
-			RhizoAddons.writeStatistics();
+			Display.getFront().getProject().getRhizoAddons().writeStatistics();
 		}
 		// rhizo commands end
 		else {

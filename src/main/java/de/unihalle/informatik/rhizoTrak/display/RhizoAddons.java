@@ -1510,7 +1510,7 @@ public class RhizoAddons
 	/**
 	 * TODO return/error messages
 	 */
-	public static void writeStatistics()
+	public void writeStatistics()
 	{
 		String[] choices1 = {"{Tab}" , "{;}", "{,}", "Space"};
 		String[] choices1_ = {"\t", ";", ",", " "};
@@ -1556,77 +1556,67 @@ public class RhizoAddons
 		List<Displayable> trees = null;
 		List<Segment> allSegments = new ArrayList<Segment>();
 		
-
-		if(outputType.equals("Current layer only") || (outputType.equals("All layers") && currentLayerSet.getLayers().size() == 1 && currentLayerSet.get(Connector.class).isEmpty()))
-		{
-			 trees = filterTreelinesByLayer(currentLayer, currentLayerSet.get(Treeline.class));
+		trees = currentLayerSet.get(Treeline.class);
+		
+		 List<Displayable> connectors = currentLayerSet.get(Connector.class);
+		 
+		 for(Displayable cObj: connectors)
+		 {
+			 Connector c = (Connector) cObj;
 			 
-			 for(Displayable cObj : trees)
-				{
-					Treeline ctree = (Treeline) cObj;
-					
-					int segmentID = 1;
-					long rootID = ctree.getId();
-					// traverse tree
-					if(null == ctree || null == ctree.getRoot()) continue;
-					
-					Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
-
-					for(Node<Float> node : allNodes)
-					{
-						if (!node.equals(ctree.getRoot()))
-						{
-							Segment currentSegment = new Segment(getPatch(ctree), rootID, segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit);
-							segmentID++;
-							
-							allSegments.add(currentSegment);
-						}
-					}
-				}
-		}
-		else if(outputType.equals("All layers"))
-		{
-			 trees = currentLayerSet.get(Treeline.class);
+			 List<Treeline> treelines = c.getConTreelines();
 			 
-			 List<Displayable> connectors = currentLayerSet.get(Connector.class);
-			 
-			 for(Displayable cObj: connectors)
+			 for(Treeline ctree: treelines)
 			 {
-				 Connector c = (Connector) cObj;
+				 if(null == ctree || null == ctree.getRoot()) continue;
 				 
-				 List<Treeline> treelines = c.getConTreelines();
-				 long rootID = treelines.get(0).getId();
+				 trees.remove(ctree);
+				 
+				 int segmentID = 1;
+				 Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
 
-				 for(Treeline ctree: treelines)
+				 for(Node<Float> node : allNodes)
 				 {
-					 if(null == ctree || null == ctree.getRoot()) continue;
-					 
-					 int segmentID = 1;
-					 Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
-
-					 for(Node<Float> node : allNodes)
+					 if(!node.equals(ctree.getRoot()))
 					 {
-						 if (!node.equals(ctree.getRoot()))
-						 {
-							 Segment currentSegment = new Segment(getPatch(ctree), rootID, segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit);
-							 segmentID++;
-											
-							 allSegments.add(currentSegment);
-						 }
+						 Segment currentSegment = new Segment(this, getPatch(ctree), cObj.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+						 segmentID++;
+										
+						 allSegments.add(currentSegment);
 					 }
 				 }
 			 }
-		}
-		else return;
+		 }
+		 
+		 Utils.log(trees.size());
+		 
+		 for(Displayable t: trees)
+		 {
+			 Treeline tl = (Treeline) t;
+			 
+			 int segmentID = 1;
+			 Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
 
-		
-		// write things to a csv
+			 for(Node<Float> node : allNodes)
+			 {
+				 if(!node.equals(tl.getRoot()))
+				 {
+					 Segment currentSegment = new Segment(this, getPatch(tl), tl.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+					 segmentID++;
+									
+					 allSegments.add(currentSegment);
+				 }
+			 }
+		 }
+	
+		// write
 		try
 		{
 			File saveFile = Utils.chooseFile(System.getProperty("user.home"), null, ".csv");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
 			
-			bw.write("experiment"+sep+"tube"+sep+"timepoint"+sep+"rootID"+sep+"segmentID"+sep+"layer"+sep+"status"+sep+"length"+sep+"avgRadius"+sep+"surfaceArea"+sep+"volume"+sep+"children\n");
+			bw.write("experiment"+sep+"tube"+sep+"timepoint"+sep+"rootID"+sep+"segmentID"+sep+"layer"+sep+"status"+sep+"length"+sep+"avgRadius"+sep+"surfaceArea"+sep+"volume"+sep+"children"+sep
+					+"status"+sep+"statusName"+"\n");
 			for (Segment segment : allSegments)
 			{
 				bw.write(segment.getStatistics(sep));
@@ -2709,6 +2699,8 @@ class Segment
 	private String imageName, experiment, tube, timepoint;
 	private double length, avgRadius, surfaceArea, volume;
 	private int segmentID, numberOfChildren, state;
+	
+	private int status;
 
 	private long treeID;
 	
@@ -2718,8 +2710,11 @@ class Segment
 	private final double minRadius = 1;
 	private double r1 = minRadius;
 	private double r2 = minRadius;
+	
+	RhizoAddons r;
 
-	public Segment(Patch p, long treeID, int segmentID, RadiusNode child, RadiusNode parent, String unit)
+	// TODO: add warning that if no images are present the unit will be pixel
+	public Segment(RhizoAddons r, Patch p, long treeID, int segmentID, RadiusNode child, RadiusNode parent, String unit, int status)
 	{
 		if(unit.equals("inch")) this.scale = p.getImagePlus().getCalibration().pixelWidth;
 		else if(unit.equals("mm")) this.scale = p.getImagePlus().getCalibration().pixelWidth * inchToMM;
@@ -2746,6 +2741,8 @@ class Segment
 		this.surfaceArea = (Math.PI * Math.pow(r1, 2) + Math.PI * Math.pow(r2, 2) + Math.PI * s * (r1 + r2));
 		this.volume = ((Math.PI * length * (Math.pow(r1, 2) + Math.pow(r1, 2) + r1 * r2)) / 3);
 		this.numberOfChildren = child.getChildrenCount();
+		this.status = status;
+		this.r = r;
 	}
 	
 	private void parseImageName(String name)
@@ -2766,9 +2763,9 @@ class Segment
 
 	public String getStatistics(String sep)
 	{
-		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) + sep + Integer.toString(segmentID) + sep + Integer.toString((int) layer.getZ()) + sep + Integer.toString(state) +
+		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) + sep + Integer.toString(segmentID) + sep + Integer.toString((int) layer.getZ() + 1) + sep + Integer.toString(state) +
 				sep + Double.toString(length) + sep + Double.toString(avgRadius) + sep + Double.toString(surfaceArea) +
-				sep + Double.toString(volume) + sep + Integer.toString(numberOfChildren);
+				sep + Double.toString(volume) + sep + Integer.toString(numberOfChildren) + sep + status + sep + r.statusMap.get(status).getFullName();
 
 		return result;
 	}
