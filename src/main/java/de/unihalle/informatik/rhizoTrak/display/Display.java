@@ -6410,7 +6410,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			conflictManager.showConflicts();
 		}
 		else if(command.equals("stat")){
-			RhizoAddons.writeStatistics();
+			Display.getFront().getProject().getRhizoAddons().writeStatistics();
 		}
 		// rhizo commands end
 		else {
@@ -7146,7 +7146,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     //actyc: new Panel to add more functionality
     private JPanel createExtendedOptionPanel() 
     {
-    	this.getProject().getRhizoAddons().init();
     	RhizoAddons.shortyForTreeLine(this.getTabbedPane());
     	//RhizoAddons.shortyForMergeTool(this.getTabbedPane()); //deprecated
     	

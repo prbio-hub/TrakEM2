@@ -290,7 +290,8 @@ public class RhizoAddons
 					statusMap.put(i, sTemp);
 				}
 			}
-		}		
+		}
+		
 	}
 
 
@@ -853,8 +854,6 @@ public class RhizoAddons
 		return true;
 	}
 	
-	/* visual stuff */
-
 	
 	/**
 	 * Updates the color for all treelines and repaints them.
@@ -914,11 +913,10 @@ public class RhizoAddons
 					cnode.chooseHighlight();
 				} else {
 					cnode.highlight();
-				}
+				}	
 			}
 			Display.repaint(((Treeline) toBeHigh).getFirstLayer());
 		}
-		
 	}
 
 	/**
@@ -1264,8 +1262,6 @@ public class RhizoAddons
 
 				target.setLastMarked(nd);
 				joinList.add(target);
-				
-				
 				if(goAhead==1)
 				{
 					conflictManager.resolveTree(treelineSet);
@@ -1278,11 +1274,9 @@ public class RhizoAddons
 				parentTl.join(joinList);
 				parentTl.unmark();
 				
-				
 				target.remove2(false);
-                Display.updateVisibleTabs();				
+                                Display.updateVisibleTabs();				
 				Display.repaint(display.getLayerSet());
-
 			};
 		};
 		mergeRun.start();
@@ -1439,7 +1433,7 @@ public class RhizoAddons
 	/**
 	 * TODO return/error messages
 	 */
-	public static void writeStatistics()
+	public void writeStatistics()
 	{
 		String[] choices1 = {"{Tab}" , "{;}", "{,}", "Space"};
 		String[] choices1_ = {"\t", ";", ",", " "};
@@ -1481,81 +1475,79 @@ public class RhizoAddons
 //		Utils.log(currentLayerSet.getAll(Patch.class).size());
 //		Utils.log(currentLayerSet.get(Treeline.class).size());
 //		Utils.log(currentLayerSet.get(Connector.class).size());
-
-		List<Displayable> trees = null;
-		List<Segment> allSegments = new ArrayList<Segment>();
 		
+		List<Displayable> processedTreelines = new ArrayList<Displayable>();
+		List<Displayable> trees = null;
+		List<Segment> allSegments = new ArrayList<Segment>();		
 
-		if(outputType.equals("Current layer only") || (outputType.equals("All layers") && currentLayerSet.getLayers().size() == 1 && currentLayerSet.get(Connector.class).isEmpty()))
+		if(outputType.equals("All layers")) trees = currentLayerSet.get(Treeline.class);
+		else trees = filterTreelinesByLayer(currentLayer, currentLayerSet.get(Treeline.class));
+
+		List<Displayable> connectors = currentLayerSet.get(Connector.class);
+
+		for(Displayable cObj: connectors)
 		{
-			 trees = filterTreelinesByLayer(currentLayer, currentLayerSet.get(Treeline.class));
-			 
-			 for(Displayable cObj : trees)
-				{
-					Treeline ctree = (Treeline) cObj;
-					
-					int segmentID = 1;
-					long rootID = ctree.getId();
-					// traverse tree
-					if(null == ctree || null == ctree.getRoot()) continue;
-					
-					Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
+			Connector c = (Connector) cObj;
 
-					for(Node<Float> node : allNodes)
+			List<Treeline> treelines = c.getConTreelines();
+
+			for(Treeline ctree: treelines)
+			{
+				if(null == ctree || null == ctree.getRoot()) continue;
+				if(processedTreelines.contains(ctree)) continue;
+				
+				trees.remove(ctree);
+
+				int segmentID = 1;
+				Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
+
+				for(Node<Float> node : allNodes)
+				{
+					if(!node.equals(ctree.getRoot()))
 					{
-						if (!node.equals(ctree.getRoot()))
-						{
-							Segment currentSegment = new Segment(getPatch(ctree), rootID, segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit);
-							segmentID++;
-							
-							allSegments.add(currentSegment);
-						}
+						Segment currentSegment = new Segment(this, getPatch(ctree), ctree, cObj.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+						segmentID++;
+
+						if(currentSegment.checkNodesInImage()) allSegments.add(currentSegment);
 					}
 				}
+				
+				processedTreelines.add(ctree);
+			}
 		}
-		else if(outputType.equals("All layers"))
+
+		Utils.log(trees.size());
+
+		for(Displayable t: trees)
 		{
-			 trees = currentLayerSet.get(Treeline.class);
-			 
-			 List<Displayable> connectors = currentLayerSet.get(Connector.class);
-			 
-			 for(Displayable cObj: connectors)
-			 {
-				 Connector c = (Connector) cObj;
-				 
-				 List<Treeline> treelines = c.getConTreelines();
-				 long rootID = treelines.get(0).getId();
+			Treeline tl = (Treeline) t;
+			if(processedTreelines.contains(tl)) continue;
+			
+			int segmentID = 1;
+			Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
 
-				 for(Treeline ctree: treelines)
-				 {
-					 if(null == ctree || null == ctree.getRoot()) continue;
-					 
-					 int segmentID = 1;
-					 Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
+			for(Node<Float> node : allNodes)
+			{
+				if(!node.equals(tl.getRoot()))
+				{
+					Segment currentSegment = new Segment(this, getPatch(tl), tl, tl.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+					segmentID++;
 
-					 for(Node<Float> node : allNodes)
-					 {
-						 if (!node.equals(ctree.getRoot()))
-						 {
-							 Segment currentSegment = new Segment(getPatch(ctree), rootID, segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit);
-							 segmentID++;
-											
-							 allSegments.add(currentSegment);
-						 }
-					 }
-				 }
-			 }
+					if(currentSegment.checkNodesInImage()) allSegments.add(currentSegment);
+				}
+			}
+			
+			processedTreelines.add(tl);
 		}
-		else return;
 
-		
-		// write things to a csv
+		// write
 		try
 		{
 			File saveFile = Utils.chooseFile(System.getProperty("user.home"), null, ".csv");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
-			
-			bw.write("experiment"+sep+"tube"+sep+"timepoint"+sep+"rootID"+sep+"segmentID"+sep+"layer"+sep+"status"+sep+"length"+sep+"avgRadius"+sep+"surfaceArea"+sep+"volume"+sep+"children\n");
+
+			bw.write("experiment"+sep+"tube"+sep+"timepoint"+sep+"rootID"+sep+"segmentID"+sep+"layer"+sep+"length"+sep+"avgRadius"+sep+"surfaceArea"+sep+"volume"+sep+"children"+sep
+					+"status"+sep+"statusName"+"\n");
 			for (Segment segment : allSegments)
 			{
 				bw.write(segment.getStatistics(sep));
@@ -2629,15 +2621,18 @@ public class RhizoAddons
  */
 class Segment
 {
-	RadiusNode child;
-	RadiusNode parent;
+	private RadiusNode child;
+	private RadiusNode parent;
 	
-	Layer layer;
+	private Layer layer;
+	private Treeline t;
 	
 	// infos
 	private String imageName, experiment, tube, timepoint;
 	private double length, avgRadius, surfaceArea, volume;
-	private int segmentID, numberOfChildren, state;
+	private int segmentID, numberOfChildren;
+	
+	private int status;
 
 	private long treeID;
 	
@@ -2647,15 +2642,23 @@ class Segment
 	private final double minRadius = 1;
 	private double r1 = minRadius;
 	private double r2 = minRadius;
+	
+	private Patch p;
+	
+	private RhizoAddons r;
 
-	public Segment(Patch p, long treeID, int segmentID, RadiusNode child, RadiusNode parent, String unit)
+	// TODO: add warning that if no images are present the unit will be pixel
+	public Segment(RhizoAddons r, Patch p, Treeline t, long treeID, int segmentID, RadiusNode child, RadiusNode parent, String unit, int status)
 	{
-		if(unit.equals("inch")) this.scale = p.getImagePlus().getCalibration().pixelWidth;
+		this.p = p;
+		this.t = t;
+		
+		if(null == p) this.scale = 1;
+		else if(unit.equals("inch")) this.scale = p.getImagePlus().getCalibration().pixelWidth;
 		else if(unit.equals("mm")) this.scale = p.getImagePlus().getCalibration().pixelWidth * inchToMM;
 		else this.scale = 1;
 		
 		this.child = child;
-		this.state = child.getConfidence();
 		this.parent = parent;
 		this.layer = child.getLayer();
 		
@@ -2669,6 +2672,14 @@ class Segment
 		
 		this.treeID = treeID;
 		this.segmentID = segmentID;
+		this.status = status;
+		this.r = r;
+		
+		calculate();
+	}
+	
+	private void calculate()
+	{
 		this.length = Math.sqrt(Math.pow(child.getX() - parent.getX(), 2) + Math.pow(child.getY() - parent.getY(), 2)) * scale;
 		this.avgRadius = (r1 + r2) / 2;
 		double s = Math.sqrt(Math.pow((r1 - r2), 2) + Math.pow(this.length, 2));
@@ -2688,6 +2699,14 @@ class Segment
 		}
 		
 		String[] split = name.split("_");
+		if(split.length < 6)
+		{
+			experiment = "NA";
+			tube = "NA";
+			timepoint ="NA";
+			return;
+		}
+		
 		experiment = split[0];
 		tube = split[1];
 		timepoint = split[5];
@@ -2695,10 +2714,74 @@ class Segment
 
 	public String getStatistics(String sep)
 	{
-		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) + sep + Integer.toString(segmentID) + sep + Integer.toString((int) layer.getZ()) + sep + Integer.toString(state) +
+		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) + sep + Integer.toString(segmentID) + sep + Integer.toString((int) layer.getZ() + 1)  +
 				sep + Double.toString(length) + sep + Double.toString(avgRadius) + sep + Double.toString(surfaceArea) +
-				sep + Double.toString(volume) + sep + Integer.toString(numberOfChildren);
+				sep + Double.toString(volume) + sep + Integer.toString(numberOfChildren) + sep + status + sep + r.statusMap.get(status).getFullName();
 
 		return result;
+	}
+	
+	public boolean checkNodesInImage()
+	{
+		// no image
+		if(null == p) return true;
+
+		ImagePlus image = p.getImagePlus();
+		
+		AffineTransform at = t.getAffineTransform();
+		Point2D p1 = at.transform(new Point2D.Float(parent.getX(), parent.getY()), null);
+		Point2D p2 = at.transform(new Point2D.Float(child.getX(), child.getY()), null);
+		
+		Utils.log(p1.getX() + " " + p1.getY() + " " + p2.getX() + " " + p2.getY() + "\t" + image.getWidth() + " " + image.getHeight());
+		
+		// both nodes are inside
+		if(p1.getX() < image.getWidth() && p1.getY() < image.getHeight() && p2.getX() < image.getWidth() && p2.getY() < image.getHeight()) return true;
+		// both nodes are outside
+		else if((p1.getX() > image.getWidth() || p1.getY() > image.getHeight()) && (p2.getX() > image.getWidth() || p2.getY() > image.getHeight())) return false; 
+		// parent node is outside, child is inside
+		else if((p1.getX() > image.getWidth() || p1.getY() > image.getHeight()) && (p2.getX() < image.getWidth() || p2.getY() < image.getHeight()))
+		{
+			double m = (p1.getY() - p2.getY())/(p1.getX() - p2.getX());
+			double b = p1.getY() + m*p1.getX();
+			
+			if(p1.getX() > image.getWidth())
+			{
+				double newY = m*image.getWidth() + b;
+				parent = new RadiusNode(image.getWidth(), (float) newY, layer, 1.0f);
+				calculate();
+				return true;
+			}			
+			if(p1.getY() > image.getHeight())
+			{
+				double newX = (image.getHeight() - b) / m;
+				parent = new RadiusNode((float) newX, image.getHeight(), layer, 1.0f);
+				calculate();
+				return true;
+			}
+		}
+		// child node is outside, parent is inside
+		else if((p1.getX() < image.getWidth() || p1.getY() < image.getHeight()) && (p2.getX() > image.getWidth() || p2.getY() > image.getHeight()))
+		{
+			double m = (p1.getY() - p2.getY())/(p1.getX() - p2.getX());
+			double b = p1.getY() + m*p1.getX();
+			
+			if(p2.getX() > image.getWidth())
+			{
+				double newY = m*image.getWidth() + b;
+				parent = new RadiusNode(image.getWidth(), (float) newY, layer, 1.0f);
+				calculate();
+				return true;
+			}			
+			if(p2.getY() > image.getHeight())
+			{
+				double newX = (image.getHeight() - b) / m;
+				parent = new RadiusNode((float) newX, image.getHeight(), layer, 1.0f);
+				calculate();
+				return true;
+			}
+		}
+
+	
+		return false;
 	}
 }
