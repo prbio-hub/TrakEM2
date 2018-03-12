@@ -1472,70 +1472,77 @@ public class RhizoAddons
 //		Utils.log(currentLayerSet.getAll(Patch.class).size());
 //		Utils.log(currentLayerSet.get(Treeline.class).size());
 //		Utils.log(currentLayerSet.get(Connector.class).size());
-
+		
+		List<Displayable> processedTreelines = new ArrayList<Displayable>();
 		List<Displayable> trees = null;
 		List<Segment> allSegments = new ArrayList<Segment>();
-		
+
 		if(outputType.equals("All layers")) trees = currentLayerSet.get(Treeline.class);
 		else trees = filterTreelinesByLayer(currentLayer, currentLayerSet.get(Treeline.class));
-		
-		 List<Displayable> connectors = currentLayerSet.get(Connector.class);
-		 
-		 for(Displayable cObj: connectors)
-		 {
-			 Connector c = (Connector) cObj;
-			 
-			 List<Treeline> treelines = c.getConTreelines();
-			 
-			 for(Treeline ctree: treelines)
-			 {
-				 if(null == ctree || null == ctree.getRoot()) continue;
-				 
-				 trees.remove(ctree);
-				 
-				 int segmentID = 1;
-				 Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
 
-				 for(Node<Float> node : allNodes)
-				 {
-					 if(!node.equals(ctree.getRoot()))
-					 {
-						 Segment currentSegment = new Segment(this, getPatch(ctree), ctree, cObj.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
-						 segmentID++;
+		List<Displayable> connectors = currentLayerSet.get(Connector.class);
 
-						 if(currentSegment.checkNodesInImage()) allSegments.add(currentSegment);
-					 }
-				 }
-			 }
-		 }
-		 
-		 Utils.log(trees.size());
-		 
-		 for(Displayable t: trees)
-		 {
-			 Treeline tl = (Treeline) t;
-			 
-			 int segmentID = 1;
-			 Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
+		for(Displayable cObj: connectors)
+		{
+			Connector c = (Connector) cObj;
 
-			 for(Node<Float> node : allNodes)
-			 {
-				 if(!node.equals(tl.getRoot()))
-				 {
-					 Segment currentSegment = new Segment(this, getPatch(tl), tl, tl.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
-					 segmentID++;
+			List<Treeline> treelines = c.getConTreelines();
 
-					 if(currentSegment.checkNodesInImage()) allSegments.add(currentSegment);
-				 }
-			 }
-		 }
-	
+			for(Treeline ctree: treelines)
+			{
+				if(null == ctree || null == ctree.getRoot()) continue;
+				if(processedTreelines.contains(ctree)) continue;
+				
+				trees.remove(ctree);
+
+				int segmentID = 1;
+				Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
+
+				for(Node<Float> node : allNodes)
+				{
+					if(!node.equals(ctree.getRoot()))
+					{
+						Segment currentSegment = new Segment(this, getPatch(ctree), ctree, cObj.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+						segmentID++;
+
+						if(currentSegment.checkNodesInImage()) allSegments.add(currentSegment);
+					}
+				}
+				
+				processedTreelines.add(ctree);
+			}
+		}
+
+		Utils.log(trees.size());
+
+		for(Displayable t: trees)
+		{
+			Treeline tl = (Treeline) t;
+			if(processedTreelines.contains(tl)) continue;
+			
+			int segmentID = 1;
+			Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
+
+			for(Node<Float> node : allNodes)
+			{
+				if(!node.equals(tl.getRoot()))
+				{
+					Segment currentSegment = new Segment(this, getPatch(tl), tl, tl.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+					segmentID++;
+
+					if(currentSegment.checkNodesInImage()) allSegments.add(currentSegment);
+				}
+			}
+			
+			processedTreelines.add(tl);
+		}
+
 		// write
 		try
 		{
 			File saveFile = Utils.chooseFile(System.getProperty("user.home"), null, ".csv");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
-			
+
 			bw.write("experiment"+sep+"tube"+sep+"timepoint"+sep+"rootID"+sep+"segmentID"+sep+"layer"+sep+"length"+sep+"avgRadius"+sep+"surfaceArea"+sep+"volume"+sep+"children"+sep
 					+"status"+sep+"statusName"+"\n");
 			for (Segment segment : allSegments)
