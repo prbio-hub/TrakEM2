@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.JFrame;
@@ -64,9 +65,13 @@ import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
+import de.unihalle.informatik.rhizoTrak.display.TreeEventListener;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.ConflictPanel;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
+
+import java.util.HashSet;
+import java.util.Iterator;
 
 public class ConflictManager {
 
@@ -81,8 +86,9 @@ public class ConflictManager {
 	private  HashMap<TreelineConflictKey, TreelineConflict> treelineConflictHash = new HashMap<TreelineConflictKey, TreelineConflict>();
         
 	private  ConflictPanel conflictPanel = null;
-        private  RhizoAddons rhizoAddons;
+    private  RhizoAddons rhizoAddons;
 	private  JFrame	conflictFrame = null;
+	private boolean autoResolveNA=false;
 
         
 	private boolean isSolving=false;
@@ -249,7 +255,280 @@ public class ConflictManager {
 			}	
 		}
 	}
+        
+        //returns false on user abort as a feedback for other methods like merge
+        //precondition: two or more connectors: so a list of Connectors
+        public int userInteraction(HashSet<Connector> initialConnectorSet,boolean fromConflictPanel)
+        {
+        	if(initialConnectorSet.size()<2) 
+        	{
+        		//abort because of no conflict
+        		return 3;
+        	}
+            //first thing: update the connector list, so be prepared for the non conflict free case
+    		HashSet<Connector> connectorSet = searchAllConnectors(initialConnectorSet);
+    		//TODO: complain to the user if conectorSet > initialConnectorSet because of unsolved issues
+    		if(connectorSet.size()>initialConnectorSet.size() || connectorSet.size()>2) {
+        		if(Utils.checkYN("It looks like your action interfere with current conflicts.\n It is highly advisable to solve current conflicts before continue. Abort?"))
+        		{
+        			//abort
+        			return 0;
+        		}
+    		}
+            //now check if the connectors can be combined without new conflicts
+    		boolean na = canBeCombinedNA(connectorSet);
+    		if(na)
+    		{
+    			if(autoResolveNA || fromConflictPanel)
+    			{        				
+    				//continue and resolve
+    				return 1;
+    			}
+    			else
+    			{
+    				return userDialogNA(connectorSet);
+    			}
+    		}
+    		else
+    		{
+    			return userDialogA(connectorSet);
+    		}
+        }
+        
+        private int userDialogNA(HashSet<Connector> connectorSet)
+        {
+			if(Utils.checkYN("This action will cause new conflicts that can be auto-resolved. Continue?"))
+			{
+				String message = "To prevent conflicts the following connectors will be merged: \n";
+	            for(Iterator<Connector> conIt = connectorSet.iterator(); conIt.hasNext();)
+	            {
+	                    Connector cConnector = conIt.next();
+	                    message = message + cConnector.getId()+ "; "; 
+	            }
+	            message = message + "\n"+"Merge?";
+				if(Utils.checkYN(message))
+				{
+					//continue and resolve
+					return 1;
+				}            
+	            //continue but not resolve
+				return 2;
+			}
+			//abort
+			return 0;
+        }
+        
+        private int userDialogA(HashSet<Connector> connectorSet)
+        {
+    		//check how bad it will be       		
+    		ArrayList<String> report = reportHowBad(connectorSet);
+    		int conflictCount = Integer.parseInt(report.get(report.size()-1));
+    		report.remove(report.size()-1);
+    		String message = "This action will cause " +conflictCount+ " new conflicts that can not be auto-resolved. Continue?"+ "\n" + "conflicts:" + "\n";
+    		for (String string : report) {
+				message = message + string;
+			}
+			if(Utils.checkYN(message))
+			{
+				//continue and resolve
+				return 1;
+			}
+			//abort
+            return 0;
+        }
+        
+        public int userInteractionTree(HashSet<Treeline> treelineSet)
+        {
+        	HashSet<Connector> connectorSet = new HashSet<Connector>();
+        	for(Iterator<Treeline> treelineIt = treelineSet.iterator(); treelineIt.hasNext();)
+        	{
+        		Treeline cTreeline = treelineIt.next();
+        		List<TreeEventListener> telList = cTreeline.getTreeEventListener();
+        		for (TreeEventListener tel : telList) {
+					connectorSet.add(tel.getConnector());
+				}
+        		
+        	}
+        	return userInteraction(connectorSet,false);
+        }
+        
+        public void resolveTree(HashSet<Treeline> treelineSet)
+        {
+        	HashSet<Connector> connectorSet = new HashSet<Connector>();
+        	for(Iterator<Treeline> treelineIt = treelineSet.iterator(); treelineIt.hasNext();)
+        	{
+        		Treeline cTreeline = treelineIt.next();
+        		List<TreeEventListener> telList = cTreeline.getTreeEventListener();
+        		for (TreeEventListener tel : telList) {
+					connectorSet.add(tel.getConnector());
+				}
+        		
+        	}
+        	resolve(connectorSet);
+        }
+        
+        public void resolve(HashSet<Connector> connectorSet)
+        {
+        	Connector parent = findParentToBe(connectorSet);
+            for(Iterator<Connector> conIt = connectorSet.iterator(); conIt.hasNext();)
+            {
+                    Connector cConnector = conIt.next();
+                    mergeConnector(parent,cConnector);
+            }
+            Display.updateVisibleTabs();				
+        }
+        
+        private Connector findParentToBe(HashSet<Connector> connectorSet)
+        {
+        	Connector currentWinner=null;
+        	double currentHighest=-1;
+            for(Iterator<Connector> conIt = connectorSet.iterator(); conIt.hasNext();)
+            {
+                Connector cConnector = conIt.next();
+                if(currentHighest==-1 && cConnector.getConTreelines().size()>0) 
+                {
+                	currentHighest = findHighestZofConnector(cConnector);
+                	currentWinner = cConnector;
+                }
+                else
+                {
+                	double currentZ = findHighestZofConnector(cConnector);
+                	if(currentZ<currentHighest)
+                	{
+                		currentHighest = currentZ;
+                		currentWinner = cConnector;
+                	}
+                }
+            }
+            return currentWinner;
+        }
+        
+        private double findHighestZofConnector(Connector connector) 
+        {
+        	double result;
+        	ArrayList<Treeline> trees = connector.getConTreelines();
+        	//dirty fix
+        	result = 9999999;
+        	for (Treeline treeline : trees) {
+				double currentZ = treeline.getFirstLayer().getZ();
+        		if(result>currentZ) 
+        		{
+        			result=currentZ;
+        		}
+			}
+        	return result;
+        }
+        
+        private ArrayList<String> reportHowBad(HashSet<Connector> connectorSet) 
+        {
+        	ArrayList<String> finalResult = new ArrayList<String>();
+        	Map<Layer,ArrayList<Treeline>> conflictAtlas =  new HashMap<Layer,ArrayList<Treeline>>();
+        	
+            for(Iterator<Connector> conIt = connectorSet.iterator(); conIt.hasNext();)
+            {
+                    Connector cConnector = conIt.next();
+                    ArrayList<Treeline> currentTrees = cConnector.getConTreelines();
+                    for(Iterator<Treeline> treelineIt = currentTrees.iterator();treelineIt.hasNext();)
+                    {
+                            Treeline cTreeline = treelineIt.next();
+                            Layer cLayer = cTreeline.getFirstLayer();
+                            //check if layer is occupied
+                            if(conflictAtlas.get(cLayer)==null) {
+                            	ArrayList<Treeline> newList = new ArrayList<Treeline>();
+                            	newList.add(cTreeline);
+                            	conflictAtlas.put(cLayer,newList);
+                            }  
+                            else 
+                            {
+                            	ArrayList<Treeline> oldList = conflictAtlas.get(cLayer);
+                            	oldList.add(cTreeline);
+                            	conflictAtlas.put(cLayer,oldList);
+                            }
+                    }
+            }
+            int conflictCount=0;
+            Set<Layer> keys = conflictAtlas.keySet();
+            for(Iterator<Layer> layerIt = keys.iterator();layerIt.hasNext();)
+            {
+            	String result="";
+            	Layer cLayer = layerIt.next();
+            	ArrayList<Treeline> cTreelines = conflictAtlas.get(cLayer);
+            	if(cTreelines.size()>1)
+            	{
+            		conflictCount=conflictCount+(cTreelines.size()-1);
+            		result = result + "layer: " + cLayer.getId() +" treelines: ";
+            		for (Treeline treeline : cTreelines) {
+						result = result + treeline.getId()+"; ";
+					}
+            		result = result + "\n";
+            		finalResult.add(result);
+            	}
+            }
+            finalResult.add(Integer.toString(conflictCount));
+        	return finalResult;
+        }
+        
+        private boolean canBeCombinedNA(HashSet<Connector> connectorSet) 
+        {
+        	HashMap<Layer,Treeline> layers = new HashMap<Layer,Treeline>();
+            for(Iterator<Connector> conIt = connectorSet.iterator(); conIt.hasNext();)
+            {
+                    Connector cConnector = conIt.next();
+                    ArrayList<Treeline> currentTrees = cConnector.getConTreelines();
+                    if(currentTrees.size()==1) continue;
+                    for(Iterator<Treeline> treelineIt = currentTrees.iterator();treelineIt.hasNext();)
+                    {
+                            Treeline cTreeline = treelineIt.next();
+                            Layer cLayer = cTreeline.getFirstLayer();
+                            if(layers.get(cLayer)!=null) 
+                            {
+                            	if(!layers.get(cLayer).equals(cTreeline)) 
+                            	{
+                                	//the layer was already taken by another treeline so no easy solution here
+                                	return false;
+                            	}
 
+                            }
+                            else
+                            {
+                            	layers.put(cLayer, cTreeline);
+                            }
+                    }
+            }
+        	return true;
+        }
+        
+        private HashSet<Connector> searchAllConnectors(HashSet<Connector> connectorSet)
+        {
+        	int formerSize=0;
+        	while(formerSize != connectorSet.size())
+        	{
+        		formerSize = connectorSet.size();
+        		HashSet<Connector> currentSet = new HashSet<Connector>();
+                for(Iterator<Connector> conIt = connectorSet.iterator(); conIt.hasNext();)
+                {
+                        Connector cConnector = conIt.next();
+                        ArrayList<Treeline> currentTrees = cConnector.getConTreelines();
+                        currentSet.addAll(searchConnectorsOfTreelineList(currentTrees));
+                }
+                connectorSet.addAll(currentSet);
+        	}
+        	return connectorSet;
+        }
+        
+        private HashSet<Connector> searchConnectorsOfTreelineList(ArrayList<Treeline> treelineList)
+        {
+                HashSet<Connector> connectorSet = new HashSet<>();
+                for(Iterator<Treeline> treelineIt = treelineList.iterator();treelineIt.hasNext();)
+                {
+                        Treeline cTreeline = treelineIt.next();
+                        for(TreeEventListener tel: cTreeline.getTreeEventListener())
+                        {
+                                connectorSet.add(tel.getConnector());
+                        }
+                }               
+                return connectorSet;
+        }
 	
 	//add conflicts
 	
@@ -385,16 +664,14 @@ public class ConflictManager {
 	
 	private static void mergeConnector(Connector parentConnector, Connector childConnector){
 		if(parentConnector.equals(childConnector)){return;}
-		Utils.log("connector: "+childConnector.getUniqueIdentifier() + " has " + childConnector.getConTreelines().size() + " trees");
 		ArrayList<Treeline> treelineList = new ArrayList<Treeline>(childConnector.getConTreelines());
 		for(Treeline curentTreeline: treelineList)
 		{
-			Utils.log("current Treeline tobe remove and added"+curentTreeline.getUniqueIdentifier());
 			childConnector.removeConTreeline(curentTreeline);
 			parentConnector.addConTreeline(curentTreeline);
 		}
-		Display.getFront().getProject().removeProjectThing(childConnector, false);
-		childConnector.remove(false);
+		childConnector.remove2(false);
+		Display.repaint(parentConnector.getLayerSet());
 	}
 	
 	public boolean abortCurrentSolving()
@@ -416,9 +693,12 @@ public class ConflictManager {
 				}
 			}
 			if(currentConflict.getClass().equals(ConnectorConflict.class)){		
-				TreelineConflict conflict = (TreelineConflict)currentConflict;		
+				ConnectorConflict conflict = (ConnectorConflict)currentConflict;		
 				if(isSolving)
 				{
+					if(conflictPanel!=null){
+						conflictPanel.setSolved();
+					}
 					isSolving=false;
 					return true;
 				}

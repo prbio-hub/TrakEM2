@@ -50,9 +50,13 @@
 package de.unihalle.informatik.rhizoTrak.display.addonGui;
 
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
+
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 
 import javax.swing.JButton;
@@ -62,8 +66,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import de.unihalle.informatik.rhizoTrak.display.Display;
+import de.unihalle.informatik.rhizoTrak.display.Layer;
+import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
+import de.unihalle.informatik.rhizoTrak.display.Tree;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
+import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 public class SplitDialog extends JDialog implements ActionListener {
 
@@ -77,15 +86,26 @@ public class SplitDialog extends JDialog implements ActionListener {
 	private javax.swing.JButton jButton2;
 	
 	
-	private ArrayList<Treeline> trees;
+	private Treeline upstream;
+	private Treeline downstream;
         
-        private RhizoAddons rhizoAddons;
+    private RhizoAddons rhizoAddons;
 	
 	public SplitDialog(ArrayList<Treeline> trees,RhizoAddons rhizoAddons)
 	{
-                this.rhizoAddons = rhizoAddons;
+        this.rhizoAddons = rhizoAddons;
 		this.setModalityType(JDialog.ModalityType.APPLICATION_MODAL);
-		this.trees = trees;
+		//prepare trees
+		
+		this.upstream = trees.get(0);
+		this.downstream = trees.get(1);
+		
+		upstream.updateCache();
+		downstream.updateCache();
+		
+		upstream.getLayerSet().add(downstream); // will change Display.this.active !
+		upstream.getProject().getProjectTree().addSibling(upstream, downstream);
+		Display.repaint(upstream.getLayerSet());		
 		
 		this.setLocationByPlatform(true);
 		this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -98,7 +118,7 @@ public class SplitDialog extends JDialog implements ActionListener {
 		
 		jPanel1.add(new javax.swing.Box.Filler(new Dimension(10, 10), new Dimension(10, 10), new Dimension(30000, 30000)));
 		
-		jLabel1 = new JLabel("Which root should get a new connector?");
+		jLabel1 = new JLabel("Which root should get the connector?");
 		jPanel1.add(jLabel1);
 		
 		jPanel1.add(new javax.swing.Box.Filler(new Dimension(10, 10), new Dimension(10, 10), new Dimension(30000, 30000)));
@@ -114,6 +134,7 @@ public class SplitDialog extends JDialog implements ActionListener {
 		jButton1 = new JButton("upstream root");
 		jButton1.setActionCommand("1");
 		jButton1.addActionListener(this);
+		jButton1.addMouseListener(ml);
 		jPanel2.add(jButton1);
 		
 		jPanel2.add(new javax.swing.Box.Filler(new Dimension(10, 10), new Dimension(10, 10), new Dimension(30000, 30000)));
@@ -121,6 +142,7 @@ public class SplitDialog extends JDialog implements ActionListener {
 		jButton2 = new JButton("downstream root");
 		jButton2.setActionCommand("2");
 		jButton2.addActionListener(this);
+		jButton2.addMouseListener(ml);
 		jPanel2.add(jButton2);
 		
 		jPanel2.add(new javax.swing.Box.Filler(new Dimension(10, 10), new Dimension(10, 10), new Dimension(30000, 30000)));
@@ -151,22 +173,70 @@ public class SplitDialog extends JDialog implements ActionListener {
 	{
 		if(evt.getActionCommand().equals("1"))
 		{
-			//connect current connector to the downstream root
-			RhizoAddons.transferConnector(trees.get(0), trees.get(1));
-			//new connector for upstream root
-			RhizoAddons.giveNewConnector(trees.get(0),null);
+			//upstream keep the connector so nothing todo
 			rhizoAddons.splitDialog = false;
 		}
 		
 		
 		if(evt.getActionCommand().equals("2"))
 		{
-			//new connector for downstream root
-			RhizoAddons.giveNewConnector(trees.get(1),trees.get(0));
+			//downstream get the connector
+			rhizoAddons.applyCorrespondingColor();
+			RhizoAddons.transferConnector(upstream, downstream);
 			rhizoAddons.splitDialog = false;
 		}
                 this.dispose();
 	}
+	
+	MouseListener ml = new MouseListener()
+	{
+		
+		@Override
+		public void mouseReleased(MouseEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+		
+		@Override
+		public void mousePressed(MouseEvent e)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+		
+		@Override
+		public void mouseExited(MouseEvent e)
+		{
+			if(e.getSource().equals(jButton1)) 
+			{
+				RhizoAddons.removeHighlight(upstream, false);
+			}
+			if(e.getSource().equals(jButton2)) 
+			{
+				RhizoAddons.removeHighlight(downstream, false);
+			}				
+		}
+		
+		@Override
+		public void mouseEntered(MouseEvent e)
+		{
+			if(e.getSource().equals(jButton1)) 
+			{
+				RhizoAddons.highlight(upstream, false);
+			}
+			if(e.getSource().equals(jButton2)) 
+			{
+				RhizoAddons.highlight(downstream, false);
+			}
+		}
+		
+		@Override
+		public void mouseClicked(MouseEvent e)
+		{
+		
+		}
+	};
 	
 
 }

@@ -77,6 +77,7 @@ import de.unihalle.informatik.rhizoTrak.utils.ProjectToolbar;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.measure.Calibration;
 import ij.measure.ResultsTable;
+
 import java.util.Iterator;
 
 /** A one-to-many connection, represented by one source point and one or more target points. The connector is drawn by click+drag+release, defining the origin at click and the target at release. By clicking anywhere else, the connector can be given another target. Points can be dragged and removed.
@@ -85,7 +86,7 @@ import java.util.Iterator;
 public class Connector extends Treeline  implements TreeEventListener{
 	
 	//actyc: variable to store connected Treelines explicitly 
-	protected ArrayList<Treeline>  conTreelines = new ArrayList<Treeline>();
+	protected HashSet<Treeline>  conTreelines = new HashSet<Treeline>();
 
 	public Connector(final Project project, final String title) {
 		super(project, title);
@@ -576,7 +577,9 @@ public class Connector extends Treeline  implements TreeEventListener{
 				
 				for(Treeline tree: conTreelines){
 					Node<Float> treeRoot = tree.getRoot();
+					if(treeRoot==null) return false;
 					Layer treeRootLayer = tree.getRoot().getLayer();
+					if(treeRootLayer==null) return false;
 					Point2D result = RhizoAddons.changeSpace(treeRoot.getX(),treeRoot.getY(),tree.getAffineTransform(),this.getAffineTransform());
 					if(result==null) return false;
 
@@ -650,30 +653,32 @@ public class Connector extends Treeline  implements TreeEventListener{
 	/* actyc: methodes to interact with the connected treelines */
 	
 	public ArrayList<Treeline> getConTreelines() {
-		return conTreelines;
+		ArrayList<Treeline> result = new ArrayList<Treeline>();
+		result.addAll(this.conTreelines);
+		return result;
 	}
 	
-	public void setConTreelines(ArrayList<Treeline> newList){
+	public void setConTreelines(HashSet<Treeline> newList){
 		conTreelines=newList;
 	}
 	
 	public boolean addConTreeline(Treeline newTreeline){
 		if(conTreelines.contains(newTreeline)) return false;
 		boolean added = conTreelines.add(newTreeline);
-		if(added) newTreeline.addTreeEventListener(this);
+		newTreeline.addTreeEventListener(this);
 		sanityCheck();
-                RhizoAddons rhizoAddons = this.getProject().getRhizoAddons();
-                ConflictManager conflictManager = rhizoAddons.getConflictManager();
+        RhizoAddons rhizoAddons = this.getProject().getRhizoAddons();
+        ConflictManager conflictManager = rhizoAddons.getConflictManager();
 		conflictManager.processChange(newTreeline, this);
 		return added;
 	}
 	
 	public boolean removeConTreeline(Treeline tobeRemoved){
 		boolean removed = conTreelines.remove(tobeRemoved);
-		if(removed) tobeRemoved.removeTreeEventListener(this);
+		tobeRemoved.removeTreeEventListener(this);
 		sanityCheck();
-                RhizoAddons rhizoAddons = this.getProject().getRhizoAddons();
-                ConflictManager conflictManager = rhizoAddons.getConflictManager();
+        RhizoAddons rhizoAddons = this.getProject().getRhizoAddons();
+        ConflictManager conflictManager = rhizoAddons.getConflictManager();
 		conflictManager.processChange(tobeRemoved, this);
 		return removed;
 	}

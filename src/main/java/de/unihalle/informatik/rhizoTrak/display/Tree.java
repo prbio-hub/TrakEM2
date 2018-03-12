@@ -1124,14 +1124,11 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 			else
 			{
 				boolean rightConflictTyp = conflictManager.currentConflictIsTreelineConflict();
-                                Utils.log("current Tree: " + this.toString());
-                                Utils.log("is it the right ConflictType? " + rightConflictTyp);
 				boolean rightInstance = false;
 				boolean rightTree = false;		
 				if(this instanceof Treeline)
 				{
 					rightInstance=true;
-                                        Utils.log("its the right instance");
 				}
                                 
 				if(rightConflictTyp && rightInstance)
@@ -1142,7 +1139,6 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				}
 				
 				if(rightConflictTyp && rightInstance && rightTree){
-                                        Utils.log("its the right Tree");
 					setLastVisited(nd);
 					return nd.la;
 				}

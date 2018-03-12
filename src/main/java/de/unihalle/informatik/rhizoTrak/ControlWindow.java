@@ -115,7 +115,6 @@ import javax.swing.UIManager;
 
 import de.unihalle.informatik.rhizoTrak.display.Display3D;
 import de.unihalle.informatik.rhizoTrak.display.ImageJCommandListener;
-import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.YesNoDialog;
 import de.unihalle.informatik.rhizoTrak.persistence.Loader;
 import de.unihalle.informatik.rhizoTrak.tree.LayerTree;

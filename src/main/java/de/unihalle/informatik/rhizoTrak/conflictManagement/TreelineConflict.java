@@ -93,7 +93,6 @@ public class TreelineConflict extends Conflict {
 	 * @return the connected Treelines
 	 */
 	public ArrayList<Treeline> getTreelineOne() {
-                Utils.log(treelineList);
 		return treelineList;
 	}
 

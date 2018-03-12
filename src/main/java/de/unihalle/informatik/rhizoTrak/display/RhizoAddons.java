@@ -75,6 +75,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -289,8 +290,7 @@ public class RhizoAddons
 					statusMap.put(i, sTemp);
 				}
 			}
-		}
-		
+		}		
 	}
 
 
@@ -853,78 +853,8 @@ public class RhizoAddons
 		return true;
 	}
 	
-	/**
-	 * Converts color to string for the con file format
-	 * @param col
-	 * @return Color string
-	 * @author Axel
-	 */
-	public static String colorToString(Color col)
-	{
-		String result = col.getRed() + ";" + col.getGreen() + ";" + col.getBlue() + ";" + col.getAlpha();
-		return result;
-	}
-
-	/**
-	 * Converts string to color for the con file format
-	 * @param string 
-	 * @return Color
-	 * @author Axel
-	 */
-	public static Color stringToColor(String string)
-	{
-		String[] info = string.split(";");
-		return new Color(Integer.parseInt(info[0]), Integer.parseInt(info[1]), Integer.parseInt(info[2]), Integer.parseInt(info[3]));
-	}
-
-	/**
-	 * Splits a string by newlines
-	 * @param string - String to be split
-	 * @return List of lines
-	 * @author Axel
-	 */
-	public static ArrayList<String> stringToLineArray(String string)
-	{
-		String[] lines = string.split("\\n");
-		return new ArrayList<String>(Arrays.asList(lines));
-	}
-	
 	/* visual stuff */
 
-	/**
-	 * Creates a color chooser dialogue and applies colors to treelines with the corresponding confidence value
-	 * @param i - Confidence value
-	 * @param list - Parent component for the chooser
-	 * @author Axel, Tino
-	 */
-	public void colorChooser(int i, JList list)
-	{
-		Color newColor = JColorChooser.showDialog(list, "Choose color", Color.WHITE);
-		Status s = statusMap.get(i);
-		s.setRed(BigInteger.valueOf(newColor.getRed()));
-		s.setGreen(BigInteger.valueOf(newColor.getGreen()));
-		s.setBlue(BigInteger.valueOf(newColor.getBlue()));
-		s.setAlpha(BigInteger.valueOf(newColor.getAlpha()));
-		
-		Display display = Display.getFront();
-		Layer currentLayer = display.getLayer();
-		LayerSet currentLayerSet = currentLayer.getParent();
-		
-		// get treelines of current layerset
-		ArrayList<Displayable> trees = currentLayerSet.get(Treeline.class);
-		for (Displayable cObj : trees)
-		{
-			Treeline ctree = (Treeline) cObj;
-			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes())
-			{
-				if ((int) cnode.getConfidence() == i)
-				{
-					cnode.setColor(newColor);
-				}
-			}
-			cObj.repaint();
-		}
-	}
 	
 	/**
 	 * Updates the color for all treelines and repaints them.
@@ -984,11 +914,11 @@ public class RhizoAddons
 					cnode.chooseHighlight();
 				} else {
 					cnode.highlight();
-				}	
+				}
 			}
-			Display.repaint(Display.getFrontLayer());
-			//tree.repaint();	
+			Display.repaint(((Treeline) toBeHigh).getFirstLayer());
 		}
+		
 	}
 
 	/**
@@ -1029,7 +959,7 @@ public class RhizoAddons
                 cnode.removeHighlight();
             }
         }
-        Display.repaint(Display.getFrontLayer());
+        Display.repaint(((Treeline) notToBeHigh).getFirstLayer());
 
     }
 
@@ -1315,6 +1245,16 @@ public class RhizoAddons
 					parentTl.unmark();
 					return;
 				}
+				//check if the merge create conflict and communicate with the user if the action should be continued
+				HashSet<Treeline> treelineSet = new HashSet<Treeline>();
+				treelineSet.add(parentTl);
+				treelineSet.add(target);
+				int goAhead=conflictManager.userInteractionTree(treelineSet);
+				if(goAhead==0)
+				{
+					parentTl.unmark();
+					return;
+				}
 
 				display.setActive(parentTl);
 				
@@ -1325,48 +1265,23 @@ public class RhizoAddons
 				target.setLastMarked(nd);
 				joinList.add(target);
 				
+				
+				if(goAhead==1)
+				{
+					conflictManager.resolveTree(treelineSet);
+				}
+				if(goAhead==2)
+				{
+					transferConnector(target, parentTl);
+				}
+				
 				parentTl.join(joinList);
 				parentTl.unmark();
-
-				//target.deselect();
 				
-				//get the Connector of the target, remove the target and add the parent treeline
-				//furthermore update ConflictManager 
-				ArrayList<Connector> connectorList = new ArrayList<Connector>();
-				List<TreeEventListener> listenerList = target.getTreeEventListener();
-				for(TreeEventListener currentListener: listenerList)
-				{
-					Connector currentCon = currentListener.getConnector();
-					if(currentCon!=null){
-						connectorList.add(currentCon);
-					}
-				}
-				for(Connector currentCon: connectorList)
-				{
-					currentCon.removeConTreeline(target);
-                                        //RhizoAddons rhizoAddons = currentCon.getProject().getRhizoAddons();
-                                        //ConflictManager conflictManager = this.getConflictManager();
-					conflictManager.processChange(target, currentCon);
-				}
 				
-				//targetConnector.removeConTreeline(target);
-				//targetConnector.addConTreeline(parentTl);
-				
-				for(Connector currentCon: connectorList)
-				{
-					currentCon.addConTreeline(parentTl);
-                                        //RhizoAddons rhizoAddons = currentCon.getProject().getRhizoAddons();
-                                        //ConflictManager conflictManager = this.getConflictManager();
-					conflictManager.processChange(parentTl, currentCon);
-				}
-				
-
 				target.remove2(false);
-                                Display.updateVisibleTabs();
-				
+                Display.updateVisibleTabs();				
 				Display.repaint(display.getLayerSet());
-				
-				//display.getProject().remove(target);
 
 			};
 		};
@@ -1438,9 +1353,23 @@ public class RhizoAddons
 						return;
 					}
 				}
-				parentConnector.addConTreeline(target);
-				display.setActive(parentConnector);
-				conflictManager.processChange(target, parentConnector);
+				HashSet<Connector> connectorSet = new HashSet<Connector>();
+				connectorSet.add(parentConnector);
+				List<TreeEventListener> tel = target.getTreeEventListener();
+				for (TreeEventListener treeEventListener : tel) {
+					connectorSet.add(treeEventListener.getConnector());
+				}
+				int goAhead = conflictManager.userInteraction(connectorSet,false);
+				if(goAhead==1 || goAhead==2 || goAhead==3) {
+					parentConnector.addConTreeline(target);
+					display.setActive(parentConnector);
+					conflictManager.processChange(target, parentConnector);
+					if(goAhead==1) 
+					{
+						conflictManager.resolve(connectorSet);
+					}					
+				}
+				return;
 			};
 		};
 		bindRun.start();

@@ -72,7 +72,6 @@ package de.unihalle.informatik.rhizoTrak;
 
 import java.io.File;
 
-import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import ij.plugin.PlugIn;
 
 public class Open_Project implements PlugIn {

@@ -64,6 +64,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.swing.DefaultListModel;
@@ -78,6 +79,7 @@ import de.unihalle.informatik.rhizoTrak.conflictManagement.Conflict;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConnectorConflict;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.TreelineConflict;
+import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
@@ -90,8 +92,8 @@ public class ConflictPanel extends JPanel implements ActionListener {
 
 	private javax.swing.Box.Filler filler1;
 	private javax.swing.JButton jButton1;
-	private javax.swing.JButton jButton2;
-	private javax.swing.JButton jButton3;
+//	private javax.swing.JButton jButton2;
+//	private javax.swing.JButton jButton3;
 	private javax.swing.JButton jButton4;
 	private javax.swing.JList<String> jList1;
 	private javax.swing.JPanel jPanel1;
@@ -115,8 +117,8 @@ public class ConflictPanel extends JPanel implements ActionListener {
 		jPanel1 = new javax.swing.JPanel();
 		jList1 = new javax.swing.JList<String>();
 		jButton1 = new javax.swing.JButton();
-		jButton2 = new javax.swing.JButton();
-		jButton3 = new javax.swing.JButton();
+//		jButton2 = new javax.swing.JButton();
+//		jButton3 = new javax.swing.JButton();
 		jButton4 = new javax.swing.JButton();
 		filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0),
 				new java.awt.Dimension(0, 32767));
@@ -134,7 +136,7 @@ public class ConflictPanel extends JPanel implements ActionListener {
 
 		add(jScrollPane1);
 
-		jPanel1.setLayout(new GridLayout(4, 1));
+		jPanel1.setLayout(new GridLayout(2, 1));
 
 		jButton1.setText("Update");
 		jButton1.setActionCommand("update");
@@ -146,15 +148,15 @@ public class ConflictPanel extends JPanel implements ActionListener {
 		jButton4.addActionListener(this);
 		jPanel1.add(jButton4);
 
-		jButton2.setText("Auto Resolve NA");
-		jButton2.setActionCommand("autoResolveNonAggressiv");
-		jButton2.addActionListener(this);
-		jPanel1.add(jButton2);
-		
-		jButton3.setText("Auto Resolve A");
-		jButton3.setActionCommand("autoResolveAggressiv");
-		jButton3.addActionListener(this);
-		jPanel1.add(jButton3);
+//		jButton2.setText("Auto Resolve NA");
+//		jButton2.setActionCommand("autoResolveNonAggressiv");
+//		jButton2.addActionListener(this);
+//		jPanel1.add(jButton2);
+//		
+//		jButton3.setText("Auto Resolve A");
+//		jButton3.setActionCommand("autoResolveAggressiv");
+//		jButton3.addActionListener(this);
+//		jPanel1.add(jButton3);
 		
 		
 //		jPanel1.add(filler1);
@@ -229,7 +231,7 @@ public class ConflictPanel extends JPanel implements ActionListener {
 			Conflict currentConflict = dataTable.get(selectedConflictString);
 			//case one: Treeline conflict
 			if(currentConflict.getClass().equals(TreelineConflict.class)){
-                                Utils.log("currently solving a treelineConflict");
+                Utils.log("currently solving a treelineConflict");
 				TreelineConflict conflict = (TreelineConflict)currentConflict;
 				conflictManager.setCurrentSolvingConflict(conflict);
 				
@@ -243,17 +245,36 @@ public class ConflictPanel extends JPanel implements ActionListener {
 				List<Displayable> treelineList = new ArrayList<Displayable>(conflict.getTreelineOne());
 				RhizoAddons.highlight(treelineList,false);
 				
-
 				Display.getFront().getFrame().toFront();
 				
 			}
 			//case two: Connector conflict
+			if(currentConflict.getClass().equals(ConnectorConflict.class)){
+                Utils.log("currently solving a connectorConflict");
+				ConnectorConflict conflict = (ConnectorConflict)currentConflict;
+				conflictManager.setCurrentSolvingConflict(conflict);
+				
+				jButton4.setText("Solving ... abort?");
+				jButton4.setBackground(new Color(255, 0, 0));
+
+				ArrayList<Connector> connectorList = conflict.getConnectorList();
+				int goAhead = conflictManager.userInteraction(new HashSet<Connector>(connectorList),true);
+				if(goAhead==1) 
+				{
+					conflictManager.resolve(new HashSet<Connector>(connectorList));
+				}
+				if(goAhead==0)
+				{
+					conflictManager.abortCurrentSolving();
+				}
+				
+			}
 		}
 	}
 	
 	public void setSolved(){
 		jButton4.setText("Solve");
-		jButton4.setBackground(jButton3.getBackground());
+		jButton4.setBackground(jButton1.getBackground());
 	}
         
         public void clearList(){
