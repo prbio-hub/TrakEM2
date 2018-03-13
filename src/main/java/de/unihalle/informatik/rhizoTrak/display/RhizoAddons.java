@@ -787,6 +787,29 @@ public class RhizoAddons
 
 	/* helpers below */
 	
+	//function to find the the treeline that is on the same layer as the connector root: if there is non or more than one return null
+	public static float[] findConnectorRootPosition(Connector connector)
+	{
+		float[] result=null;
+		ArrayList<Treeline> treelinesOnTheLayer = new ArrayList<Treeline>();
+		for(Treeline treeline :connector.getConTreelines())
+		{
+			if(treeline.getFirstLayer()!=null && treeline.getFirstLayer().equals(connector.getRoot().getLayer()))
+			{
+				treelinesOnTheLayer.add(treeline);
+			}			
+		}
+		if(treelinesOnTheLayer.size()<1 ||treelinesOnTheLayer.size()>1)
+		{
+			return result;
+		}
+		Treeline tree = treelinesOnTheLayer.get(0);
+		Node<Float> treeRoot = tree.getRoot();
+		Point2D posi = RhizoAddons.changeSpace(treeRoot.getX(),treeRoot.getY(),tree.getAffineTransform(),connector.getAffineTransform());
+		result = new float[]{(float) posi.getX(),(float) posi.getY()};
+		return result;
+	}
+	
 	/**
 	 * Converts RGBA from a status object to a color object.
 	 * @param i - Node confidence value

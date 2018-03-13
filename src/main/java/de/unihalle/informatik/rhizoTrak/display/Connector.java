@@ -613,16 +613,31 @@ public class Connector extends Treeline  implements TreeEventListener{
 				for(Node<Float> nd: deleteList){
 					this.removeNode(nd);
 				}
+				//set the root of the connector to the appropriate position
+				float[] posi = RhizoAddons.findConnectorRootPosition(this);
+				if(posi!=null)
+				{
+					this.getRoot().setPosition(posi);
+				}
 			} else {
 				//conTreelines is not empty but the connector have no children
 				for(Treeline tree: conTreelines){
+					//take tree root
 					Node<Float> treeRoot = tree.getRoot();
+					//transfer the position with the connector affine-transform
 					Point2D result = RhizoAddons.changeSpace(treeRoot.getX(),treeRoot.getY(),tree.getAffineTransform(),this.getAffineTransform());
 					if(result==null) return false;
+					//make a connector leaf and put it on the calculate position
 					Node<Float> newTarget = newNode((float) result.getX(),(float) result.getY(), treeRoot.getLayer(), root);
 					((ConnectorNode)newTarget).setData(last_radius);
 					if(!addNode(root, newTarget, (byte)-3)) return false;
-				}	
+				}
+				//set the root of the connector to the appropriate position
+				float[] posi = RhizoAddons.findConnectorRootPosition(this);
+				if(posi!=null)
+				{
+					this.getRoot().setPosition(posi);
+				}
 			}
 		} else {
 			if(root!=null && root.hasChildren()){
