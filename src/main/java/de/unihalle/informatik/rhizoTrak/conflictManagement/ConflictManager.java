@@ -59,6 +59,8 @@ import java.util.Set;
 import javax.swing.JFrame;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
@@ -73,25 +75,26 @@ import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import java.util.HashSet;
 import java.util.Iterator;
 
-public class ConflictManager {
+public class ConflictManager 
+{
 
-    public ConflictManager(RhizoAddons rhizoAddons) {
-        this.rhizoAddons = rhizoAddons;
-        
-    }
-	
 	//save conflicts and gui stuff
 	
 	private  HashMap<Treeline, ConnectorConflict> connectorConflictHash = new HashMap<Treeline, ConnectorConflict>();
 	private  HashMap<TreelineConflictKey, TreelineConflict> treelineConflictHash = new HashMap<TreelineConflictKey, TreelineConflict>();
         
 	private  ConflictPanel conflictPanel = null;
-    private  RhizoAddons rhizoAddons;
+    private  RhizoMain rhizoMain;
 	private  JFrame	conflictFrame = null;
 	private boolean autoResolveNA=false;
-
-        
+    
 	private boolean isSolving=false;
+	
+    public ConflictManager(RhizoMain rhizoMain) 
+    {
+        this.rhizoMain = rhizoMain;    
+    }
+    
 	/**
 	 * @return the isSolving
 	 */
@@ -639,7 +642,7 @@ public class ConflictManager {
 		if(conflictPanel==null || conflictFrame==null)
 		{
 			conflictPanel = new ConflictPanel(this);
-			conflictFrame = new JFrame("Conflict Manager: "+ rhizoAddons.project.getTitle());
+			conflictFrame = new JFrame("Conflict Manager: "+ rhizoMain.getProject().getTitle());
 			conflictFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 			conflictFrame.add(conflictPanel);
 			conflictFrame.setVisible(true);
@@ -683,7 +686,7 @@ public class ConflictManager {
 				if(isSolving)
 				{
 					List<Displayable> treelineList = new ArrayList<Displayable>(conflict.getTreelineOne());
-					RhizoAddons.removeHighlight(treelineList,false);
+					RhizoColVis.removeHighlight(treelineList,false);
 					
 					if(conflictPanel!=null){
 						conflictPanel.setSolved();

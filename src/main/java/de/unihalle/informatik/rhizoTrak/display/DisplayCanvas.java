@@ -764,7 +764,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 			//old:
 //			display.choose(me.getX(), me.getY(), x_p, y_p, me.isShiftDown(), null);
 			//new:
-			Thread t = Display.getFront().getProject().getRhizoAddons().choose(me.getX(), me.getY(), x_p, y_p, me.isShiftDown(), null,Display.getFront());
+			Thread t = Display.getFront().getProject().getRhizoMain().getRhizoAddons().choose(me.getX(), me.getY(), x_p, y_p, me.isShiftDown(), null,Display.getFront());
 			t.start();
 			//end
 		}

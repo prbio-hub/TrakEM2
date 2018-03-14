@@ -50,14 +50,10 @@
 package de.unihalle.informatik.rhizoTrak.display.addonGui;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.math.BigInteger;
 import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -70,15 +66,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JSlider;
-import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import de.unihalle.informatik.rhizoTrak.addon.RhizoIO;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.config.Config.StatusList.Status;
-import de.unihalle.informatik.rhizoTrak.display.Display;
-import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 public class VisibilityPanel extends JPanel 
@@ -93,11 +88,12 @@ public class VisibilityPanel extends JPanel
 	private JLabel jLabel33;
 	private JLabel jLabel34;
 	private JPanel jPanelNames;
-        public RhizoAddons rhizoAddons=null;
+        
+	private RhizoMain rhizoMain = null;
 
-	public VisibilityPanel(RhizoAddons rhizoAddons)
+	public VisibilityPanel(RhizoMain rhizoMain)
 	{
-		this.rhizoAddons = rhizoAddons;
+		this.rhizoMain = rhizoMain;
 		initComponents();
 	}
 
@@ -142,8 +138,9 @@ public class VisibilityPanel extends JPanel
 
 		add(jPanelNames);
 		
-		HashMap<Integer, Status> map = rhizoAddons.statusMap;
-		for(int i: rhizoAddons.statusMap.keySet())
+		HashMap<Integer, Status> map = rhizoMain.getRhizoIO().getStatusMap();
+		
+		for(int i: map.keySet())
 		{
 			Status s = map.get(i);
 			JPanel panel = new JPanel();
@@ -177,11 +174,11 @@ public class VisibilityPanel extends JPanel
 			button.setPreferredSize(new java.awt.Dimension(33, 12));
 			button.setContentAreaFilled(false);
 			button.setOpaque(true);
-			button.setBackground(rhizoAddons.getColorFromStatusMap(i));
+			button.setBackground(rhizoMain.getRhizoIO().getColorFromStatusMap(i));
 			panel.add(button);
 
 			add(panel);
-			if(i == rhizoAddons.getStatusMapSize()) add(new JSeparator());
+			if(i == rhizoMain.getRhizoIO().getStatusMapSize()) add(new JSeparator());
 		}
 		
 	}
@@ -195,13 +192,13 @@ public class VisibilityPanel extends JPanel
 			Color selectedColor = JColorChooser.showDialog(source, "Choose color", Color.WHITE);
 			if (selectedColor != null) 
 			{
-				Status s = rhizoAddons.statusMap.get(index);
+				Status s = rhizoMain.getRhizoIO().getStatusMap().get(index);
 				s.setRed(BigInteger.valueOf(selectedColor.getRed()));
 				s.setGreen(BigInteger.valueOf(selectedColor.getGreen()));
 				s.setBlue(BigInteger.valueOf(selectedColor.getBlue()));
-				rhizoAddons.statusMap.put(index, s);
+				rhizoMain.getRhizoIO().putStatus(index, s);
 
-				rhizoAddons.applyCorrespondingColor();
+				rhizoMain.getRhizoColVis().applyCorrespondingColor();
 				source.setBackground(selectedColor);
 			}
 		}
@@ -215,11 +212,11 @@ public class VisibilityPanel extends JPanel
 			JSlider currentSlider = (JSlider) e.getSource();
 			int index = Integer.parseInt(currentSlider.getName()); // name will always be an integer
 			
-			Status s = rhizoAddons.statusMap.get(index);
+			Status s = rhizoMain.getRhizoIO().getStatusMap().get(index);
 			s.setAlpha(BigInteger.valueOf(currentSlider.getValue()));
-			rhizoAddons.statusMap.put(index, s);
+			rhizoMain.getRhizoIO().putStatus(index, s);
 			
-			rhizoAddons.applyCorrespondingColor();
+			rhizoMain.getRhizoColVis().applyCorrespondingColor();
 			// cButton.setBackground(newColor);
 
 		}
@@ -231,9 +228,9 @@ public class VisibilityPanel extends JPanel
 			int index = Integer.parseInt(e.getActionCommand());
 			JCheckBox source = (JCheckBox) e.getSource();
 
-			Status s = rhizoAddons.statusMap.get(index);
+			Status s = rhizoMain.getRhizoIO().getStatusMap().get(index);
 			s.setSelectable(source.isSelected());
-			rhizoAddons.statusMap.put(index, s);
+			rhizoMain.getRhizoIO().putStatus(index, s);
 		}
 	};
 }

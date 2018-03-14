@@ -912,7 +912,7 @@ public final class Patch extends Displayable implements ImageData {
 			} else {
 				rel_path = path2;
 				//actyc: convert path2 to relativ path; it appears the path is not relativ if the image is in another directory than the xml
-				rel_path = project.getRhizoAddons().convertToRelativPath(path2);
+				rel_path = project.getRhizoMain().getRhizoImages().convertToRelativPath(path2);
 			}
 		}
 

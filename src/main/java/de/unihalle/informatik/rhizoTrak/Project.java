@@ -106,6 +106,8 @@ import javax.swing.plaf.FileChooserUI;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import de.unihalle.informatik.rhizoTrak.addon.RhizoIO;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.display.AreaList;
 import de.unihalle.informatik.rhizoTrak.display.AreaTree;
 import de.unihalle.informatik.rhizoTrak.display.Ball;
@@ -319,13 +321,13 @@ public class Project extends DBObject {
 	
 	private int mipmaps_mode = Loader.DEFAULT_MIPMAPS_MODE;
         
-        //actyc: refrence to the addon class of the project
-        public RhizoAddons rhizoAddons;
+	//actyc: refrence to the addon class of the project
+	private RhizoMain rhizoMain;
 
-        public RhizoAddons getRhizoAddons() 
-        {
-                return rhizoAddons;
-        }
+	public RhizoMain getRhizoMain() 
+	{
+		return rhizoMain;
+	}
 
 	/** The constructor used by the static methods present in this class. */
 	private Project(Loader loader) {
@@ -335,7 +337,7 @@ public class Project extends DBObject {
 		this.project = this; // for the superclass DBObject
 		loader.addToDatabase(this);
                 //actyc: ini the rhizoAddons
-                this.rhizoAddons= new RhizoAddons(project);
+                this.rhizoMain= new RhizoMain(project);
 	}
 
 	/** Constructor used by the Loader to find projects. These projects contain no loader. */
@@ -345,7 +347,7 @@ public class Project extends DBObject {
 		this.title = title;
 		this.project = this;
                 //actyc: ini the rhizoAddons
-                this.rhizoAddons= new RhizoAddons(project);
+                this.rhizoMain= new RhizoMain(project);
 	}
 
 	private ScheduledFuture<?> autosaving = null;
@@ -578,11 +580,12 @@ public class Project extends DBObject {
 
 			// aeekz
 			final OpenDialog od = new OpenDialog("Select status file", dir_project, null);
-			project.getRhizoAddons().loadConfigFile(od.getPath());
-			if(project.getRhizoAddons().userSettingsFile.exists())
+			project.getRhizoMain().getRhizoIO().loadConfigFile(od.getPath());
+			
+			if(RhizoIO.userSettingsFile.exists())
 			{
 				Utils.log("@Project: called loadUserSettings(");
-				project.getRhizoAddons().loadUserSettings();
+				project.getRhizoMain().getRhizoIO().loadUserSettings();
 			}
 	
 			// help the helpless users:
@@ -726,7 +729,7 @@ public class Project extends DBObject {
 		try {
 			Utils.log(loader.getProjectXMLPath()); 
 			Utils.log2("start addon loader ...");
-			project.getRhizoAddons().addonLoader(new File(loader.getProjectXMLPath()),project).join();
+			project.getRhizoMain().getRhizoIO().addonLoader(new File(loader.getProjectXMLPath()),project).join();
 			Utils.log2("started");
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
@@ -859,7 +862,7 @@ public class Project extends DBObject {
 				final YesNoDialog yn = ControlWindow.makeYesNoDialog("rhizoTrak", "There are unsaved changes in project " + title + ". Save them?");
 				if (yn.yesPressed()) {
 					String path = save();
-					this.rhizoAddons.addonSaver(new File(path));
+					this.getRhizoMain().getRhizoIO().addonSaver(new File(path));
 				}
 			} else {
 				Utils.log2("WARNING: closing project '" + title  + "' with unsaved changes.");
@@ -886,7 +889,7 @@ public class Project extends DBObject {
 		Search.removeTabs(this);
 		synchronized (ptcache) { ptcache.clear(); }
                 //actyc: dispose frames
-                this.getRhizoAddons().disposeGui();
+                this.getRhizoMain().disposeGUIs();
 		return true;
 	}
 

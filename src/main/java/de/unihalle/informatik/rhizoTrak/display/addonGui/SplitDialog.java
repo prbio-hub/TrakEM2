@@ -49,6 +49,8 @@
 
 package de.unihalle.informatik.rhizoTrak.display.addonGui;
 
+import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 
 import java.awt.Color;
@@ -89,11 +91,11 @@ public class SplitDialog extends JDialog implements ActionListener {
 	private Treeline upstream;
 	private Treeline downstream;
         
-    private RhizoAddons rhizoAddons;
+    private RhizoMain rhizoMain;
 	
-	public SplitDialog(ArrayList<Treeline> trees,RhizoAddons rhizoAddons)
+	public SplitDialog(ArrayList<Treeline> trees, RhizoMain rhizoMain)
 	{
-        this.rhizoAddons = rhizoAddons;
+        this.rhizoMain = rhizoMain;
 		this.setModalityType(JDialog.ModalityType.APPLICATION_MODAL);
 		//prepare trees
 		
@@ -174,18 +176,18 @@ public class SplitDialog extends JDialog implements ActionListener {
 		if(evt.getActionCommand().equals("1"))
 		{
 			//upstream keep the connector so nothing todo
-			rhizoAddons.splitDialog = false;
+			rhizoMain.getRhizoAddons().splitDialog = false;
 		}
-		
-		
+
+
 		if(evt.getActionCommand().equals("2"))
 		{
 			//downstream get the connector
-			rhizoAddons.applyCorrespondingColor();
+			rhizoMain.getRhizoColVis().applyCorrespondingColor();
 			RhizoAddons.transferConnector(upstream, downstream);
-			rhizoAddons.splitDialog = false;
+			rhizoMain.getRhizoAddons().splitDialog = false;
 		}
-                this.dispose();
+		this.dispose();
 	}
 	
 	MouseListener ml = new MouseListener()
@@ -210,11 +212,11 @@ public class SplitDialog extends JDialog implements ActionListener {
 		{
 			if(e.getSource().equals(jButton1)) 
 			{
-				RhizoAddons.removeHighlight(upstream, false);
+				RhizoColVis.removeHighlight(upstream, false);
 			}
 			if(e.getSource().equals(jButton2)) 
 			{
-				RhizoAddons.removeHighlight(downstream, false);
+				RhizoColVis.removeHighlight(downstream, false);
 			}				
 		}
 		
@@ -223,11 +225,11 @@ public class SplitDialog extends JDialog implements ActionListener {
 		{
 			if(e.getSource().equals(jButton1)) 
 			{
-				RhizoAddons.highlight(upstream, false);
+				RhizoColVis.highlight(upstream, false);
 			}
 			if(e.getSource().equals(jButton2)) 
 			{
-				RhizoAddons.highlight(downstream, false);
+				RhizoColVis.highlight(downstream, false);
 			}
 		}
 		

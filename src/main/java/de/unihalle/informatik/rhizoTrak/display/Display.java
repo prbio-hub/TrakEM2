@@ -169,6 +169,8 @@ import javax.swing.text.Document;
 
 import de.unihalle.informatik.rhizoTrak.ControlWindow;
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.analysis.Graph;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.inspect.InspectPatchTrianglesMode;
@@ -2273,12 +2275,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	protected void choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final Class<?> c) {
             //atyc: change to the modified RhizoTrak version of choose
             //choose(screen_x_p, screen_y_p, x_p, y_p, false, c);
-            this.getProject().getRhizoAddons().choose(screen_x_p, screen_y_p, x_p, y_p, false, c,this);
+            this.getProject().getRhizoMain().getRhizoAddons().choose(screen_x_p, screen_y_p, x_p, y_p, false, c,this);
 	}
 	protected void choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p) {
             //atyc: change to the modified RhizoTrak version of choose
             //choose(screen_x_p, screen_y_p, x_p, y_p, false, null);
-            this.getProject().getRhizoAddons().choose(screen_x_p, screen_y_p, x_p, y_p, false, null,this);
+            this.getProject().getRhizoMain().getRhizoAddons().choose(screen_x_p, screen_y_p, x_p, y_p, false, null,this);
 	}
 
 	/** Find a Displayable to add to the selection under the given point (which is in offscreen coords); will use a popup menu to give the user a range of Displayable objects to select from. */
@@ -2297,7 +2299,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				Node<Float> nearestNode = currentTreeline.findNearestNode((float)transX,(float) transY, layer);
 				//Utils.log(nearestNode);
 				//check if treeline is clickable if not add it to the remove list
-				if(nearestNode.getConfidence() > 0 && !this.getProject().getRhizoAddons().statusMap.get((int) nearestNode.getConfidence()).isSelectable()) {
+				if(nearestNode.getConfidence() > 0 && !this.getProject().getRhizoMain().getRhizoIO().getStatusMap().get((int) nearestNode.getConfidence()).isSelectable()) {
 					alternatedList.add(displayable);
 				}
 			}
@@ -2419,7 +2421,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				}
 				//actyc: remove highlight of connected treelines
 				if(prev_active instanceof Connector){
-					RhizoAddons.removeHighlight(new ArrayList<Displayable>(((Connector)prev_active).getConTreelines()),false);
+					RhizoColVis.removeHighlight(new ArrayList<Displayable>(((Connector)prev_active).getConTreelines()),false);
 				}
 				//end
 			}
@@ -2459,7 +2461,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				annot_editor.setEnabled(true);		
 				//actyc: highlight  connected treelines
 				if(displ instanceof Connector){
-					RhizoAddons.highlight(new ArrayList<Displayable>(((Connector)displ).getConTreelines()),false);
+					RhizoColVis.highlight(new ArrayList<Displayable>(((Connector)displ).getConTreelines()),false);
 				}
 				//end
 			} else {
@@ -6387,30 +6389,30 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("Copy treelines")){
 			int answer = JOptionPane.showConfirmDialog(null, "This will copy every treeline from the current layer to the next layer and may not be undone.\nAre you sure?", 
 														"", JOptionPane.YES_NO_OPTION);
-			if(answer == JOptionPane.YES_OPTION) Display.getFront().getProject().getRhizoAddons().copyTreeLine();
+			if(answer == JOptionPane.YES_OPTION) Display.getFront().getProject().getRhizoMain().getRhizoAddons().copyTreeLine();
 		}
 		else if(command.equals("Load images")){
-			Display.getFront().getProject().getRhizoAddons().imageLoader();
+			Display.getFront().getProject().getRhizoMain().getRhizoImages().createImageLoaderFrame();
 		}
 		else if(command.equals("colVis")){
-			Display.getFront().getProject().getRhizoAddons().setVisibility();
+			Display.getFront().getProject().getRhizoMain().getRhizoColVis().createColVisFrame();;
 		}
 		else if(command.equals("testtest")){
-			Display.getFront().getProject().getRhizoAddons().test();
+			Display.getFront().getProject().getRhizoMain().getRhizoAddons().test();
 		}
 		else if(command.equals("readXML")){
-			Display.getFront().getProject().getRhizoAddons().readMTBXML();
+			Display.getFront().getProject().getRhizoMain().getRhizoMTBXML().readMTBXML();
 		}
 		else if(command.equals("writeXML")){
-			Display.getFront().getProject().getRhizoAddons().writeMTBXML();
+			Display.getFront().getProject().getRhizoMain().getRhizoMTBXML().writeMTBXML();
 		}
 		else if(command.equals("conflictPanel")){
-                        RhizoAddons rhizoAddons = Display.getFront().getProject().getRhizoAddons();
-                        ConflictManager conflictManager = rhizoAddons.getConflictManager();
+                        RhizoMain rhizoMain = Display.getFront().getProject().getRhizoMain();
+                        ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
 			conflictManager.showConflicts();
 		}
 		else if(command.equals("stat")){
-			Display.getFront().getProject().getRhizoAddons().writeStatistics();
+			Display.getFront().getProject().getRhizoMain().getRhizoStatistics().writeStatistics();
 		}
 		// rhizo commands end
 		else {

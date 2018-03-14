@@ -70,6 +70,7 @@ import java.util.Set;
 import org.scijava.vecmath.Point3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.SplitDialog;
 import de.unihalle.informatik.rhizoTrak.utils.M;
@@ -513,7 +514,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 				int oldSize = conTreelines.size();
 				
 				if(!me.isShiftDown() && !Utils.isControlDown(me)){
-					this.getProject().getRhizoAddons().bindConnectorToTreeline(layer, x_p, y_p, mag, this, me);
+					this.getProject().getRhizoMain().getRhizoAddons().bindConnectorToTreeline(layer, x_p, y_p, mag, this, me);
 					return;
 				}
 
@@ -682,8 +683,8 @@ public class Connector extends Treeline  implements TreeEventListener{
 		boolean added = conTreelines.add(newTreeline);
 		newTreeline.addTreeEventListener(this);
 		sanityCheck();
-        RhizoAddons rhizoAddons = this.getProject().getRhizoAddons();
-        ConflictManager conflictManager = rhizoAddons.getConflictManager();
+        RhizoMain rhizoMain = this.getProject().getRhizoMain();
+        ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
 		conflictManager.processChange(newTreeline, this);
 		return added;
 	}
@@ -692,8 +693,8 @@ public class Connector extends Treeline  implements TreeEventListener{
 		boolean removed = conTreelines.remove(tobeRemoved);
 		tobeRemoved.removeTreeEventListener(this);
 		sanityCheck();
-        RhizoAddons rhizoAddons = this.getProject().getRhizoAddons();
-        ConflictManager conflictManager = rhizoAddons.getConflictManager();
+		RhizoMain rhizoMain = this.getProject().getRhizoMain();
+        ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
 		conflictManager.processChange(tobeRemoved, this);
 		return removed;
 	}
@@ -714,10 +715,10 @@ public class Connector extends Treeline  implements TreeEventListener{
 		if(te.getEventMessage().equals("split"))
 		{
 			ArrayList<Treeline> trees = te.getInterestingTrees();
-			if(!this.getProject().getRhizoAddons().splitDialog)
+			if(!this.getProject().getRhizoMain().getRhizoAddons().splitDialog)
 			{
-				this.getProject().getRhizoAddons().splitDialog = true;
-				new SplitDialog(trees,project.getRhizoAddons());
+				this.getProject().getRhizoMain().getRhizoAddons().splitDialog = true;
+				new SplitDialog(trees, project.getRhizoMain());
 			}
 			
 			
@@ -741,7 +742,7 @@ public class Connector extends Treeline  implements TreeEventListener{
                 if(currentTree != null)
                 {
                     currentTree.removeTreeEventListener(this);
-                    this.getProject().getRhizoAddons().getConflictManager().processChange(currentTree, this);
+                    this.getProject().getRhizoMain().getRhizoAddons().getConflictManager().processChange(currentTree, this);
                     it.remove();
                     //this.removeConTreeline(currentTree);
                 }

@@ -77,6 +77,7 @@ import java.util.TreeSet;
 import org.scijava.vecmath.Point3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.M;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
@@ -110,7 +111,7 @@ public abstract class Node<T> implements Taggable {
 		this.x = p[0];
 		this.y = p[1];
 	}
-	public RhizoAddons rhizoAddons=null;
+	public RhizoMain rhizoMain = null;
 	/** The confidence value of the edge towards the parent;
 	 *  in other words, how much this node can be trusted to continue from its parent node.
 	 *  Defaults to MAX_EDGE_CONFIDENCE for full trust, and 0 for none. */
@@ -119,12 +120,12 @@ public abstract class Node<T> implements Taggable {
 	// aeekz: removed lower bounds check
 	public byte getConfidence() 
 	{
-                if(!rhizoAddonsExists()){
-                     return MAX_EDGE_CONFIDENCE;
-                }
-		if(confidence > rhizoAddons.getStatusMapSize())
+		if(!rhizoAddonsExists()){
+			return MAX_EDGE_CONFIDENCE;
+		}
+		if(confidence > rhizoMain.getRhizoIO().getStatusMapSize())
 		{
-			return rhizoAddons.getStatusMapSize();
+			return rhizoMain.getRhizoIO().getStatusMapSize();
 		}
 		else
 		{
@@ -187,7 +188,7 @@ public abstract class Node<T> implements Taggable {
 	}
 	public void setLayer(final Layer la) {
 		this.la = la;
-                this.rhizoAddons=la.getProject().getRhizoAddons();
+		this.rhizoMain = la.getProject().getRhizoMain();
 	}
 	/** Returns -1 when not added (e.g. if child is null). */
 	synchronized public final int add(final Node<T> child, final byte conf) {
@@ -425,8 +426,8 @@ public abstract class Node<T> implements Taggable {
 				// aeekz actyc
 				
 				int i = (int) this.getConfidence();
-				if(i > rhizoAddons.getStatusMapSize()) Utils.log("@Node: confidence is higher than status list size");
-				String s = rhizoAddons.statusMap.get(i).getAbbreviation();
+				if(i > rhizoMain.getRhizoIO().getStatusMapSize()) Utils.log("@Node: confidence is higher than status list size");
+				String s = rhizoMain.getRhizoIO().getStatusMap().get(i).getAbbreviation();
 				
 				final Dimension dim = Utils.getDimensions(s, g.getFont());
 				g.setColor(Color.white);
@@ -1278,23 +1279,23 @@ public abstract class Node<T> implements Taggable {
                 if(!rhizoAddonsExists()){
                     return Color.LIGHT_GRAY;     
                 }
-		Color result = this.rhizoAddons.getColorFromStatusMap(this.getConfidence());
+		Color result = this.rhizoMain.getRhizoIO().getColorFromStatusMap(this.getConfidence());
 		if(high[0]) return Color.MAGENTA; // Tino - may be temporary
 		if(high[1]) return Color.PINK;
 		return result;
 	}
         
-        //actyc: helper to verify that rhizoAddons is set when possible
-        private boolean rhizoAddonsExists(){
-                if(this.rhizoAddons!=null)
-                {
-                        return true;
-                }
-                if(this.getLayer()!=null)
-                {
-                        this.rhizoAddons = this.getLayer().getProject().getRhizoAddons();
-                        return true;
-                }
-                return false;
-        }
+	//actyc: helper to verify that rhizoAddons is set when possible
+	private boolean rhizoAddonsExists(){
+		if(this.rhizoMain!=null)
+		{
+			return true;
+		}
+		if(this.getLayer()!=null)
+		{
+			this.rhizoMain = this.getLayer().getProject().getRhizoMain();
+			return true;
+		}
+		return false;
+	}
 }

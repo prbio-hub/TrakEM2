@@ -80,6 +80,8 @@ import javax.swing.TransferHandler;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import ch.qos.logback.classic.pattern.Util;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoImages;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
@@ -104,11 +106,11 @@ public class ImageImport extends JPanel {
 	private String filterReg_constant_part = "_(T|t)\\d*";
 	private String filterReg_sort_part = "_\\d{3}";
         
-        private RhizoAddons rhizoAddons = null;
+	private RhizoMain rhizoMain = null;
 
-	public ImageImport(RhizoAddons rhizoAddons) 
+	public ImageImport(RhizoMain rhizoMain) 
 	{
-            this.rhizoAddons = rhizoAddons;
+        this.rhizoMain = rhizoMain;
 		iniComponents();
 	}
 
@@ -209,7 +211,7 @@ public class ImageImport extends JPanel {
 //			imgDir.setText(RhizoAddons.imageDir.getAbsolutePath());
 //		}
 		JFrame parentFrame = (JFrame) SwingUtilities.getRoot(this);
-		if(null != parentFrame && null != rhizoAddons.imageDir) parentFrame.setTitle("Image Loader - "+ rhizoAddons.imageDir.getAbsolutePath());
+		if(null != parentFrame && null != rhizoMain.getRhizoImages().getImageDir()) parentFrame.setTitle("Image Loader - "+ rhizoMain.getRhizoImages().getImageDir().getAbsolutePath());
 		
 		
 		add(jPanel1, BorderLayout.EAST);
@@ -249,7 +251,7 @@ public class ImageImport extends JPanel {
         reord.toArray(reordArray);
         files=reordArray;
         //adding appropriate number of layer and image
-        RhizoAddons.addLayerAndImage(files);
+        RhizoImages.addLayerAndImage(files);
         listModel.clear();
         
 	}
@@ -313,10 +315,10 @@ public class ImageImport extends JPanel {
 		if(indicator == JFileChooser.APPROVE_OPTION)
 		{
 			File dir = dialog.getSelectedFile();
-			rhizoAddons.imageDir=dir;
+			rhizoMain.getRhizoImages().setImageDir(dir);
 //			imgDir.setText(RhizoAddons.imageDir.getAbsolutePath());
 			JFrame parentFrame = (JFrame) SwingUtilities.getRoot(this);
-			if(null != parentFrame) parentFrame.setTitle("Image Loader - "+ rhizoAddons.imageDir.getAbsolutePath());
+			if(null != parentFrame) parentFrame.setTitle("Image Loader - "+ rhizoMain.getRhizoImages().getImageDir().getAbsolutePath());
 		}
 		
 	}
@@ -325,8 +327,8 @@ public class ImageImport extends JPanel {
 	private void autoImport()
 	{
 		Utils.log2("Start auto import:");
-		File imageDir = rhizoAddons.imageDir;
-		if(imageDir==null)
+		File imageDir = rhizoMain.getRhizoImages().getImageDir();
+		if(imageDir == null)
 		{
 			return;
 		}
@@ -362,7 +364,7 @@ public class ImageImport extends JPanel {
 		
 		//if there is no patch already simply import
 		if(patches.isEmpty()){
-			RhizoAddons.addLayerAndImage(files);
+			RhizoImages.addLayerAndImage(files);
 			return;
 		}
 		

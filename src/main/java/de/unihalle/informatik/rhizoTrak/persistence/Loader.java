@@ -3917,7 +3917,7 @@ while (it.hasNext()) {
 		if (null == project || null == fxml) return null;
 
                 //actyc: if the main project saves, save the addon stuff
-		project.getRhizoAddons().addonSaver(fxml);
+		project.getRhizoMain().getRhizoIO().addonSaver(fxml);
                 
 		releaseToFit(estimateXMLFileSize(fxml));
 
@@ -4103,7 +4103,7 @@ while (it.hasNext()) {
 		//
 		
 		// aeekz - only makes sense if xml file is saved in the storage folder
-		project.getRhizoAddons().imageDir = new File(storage_dir);
+		project.getRhizoMain().getRhizoImages().setImageDir(new File(storage_dir));
 		Utils.log(fxml.getAbsolutePath());
 		
 		return path;

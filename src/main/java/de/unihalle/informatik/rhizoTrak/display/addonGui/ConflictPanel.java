@@ -75,6 +75,7 @@ import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
 import javax.swing.TransferHandler;
 
+import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.Conflict;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConnectorConflict;
@@ -243,7 +244,7 @@ public class ConflictPanel extends JPanel implements ActionListener {
 				Display.getFront().setLayer(layer);
 				//find the interesting treelines and highlight
 				List<Displayable> treelineList = new ArrayList<Displayable>(conflict.getTreelineOne());
-				RhizoAddons.highlight(treelineList,false);
+				RhizoColVis.highlight(treelineList,false);
 				
 				Display.getFront().getFrame().toFront();
 				

@@ -278,7 +278,7 @@ public class Treeline extends Tree<Float> {
 			node.setConfidence((byte) (node.getConfidence() +  inc));
 		}
 		
-		project.getRhizoAddons().applyCorrespondingColor();
+		project.getRhizoMain().getRhizoColVis().applyCorrespondingColor();
 		return nearest;
 	}
 

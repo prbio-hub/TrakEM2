@@ -139,6 +139,7 @@ import org.scijava.vecmath.Color3f;
 import org.scijava.vecmath.Point3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.analysis.Centrality;
 import de.unihalle.informatik.rhizoTrak.analysis.Vertex;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
@@ -1112,8 +1113,8 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	/** Also sets the last visited and the receiver node. This is a GUI method. */
 	protected Layer toClosestPaintedNode(final Layer active_layer, final float wx, final float wy, final double magnification) {
 		final Node<T> nd = findClosestNodeW(getNodesToPaint(active_layer), wx, wy, magnification);
-                RhizoAddons rhizoAddons = Display.getFront().getProject().getRhizoAddons();
-                ConflictManager conflictManager = rhizoAddons.getConflictManager();
+                RhizoMain rhizoMain = Display.getFront().getProject().getRhizoMain();
+                ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
                 if (null != nd) {
 			
 			//actyc: check if your in a solving situation and the tree is helpful
@@ -1758,8 +1759,8 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 						//addNode(nearest, found, Node.MAX_EDGE_CONFIDENCE);
 						addNode(nearest, found, nearest.getConfidence());
 						
-						project.getRhizoAddons().lastEditedOrActiveNode = found; // Tino - aeekz
-						project.getRhizoAddons().applyCorrespondingColor();
+						project.getRhizoMain().getRhizoAddons().lastEditedOrActiveNode = found; // Tino - aeekz
+						project.getRhizoMain().getRhizoColVis().applyCorrespondingColor();
 						
 						//actyc: new node inherits highlight status
 						found.high(nearest.high());
@@ -1775,10 +1776,10 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				root = createNewNode(x_p, y_p, layer, null); // world coords, so calculateBoundingBox will do the right thing
 				addNode(null, root, (byte)0);
 				
-				if(project.getRhizoAddons().lastEditedOrActiveNode != null)// Tino - aeekz 
+				if(project.getRhizoMain().getRhizoAddons().lastEditedOrActiveNode != null)// Tino - aeekz 
 				{
 					@SuppressWarnings("unchecked")
-					Node<T> temp = (Node<T>) project.getRhizoAddons().lastEditedOrActiveNode;
+					Node<T> temp = (Node<T>) project.getRhizoMain().getRhizoAddons().lastEditedOrActiveNode;
 					root.setConfidence(temp.getConfidence());
 					root.setData(temp.getData());
 				}
@@ -1792,7 +1793,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				if(this.getClass().equals(Treeline.class)){
 					Utils.log("active node in the parent tree: "+ this.last_visited);
 					this.marked = this.last_visited;
-					project.getRhizoAddons().mergeTool(layer, x_p, y_p,mag, (Treeline.RadiusNode) this.last_visited, (Treeline) this,me);
+					project.getRhizoMain().getRhizoAddons().mergeTool(layer, x_p, y_p,mag, (Treeline.RadiusNode) this.last_visited, (Treeline) this,me);
 					//RhizoAddons.mergeActive=false; //deprecated
 					return;
 				}
@@ -2199,11 +2200,11 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 
 			Node<T> n = adjustEdgeConfidence(rotation > 0 ? 1 : -1, x, y, la, dc);
 
-			project.getRhizoAddons().applyCorrespondingColor(); // Tino - aeekz
+			project.getRhizoMain().getRhizoColVis().applyCorrespondingColor(); // Tino - aeekz
 		
 			if(n != null)
 			{
-				project.getRhizoAddons().lastEditedOrActiveNode = n;
+				project.getRhizoMain().getRhizoAddons().lastEditedOrActiveNode = n;
 			}
 			
 			Display.repaint(this);
@@ -2223,7 +2224,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 			node.setConfidence((byte) (node.getConfidence() +  inc));
 		}
 		
-		project.getRhizoAddons().applyCorrespondingColor();
+		project.getRhizoMain().getRhizoColVis().applyCorrespondingColor();
 		return nearest;
 	}
 
