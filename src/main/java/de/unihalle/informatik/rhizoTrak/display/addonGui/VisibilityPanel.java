@@ -73,7 +73,7 @@ import javax.swing.event.ChangeListener;
 
 import de.unihalle.informatik.rhizoTrak.addon.RhizoIO;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
-import de.unihalle.informatik.rhizoTrak.config.Config.StatusList.Status;
+import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 public class VisibilityPanel extends JPanel 

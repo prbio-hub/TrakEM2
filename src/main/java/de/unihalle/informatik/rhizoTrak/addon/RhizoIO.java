@@ -18,12 +18,12 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import de.unihalle.informatik.rhizoTrak.Project;
-import de.unihalle.informatik.rhizoTrak.config.Config;
-import de.unihalle.informatik.rhizoTrak.config.GlobalSettings;
-import de.unihalle.informatik.rhizoTrak.config.Config.StatusList;
-import de.unihalle.informatik.rhizoTrak.config.Config.StatusList.Status;
-import de.unihalle.informatik.rhizoTrak.config.GlobalSettings.GlobalStatusList;
-import de.unihalle.informatik.rhizoTrak.config.GlobalSettings.GlobalStatusList.GlobalStatus;
+import de.unihalle.informatik.rhizoTrak.xsd.config.Config;
+import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings;
+import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList;
+import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
+import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.GlobalStatusList;
+import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.GlobalStatusList.GlobalStatus;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;

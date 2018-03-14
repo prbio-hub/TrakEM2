@@ -4,3 +4,4 @@ target/
 .project
 .settings
 .classpath
+src/main/java/de/unihalle/informatik/rhizoTrak/xsd/*

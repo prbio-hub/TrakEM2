@@ -5,18 +5,21 @@
 Diese Datei wurde mit der JavaTM Architecture for XML Binding(JAXB) Reference Implementation, v2.2.11 generiert 
 Siehe <a href="http://java.sun.com/xml/jaxb">http://java.sun.com/xml/jaxb</a> 
 Änderungen an dieser Datei gehen bei einer Neukompilierung des Quellschemas verloren. 
-Generiert: 2018.03.14 um 08:10:58 PM CET 
+Generiert: 2018.03.15 um 12:09:09 AM CET 
 
   -->
   <jaxb:bindings scd="x-schema::">
     <jaxb:schemaBindings map="false">
-      <jaxb:package name="de.unihalle.informatik.rhizoTrak.config"/>
+      <jaxb:package name="de.unihalle.informatik.rhizoTrak.xsd.config"/>
     </jaxb:schemaBindings>
+    <jaxb:bindings scd="RhizoTrakProjectConfig">
+      <jaxb:class ref="de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig"/>
+    </jaxb:bindings>
     <jaxb:bindings scd="config">
-      <jaxb:class ref="de.unihalle.informatik.rhizoTrak.config.Config"/>
+      <jaxb:class ref="de.unihalle.informatik.rhizoTrak.xsd.config.Config"/>
     </jaxb:bindings>
     <jaxb:bindings scd="globalSettings">
-      <jaxb:class ref="de.unihalle.informatik.rhizoTrak.config.GlobalSettings"/>
+      <jaxb:class ref="de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings"/>
     </jaxb:bindings>
   </jaxb:bindings>
 </jaxb:bindings>

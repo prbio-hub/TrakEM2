@@ -258,7 +258,7 @@
 		  <url>https://raw.githubusercontent.com/RootSystemML/RSMLValidator/master/rsml.xsd</url>
 		</schema>
 	      </schemas>
-	      <generatePackage>de.unihalle.informatik.rhizoTrak.rsml</generatePackage>
+	      <generatePackage>de.unihalle.informatik.rhizoTrak.xsd.rsml</generatePackage>
 	      <writeCode>true</writeCode>
 	      <noFileHeader>false</noFileHeader>
 	      <removeOldOutput>true</removeOldOutput>
@@ -286,9 +286,10 @@
 			<sources>
 				<source>src/main/resources/schemas/config.xsd</source>
 				<source>src/main/resources/schemas/settings.xsd</source>
+				<source>src/main/resources/schemas/RhizoTrakProjectConfig.xsd</source>
 			</sources>
 			<clearOutputDir>false</clearOutputDir>
-			<packageName>de.unihalle.informatik.rhizoTrak.config</packageName>
+			<packageName>de.unihalle.informatik.rhizoTrak.xsd.config</packageName>
 		</configuration>
 	</plugin>
 
