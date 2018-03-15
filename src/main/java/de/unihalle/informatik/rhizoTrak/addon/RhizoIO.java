@@ -203,6 +203,13 @@ public class RhizoIO
 				de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status newStatus = sl.get(i);
 				oldStatus.setFullName(  newStatus.getFullName());
 				oldStatus.setAbbreviation( newStatus.getAbbreviation());
+				oldStatus.setRed(BigInteger.valueOf(255));
+				oldStatus.setGreen(BigInteger.valueOf(255));
+				oldStatus.setBlue(BigInteger.valueOf(0));
+				oldStatus.setAlpha(BigInteger.valueOf(255));
+				oldStatus.setSelectable(true);
+				
+				
 				statusMap.put(i, oldStatus);
 			}
 
