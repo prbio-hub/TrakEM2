@@ -143,47 +143,17 @@ public class VisibilityPanel extends JPanel
 		
 		HashMap<Integer, Status> map = rhizoMain.getRhizoIO().getStatusMap();
 		
-		for(int i: map.keySet())
-		{
-			System.out.println("XX " + i + "  " + map.get(i).getFullName());
-			Status s = map.get(i);
-			JPanel panel = new JPanel();
-			panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
-			
-			String temp = s.getAbbreviation()+" | "+s.getFullName();
-			JLabel lab = new JLabel(temp);
-			panel.add(lab);
-			
-			// workaround TODO: find max dimensions
-			panel.add(Box.createRigidArea(new Dimension(80 - Utils.getDimensions(temp, UIManager.getFont("Label.font")).width, 0)));
-			
-			JSlider slider = new JSlider();
-			slider.setMinimum(0);
-			slider.setName(Integer.toString(i));
-			slider.setMaximum(255);
-			slider.setValue(s.getAlpha().intValue());
-			slider.addChangeListener(sliderAction);
-			panel.add(slider);
-			
-			JCheckBox checkBox = new JCheckBox("", true);
-			checkBox.setActionCommand(Integer.toString(i));
-			checkBox.addActionListener(clickablityAction);
-			panel.add(checkBox);
-			
-			JButton button = new JButton();
-			button.setActionCommand(Integer.toString(i));
-			button.addActionListener(colorChangeButton);
-			button.setMaximumSize(new java.awt.Dimension(33, 15));
-			button.setMinimumSize(new java.awt.Dimension(33, 15));
-			button.setPreferredSize(new java.awt.Dimension(33, 12));
-			button.setContentAreaFilled(false);
-			button.setOpaque(true);
-			button.setBackground(rhizoMain.getRhizoIO().getColorFromStatusMap(i));
-			panel.add(button);
-
-			add(panel);
-			if(i == rhizoMain.getRhizoIO().getStatusMapSize()) add(new JSeparator());
+		// first add user definable status labels
+		for(int i: map.keySet()) {
+			if ( i>= 0 ) addStatus( i, map);
 		}               
+		
+		add(new JSeparator());
+		
+		// then add the fixed labes
+		for(int i: map.keySet()) {
+			if ( i < 0 ) addStatus( i, map);
+		}  
 		
 		// add highlighting color
 		JPanel panel = new JPanel();
@@ -195,7 +165,7 @@ public class VisibilityPanel extends JPanel
         jLabel.setMinimumSize(new java.awt.Dimension(12, 14));
         jLabel.setPreferredSize(new java.awt.Dimension(120, 14));
         panel.add(jLabel);
-
+        
         JButton jButton = new JButton();
         jButton.setActionCommand( HIGHLIGHTCOLOR1ACTIONSTRING);
         jButton.addActionListener(colorChangeButton);
@@ -210,6 +180,45 @@ public class VisibilityPanel extends JPanel
         add(panel);
 	}
         
+	private void addStatus( int i, HashMap<Integer, Status> map) {
+		Status s = map.get(i);
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+
+		String temp = s.getAbbreviation()+" | "+s.getFullName();
+		JLabel lab = new JLabel(temp);
+		panel.add(lab);
+
+		// workaround TODO: find max dimensions
+		panel.add(Box.createRigidArea(new Dimension(80 - Utils.getDimensions(temp, UIManager.getFont("Label.font")).width, 0)));
+
+		JSlider slider = new JSlider();
+		slider.setMinimum(0);
+		slider.setName(Integer.toString(i));
+		slider.setMaximum(255);
+		slider.setValue(s.getAlpha().intValue());
+		slider.addChangeListener(sliderAction);
+		panel.add(slider);
+
+		JCheckBox checkBox = new JCheckBox("", true);
+		checkBox.setActionCommand(Integer.toString(i));
+		checkBox.addActionListener(clickablityAction);
+		panel.add(checkBox);
+
+		JButton button = new JButton();
+		button.setActionCommand(Integer.toString(i));
+		button.addActionListener(colorChangeButton);
+		button.setMaximumSize(new java.awt.Dimension(33, 15));
+		button.setMinimumSize(new java.awt.Dimension(33, 15));
+		button.setPreferredSize(new java.awt.Dimension(33, 12));
+		button.setContentAreaFilled(false);
+		button.setOpaque(true);
+		button.setBackground(rhizoMain.getRhizoIO().getColorFromStatusMap(i));
+		panel.add(button);
+
+		add(panel);
+	}
+	
 	// Color change button action
 	Action colorChangeButton = new AbstractAction("colorChangeButton") {
 		public void actionPerformed(ActionEvent e) {
