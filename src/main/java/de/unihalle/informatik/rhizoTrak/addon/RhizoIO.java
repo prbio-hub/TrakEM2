@@ -126,8 +126,17 @@ public class RhizoIO
 			globalStatusList.addAll(gs.getGlobalStatusList().getGlobalStatus());
 			Utils.log(globalStatusList.size());
 
-			rhizoMain.getRhizoColVis().setHighlightColor1( settingsToColor( gs.getHighlightcolorList().getColor().get( 0)));
-			rhizoMain.getRhizoColVis().setHighlightColor2( settingsToColor( gs.getHighlightcolorList().getColor().get( 1)));
+			if(null == gs.getHighlightcolorList())
+			{
+				rhizoMain.getRhizoColVis().setHighlightColor1(Color.CYAN);
+				rhizoMain.getRhizoColVis().setHighlightColor2(Color.CYAN);
+			}
+			else
+			{
+				rhizoMain.getRhizoColVis().setHighlightColor1( settingsToColor( gs.getHighlightcolorList().getColor().get( 0)));
+				rhizoMain.getRhizoColVis().setHighlightColor2( settingsToColor( gs.getHighlightcolorList().getColor().get( 1)));
+			}
+
 
 			updateStatusMap();
 		} 
