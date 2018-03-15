@@ -2,6 +2,7 @@ package de.unihalle.informatik.rhizoTrak.addon;
 
 import java.awt.GridLayout;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -239,7 +240,7 @@ class Segment
 	
 	private void calculate()
 	{
-		this.length = Math.sqrt(Math.pow(child.getX() - parent.getX(), 2) + Math.pow(child.getY() - parent.getY(), 2)) * scale;
+		this.length = Math.sqrt(Math.pow(parent.getX() - child.getX(), 2) + Math.pow(parent.getY() - child.getY(), 2)) * scale;
 		this.avgRadius = (r1 + r2) / 2;
 		double s = Math.sqrt(Math.pow((r1 - r2), 2) + Math.pow(this.length, 2));
 		this.surfaceArea = (Math.PI * Math.pow(r1, 2) + Math.PI * Math.pow(r2, 2) + Math.PI * s * (r1 + r2));
@@ -280,6 +281,7 @@ class Segment
 		return result;
 	}
 	
+	// TODO: add checks for division by zero
 	public boolean checkNodesInImage()
 	{
 		// no image
@@ -288,6 +290,7 @@ class Segment
 		ImagePlus image = p.getImagePlus();
 		
 		AffineTransform at = t.getAffineTransform();
+		
 		Point2D p1 = at.transform(new Point2D.Float(parent.getX(), parent.getY()), null);
 		Point2D p2 = at.transform(new Point2D.Float(child.getX(), child.getY()), null);
 		
@@ -298,45 +301,70 @@ class Segment
 		// both nodes are outside
 		else if((p1.getX() > image.getWidth() || p1.getY() > image.getHeight()) && (p2.getX() > image.getWidth() || p2.getY() > image.getHeight())) return false; 
 		// parent node is outside, child is inside
-		else if((p1.getX() > image.getWidth() || p1.getY() > image.getHeight()) && (p2.getX() < image.getWidth() || p2.getY() < image.getHeight()))
+		else if((p1.getX() > image.getWidth() || p1.getY() > image.getHeight()) && (p2.getX() < image.getWidth() && p2.getY() < image.getHeight()))
 		{
-			double m = (p1.getY() - p2.getY())/(p1.getX() - p2.getX());
-			double b = p1.getY() + m*p1.getX();
-			
-			if(p1.getX() > image.getWidth())
+			try
 			{
-				double newY = m*image.getWidth() + b;
-				parent = new RadiusNode(image.getWidth(), (float) newY, layer, 1.0f);
-				calculate();
-				return true;
-			}			
-			if(p1.getY() > image.getHeight())
+				double m = 0;
+				if(p1.getX() - p2.getX() != 0) m = (p1.getY() - p2.getY())/(p1.getX() - p2.getX());
+				double b = p1.getY() - m*p1.getX();
+				
+				if(p1.getX() > image.getWidth())
+				{
+					double newY = m*image.getWidth() + b;
+					
+					Point2D newPoint = at.inverseTransform(new Point2D.Double(image.getWidth(), newY), null);
+					parent = new RadiusNode((float) newPoint.getX(), (float) newPoint.getY(), layer, parent.getData());
+					calculate();
+					return true;
+				}			
+				if(p1.getY() > image.getHeight())
+				{
+					double newX = (image.getHeight() - b) / m;
+					
+					Point2D newPoint = at.inverseTransform(new Point2D.Double(newX, image.getHeight()), null);
+					parent = new RadiusNode((float) newPoint.getX(), (float) newPoint.getY(), layer, parent.getData());
+					calculate();
+					return true;
+				}
+			} 
+			catch (NoninvertibleTransformException e)
 			{
-				double newX = (image.getHeight() - b) / m;
-				parent = new RadiusNode((float) newX, image.getHeight(), layer, 1.0f);
-				calculate();
-				return true;
+				e.printStackTrace();
 			}
+
 		}
 		// child node is outside, parent is inside
-		else if((p1.getX() < image.getWidth() || p1.getY() < image.getHeight()) && (p2.getX() > image.getWidth() || p2.getY() > image.getHeight()))
+		else if((p1.getX() < image.getWidth() && p1.getY() < image.getHeight()) && (p2.getX() > image.getWidth() || p2.getY() > image.getHeight()))
 		{
-			double m = (p1.getY() - p2.getY())/(p1.getX() - p2.getX());
-			double b = p1.getY() + m*p1.getX();
-			
-			if(p2.getX() > image.getWidth())
+			try
 			{
-				double newY = m*image.getWidth() + b;
-				parent = new RadiusNode(image.getWidth(), (float) newY, layer, 1.0f);
-				calculate();
-				return true;
-			}			
-			if(p2.getY() > image.getHeight())
+				double m = 0;
+				if(p1.getX() - p2.getX() != 0) m = (p1.getY() - p2.getY())/(p1.getX() - p2.getX());
+				double b = p1.getY() - m*p1.getX();
+				
+				if(p2.getX() > image.getWidth())
+				{
+					double newY = m*image.getWidth() + b;
+					
+					Point2D newPoint = at.inverseTransform(new Point2D.Double(image.getWidth(), newY), null);
+					child = new RadiusNode((float) newPoint.getX(), (float) newPoint.getY(), layer, parent.getData());
+					calculate();
+					return true;
+				}			
+				if(p2.getY() > image.getHeight())
+				{
+					double newX = (image.getHeight() - b) / m;
+					
+					Point2D newPoint = at.inverseTransform(new Point2D.Double(newX, image.getHeight()), null);
+					child = new RadiusNode((float) newPoint.getX(), (float) newPoint.getY(), layer, parent.getData());
+					calculate();
+					return true;
+				}
+			}
+			catch (NoninvertibleTransformException e)
 			{
-				double newX = (image.getHeight() - b) / m;
-				parent = new RadiusNode((float) newX, image.getHeight(), layer, 1.0f);
-				calculate();
-				return true;
+				e.printStackTrace();
 			}
 		}
 
