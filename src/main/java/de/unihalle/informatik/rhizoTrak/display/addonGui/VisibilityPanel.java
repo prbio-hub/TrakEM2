@@ -73,6 +73,7 @@ import javax.swing.event.ChangeListener;
 
 import de.unihalle.informatik.rhizoTrak.addon.RhizoIO;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
@@ -90,6 +91,8 @@ public class VisibilityPanel extends JPanel
 	private JPanel jPanelNames;
         
 	private RhizoMain rhizoMain = null;
+	
+	static private String HIGHLIGHTCOLOR1ACTIONSTRING ="highlightcolor1";
 
 	public VisibilityPanel(RhizoMain rhizoMain)
 	{
@@ -142,6 +145,7 @@ public class VisibilityPanel extends JPanel
 		
 		for(int i: map.keySet())
 		{
+			System.out.println("XX " + i + "  " + map.get(i).getFullName());
 			Status s = map.get(i);
 			JPanel panel = new JPanel();
 			panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
@@ -179,24 +183,61 @@ public class VisibilityPanel extends JPanel
 
 			add(panel);
 			if(i == rhizoMain.getRhizoIO().getStatusMapSize()) add(new JSeparator());
-		}
+		}               
 		
+		// add highlighting color
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+		
+        JLabel jLabel = new JLabel();
+        jLabel.setText("Highlighting color");
+        jLabel.setMaximumSize(new java.awt.Dimension(500, 100));
+        jLabel.setMinimumSize(new java.awt.Dimension(12, 14));
+        jLabel.setPreferredSize(new java.awt.Dimension(120, 14));
+        panel.add(jLabel);
+
+        JButton jButton = new JButton();
+        jButton.setActionCommand( HIGHLIGHTCOLOR1ACTIONSTRING);
+        jButton.addActionListener(colorChangeButton);
+        jButton.setMaximumSize(new java.awt.Dimension(33, 15));
+        jButton.setMinimumSize(new java.awt.Dimension(33, 15));
+        jButton.setPreferredSize(new java.awt.Dimension(33, 12));
+        jButton.setContentAreaFilled(false);
+        jButton.setOpaque(true);
+        jButton.setBackground( rhizoMain.getRhizoColVis().getHighlightColor1());
+        panel.add(jButton);
+        
+        add(panel);
 	}
         
 	// Color change button action
 	Action colorChangeButton = new AbstractAction("colorChangeButton") {
 		public void actionPerformed(ActionEvent e) {
-			int index = Integer.parseInt(e.getActionCommand());
+			
+			Status s = null;
+			int index = 0;
+			if ( e.getActionCommand().equals( HIGHLIGHTCOLOR1ACTIONSTRING)) {
+				
+			} else {
+				index = Integer.parseInt(e.getActionCommand());
+				s = rhizoMain.getRhizoIO().getStatusMap().get(index);
+			}
+			
+			
 			JButton source = (JButton) e.getSource();
 
 			Color selectedColor = JColorChooser.showDialog(source, "Choose color", Color.WHITE);
 			if (selectedColor != null) 
 			{
-				Status s = rhizoMain.getRhizoIO().getStatusMap().get(index);
-				s.setRed(BigInteger.valueOf(selectedColor.getRed()));
-				s.setGreen(BigInteger.valueOf(selectedColor.getGreen()));
-				s.setBlue(BigInteger.valueOf(selectedColor.getBlue()));
-				rhizoMain.getRhizoIO().putStatus(index, s);
+				if ( s == null ) {
+					rhizoMain.getRhizoColVis().setHighlightColor1( new Color( 
+							selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue()));
+				} else {	
+					s.setRed(BigInteger.valueOf(selectedColor.getRed()));
+					s.setGreen(BigInteger.valueOf(selectedColor.getGreen()));
+					s.setBlue(BigInteger.valueOf(selectedColor.getBlue()));
+					rhizoMain.getRhizoIO().putStatus(index, s);
+				}
 
 				rhizoMain.getRhizoColVis().applyCorrespondingColor();
 				source.setBackground(selectedColor);

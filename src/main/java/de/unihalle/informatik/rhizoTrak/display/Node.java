@@ -1280,8 +1280,9 @@ public abstract class Node<T> implements Taggable {
                     return Color.LIGHT_GRAY;     
                 }
 		Color result = this.rhizoMain.getRhizoIO().getColorFromStatusMap(this.getConfidence());
-		if(high[0]) return Color.MAGENTA; // Tino - may be temporary
-		if(high[1]) return Color.PINK;
+
+		if(high[0]) return rhizoMain.getRhizoColVis().getHighlightColor1();
+		if(high[1]) return rhizoMain.getRhizoColVis().getHighlightColor2();
 		return result;
 	}
         

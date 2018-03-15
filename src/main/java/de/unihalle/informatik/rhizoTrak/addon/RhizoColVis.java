@@ -22,6 +22,9 @@ public class RhizoColVis
 	private JFrame colorFrame;
 	
 	private RhizoMain rhizoMain;
+	
+	private Color highlightColor1 = Color.MAGENTA;
+	private Color highlightColor2 = Color.PINK;
 
 	public RhizoColVis(RhizoMain rhizoMain)
 	{
@@ -191,4 +194,32 @@ public class RhizoColVis
         rhizoMain.getRhizoIO().clearColorVisibilityLists();
     	colorFrame.dispose();
     }
+
+	/**
+	 * @return the highlightColor1
+	 */
+	public Color getHighlightColor1() {
+		return highlightColor1;
+	}
+
+	/**
+	 * @param highlightColor1 the highlightColor1 to set
+	 */
+	public void setHighlightColor1(Color highlightColor1) {
+		this.highlightColor1 = highlightColor1;
+	}
+
+	/**
+	 * @return the highlightColor2
+	 */
+	public Color getHighlightColor2() {
+		return highlightColor2;
+	}
+
+	/**
+	 * @param highlightColor2 the highlightColor2 to set
+	 */
+	public void setHighlightColor2(Color highlightColor2) {
+		this.highlightColor2 = highlightColor2;
+	}
 }
