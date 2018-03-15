@@ -37,7 +37,10 @@ public class RhizoIO
 {
 
 	public static final int FIXEDSTATUSSIZE = 3;
-	
+	public static final int STATUS_UNDEFINED = -1;
+	public static final int STATUS_VIRTUAL = -2;
+	public static final int STATUS_CONNECTOR = -3;
+			
 	private RhizoMain rhizoMain;
 	
 	public static File userSettingsFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings.xml");
@@ -680,7 +683,7 @@ public class RhizoIO
 		undefined.setBlue(BigInteger.valueOf(255));
 		undefined.setGreen(BigInteger.valueOf(0));
 		undefined.setAlpha(BigInteger.valueOf(255));
-		statusMap.put(-1, undefined);
+		statusMap.put(STATUS_UNDEFINED, undefined);
 
 		Status virtual = new Status();
 		virtual.setFullName("VIRTUAL");
@@ -689,7 +692,7 @@ public class RhizoIO
 		virtual.setBlue(BigInteger.valueOf(255));
 		virtual.setGreen(BigInteger.valueOf(0));
 		virtual.setAlpha(BigInteger.valueOf(255));
-		statusMap.put(-2, virtual);
+		statusMap.put(STATUS_VIRTUAL, virtual);
 
 		Status connector = new Status();
 		connector.setFullName("CONNECTOR");
@@ -698,7 +701,7 @@ public class RhizoIO
 		connector.setBlue(BigInteger.valueOf(255));
 		connector.setGreen(BigInteger.valueOf(0));
 		connector.setAlpha(BigInteger.valueOf(255));
-		statusMap.put(-3, connector);
+		statusMap.put(STATUS_CONNECTOR, connector);
 	}
 
 
