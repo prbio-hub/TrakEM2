@@ -23,6 +23,7 @@ import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings;
 import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.GlobalStatusList;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.GlobalStatusList.GlobalStatus;
+import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList;
 import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
@@ -118,23 +119,33 @@ public class RhizoIO
 			return;
 		}
 
-		try 
-		{
+		try {
 			JAXBContext context = JAXBContext.newInstance(GlobalSettings.class);
-                        Unmarshaller um = context.createUnmarshaller();
-                        GlobalSettings gs = (GlobalSettings) um.unmarshal(userSettingsFile);
-                        globalStatusList.addAll(gs.getGlobalStatusList().getGlobalStatus());
-                        Utils.log(globalStatusList.size());
-	        
-	        updateStatusMap();
+			Unmarshaller um = context.createUnmarshaller();
+			GlobalSettings gs = (GlobalSettings) um.unmarshal(userSettingsFile);
+			globalStatusList.addAll(gs.getGlobalStatusList().getGlobalStatus());
+			Utils.log(globalStatusList.size());
+
+			rhizoMain.getRhizoColVis().setHighlightColor1( settingsToColor( gs.getHighlightcolorList().getColor().get( 0)));
+			rhizoMain.getRhizoColVis().setHighlightColor2( settingsToColor( gs.getHighlightcolorList().getColor().get( 1)));
+
+			updateStatusMap();
 		} 
 		catch (JAXBException e) 
 		{
+			Utils.showMessage( "cannot load user settings from config file " + userSettingsFile.getPath());
 			e.printStackTrace();
 		}
 	}
 	
 	
+	private Color settingsToColor(
+			de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color colorSettings) {
+		Color color = new Color( colorSettings.getRed().intValue(), colorSettings.getGreen().intValue(), colorSettings.getBlue().intValue());
+		return color;
+	}
+
+
 	/**
 	 * Updates the local status map with the global user settings
 	 * @author Tino
@@ -385,14 +396,12 @@ public class RhizoIO
 		List<String> temp = new ArrayList<String>();
 		
 		// global status list
-		for(GlobalStatus s: globalStatusList)
-		{
+		for(GlobalStatus s: globalStatusList) { 
 			temp.add(s.getFullName());
 		}
 		
 		// local status list
-		for(Status s: statusMap.values())
-		{
+		for(Status s: statusMap.values()) {
 			if(!temp.contains(s.getFullName())) // add new global status
 			{
 				GlobalStatus gStatus = new GlobalStatus();
@@ -405,13 +414,9 @@ public class RhizoIO
 				gStatus.setSelectable(s.isSelectable());
 			
 				globalStatusList.add(gStatus);
-			}
-			else // update existing global status
-			{
-				for(GlobalStatus g: globalStatusList)
-				{
-					if(g.getFullName().equals(s.getFullName()))
-					{
+			} else  {// update existing global status
+				for(GlobalStatus g: globalStatusList) {
+					if(g.getFullName().equals(s.getFullName())) {
 						g.setAbbreviation(s.getAbbreviation());
 						g.setRed(s.getRed());
 						g.setGreen(s.getGreen());
@@ -423,6 +428,14 @@ public class RhizoIO
 			}
 		}
 		
+		// highlight colors
+		List<de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color> highligthColorList =
+				new ArrayList<de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color>(2);
+		
+		
+		highligthColorList.add( colorToSettings( rhizoMain.getRhizoColVis().getHighlightColor1()));
+		highligthColorList.add( colorToSettings( rhizoMain.getRhizoColVis().getHighlightColor2()));
+
 		try
 		{
 			if(!userSettingsFile.getParentFile().exists()) userSettingsFile.getParentFile().mkdirs();
@@ -435,16 +448,34 @@ public class RhizoIO
 	        GlobalStatusList gsl = new GlobalStatusList();
 	        gsl.getGlobalStatus().addAll(globalStatusList);
 	        
+	        HighlightcolorList hlc = new HighlightcolorList();
+			hlc.getColor().addAll( highligthColorList);
+	        
 	        GlobalSettings gs = new GlobalSettings();
 	        gs.setGlobalStatusList(gsl);
+	        gs.setHighlightcolorList(hlc);
 			
 			m.marshal(gs, userSettingsFile);
 		}
 		catch(Exception e) 
 		{
+			Utils.showMessage( "cannot write user settings to " + userSettingsFile.getPath());
 			e.printStackTrace();
 		}
+	}
+	
+	/** convert a awt Color to the xsd representation in user settings
+	 * @param color
+	 * @return
+	 */
+	private de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color colorToSettings( Color color) {
+		de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color colorSettings = 
+				new de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color();
+		colorSettings.setRed( BigInteger.valueOf( color.getRed()));
+		colorSettings.setGreen( BigInteger.valueOf( color.getGreen()));
+		colorSettings.setBlue( BigInteger.valueOf( color.getBlue()));
 		
+		return colorSettings;
 	}
 	
     /**
