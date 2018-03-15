@@ -82,10 +82,6 @@ public class RhizoStatistics
 		Layer currentLayer = display.getLayer();
 		LayerSet currentLayerSet = currentLayer.getParent();
 
-//		Utils.log(currentLayerSet.getAll(Patch.class).size());
-//		Utils.log(currentLayerSet.get(Treeline.class).size());
-//		Utils.log(currentLayerSet.get(Connector.class).size());
-		
 		List<Displayable> processedTreelines = new ArrayList<Displayable>();
 		List<Displayable> trees = null;
 		List<Segment> allSegments = new ArrayList<Segment>();		
@@ -103,8 +99,9 @@ public class RhizoStatistics
 
 			for(Treeline ctree: treelines)
 			{
-				if(null == ctree || null == ctree.getRoot()) continue;
-				if(processedTreelines.contains(ctree)) continue;
+				if(null == ctree || null == ctree.getRoot()) continue; // empty treelines
+				if(processedTreelines.contains(ctree)) continue; // already processed treelines
+				if(!trees.contains(ctree)) continue; // when current layer only is selected
 				
 				trees.remove(ctree);
 
