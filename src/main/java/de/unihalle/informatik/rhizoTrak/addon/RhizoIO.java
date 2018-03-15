@@ -20,10 +20,10 @@ import javax.xml.bind.Unmarshaller;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.xsd.config.Config;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings;
-import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList;
 import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.GlobalStatusList;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.GlobalStatusList.GlobalStatus;
+import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
@@ -185,33 +185,52 @@ public class RhizoIO
 		
 		if(!configFile.exists())
 		{
+			Utils.showMessage( "config file " + configFile.getPath() + " not found: using default settings");
 			setDefaultStatus();
 			return;
 		}
+
 		
-		
-		try 
-		{
-			JAXBContext context = JAXBContext.newInstance(Config.class);
-	        Unmarshaller um = context.createUnmarshaller();
-	        Config config = (Config) um.unmarshal(configFile);
-	        List<Status> sl = config.getStatusList().getStatus();
-	        
-	        for(int i = 0; i < sl.size(); i++)
-	        {
-	        	statusMap.put(i, sl.get(i));
-	        }
-	        
-	        setFixedStatus();
-	        updateStatusMap();
-		} 
-		catch (JAXBException e) 
-		{
-			e.printStackTrace();
+		try {
+			JAXBContext context = JAXBContext.newInstance(RhizoTrakProjectConfig.class);
+			Unmarshaller um = context.createUnmarshaller();
+			RhizoTrakProjectConfig config = (RhizoTrakProjectConfig) um.unmarshal(configFile);
+			List<de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status> sl = config.getStatusList().getStatus();
+
+			for(int i = 0; i < sl.size(); i++)
+			{
+				Status oldStatus = new Status();
+				de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status newStatus = sl.get(i);
+				oldStatus.setFullName(  newStatus.getFullName());
+				oldStatus.setAbbreviation( newStatus.getAbbreviation());
+				statusMap.put(i, oldStatus);
+			}
+
+			setFixedStatus();
+			updateStatusMap();
+		} catch (JAXBException e) {    
+			try {
+				JAXBContext context = JAXBContext.newInstance(Config.class);
+				Unmarshaller um = context.createUnmarshaller();
+				Config config = (Config) um.unmarshal(configFile);
+				List<Status> sl = config.getStatusList().getStatus();
+
+				for(int i = 0; i < sl.size(); i++)
+				{
+					statusMap.put(i, sl.get(i));
+				}
+
+				setFixedStatus();
+				updateStatusMap();
+			} catch (JAXBException e1) 		{
+				Utils.showMessage( "cannot parse config file " + configFile.getPath() + ": using default settings");
+				setDefaultStatus();
+
+			}
 		}
 
 		Node.MAX_EDGE_CONFIDENCE = getStatusMapSize();
-	}
+		}
 	
     //TODO: needs to be recode for non-static behavior
     /**
@@ -322,18 +341,23 @@ public class RhizoIO
 		
 		try 
 		{
-			JAXBContext context = JAXBContext.newInstance(Config.class);
+			JAXBContext context = JAXBContext.newInstance(RhizoTrakProjectConfig.class);
                         Marshaller m = context.createMarshaller();
                         m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 	        
-	        StatusList sl = new StatusList();
-	        for(int i: statusMap.keySet())
-	        {
+            de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList sl = 
+                        		new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList();
+	        for(int i: statusMap.keySet()) 	        {
 	        	// ignore undefined, virtual and connector
-	        	if(i >= 0) sl.getStatus().add(statusMap.get(i));
+	        	Status oldStatus = statusMap.get(i);
+	        	de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status newStatus =
+	        			new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status();
+	        	newStatus.setFullName( oldStatus.getFullName());
+	        	newStatus.setAbbreviation( oldStatus.getAbbreviation());
+	        	if(i >= 0) sl.getStatus().add( newStatus);
 	        }
 
-	        Config config = new Config();
+	        RhizoTrakProjectConfig config = new RhizoTrakProjectConfig();
 	        config.setStatusList(sl);
 	        
 	        m.marshal(config, configFile);
