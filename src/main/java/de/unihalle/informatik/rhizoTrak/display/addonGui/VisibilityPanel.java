@@ -92,8 +92,8 @@ public class VisibilityPanel extends JPanel
         
 	private RhizoMain rhizoMain = null;
 	
-	static private String HIGHLIGHTCOLOR1ACTIONSTRING1 ="Highlightcolor 1";
-	static private String HIGHLIGHTCOLOR1ACTIONSTRING2 ="Highlightcolor 2";
+	static private final String HIGHLIGHTCOLOR1ACTIONSTRING1 ="Highlightcolor 1";
+	static private final String HIGHLIGHTCOLOR1ACTIONSTRING2 ="Highlightcolor 2";
 
 
 	public VisibilityPanel(RhizoMain rhizoMain)
