@@ -23,6 +23,7 @@ import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings;
 import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.GlobalStatusList;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.GlobalStatusList.GlobalStatus;
+import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList;
 import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
@@ -36,7 +37,10 @@ public class RhizoIO
 {
 
 	public static final int FIXEDSTATUSSIZE = 3;
-	
+	public static final int STATUS_UNDEFINED = -1;
+	public static final int STATUS_VIRTUAL = -2;
+	public static final int STATUS_CONNECTOR = -3;
+			
 	private RhizoMain rhizoMain;
 	
 	public static File userSettingsFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings.xml");
@@ -118,23 +122,42 @@ public class RhizoIO
 			return;
 		}
 
-		try 
-		{
+		try {
 			JAXBContext context = JAXBContext.newInstance(GlobalSettings.class);
-                        Unmarshaller um = context.createUnmarshaller();
-                        GlobalSettings gs = (GlobalSettings) um.unmarshal(userSettingsFile);
-                        globalStatusList.addAll(gs.getGlobalStatusList().getGlobalStatus());
-                        Utils.log(globalStatusList.size());
-	        
-	        updateStatusMap();
+			Unmarshaller um = context.createUnmarshaller();
+			GlobalSettings gs = (GlobalSettings) um.unmarshal(userSettingsFile);
+			globalStatusList.addAll(gs.getGlobalStatusList().getGlobalStatus());
+			Utils.log(globalStatusList.size());
+
+			if(null == gs.getHighlightcolorList())
+			{
+				rhizoMain.getRhizoColVis().setHighlightColor1(Color.MAGENTA);
+				rhizoMain.getRhizoColVis().setHighlightColor2(Color.PINK);
+			}
+			else
+			{
+				rhizoMain.getRhizoColVis().setHighlightColor1( settingsToColor( gs.getHighlightcolorList().getColor().get( 0)));
+				rhizoMain.getRhizoColVis().setHighlightColor2( settingsToColor( gs.getHighlightcolorList().getColor().get( 1)));
+			}
+
+
+			updateStatusMap();
 		} 
 		catch (JAXBException e) 
 		{
+			Utils.showMessage( "cannot load user settings from config file " + userSettingsFile.getPath());
 			e.printStackTrace();
 		}
 	}
 	
 	
+	private Color settingsToColor(
+			de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color colorSettings) {
+		Color color = new Color( colorSettings.getRed().intValue(), colorSettings.getGreen().intValue(), colorSettings.getBlue().intValue());
+		return color;
+	}
+
+
 	/**
 	 * Updates the local status map with the global user settings
 	 * @author Tino
@@ -203,6 +226,13 @@ public class RhizoIO
 				de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status newStatus = sl.get(i);
 				oldStatus.setFullName(  newStatus.getFullName());
 				oldStatus.setAbbreviation( newStatus.getAbbreviation());
+				oldStatus.setRed(BigInteger.valueOf(255));
+				oldStatus.setGreen(BigInteger.valueOf(255));
+				oldStatus.setBlue(BigInteger.valueOf(0));
+				oldStatus.setAlpha(BigInteger.valueOf(255));
+				oldStatus.setSelectable(true);
+				
+				
 				statusMap.put(i, oldStatus);
 			}
 
@@ -378,14 +408,12 @@ public class RhizoIO
 		List<String> temp = new ArrayList<String>();
 		
 		// global status list
-		for(GlobalStatus s: globalStatusList)
-		{
+		for(GlobalStatus s: globalStatusList) { 
 			temp.add(s.getFullName());
 		}
 		
 		// local status list
-		for(Status s: statusMap.values())
-		{
+		for(Status s: statusMap.values()) {
 			if(!temp.contains(s.getFullName())) // add new global status
 			{
 				GlobalStatus gStatus = new GlobalStatus();
@@ -398,13 +426,9 @@ public class RhizoIO
 				gStatus.setSelectable(s.isSelectable());
 			
 				globalStatusList.add(gStatus);
-			}
-			else // update existing global status
-			{
-				for(GlobalStatus g: globalStatusList)
-				{
-					if(g.getFullName().equals(s.getFullName()))
-					{
+			} else  {// update existing global status
+				for(GlobalStatus g: globalStatusList) {
+					if(g.getFullName().equals(s.getFullName())) {
 						g.setAbbreviation(s.getAbbreviation());
 						g.setRed(s.getRed());
 						g.setGreen(s.getGreen());
@@ -416,6 +440,14 @@ public class RhizoIO
 			}
 		}
 		
+		// highlight colors
+		List<de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color> highligthColorList =
+				new ArrayList<de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color>(2);
+		
+		
+		highligthColorList.add( colorToSettings( rhizoMain.getRhizoColVis().getHighlightColor1()));
+		highligthColorList.add( colorToSettings( rhizoMain.getRhizoColVis().getHighlightColor2()));
+
 		try
 		{
 			if(!userSettingsFile.getParentFile().exists()) userSettingsFile.getParentFile().mkdirs();
@@ -428,16 +460,34 @@ public class RhizoIO
 	        GlobalStatusList gsl = new GlobalStatusList();
 	        gsl.getGlobalStatus().addAll(globalStatusList);
 	        
+	        HighlightcolorList hlc = new HighlightcolorList();
+			hlc.getColor().addAll( highligthColorList);
+	        
 	        GlobalSettings gs = new GlobalSettings();
 	        gs.setGlobalStatusList(gsl);
+	        gs.setHighlightcolorList(hlc);
 			
 			m.marshal(gs, userSettingsFile);
 		}
 		catch(Exception e) 
 		{
+			Utils.showMessage( "cannot write user settings to " + userSettingsFile.getPath());
 			e.printStackTrace();
 		}
+	}
+	
+	/** convert a awt Color to the xsd representation in user settings
+	 * @param color
+	 * @return
+	 */
+	private de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color colorToSettings( Color color) {
+		de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color colorSettings = 
+				new de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color();
+		colorSettings.setRed( BigInteger.valueOf( color.getRed()));
+		colorSettings.setGreen( BigInteger.valueOf( color.getGreen()));
+		colorSettings.setBlue( BigInteger.valueOf( color.getBlue()));
 		
+		return colorSettings;
 	}
 	
     /**
@@ -493,7 +543,7 @@ public class RhizoIO
 	{
 		GlobalStatus undefined = new GlobalStatus();
 		undefined.setFullName("UNDEFINED");
-		undefined.setAbbreviation("U");
+		undefined.setAbbreviation("*");
 		undefined.setRed(BigInteger.valueOf(0));
 		undefined.setGreen(BigInteger.valueOf(255));
 		undefined.setBlue(BigInteger.valueOf(255));
@@ -503,7 +553,7 @@ public class RhizoIO
 		
 		GlobalStatus connector = new GlobalStatus();
 		connector.setFullName("CONNECTOR");
-		connector.setAbbreviation("C");
+		connector.setAbbreviation("@");
 		connector.setRed(BigInteger.valueOf(0));
 		connector.setGreen(BigInteger.valueOf(255));
 		connector.setBlue(BigInteger.valueOf(255));
@@ -513,7 +563,7 @@ public class RhizoIO
 		
 		GlobalStatus virtual = new GlobalStatus();
 		virtual.setFullName("VIRTUAL");
-		virtual.setAbbreviation("V");
+		virtual.setAbbreviation("-");
 		virtual.setRed(BigInteger.valueOf(0));
 		virtual.setGreen(BigInteger.valueOf(255));
 		virtual.setBlue(BigInteger.valueOf(255));
@@ -628,30 +678,30 @@ public class RhizoIO
 		// Standard status - always included
 		Status undefined = new Status();
 		undefined.setFullName("UNDEFINED");
-		undefined.setAbbreviation("U");
+		undefined.setAbbreviation("*");
 		undefined.setRed(BigInteger.valueOf(255));
 		undefined.setBlue(BigInteger.valueOf(255));
 		undefined.setGreen(BigInteger.valueOf(0));
 		undefined.setAlpha(BigInteger.valueOf(255));
-		statusMap.put(-1, undefined);
+		statusMap.put(STATUS_UNDEFINED, undefined);
 
 		Status virtual = new Status();
 		virtual.setFullName("VIRTUAL");
-		virtual.setAbbreviation("V");
+		virtual.setAbbreviation("-");
 		virtual.setRed(BigInteger.valueOf(255));
 		virtual.setBlue(BigInteger.valueOf(255));
 		virtual.setGreen(BigInteger.valueOf(0));
 		virtual.setAlpha(BigInteger.valueOf(255));
-		statusMap.put(-2, virtual);
+		statusMap.put(STATUS_VIRTUAL, virtual);
 
 		Status connector = new Status();
 		connector.setFullName("CONNECTOR");
-		connector.setAbbreviation("C");
+		connector.setAbbreviation("@");
 		connector.setRed(BigInteger.valueOf(255));
 		connector.setBlue(BigInteger.valueOf(255));
 		connector.setGreen(BigInteger.valueOf(0));
 		connector.setAlpha(BigInteger.valueOf(255));
-		statusMap.put(-3, connector);
+		statusMap.put(STATUS_CONNECTOR, connector);
 	}
 
 

@@ -77,10 +77,12 @@ import java.util.TreeSet;
 import org.scijava.vecmath.Point3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoIO;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.M;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
+import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
 
 /** Can only have one parent, so there aren't cyclic graphs. */
 public abstract class Node<T> implements Taggable {
@@ -121,16 +123,9 @@ public abstract class Node<T> implements Taggable {
 	public byte getConfidence() 
 	{
 		if(!rhizoAddonsExists()){
-			return MAX_EDGE_CONFIDENCE;
+			return confidence;
 		}
-		if(confidence > rhizoMain.getRhizoIO().getStatusMapSize())
-		{
-			return rhizoMain.getRhizoIO().getStatusMapSize();
-		}
-		else
-		{
-			return confidence;    
-		}
+		return confidence;
 	}
 
 	protected Layer la;
@@ -426,8 +421,15 @@ public abstract class Node<T> implements Taggable {
 				// aeekz actyc
 				
 				int i = (int) this.getConfidence();
-				if(i > rhizoMain.getRhizoIO().getStatusMapSize()) Utils.log("@Node: confidence is higher than status list size");
-				String s = rhizoMain.getRhizoIO().getStatusMap().get(i).getAbbreviation();
+//				if(i > rhizoMain.getRhizoIO().getStatusMapSize()) Utils.log("@Node: confidence is higher than status list size");
+//				String s = rhizoMain.getRhizoIO().getStatusMap().get(i).getAbbreviation();
+				Status status = rhizoMain.getRhizoIO().getStatusMap().get(i);
+				String s;
+				if ( status != null ) {
+					s = status.getAbbreviation();
+				} else {
+					s = rhizoMain.getRhizoIO().getStatusMap().get( RhizoIO.STATUS_UNDEFINED).getAbbreviation();
+				}
 				
 				final Dimension dim = Utils.getDimensions(s, g.getFont());
 				g.setColor(Color.white);
@@ -1280,8 +1282,9 @@ public abstract class Node<T> implements Taggable {
                     return Color.LIGHT_GRAY;     
                 }
 		Color result = this.rhizoMain.getRhizoIO().getColorFromStatusMap(this.getConfidence());
-		if(high[0]) return Color.MAGENTA; // Tino - may be temporary
-		if(high[1]) return Color.PINK;
+
+		if(high[0]) return rhizoMain.getRhizoColVis().getHighlightColor1();
+		if(high[1]) return rhizoMain.getRhizoColVis().getHighlightColor2();
 		return result;
 	}
         

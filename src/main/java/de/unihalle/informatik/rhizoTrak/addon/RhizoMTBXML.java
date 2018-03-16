@@ -5,8 +5,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -19,6 +21,7 @@ import de.unihalle.informatik.MiToBo_xml.MTBXMLRootProjectDocument;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootProjectType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootReferenceType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentPointType;
+import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentStatusType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootType;
 import de.unihalle.informatik.rhizoTrak.Project;
@@ -36,6 +39,7 @@ import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
+import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
 import ij.ImagePlus;
 
 public class RhizoMTBXML
@@ -220,16 +224,16 @@ public class RhizoMTBXML
 				rootSegment.setEndPoint(xmlEnd);
 				rootSegment.setEndRadius(endRadius);
 				
-				// TODO: this is temporary
-//				if(statusFileExists && n.getConfidence() < statusList.size())
-//				{
-//					String status = statusList.get(n.getConfidence());
-//					if(status.equals("DEAD")) rootSegment.setType(MTBXMLRootSegmentStatusType.DEAD);
-//					else if(status.equals("DECAYED")) rootSegment.setType(MTBXMLRootSegmentStatusType.DECAYED);
-//					else if(status.equals("GAP")) rootSegment.setType(MTBXMLRootSegmentStatusType.GAP);
-//					else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING);
-//				}
-//				else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING); // TODO: custom status vs enums?
+				LinkedHashMap<Integer, Status> statusMap = rhizoMain.getRhizoIO().getStatusMap();
+				if(null != statusMap.get((int) n.getConfidence()))
+				{
+					String statusName = statusMap.get((int) n.getConfidence()).getFullName();
+					if(statusName.equals("DEAD")) rootSegment.setType(MTBXMLRootSegmentStatusType.DEAD);
+					else if(statusName.equals("DECAYED")) rootSegment.setType(MTBXMLRootSegmentStatusType.DECAYED);
+					else if(statusName.equals("GAP")) rootSegment.setType(MTBXMLRootSegmentStatusType.GAP);
+					else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING);
+				}
+				else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING);
 				
 				rootSegmentsArray[i] = rootSegment;
 			}
@@ -303,6 +307,21 @@ public class RhizoMTBXML
 		
 		try 
 		{
+			LinkedHashMap<Integer, Status> statusMap = rhizoMain.getRhizoIO().getStatusMap();
+
+			// error if default status is not defined
+			List<String> fullNames = new ArrayList<String>();
+			for(int i: statusMap.keySet())
+			{
+				fullNames.add(statusMap.get(i).getFullName());
+			}
+			
+			if(!fullNames.contains("LIVING") || !fullNames.contains("DEAD") || !fullNames.contains("DECAYED") || !fullNames.contains("GAP"))
+			{
+				Utils.showMessage("ERROR: not all default status are defined. Cancelling MTBXML import.");
+				return;
+			}
+			
 			MTBXMLRootProjectDocument rootProjectDocument = MTBXMLRootProjectDocument.Factory.parse(file);
 			MTBXMLRootProjectType rootProject = rootProjectDocument.getMTBXMLRootProject();
 			MTBXMLRootImageAnnotationType[] rootSets = rootProject.getCollectionOfImageAnnotationsArray();
@@ -327,6 +346,7 @@ public class RhizoMTBXML
 				rootProject = rootProjectDocument.getMTBXMLRootProject();
 				rootSets = rootProject.getCollectionOfImageAnnotationsArray();
 			}
+			
 			
 			/* catch exceptions:
 			 * - check resolution 
@@ -359,7 +379,7 @@ public class RhizoMTBXML
 	    			Treeline treeline = (Treeline) treelineThing.getObject();
 	    			treeline.setLayer(currentLayer);
 	    			
-	    			// TODO: this is a workaround for the repainting issues that occur when creating a new nodes out of a mtbxml file
+	    			// TODO: this is a workaround for the repainting issues that occur when creating new nodes out of a mtbxml file
 	    			currentLayer.mtbxml = true;
 	    			
 	    			MTBXMLRootSegmentType[] rootSegments = currentRoot.getRootSegmentsArray();
@@ -391,19 +411,17 @@ public class RhizoMTBXML
 	    			{
 	    				MTBXMLRootSegmentType currentRootSegment = rootSegments[k];
 	    				
-    					// TODO: this is temporary
-	    				byte s = 0;
-	    				
-//	    				if(statusFileExists)
-//	    				{
-//		    				if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.LIVING) s = (byte) statusList.indexOf("LIVING");
-//		    				else if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.DEAD) s = (byte) statusList.indexOf("DEAD");
-//		    				else if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.GAP) s = (byte) statusList.indexOf("GAP");
-//		    				else if(currentRootSegment.getType() == MTBXMLRootSegmentStatusType.DECAYED) s = (byte) statusList.indexOf("DECAYED");
-//	    				}
+    					// assuming that default status are defined
+	    				byte s = -1;
 
-    					if(s == -1) s = 0;
-	    				
+	    				for(int index: statusMap.keySet())
+	    				{
+	    					String statusName = statusMap.get(index).getFullName();
+	    					if(statusName.equals("LIVING") && currentRootSegment.getType() == MTBXMLRootSegmentStatusType.LIVING) s = (byte) index;
+	    					else if(statusName.equals("DEAD") && currentRootSegment.getType() == MTBXMLRootSegmentStatusType.DEAD) s = (byte) index;
+	    					else if(statusName.equals("GAP") && currentRootSegment.getType() == MTBXMLRootSegmentStatusType.GAP) s = (byte) index;
+	    					else if(statusName.equals("DECAYED") && currentRootSegment.getType() == MTBXMLRootSegmentStatusType.DECAYED) s = (byte) index;
+	    				}
 
 	    				if(currentRootSegment.getParentID() == -1)
 	    				{

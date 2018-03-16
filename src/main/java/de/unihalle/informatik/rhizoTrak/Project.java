@@ -864,6 +864,10 @@ public class Project extends DBObject {
 					String path = save();
 					this.getRhizoMain().getRhizoIO().addonSaver(new File(path));
 				}
+				else
+				{
+					this.getRhizoMain().getRhizoIO().saveUserSettings();
+				}
 			} else {
 				Utils.log2("WARNING: closing project '" + title  + "' with unsaved changes.");
 			}

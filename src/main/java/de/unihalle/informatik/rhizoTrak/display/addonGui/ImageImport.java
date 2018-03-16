@@ -160,7 +160,7 @@ public class ImageImport extends JPanel {
 		jPanel1.setLayout(new GridLayout(3, 1));
 		
 
-		jButton1.setText("Open Images");
+		jButton1.setText("Select Images");
 		jButton1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				jButton1ActionPerformed(evt);

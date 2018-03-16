@@ -73,6 +73,7 @@ import javax.swing.event.ChangeListener;
 
 import de.unihalle.informatik.rhizoTrak.addon.RhizoIO;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
@@ -90,6 +91,10 @@ public class VisibilityPanel extends JPanel
 	private JPanel jPanelNames;
         
 	private RhizoMain rhizoMain = null;
+	
+	static private final String HIGHLIGHTCOLOR1ACTIONSTRING1 ="Highlightcolor 1";
+	static private final String HIGHLIGHTCOLOR1ACTIONSTRING2 ="Highlightcolor 2";
+
 
 	public VisibilityPanel(RhizoMain rhizoMain)
 	{
@@ -140,64 +145,116 @@ public class VisibilityPanel extends JPanel
 		
 		HashMap<Integer, Status> map = rhizoMain.getRhizoIO().getStatusMap();
 		
-		for(int i: map.keySet())
-		{
-			Status s = map.get(i);
-			JPanel panel = new JPanel();
-			panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
-			
-			String temp = s.getAbbreviation()+" | "+s.getFullName();
-			JLabel lab = new JLabel(temp);
-			panel.add(lab);
-			
-			// workaround TODO: find max dimensions
-			panel.add(Box.createRigidArea(new Dimension(80 - Utils.getDimensions(temp, UIManager.getFont("Label.font")).width, 0)));
-			
-			JSlider slider = new JSlider();
-			slider.setMinimum(0);
-			slider.setName(Integer.toString(i));
-			slider.setMaximum(255);
-			slider.setValue(s.getAlpha().intValue());
-			slider.addChangeListener(sliderAction);
-			panel.add(slider);
-			
-			JCheckBox checkBox = new JCheckBox("", true);
-			checkBox.setActionCommand(Integer.toString(i));
-			checkBox.addActionListener(clickablityAction);
-			panel.add(checkBox);
-			
-			JButton button = new JButton();
-			button.setActionCommand(Integer.toString(i));
-			button.addActionListener(colorChangeButton);
-			button.setMaximumSize(new java.awt.Dimension(33, 15));
-			button.setMinimumSize(new java.awt.Dimension(33, 15));
-			button.setPreferredSize(new java.awt.Dimension(33, 12));
-			button.setContentAreaFilled(false);
-			button.setOpaque(true);
-			button.setBackground(rhizoMain.getRhizoIO().getColorFromStatusMap(i));
-			panel.add(button);
-
-			add(panel);
-			if(i == rhizoMain.getRhizoIO().getStatusMapSize()) add(new JSeparator());
-		}
+		// first add user definable status labels
+		for(int i: map.keySet()) {
+			if ( i>= 0 ) addStatus( i, map);
+		}               
 		
+		add(new JSeparator());
+		
+		// then add the fixed labes
+		for(int i: map.keySet()) {
+			if ( i < 0 ) addStatus( i, map);
+		}  
+		
+		// add highlighting color
+		add(new JSeparator());
+		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING1, rhizoMain.getRhizoColVis().getHighlightColor1());
+		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING2, rhizoMain.getRhizoColVis().getHighlightColor2());
+		
+		add(new JSeparator());
 	}
         
+	private void addStatus( int i, HashMap<Integer, Status> map) {
+		Status s = map.get(i);
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+
+		String temp = s.getAbbreviation()+" | "+s.getFullName();
+		JLabel lab = new JLabel(temp);
+		panel.add(lab);
+
+		// workaround TODO: find max dimensions
+		panel.add(Box.createRigidArea(new Dimension(80 - Utils.getDimensions(temp, UIManager.getFont("Label.font")).width, 0)));
+
+		JSlider slider = new JSlider();
+		slider.setMinimum(0);
+		slider.setName(Integer.toString(i));
+		slider.setMaximum(255);
+		slider.setValue(s.getAlpha().intValue());
+		slider.addChangeListener(sliderAction);
+		panel.add(slider);
+
+		JCheckBox checkBox = new JCheckBox("", true);
+		checkBox.setActionCommand(Integer.toString(i));
+		checkBox.addActionListener(clickablityAction);
+		panel.add(checkBox);
+
+		JButton button = new JButton();
+		button.setActionCommand(Integer.toString(i));
+		button.addActionListener(colorChangeButton);
+		button.setMaximumSize(new java.awt.Dimension(33, 15));
+		button.setMinimumSize(new java.awt.Dimension(33, 15));
+		button.setPreferredSize(new java.awt.Dimension(33, 12));
+		button.setContentAreaFilled(false);
+		button.setOpaque(true);
+		button.setBackground(rhizoMain.getRhizoIO().getColorFromStatusMap(i));
+		panel.add(button);
+
+		add(panel);
+	}
+	
+	private void addHighlightColor( String label, Color color) {
+		// add highlighting color
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+
+		JLabel jLabel = new JLabel();
+		jLabel.setText( label);
+		jLabel.setMaximumSize(new java.awt.Dimension(500, 100));
+		jLabel.setMinimumSize(new java.awt.Dimension(12, 14));
+		jLabel.setPreferredSize(new java.awt.Dimension(120, 14));
+		panel.add(jLabel);
+
+		JButton jButton = new JButton();
+		jButton.setActionCommand( label);
+		jButton.addActionListener(colorChangeButton);
+		jButton.setMaximumSize(new java.awt.Dimension(33, 15));
+		jButton.setMinimumSize(new java.awt.Dimension(33, 15));
+		jButton.setPreferredSize(new java.awt.Dimension(33, 12));
+		jButton.setContentAreaFilled(false);
+		jButton.setOpaque(true);
+		jButton.setBackground( color);
+		panel.add(jButton);
+
+		add(panel);
+	}
+	
 	// Color change button action
+	@SuppressWarnings("serial")
 	Action colorChangeButton = new AbstractAction("colorChangeButton") {
 		public void actionPerformed(ActionEvent e) {
-			int index = Integer.parseInt(e.getActionCommand());
 			JButton source = (JButton) e.getSource();
-
 			Color selectedColor = JColorChooser.showDialog(source, "Choose color", Color.WHITE);
-			if (selectedColor != null) 
-			{
-				Status s = rhizoMain.getRhizoIO().getStatusMap().get(index);
-				s.setRed(BigInteger.valueOf(selectedColor.getRed()));
-				s.setGreen(BigInteger.valueOf(selectedColor.getGreen()));
-				s.setBlue(BigInteger.valueOf(selectedColor.getBlue()));
-				rhizoMain.getRhizoIO().putStatus(index, s);
 
+			if (selectedColor != null)  {
+				if ( e.getActionCommand().equals( HIGHLIGHTCOLOR1ACTIONSTRING1) ) {
+					rhizoMain.getRhizoColVis().setHighlightColor1( new Color( 
+							selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue()));
+
+				} else if ( e.getActionCommand().equals( HIGHLIGHTCOLOR1ACTIONSTRING2) ) {
+					rhizoMain.getRhizoColVis().setHighlightColor2( new Color( 
+							selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue()));
+				} else {
+					int index = Integer.parseInt(e.getActionCommand());
+					Status s = rhizoMain.getRhizoIO().getStatusMap().get(index);
+					s.setRed(BigInteger.valueOf(selectedColor.getRed()));
+					s.setGreen(BigInteger.valueOf(selectedColor.getGreen()));
+					s.setBlue(BigInteger.valueOf(selectedColor.getBlue()));
+					rhizoMain.getRhizoIO().putStatus(index, s);
+
+				}
+				
 				rhizoMain.getRhizoColVis().applyCorrespondingColor();
 				source.setBackground(selectedColor);
 			}
