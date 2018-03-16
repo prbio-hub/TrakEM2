@@ -77,18 +77,15 @@ import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
-import javax.swing.filechooser.FileNameExtensionFilter;
-
-import ch.qos.logback.classic.pattern.Util;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoImages;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Patch;
-import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
-import ij.ImagePlus;
 
+@SuppressWarnings("serial")
 public class ImageImport extends JPanel {
+	@SuppressWarnings("unused")
 	private javax.swing.Box.Filler filler1;
 	private javax.swing.JButton jButton1;
 	private javax.swing.JButton jButton2;
@@ -100,7 +97,8 @@ public class ImageImport extends JPanel {
 	private javax.swing.JPanel jPanel1;
 	private javax.swing.JScrollPane jScrollPane1;
 	private javax.swing.DefaultListModel<String> listModel;
-	File[] files;
+	
+	private ArrayList<File> allFiles = new ArrayList<>();
 	
 	//image filter ini: constant_part > constant across all images; sort_part > part that is used to reconstruct the timeline
 	private String filterReg_constant_part = "_(T|t)\\d*";
@@ -225,10 +223,11 @@ public class ImageImport extends JPanel {
 		Component frame = null;
 
 		chooser.showOpenDialog(frame);
-		files = chooser.getSelectedFiles();
+		File[] files = chooser.getSelectedFiles();
 		for (File file : files) {
 			// file.getName();
-			listModel.addElement(file.getName());		
+			listModel.addElement(file.getName());	
+			allFiles.add(file);
 		}
 		jList1.setTransferHandler(new ListTransferHandler());
 	}
@@ -239,7 +238,7 @@ public class ImageImport extends JPanel {
         List<File> reord = new ArrayList<File>();
         int i=0;
         for (Object string : listModel.toArray()) {
-        	for (File file : files) {
+        	for (File file : allFiles) {
 				if(file.getName().equals((String)string)){
 					reord.add(file);
 					Utils.log(string +":"+file.getName());
@@ -249,10 +248,12 @@ public class ImageImport extends JPanel {
 		}
         File[] reordArray = new File[reord.size()];
         reord.toArray(reordArray);
-        files=reordArray;
+//        files=reordArray;
         //adding appropriate number of layer and image
-        RhizoImages.addLayerAndImage(files);
+        
+        RhizoImages.addLayerAndImage( reordArray);
         listModel.clear();
+        allFiles.clear();
         
 	}
 	
@@ -397,10 +398,11 @@ public class ImageImport extends JPanel {
 			}
 		}
 		
+//        File[] importArray = new File[toImport.size()];
+//        toImport.toArray(importArray);
+//        this.files=importArray;
+		allFiles.addAll(toImport);
 		
-        File[] importArray = new File[toImport.size()];
-        toImport.toArray(importArray);
-        this.files=importArray;
 		for(File file : toImport){
 			listModel.addElement(file.getName());
 		}
