@@ -7275,7 +7275,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	
     	
     	JPanel panel = new JPanel();
-    	panel.setLayout(new GridLayout(0, 2)); // n rows 2 columns
+    	panel.setLayout(new GridLayout(0, 1)); // n rows 1 columns
 //    	panel.setBorder(new EmptyBorder(5, 5, 5, 5));
     	
     	JButton copyButton = new JButton("Copy Treelines");
