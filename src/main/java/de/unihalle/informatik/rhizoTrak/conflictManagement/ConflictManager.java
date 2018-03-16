@@ -549,7 +549,7 @@ public class ConflictManager
             	if(cTreelines.size()>1)
             	{
             		conflictCount=conflictCount+(cTreelines.size()-1);
-            		result = result + "layer: " + cLayer.getId() +" treelines: ";
+            		result = result + "layer: " + (cLayer.getParent().getLayerIndex(cLayer.getId())+1) +" treelines: ";
             		for (Treeline treeline : cTreelines) {
 						result = result + treeline.getId()+"; ";
 					}
