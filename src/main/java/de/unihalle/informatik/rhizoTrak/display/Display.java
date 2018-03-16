@@ -149,7 +149,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
+import javax.imageio.ImageIO;
 import javax.swing.DefaultBoundedRangeModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
@@ -6420,6 +6422,43 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			Display.getFront().getProject().getRhizoMain().getRhizoStatistics().writeStatistics();
 		}
 		else if(command.equals("aboutRhizo")){
+			// initialize the icon
+			String iconDataName = "/share/logo/rhizoTrak_logo.png";
+			Image img = null;
+			BufferedImage bi = null;
+			Graphics g = null;
+			InputStream is = null;
+			ImageIcon rhizoTrakIcon = null;
+			try {
+				ImageIcon icon;
+				File iconDataFile = new File("./" + iconDataName);
+				if(iconDataFile.exists()) {
+					icon = new ImageIcon("./" + iconDataName);
+					img = icon.getImage();
+				}
+				// try to find it inside a jar archive....
+				else {
+					is = Display.class.getResourceAsStream(iconDataName);
+					if (is == null) {
+						System.err.println("Warning - cannot find icons...");
+						img = new BufferedImage(20,20,BufferedImage.TYPE_INT_ARGB);
+					}
+					else {
+						img = ImageIO.read(is);
+					}
+					bi= new BufferedImage(20,20,BufferedImage.TYPE_INT_ARGB);
+					g = bi.createGraphics();
+					g.drawImage(img, 0, 0, 20, 20, null);
+				}
+			} catch (IOException ex) {
+				System.err.println("ALDChooseOpNameFrame - problems loading icons...!");
+				img = new BufferedImage(20,20,BufferedImage.TYPE_INT_ARGB);
+				bi= new BufferedImage(20,20,BufferedImage.TYPE_INT_ARGB);
+				g = bi.createGraphics();
+				g.drawImage(img, 0, 0, 20, 20, null);
+			}
+			rhizoTrakIcon = new ImageIcon(img);
+				
 			Object[] options = { "OK" };
 			String year = Integer.toString(Calendar.getInstance().get(Calendar.YEAR));
 			String[] releaseInfos = Display.getReleaseInfosFromJar();
@@ -6432,12 +6471,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		    + "Martin Luther University Halle-Wittenberg<p>"
 		    + "Institute of Computer Science, Faculty of Natural Sciences III<p><p>"
 		    + "Email: rhizoTrak@informatik.uni-halle.de<p>"
-		    + "Internet: <i>https://github.com/prbio-hub/rhizoTrak</i><p>"
+		    + "Internet: <i>https://github.com/prbio-hub/rhizoTrak/wiki</i><p>"
 		    + "License: GPL 3.0, <i>http://www.gnu.org/licenses/gpl.html</i></html>";
 
 			JOptionPane.showOptionDialog(null, new JLabel(msg),
 				"Information about rhizoTrak", JOptionPane.DEFAULT_OPTION,
-			  	JOptionPane.INFORMATION_MESSAGE, null, //ALDIcon.getInstance().getIcon(), 
+			  	JOptionPane.INFORMATION_MESSAGE, rhizoTrakIcon, 
 			  		options, options[0]);
 		}
 		// rhizo commands end
