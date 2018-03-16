@@ -131,8 +131,8 @@ public class RhizoIO
 
 			if(null == gs.getHighlightcolorList())
 			{
-				rhizoMain.getRhizoColVis().setHighlightColor1(Color.CYAN);
-				rhizoMain.getRhizoColVis().setHighlightColor2(Color.CYAN);
+				rhizoMain.getRhizoColVis().setHighlightColor1(Color.MAGENTA);
+				rhizoMain.getRhizoColVis().setHighlightColor2(Color.PINK);
 			}
 			else
 			{
@@ -543,7 +543,7 @@ public class RhizoIO
 	{
 		GlobalStatus undefined = new GlobalStatus();
 		undefined.setFullName("UNDEFINED");
-		undefined.setAbbreviation("U");
+		undefined.setAbbreviation("*");
 		undefined.setRed(BigInteger.valueOf(0));
 		undefined.setGreen(BigInteger.valueOf(255));
 		undefined.setBlue(BigInteger.valueOf(255));
@@ -553,7 +553,7 @@ public class RhizoIO
 		
 		GlobalStatus connector = new GlobalStatus();
 		connector.setFullName("CONNECTOR");
-		connector.setAbbreviation("C");
+		connector.setAbbreviation("@");
 		connector.setRed(BigInteger.valueOf(0));
 		connector.setGreen(BigInteger.valueOf(255));
 		connector.setBlue(BigInteger.valueOf(255));
@@ -563,7 +563,7 @@ public class RhizoIO
 		
 		GlobalStatus virtual = new GlobalStatus();
 		virtual.setFullName("VIRTUAL");
-		virtual.setAbbreviation("V");
+		virtual.setAbbreviation("-");
 		virtual.setRed(BigInteger.valueOf(0));
 		virtual.setGreen(BigInteger.valueOf(255));
 		virtual.setBlue(BigInteger.valueOf(255));
@@ -678,7 +678,7 @@ public class RhizoIO
 		// Standard status - always included
 		Status undefined = new Status();
 		undefined.setFullName("UNDEFINED");
-		undefined.setAbbreviation("U");
+		undefined.setAbbreviation("*");
 		undefined.setRed(BigInteger.valueOf(255));
 		undefined.setBlue(BigInteger.valueOf(255));
 		undefined.setGreen(BigInteger.valueOf(0));
@@ -687,7 +687,7 @@ public class RhizoIO
 
 		Status virtual = new Status();
 		virtual.setFullName("VIRTUAL");
-		virtual.setAbbreviation("V");
+		virtual.setAbbreviation("-");
 		virtual.setRed(BigInteger.valueOf(255));
 		virtual.setBlue(BigInteger.valueOf(255));
 		virtual.setGreen(BigInteger.valueOf(0));
@@ -696,7 +696,7 @@ public class RhizoIO
 
 		Status connector = new Status();
 		connector.setFullName("CONNECTOR");
-		connector.setAbbreviation("C");
+		connector.setAbbreviation("@");
 		connector.setRed(BigInteger.valueOf(255));
 		connector.setBlue(BigInteger.valueOf(255));
 		connector.setGreen(BigInteger.valueOf(0));

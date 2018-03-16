@@ -179,14 +179,6 @@ public class ConflictPanel extends JPanel implements ActionListener {
 			Utils.log("Update button pressed");
 			updateList();
 			break;
-		
-		case "autoResolveNonAggressiv":
-			conflictManager.autoResolveConnectorConnflicts(false);
-			break;
-			
-		case "autoResolveAggressiv":
-			conflictManager.autoResolveConnectorConnflicts(true);
-			break;
 			
 		case "solve":
 			solveButton();
@@ -259,10 +251,11 @@ public class ConflictPanel extends JPanel implements ActionListener {
 				jButton4.setBackground(new Color(255, 0, 0));
 
 				ArrayList<Connector> connectorList = conflict.getConnectorList();
-				int goAhead = conflictManager.userInteraction(new HashSet<Connector>(connectorList),true);
+				int goAhead = conflictManager.solveInteraction(new HashSet<Connector>(connectorList));
 				if(goAhead==1) 
 				{
 					conflictManager.resolve(new HashSet<Connector>(connectorList));
+					conflictManager.abortCurrentSolving();
 				}
 				if(goAhead==0)
 				{

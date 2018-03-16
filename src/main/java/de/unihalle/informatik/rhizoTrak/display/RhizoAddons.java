@@ -404,7 +404,7 @@ public class RhizoAddons
 				HashSet<Treeline> treelineSet = new HashSet<Treeline>();
 				treelineSet.add(parentTl);
 				treelineSet.add(target);
-				int goAhead=conflictManager.userInteractionTree(treelineSet);
+				int goAhead=conflictManager.mergeInteraction(parentTl, target);
 				if(goAhead==0)
 				{
 					parentTl.unmark();
@@ -504,13 +504,17 @@ public class RhizoAddons
 						return;
 					}
 				}
+				//gather the know relevant connectors
 				HashSet<Connector> connectorSet = new HashSet<Connector>();
 				connectorSet.add(parentConnector);
 				List<TreeEventListener> tel = target.getTreeEventListener();
 				for (TreeEventListener treeEventListener : tel) {
 					connectorSet.add(treeEventListener.getConnector());
 				}
-				int goAhead = conflictManager.userInteraction(connectorSet,false);
+				//add the target temporarily and check the situation then remove the target			
+				int goAhead = conflictManager.addInteraction(connectorSet,target);				
+				
+				//act accordingly to the user reaction
 				if(goAhead==1 || goAhead==2 || goAhead==3) {
 					parentConnector.addConTreeline(target);
 					display.setActive(parentConnector);
