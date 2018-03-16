@@ -141,133 +141,220 @@ public class ConflictManager
 		}
 	}
 	
-	//auto resolve to minimize multiple connector conflicts if possible
-	public void autoResolveConnectorConnflicts(boolean aggressive)
-	{
-		if(!aggressive)
+//	//auto resolve to minimize multiple connector conflicts if possible
+//	public void autoResolveConnectorConnflicts(boolean aggressive)
+//	{
+//		if(!aggressive)
+//		{
+//			//so only solve cases if no new treeconflict will arise aka max one connected tree per layer
+//			
+//			ArrayList<ConnectorConflict> conflictsList = new ArrayList<ConnectorConflict>(connectorConflictHash.values());
+//			while(conflictsList.size()>0)
+//			{
+//				//as long as there are conflicts to solve
+//				ConnectorConflict currentConflict = conflictsList.get(0);
+//				ArrayList<Connector> currentConnectorList = currentConflict.getConnectorList();
+//				HashMap<Layer,Connector> conflictAtlas = new HashMap<Layer,Connector>();
+//				boolean isSolvable=true;
+//				for(Connector currentConnector: currentConnectorList)
+//				{
+//					//for every connector in the current conflict > try to find if there are more than max one connected tree
+//					ArrayList<Treeline> currentTreelineList = currentConnector.getConTreelines();
+//					for(Treeline currentTreeline: currentTreelineList)
+//					{
+//						Layer currentLayer = currentTreeline.getFirstLayer();
+//						//check if its really resolvable so the non max one is not the current conflict point and and its already taken and the connectors aren't in a subset situation
+//						if(conflictAtlas.containsKey(currentLayer) && currentLayer!=currentConflict.getConflictTree().getFirstLayer() && !conflictAtlas.get(currentLayer).getConTreelines().contains(currentTreeline))
+//						{
+//							isSolvable=false;
+//						}
+//						conflictAtlas.put(currentLayer, currentConnector);
+//					}
+//				}
+//				if(isSolvable)
+//				{
+//					//its solvable so we need to find the most upper connector as the future parent to be.
+//					Set<Layer> keySet =conflictAtlas.keySet();
+//					Layer first = null;
+//					for(Layer currentLayer: keySet)
+//					{
+//						if(first==null)
+//						{
+//							first = currentLayer;
+//						}
+//						if(currentLayer.getZ() < first.getZ())
+//						{
+//							first = currentLayer;
+//						}
+//					}
+//					
+//					Connector parent = conflictAtlas.get(first);
+//					for(Connector currentConnector: currentConnectorList)
+//					{
+//						//for every connector in the current conflict > port treelines to parent
+//						mergeConnector(parent, currentConnector);
+//						
+//					}
+//					//conflictsList = new ArrayList<ConnectorConflict>(connectorConflictHash.values());
+//				}
+//				if(conflictsList.size()>0)
+//				{
+//					conflictsList.remove(0);
+//				}		
+//			}		
+//		}
+//		else
+//		{
+//			//so the goal is to convert multiple connectorconflicts to treeconflicts
+//			
+//			ArrayList<ConnectorConflict> conflictsList = new ArrayList<ConnectorConflict>(connectorConflictHash.values());
+//			while(conflictsList.size()>0)
+//			{
+//				//as long as there are conflicts to solve
+//				ConnectorConflict currentConflict = conflictsList.get(0);
+//				ArrayList<Connector> currentConnectorList = currentConflict.getConnectorList();
+//				HashMap<Layer,Connector> conflictAtlas = new HashMap<Layer,Connector>();
+//				boolean isSolvable=true;
+//				for(Connector currentConnector: currentConnectorList)
+//				{
+//					//for every connector in the current conflict > try to find if there are more than max one connected tree
+//					ArrayList<Treeline> currentTreelineList = currentConnector.getConTreelines();
+//					for(Treeline currentTreeline: currentTreelineList)
+//					{
+//						Layer currentLayer = currentTreeline.getFirstLayer();
+//						conflictAtlas.put(currentLayer, currentConnector);
+//					}
+//				}
+//				if(isSolvable)
+//				{
+//					//its solvable so we need to find the most upper connector as the future parent to be.
+//					Set<Layer> keySet =conflictAtlas.keySet();
+//					Layer first = null;
+//					for(Layer currentLayer: keySet)
+//					{
+//						if(first==null)
+//						{
+//							first = currentLayer;
+//						}
+//						if(currentLayer.getZ() < first.getZ())
+//						{
+//							first = currentLayer;
+//						}
+//					}
+//					
+//					Connector parent = conflictAtlas.get(first);
+//					for(Connector currentConnector: currentConnectorList)
+//					{
+//						//for every connector in the current conflict > port treelines to parent
+//						mergeConnector(parent, currentConnector);
+//						
+//					}
+//					//conflictsList = new ArrayList<ConnectorConflict>(connectorConflictHash.values());
+//				}
+//				if(conflictsList.size()>0)
+//				{
+//					conflictsList.remove(0);
+//				}		
+//			}	
+//		}
+//	}
+       
+	
+		
+		public int mergeInteraction(Treeline parent, Treeline target)
 		{
-			//so only solve cases if no new treeconflict will arise aka max one connected tree per layer
-			
-			ArrayList<ConnectorConflict> conflictsList = new ArrayList<ConnectorConflict>(connectorConflictHash.values());
-			while(conflictsList.size()>0)
+			//possible out comes:
+			//0: user abort the action
+			//3: merge is no problem: only one parent have a connector
+			//1: merge is a small problem that can be auto resolved
+			//1: merge is a big problem that can not be auto resolve
+			HashSet<Connector> connectorSet1 = searchConnectorsOfTreeline(parent);
+			HashSet<Connector> connectorSet2 = searchConnectorsOfTreeline(target);
+			if(connectorSet1.size()==0 || connectorSet2.size()==0 || connectorSet1.equals(connectorSet2))
 			{
-				//as long as there are conflicts to solve
-				ConnectorConflict currentConflict = conflictsList.get(0);
-				ArrayList<Connector> currentConnectorList = currentConflict.getConnectorList();
-				HashMap<Layer,Connector> conflictAtlas = new HashMap<Layer,Connector>();
-				boolean isSolvable=true;
-				for(Connector currentConnector: currentConnectorList)
-				{
-					//for every connector in the current conflict > try to find if there are more than max one connected tree
-					ArrayList<Treeline> currentTreelineList = currentConnector.getConTreelines();
-					for(Treeline currentTreeline: currentTreelineList)
-					{
-						Layer currentLayer = currentTreeline.getFirstLayer();
-						//check if its really resolvable so the non max one is not the current conflict point and and its already taken and the connectors aren't in a subset situation
-						if(conflictAtlas.containsKey(currentLayer) && currentLayer!=currentConflict.getConflictTree().getFirstLayer() && !conflictAtlas.get(currentLayer).getConTreelines().contains(currentTreeline))
-						{
-							isSolvable=false;
-						}
-						conflictAtlas.put(currentLayer, currentConnector);
-					}
-				}
-				if(isSolvable)
-				{
-					//its solvable so we need to find the most upper connector as the future parent to be.
-					Set<Layer> keySet =conflictAtlas.keySet();
-					Layer first = null;
-					for(Layer currentLayer: keySet)
-					{
-						if(first==null)
-						{
-							first = currentLayer;
-						}
-						if(currentLayer.getZ() < first.getZ())
-						{
-							first = currentLayer;
-						}
-					}
-					
-					Connector parent = conflictAtlas.get(first);
-					for(Connector currentConnector: currentConnectorList)
-					{
-						//for every connector in the current conflict > port treelines to parent
-						mergeConnector(parent, currentConnector);
-						
-					}
-					//conflictsList = new ArrayList<ConnectorConflict>(connectorConflictHash.values());
-				}
-				if(conflictsList.size()>0)
-				{
-					conflictsList.remove(0);
-				}		
-			}		
-		}
-		else
-		{
-			//so the goal is to convert multiple connectorconflicts to treeconflicts
+				return 3;
+			}
 			
-			ArrayList<ConnectorConflict> conflictsList = new ArrayList<ConnectorConflict>(connectorConflictHash.values());
-			while(conflictsList.size()>0)
-			{
-				//as long as there are conflicts to solve
-				ConnectorConflict currentConflict = conflictsList.get(0);
-				ArrayList<Connector> currentConnectorList = currentConflict.getConnectorList();
-				HashMap<Layer,Connector> conflictAtlas = new HashMap<Layer,Connector>();
-				boolean isSolvable=true;
-				for(Connector currentConnector: currentConnectorList)
-				{
-					//for every connector in the current conflict > try to find if there are more than max one connected tree
-					ArrayList<Treeline> currentTreelineList = currentConnector.getConTreelines();
-					for(Treeline currentTreeline: currentTreelineList)
-					{
-						Layer currentLayer = currentTreeline.getFirstLayer();
-						conflictAtlas.put(currentLayer, currentConnector);
-					}
-				}
-				if(isSolvable)
-				{
-					//its solvable so we need to find the most upper connector as the future parent to be.
-					Set<Layer> keySet =conflictAtlas.keySet();
-					Layer first = null;
-					for(Layer currentLayer: keySet)
-					{
-						if(first==null)
-						{
-							first = currentLayer;
-						}
-						if(currentLayer.getZ() < first.getZ())
-						{
-							first = currentLayer;
-						}
-					}
-					
-					Connector parent = conflictAtlas.get(first);
-					for(Connector currentConnector: currentConnectorList)
-					{
-						//for every connector in the current conflict > port treelines to parent
-						mergeConnector(parent, currentConnector);
-						
-					}
-					//conflictsList = new ArrayList<ConnectorConflict>(connectorConflictHash.values());
-				}
-				if(conflictsList.size()>0)
-				{
-					conflictsList.remove(0);
-				}		
-			}	
+			connectorSet1.addAll(connectorSet2);
+			Utils.log("ConnectorSet size after combining: "+ connectorSet1.size());
+			int na = canBeCombinedNA(connectorSet1,target);
+    		if(na>0)
+    		{
+    			if(autoResolveNA || na==2)
+    			{        				
+    				//continue and resolve
+    				return 1;
+    			}
+    			else
+    			{
+    				return userDialogNA(connectorSet1);
+    			}
+    		}
+       		else
+    		{
+    			return userDialogA(connectorSet1,target);
+    		}
 		}
-	}
-        
-        //returns false on user abort as a feedback for other methods like merge
-        //precondition: two or more connectors: so a list of Connectors
-        public int userInteraction(HashSet<Connector> initialConnectorSet,boolean fromConflictPanel)
+		
+
+        public int addInteraction(HashSet<Connector> initialConnectorSet,Treeline addTarget)
         {
-        	if(initialConnectorSet.size()<2) 
-        	{
-        		//abort because of no conflict
-        		return 3;
-        	}
+    		//abort because of no conflict#
+    		Connector[] con = initialConnectorSet.toArray(new Connector[0]);
+    		List<Layer> conLayers = con[0].getConnectedLayerList();
+    		if(initialConnectorSet.size()==1) 
+    		{
+        		//if only the recently added is inside its fine
+        		if(con[0].getConTreelines().size()==0) 
+        		{
+        			return 3;
+        		}
+        		//if the target is on a "free"-layer its fine
+        		if(!conLayers.contains(addTarget.getFirstLayer()))
+        		{
+        			return 3;
+        		}
+    		} 
+    		//add the target temporary
+    		con[0].addConTreeline(addTarget);
+            //first thing: update the connector list, so be prepared for the non conflict free case
+    		HashSet<Connector> connectorSet = searchAllConnectors(initialConnectorSet);
+    		//TODO: complain to the user if conectorSet > initialConnectorSet because of unsolved issues
+    		if(connectorSet.size()>initialConnectorSet.size() || connectorSet.size()>2) {
+        		if(Utils.checkYN("It looks like your action interfere with current conflicts.\n It is highly advisable to solve current conflicts before continue. Abort?"))
+        		{
+        			//abort
+        			con[0].removeConTreeline(addTarget);
+        			return 0;
+        		}
+    		}
+            //now check if the connectors can be combined without new conflicts
+    		int na = canBeCombinedNA(connectorSet,null);
+    		if(na==1 || na==2)
+    		{
+    			if(autoResolveNA)
+    			{        				
+    				//continue and resolve
+    				con[0].removeConTreeline(addTarget);
+    				return 1;
+    			}
+    			else
+    			{    				
+    				int result = userDialogNA(connectorSet);
+    				con[0].removeConTreeline(addTarget);
+    				return result;
+    			}
+    		}
+    		else
+    		{
+    			int result = userDialogA(connectorSet,null);
+    			con[0].removeConTreeline(addTarget);
+    			return result;
+    		}
+        }
+        
+        public int solveInteraction(HashSet<Connector> initialConnectorSet)
+        {
             //first thing: update the connector list, so be prepared for the non conflict free case
     		HashSet<Connector> connectorSet = searchAllConnectors(initialConnectorSet);
     		//TODO: complain to the user if conectorSet > initialConnectorSet because of unsolved issues
@@ -279,22 +366,21 @@ public class ConflictManager
         		}
     		}
             //now check if the connectors can be combined without new conflicts
-    		boolean na = canBeCombinedNA(connectorSet);
-    		if(na)
+    		int na = canBeCombinedNA(connectorSet,null);
+    		if(na==1 || na==2)
     		{
-    			if(autoResolveNA || fromConflictPanel)
-    			{        				
-    				//continue and resolve
-    				return 1;
-    			}
-    			else
-    			{
-    				return userDialogNA(connectorSet);
-    			}
+				String message = "Conflict was solved automatically. \n The following connectors were merged in this action: \n";
+	            for(Iterator<Connector> conIt = connectorSet.iterator(); conIt.hasNext();)
+	            {
+	                    Connector cConnector = conIt.next();
+	                    message = message + cConnector.getId()+ "; "; 
+	            }
+    			Utils.showMessage(message);
+    			return 1;
     		}
     		else
     		{
-    			return userDialogA(connectorSet);
+    			return userDialogA(connectorSet,null);
     		}
         }
         
@@ -321,13 +407,14 @@ public class ConflictManager
 			return 0;
         }
         
-        private int userDialogA(HashSet<Connector> connectorSet)
+        
+        private int userDialogA(HashSet<Connector> connectorSet,Treeline target)
         {
     		//check how bad it will be       		
-    		ArrayList<String> report = reportHowBad(connectorSet);
+    		ArrayList<String> report = reportHowBad(connectorSet,target);
     		int conflictCount = Integer.parseInt(report.get(report.size()-1));
     		report.remove(report.size()-1);
-    		String message = "This action will cause " +conflictCount+ " new conflicts that can not be auto-resolved. Continue?"+ "\n" + "conflicts:" + "\n";
+    		String message = "This action will cause " +conflictCount+ " new conflicts that can not be auto-resolved. Continue?"+ "\n" + "Multiple Treeline Conflict(s):" + "\n";
     		for (String string : report) {
 				message = message + string;
 			}
@@ -340,20 +427,21 @@ public class ConflictManager
             return 0;
         }
         
-        public int userInteractionTree(HashSet<Treeline> treelineSet)
-        {
-        	HashSet<Connector> connectorSet = new HashSet<Connector>();
-        	for(Iterator<Treeline> treelineIt = treelineSet.iterator(); treelineIt.hasNext();)
-        	{
-        		Treeline cTreeline = treelineIt.next();
-        		List<TreeEventListener> telList = cTreeline.getTreeEventListener();
-        		for (TreeEventListener tel : telList) {
-					connectorSet.add(tel.getConnector());
-				}
-        		
-        	}
-        	return userInteraction(connectorSet,false);
-        }
+        
+//        public int userInteractionTree(HashSet<Treeline> treelineSet)
+//        {
+//        	HashSet<Connector> connectorSet = new HashSet<Connector>();
+//        	for(Iterator<Treeline> treelineIt = treelineSet.iterator(); treelineIt.hasNext();)
+//        	{
+//        		Treeline cTreeline = treelineIt.next();
+//        		List<TreeEventListener> telList = cTreeline.getTreeEventListener();
+//        		for (TreeEventListener tel : telList) {
+//					connectorSet.add(tel.getConnector());
+//				}
+//        		
+//        	}
+//        	return userInteraction(connectorSet,false,null);
+//        }
         
         public void resolveTree(HashSet<Treeline> treelineSet)
         {
@@ -422,7 +510,7 @@ public class ConflictManager
         	return result;
         }
         
-        private ArrayList<String> reportHowBad(HashSet<Connector> connectorSet) 
+        private ArrayList<String> reportHowBad(HashSet<Connector> connectorSet,Treeline target) 
         {
         	ArrayList<String> finalResult = new ArrayList<String>();
         	Map<Layer,ArrayList<Treeline>> conflictAtlas =  new HashMap<Layer,ArrayList<Treeline>>();
@@ -434,6 +522,8 @@ public class ConflictManager
                     for(Iterator<Treeline> treelineIt = currentTrees.iterator();treelineIt.hasNext();)
                     {
                             Treeline cTreeline = treelineIt.next();
+                            //target treeline is irrelevant because it gets integrated anyway
+                            if(target!= null && cTreeline.equals(target)) continue;
                             Layer cLayer = cTreeline.getFirstLayer();
                             //check if layer is occupied
                             if(conflictAtlas.get(cLayer)==null) {
@@ -471,7 +561,7 @@ public class ConflictManager
         	return finalResult;
         }
         
-        private boolean canBeCombinedNA(HashSet<Connector> connectorSet) 
+        private int canBeCombinedNA(HashSet<Connector> connectorSet,Treeline target) 
         {
         	HashMap<Layer,Treeline> layers = new HashMap<Layer,Treeline>();
             for(Iterator<Connector> conIt = connectorSet.iterator(); conIt.hasNext();)
@@ -482,13 +572,18 @@ public class ConflictManager
                     for(Iterator<Treeline> treelineIt = currentTrees.iterator();treelineIt.hasNext();)
                     {
                             Treeline cTreeline = treelineIt.next();
+                            if(target!=null && target.equals(cTreeline)) continue;
                             Layer cLayer = cTreeline.getFirstLayer();
                             if(layers.get(cLayer)!=null) 
                             {
-                            	if(!layers.get(cLayer).equals(cTreeline)) 
+                            	if(layers.get(cLayer).equals(cTreeline)) 
+                            	{
+                            		//same treeline so no wories
+                            	}
+                            	else
                             	{
                                 	//the layer was already taken by another treeline so no easy solution here
-                                	return false;
+                                	return 0;
                             	}
 
                             }
@@ -498,7 +593,8 @@ public class ConflictManager
                             }
                     }
             }
-        	return true;
+            if(layers.size()==1) return 2; //only one layer so its a simple merge case
+        	return 1; //na possible
         }
         
         private HashSet<Connector> searchAllConnectors(HashSet<Connector> connectorSet)
@@ -530,6 +626,17 @@ public class ConflictManager
                                 connectorSet.add(tel.getConnector());
                         }
                 }               
+                return connectorSet;
+        }
+        
+        private HashSet<Connector> searchConnectorsOfTreeline(Treeline treeline)
+        {
+                HashSet<Connector> connectorSet = new HashSet<>();
+                Treeline cTreeline = treeline;
+                for(TreeEventListener tel: cTreeline.getTreeEventListener())
+                {
+                        connectorSet.add(tel.getConnector());
+                }            
                 return connectorSet;
         }
 	
