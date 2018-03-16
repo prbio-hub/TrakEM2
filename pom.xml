@@ -191,6 +191,27 @@
     <plugins>
 
       <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <version>1.4</version>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>create</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+	  <!-- if doCheck is set to true the plugin will fail if there are locally modified files -->
+          <doCheck>false</doCheck>
+	  <!-- Don't set doUpdate to true as this will modify the local repository! -->
+          <doUpdate>false</doUpdate>
+	  <!-- configure length of Git commit SHAs -->
+	  <shortRevisionLength>10</shortRevisionLength>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
 	<version>3.0.2</version>
@@ -224,6 +245,7 @@
 	          <directory>src/main/resources</directory>
 	          <includes>
                     <include>README.rhizoTrak</include>
+		    <include>revision.txt</include>
                     <exclude>plugins.config</exclude>
 	          </includes>
 	          <filtering>true</filtering>
