@@ -208,7 +208,7 @@
 	  <!-- Don't set doUpdate to true as this will modify the local repository! -->
           <doUpdate>false</doUpdate>
 	  <!-- configure length of Git commit SHAs -->
-	  <shortRevisionLength>10</shortRevisionLength>
+	  <shortRevisionLength>16</shortRevisionLength>
         </configuration>
       </plugin>
       <plugin>
@@ -245,7 +245,7 @@
 	          <directory>src/main/resources</directory>
 	          <includes>
                     <include>README.rhizoTrak</include>
-		    <include>revision.txt</include>
+		    <include>revision_rhizo.txt</include>
                     <exclude>plugins.config</exclude>
 	          </includes>
 	          <filtering>true</filtering>
