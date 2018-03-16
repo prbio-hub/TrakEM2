@@ -119,8 +119,12 @@ import java.awt.geom.Line2D;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
@@ -6418,15 +6422,13 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("aboutRhizo")){
 			Object[] options = { "OK" };
 			String year = Integer.toString(Calendar.getInstance().get(Calendar.YEAR));
-//			String rev = ALDVersionProviderFactory.getProviderInstance().getVersion();
-			String rev = "Test";
-			if (rev.contains("=")) {
-				int equalSign = rev.indexOf("=");
-				int closingBracket = rev.lastIndexOf("]");
-				rev = rev.substring(0, equalSign + 9) + rev.substring(closingBracket);
-			}
+			String[] releaseInfos = Display.getReleaseInfosFromJar();
+			String rev = releaseInfos[0];
+			String branch = releaseInfos[1];
+			String commit = releaseInfos[2];
 			String msg = "<html>rhizoTrak - Annotation of Minirhizotron Time-Series Images<p><p>"
-		    + "Release " + rev + "<p>" + "\u00a9 2018 - " + year + "   "
+		    + rev + ", " + branch + "<p>" + commit + "   "
+		    + "<p><p>" + "\u00a9 2018 - " + year + "   "
 		    + "Martin Luther University Halle-Wittenberg<p>"
 		    + "Institute of Computer Science, Faculty of Natural Sciences III<p><p>"
 		    + "Email: rhizoTrak@informatik.uni-halle.de<p>"
@@ -6443,6 +6445,63 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			Utils.log2("Display: don't know what to do with command " + command);
 		}
 		}});
+	}
+
+	private static String[] getReleaseInfosFromJar() {
+
+		InputStream is= null;
+		BufferedReader br= null;
+		String vLine= null;
+
+		String release = "Unknown_Release";
+		String branch = "Unknown_Branch";
+		String commit = "Unknown_Commit";
+		
+		// initialize file reader 
+		try { 
+			is= Display.class.getResourceAsStream("/revision_rhizo.txt");
+			br= new BufferedReader(new InputStreamReader(is));
+			vLine= br.readLine();
+			if (vLine == null) {
+				br.close();
+				return new String[]{release, branch, commit};
+			}	
+			// read release
+			release=vLine;
+			vLine= br.readLine();
+			if (vLine == null) {
+				br.close();
+				return new String[]{release, branch, commit};
+			}	
+			// read branch 
+			branch = vLine;
+			vLine = br.readLine();
+			if (vLine == null) {
+				br.close();
+				return new String[]{release, branch, commit};
+			}	
+			// read commit 
+			commit = vLine;
+			br.close();
+			return new String[]{release, branch, commit};
+		}
+		catch (Exception e) {
+			System.err.println("[rhizoTrak::about()] Warning - " + 
+							"something went wrong on reading the version file...");
+			e.printStackTrace();
+			try {
+				if (br != null)
+					br.close();
+				if (is != null)
+					is.close();
+			} catch (IOException ee) {
+				System.err.println(
+						"[rhizoTrak::about()] "
+							+ "problems on closing the file handles...");
+				ee.printStackTrace();
+			}
+			return new String[]{release, branch, commit};
+		}
 	}
 
 	public void adjustMinAndMaxGUI() {
