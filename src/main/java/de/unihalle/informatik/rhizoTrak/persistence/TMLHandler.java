@@ -1151,7 +1151,7 @@ public class TMLHandler extends DefaultHandler {
 			//
 			if (null == prev) prev = nd;
 			else {
-				prev.add(nd, Node.MAX_EDGE_CONFIDENCE);
+				prev.add(nd, Node.DEFAULT_EDGE_CONFIDENCE);
 				prev = nd; // new parent
 			}
 		}
@@ -1173,7 +1173,7 @@ public class TMLHandler extends DefaultHandler {
 				// Add the root node of the new branch to the node at branch index
 				int openbranch = s.indexOf('{', open+1);
 				int branchindex = Integer.parseInt(s.substring(open+1, openbranch-1));
-				nodes.get(branchindex).add(parseBranch(s.substring(open, end)), Node.MAX_EDGE_CONFIDENCE);
+				nodes.get(branchindex).add(parseBranch(s.substring(open, end)), Node.DEFAULT_EDGE_CONFIDENCE);
 				open = s.indexOf('{', end+1);
 			}
 		}
