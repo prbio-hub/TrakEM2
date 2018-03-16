@@ -374,6 +374,12 @@ public class RhizoAddons
 					e.printStackTrace();
 				}
 				// Utils.log(display.getActive());
+				if(parentTl.getActive()==null)
+				{
+					Utils.log("no active node in parent treeline");
+					parentTl.unmark();
+					return;
+				}
 				if (oldActive.equals(display.getActive()))
 				{
 					Utils.log("found no target");
