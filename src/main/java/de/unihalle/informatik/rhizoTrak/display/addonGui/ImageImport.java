@@ -87,16 +87,26 @@ import de.unihalle.informatik.rhizoTrak.utils.Utils;
 public class ImageImport extends JPanel {
 	@SuppressWarnings("unused")
 	private javax.swing.Box.Filler filler1;
-	private javax.swing.JButton jButton1;
-	private javax.swing.JButton jButton2;
-	private javax.swing.JButton jButton3;
-	private javax.swing.JButton jButton4;
-	private javax.swing.JButton jButton5;
-	private javax.swing.JList<String> jList1;
+	private javax.swing.JButton jButtonSelectImage;
+	private javax.swing.JButton jButtonClearSelection;
+	private javax.swing.JButton jButtonImportImages;
+	private javax.swing.JButton jButtonSortByTime;
+	private javax.swing.JButton jButtonSelectImageDir;
+	private javax.swing.JButton jButtonSearchNewImages;
+	private javax.swing.JList<String> jImageNameList;
 	private javax.swing.JPanel jPanel1;
 	private javax.swing.JScrollPane jScrollPane1;
+	
+	/**
+	 * List of filename in the panel of selected images
+	 * Needs to be kept in sync with <code>allFiles</code>
+	 */
 	private javax.swing.DefaultListModel<String> listModel;
 	
+	/**
+	 * List of File handle of all filenames in <code>listModel</code>
+	 * Needs to be kept in sync
+	 */
 	private ArrayList<File> allFiles = new ArrayList<>();
 	
 	//image filter ini: constant_part > constant across all images; sort_part > part that is used to reconstruct the timeline
@@ -117,12 +127,13 @@ public class ImageImport extends JPanel {
 		listModel	=	new javax.swing.DefaultListModel<String>();
 		jScrollPane1 = new javax.swing.JScrollPane();
 		jPanel1 = new javax.swing.JPanel();
-		jList1 = new javax.swing.JList<String>();
-		jButton1 = new javax.swing.JButton();
-		jButton2 = new javax.swing.JButton();
-		jButton3 = new javax.swing.JButton();
-		jButton4 = new javax.swing.JButton();
-		jButton5 = new javax.swing.JButton();
+		jImageNameList = new javax.swing.JList<String>();
+		jButtonSelectImage = new javax.swing.JButton();
+		jButtonClearSelection = new javax.swing.JButton();
+		jButtonImportImages = new javax.swing.JButton();
+		jButtonSortByTime = new javax.swing.JButton();
+		jButtonSelectImageDir = new javax.swing.JButton();
+		jButtonSearchNewImages = new javax.swing.JButton();
 		filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0),
 				new java.awt.Dimension(0, 32767));
 		
@@ -140,13 +151,13 @@ public class ImageImport extends JPanel {
 //				listModel.addElement(string);	
 //			}
 //		}
-		jList1.setModel(listModel);
-		jList1.setTransferHandler(new ListTransferHandler());
-		jList1.setDragEnabled(true);
-		jList1.setDropMode(DropMode.INSERT);
-		jList1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		jImageNameList.setModel(listModel);
+		jImageNameList.setTransferHandler(new ListTransferHandler());
+		jImageNameList.setDragEnabled(true);
+		jImageNameList.setDropMode(DropMode.INSERT);
+		jImageNameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-		jScrollPane1.setViewportView(jList1);
+		jScrollPane1.setViewportView(jImageNameList);
 		
 		add(jScrollPane1);
 
@@ -154,18 +165,24 @@ public class ImageImport extends JPanel {
 		jPanel1.setLayout(new GridLayout(3, 1));
 		
 
-		jButton1.setText("Select Images");
-		jButton1.addActionListener(new ActionListener() {
+		jButtonSelectImage.setText("Select Images");
+		jButtonSelectImage.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				jButton1ActionPerformed(evt);
+				jButtonSelectImageActionPerformed(evt);
 			}
 		});
-		jPanel1.add(jButton1);
 
-		jButton2.setText("Import Images");
-		jButton2.addActionListener(new ActionListener() {
+		jButtonClearSelection.setText("Clear Image Selection");
+		jButtonClearSelection.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				jButton2ActionPerformed(evt);
+				jButtonClearSelectionActionPerformed(evt);
+			}
+		});
+
+		jButtonImportImages.setText("Import Images");
+		jButtonImportImages.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				jButtonImportImagesActionPerformed(evt);
 				
 				if(SwingUtilities.getRoot(jPanel1) instanceof JFrame)
 				{
@@ -174,31 +191,34 @@ public class ImageImport extends JPanel {
 				}
 			}
 		});
-		jPanel1.add(jButton2);
 		
-		jButton3.setText("Sort by Timepoint");
-		jButton3.addActionListener(new ActionListener() {
+		jButtonSortByTime.setText("Sort by Timepoint");
+		jButtonSortByTime.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				sortList(evt);
 			}
 		});
-		jPanel1.add(jButton3);
 		
-		jButton4.setText("Select Image Directory");
-		jButton4.addActionListener(new ActionListener() {
+		jButtonSelectImageDir.setText("Select Image Directory");
+		jButtonSelectImageDir.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				chooseImageDir();
 			}
 		});
-		jPanel1.add(jButton4);
 		
-		jButton5.setText("Search New Images");
-		jButton5.addActionListener(new ActionListener() {
+		jButtonSearchNewImages.setText("Search New Images");
+		jButtonSearchNewImages.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				searchNewImages();
 			}
 		});
-		jPanel1.add(jButton5);
+		
+		jPanel1.add(jButtonSelectImage);
+		jPanel1.add(jButtonSearchNewImages);
+		jPanel1.add(jButtonSortByTime);
+		jPanel1.add(jButtonClearSelection);
+		jPanel1.add(jButtonImportImages);
+		jPanel1.add(jButtonSelectImageDir);
 		
 		JFrame parentFrame = (JFrame) SwingUtilities.getRoot(this);
 		if(null != parentFrame && null != rhizoMain.getRhizoImages().getImageDir()) parentFrame.setTitle("Image Loader - "+ rhizoMain.getRhizoImages().getImageDir().getAbsolutePath());
@@ -207,7 +227,7 @@ public class ImageImport extends JPanel {
 		add(jPanel1, BorderLayout.EAST);
 	}
 	
-	private void jButton1ActionPerformed(java.awt.event.ActionEvent evt){
+	private void jButtonSelectImageActionPerformed(java.awt.event.ActionEvent evt){
 		
 		JFileChooser chooser = new JFileChooser();
 		chooser.setMultiSelectionEnabled(true);
@@ -222,10 +242,16 @@ public class ImageImport extends JPanel {
 			listModel.addElement(file.getName());	
 			allFiles.add(file);
 		}
-		jList1.setTransferHandler(new ListTransferHandler());
+		jImageNameList.setTransferHandler(new ListTransferHandler());
 	}
 	
-	private void jButton2ActionPerformed(java.awt.event.ActionEvent evt){
+	private void jButtonClearSelectionActionPerformed(java.awt.event.ActionEvent evt){
+		listModel.clear();
+		allFiles.clear();
+		jImageNameList.setTransferHandler(new ListTransferHandler());
+	}
+	
+	private void jButtonImportImagesActionPerformed(java.awt.event.ActionEvent evt){
 		//TODO add code to load images to stack
         //make files array consistent
         List<File> reord = new ArrayList<File>();
