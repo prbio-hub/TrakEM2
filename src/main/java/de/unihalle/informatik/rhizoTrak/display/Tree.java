@@ -1343,7 +1343,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 					// Make its child the new root
 					root = node.children[0];
 					root.parent = null;
-					root.confidence = Node.MAX_EDGE_CONFIDENCE; // with its now non-existent parent
+					root.confidence = Node.DEFAULT_EDGE_CONFIDENCE; // with its now non-existent parent
 					if (node == last_visited) setLastVisited(root);
 				} else {
 					node.parent.children[node.parent.indexOf(node)] = node.children[0];
@@ -1467,7 +1467,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				// Remove review stack if any
 				removeReview(nd);
 			}
-			addNode(this.marked, tl.marked, Node.MAX_EDGE_CONFIDENCE); // will calculateBoundingBox, hence at_inv has to be recomputed every time
+			addNode(this.marked, tl.marked, Node.DEFAULT_EDGE_CONFIDENCE); // will calculateBoundingBox, hence at_inv has to be recomputed every time
 			// Remove from tl pointers
 			tl.root = null; // stolen!
 			tl.setLastMarked(null);
@@ -2011,7 +2011,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		final Point po = dc.getCursorLoc(); // as offscreen coords
 
 		// Set confidence of the receiver node
-		if (keyCode >= KeyEvent.VK_0 && keyCode <= (KeyEvent.VK_0 + Node.MAX_EDGE_CONFIDENCE)) {
+		if (keyCode >= KeyEvent.VK_0 && keyCode <= (KeyEvent.VK_0 + Node.DEFAULT_EDGE_CONFIDENCE)) {
 			if (null != setEdgeConfidence((byte)(keyCode - KeyEvent.VK_0))) {
 				Display.repaint(layer_set);
 				ke.consume();

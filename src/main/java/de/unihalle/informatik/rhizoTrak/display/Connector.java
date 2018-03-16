@@ -228,7 +228,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 			final Node<Float> root = new ConnectorNode(p[0], p[1], ls.getLayer(lids[0]), radius[0]);
 			for (int i=1; i<lids.length; i++) {
 				final Node<Float> nd = new ConnectorNode(p[i+i], p[i+i+1], ls.getLayer(lids[i]), radius[i]);
-				root.add(nd, Node.MAX_EDGE_CONFIDENCE);
+				root.add(nd, Node.DEFAULT_EDGE_CONFIDENCE);
 			}
 			setRoot(root);
 
@@ -241,7 +241,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 
 	public int addTarget(final float x, final float y, final long layer_id, final float r) {
 		if (null == root) return -1;
-		root.add(new ConnectorNode(x, y, layer_set.getLayer(layer_id), r), Node.MAX_EDGE_CONFIDENCE);
+		root.add(new ConnectorNode(x, y, layer_set.getLayer(layer_id), r), Node.DEFAULT_EDGE_CONFIDENCE);
 		return root.getChildrenCount() - 1;
 	}
 

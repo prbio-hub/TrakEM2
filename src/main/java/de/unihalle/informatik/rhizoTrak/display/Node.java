@@ -89,7 +89,9 @@ public abstract class Node<T> implements Taggable {
 	/** Maximum possible confidence in an edge (ranges from 0 to 5, inclusive).*/
 
 	// aeekz: is changed when a status file exists
-	static public byte MAX_EDGE_CONFIDENCE = 10;
+	static public byte MAX_EDGE_CONFIDENCE = 0;
+	
+	static public byte DEFAULT_EDGE_CONFIDENCE = 0;
 	
 	//actyc: added a indicator showing whether the node is highlighted
 	private boolean[] high = {false,false};
@@ -114,10 +116,13 @@ public abstract class Node<T> implements Taggable {
 		this.y = p[1];
 	}
 	public RhizoMain rhizoMain = null;
-	/** The confidence value of the edge towards the parent;
+	
+	/* The confidence value of the edge towards the parent;
 	 *  in other words, how much this node can be trusted to continue from its parent node.
 	 *  Defaults to MAX_EDGE_CONFIDENCE for full trust, and 0 for none. */
-	protected byte confidence = MAX_EDGE_CONFIDENCE;
+	
+	/** confidence interpreted as a status */
+	protected byte confidence = DEFAULT_EDGE_CONFIDENCE;
 	
 	// aeekz: removed lower bounds check
 	public byte getConfidence() 
@@ -688,7 +693,7 @@ public abstract class Node<T> implements Taggable {
 		for (final Node<T> nd : path) {
 			// Made nd the parent of newchild (was the opposite)
 			// 1 - Find out the confidence of the edge to the child node:
-			byte conf = MAX_EDGE_CONFIDENCE;
+			byte conf = DEFAULT_EDGE_CONFIDENCE;
 			for (int i=0; i<newchild.children.length; i++) {
 				if (nd == newchild.children[i]) {
 					conf = newchild.children[i].confidence;
