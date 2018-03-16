@@ -582,6 +582,8 @@ public class Project extends DBObject {
 			final OpenDialog od = new OpenDialog("Select status file", dir_project, null);
 			project.getRhizoMain().getRhizoIO().loadConfigFile(od.getPath());
 			
+			project.getRhizoMain().getRhizoImages().setImageDir( new File( dir_project));
+			
 			if(RhizoIO.userSettingsFile.exists())
 			{
 				Utils.log("@Project: called loadUserSettings(");
@@ -730,6 +732,11 @@ public class Project extends DBObject {
 			Utils.log(loader.getProjectXMLPath()); 
 			Utils.log2("start addon loader ...");
 			project.getRhizoMain().getRhizoIO().addonLoader(new File(loader.getProjectXMLPath()),project).join();
+			try {
+				project.getRhizoMain().getRhizoImages().setImageDir( (new File(loader.getProjectXMLPath()).getParentFile()));
+			} catch( Exception e) {
+				// this was a try
+			}
 			Utils.log2("started");
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block

@@ -93,7 +93,6 @@ public class ImageImport extends JPanel {
 	private javax.swing.JButton jButton4;
 	private javax.swing.JButton jButton5;
 	private javax.swing.JList<String> jList1;
-	private javax.swing.JLabel imgDir;
 	private javax.swing.JPanel jPanel1;
 	private javax.swing.JScrollPane jScrollPane1;
 	private javax.swing.DefaultListModel<String> listModel;
@@ -102,8 +101,6 @@ public class ImageImport extends JPanel {
 	
 	//image filter ini: constant_part > constant across all images; sort_part > part that is used to reconstruct the timeline
 	private String filterReg_constant_part = "_(T|t)\\d*";
-	private String filterReg_sort_part = "_\\d{3}";
-        
 	private RhizoMain rhizoMain = null;
 
 	public ImageImport(RhizoMain rhizoMain) 
@@ -126,7 +123,6 @@ public class ImageImport extends JPanel {
 		jButton3 = new javax.swing.JButton();
 		jButton4 = new javax.swing.JButton();
 		jButton5 = new javax.swing.JButton();
-		imgDir = new javax.swing.JLabel();
 		filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0),
 				new java.awt.Dimension(0, 32767));
 		
@@ -199,15 +195,11 @@ public class ImageImport extends JPanel {
 		jButton5.setText("Search New Images");
 		jButton5.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				autoImport();
+				searchNewImages();
 			}
 		});
 		jPanel1.add(jButton5);
 		
-//		jPanel1.add(imgDir);
-//		if(RhizoAddons.imageDir!=null){
-//			imgDir.setText(RhizoAddons.imageDir.getAbsolutePath());
-//		}
 		JFrame parentFrame = (JFrame) SwingUtilities.getRoot(this);
 		if(null != parentFrame && null != rhizoMain.getRhizoImages().getImageDir()) parentFrame.setTitle("Image Loader - "+ rhizoMain.getRhizoImages().getImageDir().getAbsolutePath());
 		
@@ -236,7 +228,6 @@ public class ImageImport extends JPanel {
 		//TODO add code to load images to stack
         //make files array consistent
         List<File> reord = new ArrayList<File>();
-        int i=0;
         for (Object string : listModel.toArray()) {
         	for (File file : allFiles) {
 				if(file.getName().equals((String)string)){
@@ -244,7 +235,6 @@ public class ImageImport extends JPanel {
 					Utils.log(string +":"+file.getName());
 				}
 			}
-        	i++;
 		}
         File[] reordArray = new File[reord.size()];
         reord.toArray(reordArray);
@@ -317,17 +307,20 @@ public class ImageImport extends JPanel {
 		{
 			File dir = dialog.getSelectedFile();
 			rhizoMain.getRhizoImages().setImageDir(dir);
-//			imgDir.setText(RhizoAddons.imageDir.getAbsolutePath());
 			JFrame parentFrame = (JFrame) SwingUtilities.getRoot(this);
-			if(null != parentFrame) parentFrame.setTitle("Image Loader - "+ rhizoMain.getRhizoImages().getImageDir().getAbsolutePath());
+			if(null != parentFrame) 
+				parentFrame.setTitle("Image Loader - "+ rhizoMain.getRhizoImages().getImageDir().getAbsolutePath());
 		}
 		
 	}
 	
-	// aeekz - maybe add them to the window first before importing
-	private void autoImport()
+	/**
+	 * Searches for new images in the search directory
+	 * If no image was imported until now return all images found
+	 */
+	private void searchNewImages()
 	{
-		Utils.log2("Start auto import:");
+		Utils.log2("Start searching for new images:");
 		File imageDir = rhizoMain.getRhizoImages().getImageDir();
 		if(imageDir == null)
 		{
@@ -340,35 +333,27 @@ public class ImageImport extends JPanel {
 		
 				
 		java.io.FileFilter ioFilter = new FileFilter(){
-
 			@Override
 			public boolean accept(File pathname) {
 				  String filename = pathname.getName();
 				  if (pathname.isDirectory()) {
 				    return false;
 
-				  } else if ((filename.endsWith("jpg") || filename.endsWith("jpeg") || filename.endsWith("png") || filename.endsWith("gif") || filename.endsWith("tif") || filename.endsWith("tiff"))) {
+				  } else if ((filename.endsWith("jpg") || filename.endsWith("jpeg") || filename.endsWith("png") || 
+						  filename.endsWith("gif") || filename.endsWith("tif") || filename.endsWith("tiff"))) {
 				    return true;
 				  } else {
 				    return false;
 				  }
-			}
-			
+			}	
 		};
-		
 		
 		File[] files = imageDir.listFiles(ioFilter);
 		if(files.length==0){
 			// open dialog to inform user
 			return;
 		}
-		
-		//if there is no patch already simply import
-		if(patches.isEmpty()){
-			RhizoImages.addLayerAndImage(files);
-			return;
-		}
-		
+				
 		for (File file : files) {
 			boolean imp = true;
 			String currentFileName = file.getName();
@@ -382,46 +367,31 @@ public class ImageImport extends JPanel {
 			}
 		}
 		
-		//filter files
+		//filter files according to tube number, 
+		// if not images yet loaded keep all
 		//get the tube number
-		String template=patches.get(0).getImagePlus().getTitle();
-		Matcher matcher = Pattern.compile(filterReg_constant_part).matcher(template);
-		matcher.find();
-		String currentTubeNumber = matcher.group();
-		Utils.log2("found tube number was:"+ currentTubeNumber);
-		//filter for the found tube
-		Iterator<File> importIt = toImport.iterator();
-		while(importIt.hasNext()){
-			File currentFile = importIt.next();
-			if(!currentFile.getName().contains(currentTubeNumber)){
-				importIt.remove();
+		if ( patches.size() > 0 ) {
+			String template=patches.get(0).getImagePlus().getTitle();
+			Matcher matcher = Pattern.compile(filterReg_constant_part).matcher(template);
+			matcher.find();
+			String currentTubeNumber = matcher.group();
+			Utils.log2("found tube number was:"+ currentTubeNumber);
+			//filter for the found tube
+			Iterator<File> importIt = toImport.iterator();
+			while(importIt.hasNext()){
+				File currentFile = importIt.next();
+				if(!currentFile.getName().contains(currentTubeNumber)){
+					importIt.remove();
+				}
 			}
 		}
-		
-//        File[] importArray = new File[toImport.size()];
-//        toImport.toArray(importArray);
-//        this.files=importArray;
-		allFiles.addAll(toImport);
-		
+
 		for(File file : toImport){
+			allFiles.add(file);
 			listModel.addElement(file.getName());
 		}
-		//RhizoAddons.addLayerAndImage(toImport);
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 class ListTransferHandler extends TransferHandler
 {
