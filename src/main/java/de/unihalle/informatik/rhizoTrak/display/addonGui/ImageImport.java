@@ -211,6 +211,7 @@ public class ImageImport extends JPanel {
 		
 		JFileChooser chooser = new JFileChooser();
 		chooser.setMultiSelectionEnabled(true);
+		chooser.setCurrentDirectory(rhizoMain.getRhizoImages().getImageDir());
 
 		Component frame = null;
 
