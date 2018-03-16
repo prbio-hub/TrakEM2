@@ -40,6 +40,9 @@ public class RhizoIO
 	public static final int STATUS_UNDEFINED = -1;
 	public static final int STATUS_VIRTUAL = -2;
 	public static final int STATUS_CONNECTOR = -3;
+	
+	public static final Color DEFAULT_STATUS_COLOR = new Color( 255, 255, 0);
+	public static final Color DEFAULT_FIXED_STATUS_COLOR = new Color( 0, 255, 255);
 			
 	private RhizoMain rhizoMain;
 	
@@ -544,9 +547,9 @@ public class RhizoIO
 		GlobalStatus undefined = new GlobalStatus();
 		undefined.setFullName("UNDEFINED");
 		undefined.setAbbreviation("*");
-		undefined.setRed(BigInteger.valueOf(0));
-		undefined.setGreen(BigInteger.valueOf(255));
-		undefined.setBlue(BigInteger.valueOf(255));
+		undefined.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
+		undefined.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
+		undefined.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
 		undefined.setAlpha(BigInteger.valueOf(255));
 		undefined.setSelectable(true);
 		globalStatusList.add(undefined);
@@ -554,9 +557,9 @@ public class RhizoIO
 		GlobalStatus connector = new GlobalStatus();
 		connector.setFullName("CONNECTOR");
 		connector.setAbbreviation("@");
-		connector.setRed(BigInteger.valueOf(0));
-		connector.setGreen(BigInteger.valueOf(255));
-		connector.setBlue(BigInteger.valueOf(255));
+		connector.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
+		connector.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
+		connector.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
 		connector.setAlpha(BigInteger.valueOf(255));
 		connector.setSelectable(true);
 		globalStatusList.add(connector);
@@ -564,9 +567,9 @@ public class RhizoIO
 		GlobalStatus virtual = new GlobalStatus();
 		virtual.setFullName("VIRTUAL");
 		virtual.setAbbreviation("-");
-		virtual.setRed(BigInteger.valueOf(0));
-		virtual.setGreen(BigInteger.valueOf(255));
-		virtual.setBlue(BigInteger.valueOf(255));
+		virtual.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
+		virtual.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
+		virtual.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
 		virtual.setAlpha(BigInteger.valueOf(255));
 		virtual.setSelectable(true);
 		globalStatusList.add(virtual);
@@ -574,9 +577,9 @@ public class RhizoIO
 		GlobalStatus living = new GlobalStatus();
 		living.setFullName("LIVING");
 		living.setAbbreviation("L");
-		living.setRed(BigInteger.valueOf(255));
-		living.setGreen(BigInteger.valueOf(255));
-		living.setBlue(BigInteger.valueOf(0));
+		living.setRed(BigInteger.valueOf( DEFAULT_STATUS_COLOR.getRed()));
+		living.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
+		living.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
 		living.setAlpha(BigInteger.valueOf(255));
 		living.setSelectable(true);
 		globalStatusList.add(living);
@@ -584,9 +587,9 @@ public class RhizoIO
 		GlobalStatus dead = new GlobalStatus();
 		dead.setFullName("DEAD");
 		dead.setAbbreviation("D");
-		dead.setRed(BigInteger.valueOf(255));
-		dead.setGreen(BigInteger.valueOf(255));
-		dead.setBlue(BigInteger.valueOf(0));
+		dead.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
+		dead.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
+		dead.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
 		dead.setAlpha(BigInteger.valueOf(255));
 		dead.setSelectable(true);
 		globalStatusList.add(dead);
@@ -594,9 +597,9 @@ public class RhizoIO
 		GlobalStatus decayed = new GlobalStatus();
 		decayed.setFullName("DECAYED");
 		decayed.setAbbreviation("Y");
-		decayed.setRed(BigInteger.valueOf(255));
-		decayed.setGreen(BigInteger.valueOf(255));
-		decayed.setBlue(BigInteger.valueOf(0));
+		decayed.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
+		decayed.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
+		decayed.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
 		decayed.setAlpha(BigInteger.valueOf(255));
 		decayed.setSelectable(true);
 		globalStatusList.add(decayed);
@@ -604,9 +607,9 @@ public class RhizoIO
 		GlobalStatus gap = new GlobalStatus();
 		gap.setFullName("GAP");
 		gap.setAbbreviation("G");
-		gap.setRed(BigInteger.valueOf(255));
-		gap.setGreen(BigInteger.valueOf(255));
-		gap.setBlue(BigInteger.valueOf(0));
+		gap.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
+		gap.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
+		gap.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
 		gap.setAlpha(BigInteger.valueOf(255));
 		gap.setSelectable(true);
 		globalStatusList.add(gap);
@@ -624,9 +627,9 @@ public class RhizoIO
 		Status living = new Status();
 		living.setFullName("LIVING");
 		living.setAbbreviation("L");
-		living.setRed(BigInteger.valueOf(255));
-		living.setGreen(BigInteger.valueOf(255));
-		living.setBlue(BigInteger.valueOf(0));
+		living.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
+		living.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
+		living.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
 		living.setAlpha(BigInteger.valueOf(255));
 		living.setSelectable(true);
 		statusList.add(living);
@@ -634,9 +637,9 @@ public class RhizoIO
 		Status dead = new Status();
 		dead.setFullName("DEAD");
 		dead.setAbbreviation("D");
-		dead.setRed(BigInteger.valueOf(255));
-		dead.setGreen(BigInteger.valueOf(255));
-		dead.setBlue(BigInteger.valueOf(0));
+		dead.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
+		dead.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
+		dead.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
 		dead.setAlpha(BigInteger.valueOf(255));
 		dead.setSelectable(true);
 		statusList.add(dead);
@@ -644,9 +647,9 @@ public class RhizoIO
 		Status decayed = new Status();
 		decayed.setFullName("DECAYED");
 		decayed.setAbbreviation("Y");
-		decayed.setRed(BigInteger.valueOf(255));
-		decayed.setGreen(BigInteger.valueOf(255));
-		decayed.setBlue(BigInteger.valueOf(0));
+		decayed.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
+		decayed.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
+		decayed.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
 		decayed.setAlpha(BigInteger.valueOf(255));
 		decayed.setSelectable(true);
 		statusList.add(decayed);
@@ -654,9 +657,9 @@ public class RhizoIO
 		Status gap = new Status();
 		gap.setFullName("GAP");
 		gap.setAbbreviation("G");
-		gap.setRed(BigInteger.valueOf(255));
-		gap.setGreen(BigInteger.valueOf(255));
-		gap.setBlue(BigInteger.valueOf(0));
+		gap.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
+		gap.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
+		gap.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
 		gap.setAlpha(BigInteger.valueOf(255));
 		gap.setSelectable(true);
 		statusList.add(gap);
@@ -679,27 +682,27 @@ public class RhizoIO
 		Status undefined = new Status();
 		undefined.setFullName("UNDEFINED");
 		undefined.setAbbreviation("*");
-		undefined.setRed(BigInteger.valueOf(255));
-		undefined.setBlue(BigInteger.valueOf(255));
-		undefined.setGreen(BigInteger.valueOf(0));
+		undefined.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
+		undefined.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
+		undefined.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
 		undefined.setAlpha(BigInteger.valueOf(255));
 		statusMap.put(STATUS_UNDEFINED, undefined);
 
 		Status virtual = new Status();
 		virtual.setFullName("VIRTUAL");
 		virtual.setAbbreviation("-");
-		virtual.setRed(BigInteger.valueOf(255));
-		virtual.setBlue(BigInteger.valueOf(255));
-		virtual.setGreen(BigInteger.valueOf(0));
+		virtual.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
+		virtual.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
+		virtual.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
 		virtual.setAlpha(BigInteger.valueOf(255));
 		statusMap.put(STATUS_VIRTUAL, virtual);
 
 		Status connector = new Status();
 		connector.setFullName("CONNECTOR");
 		connector.setAbbreviation("@");
-		connector.setRed(BigInteger.valueOf(255));
-		connector.setBlue(BigInteger.valueOf(255));
-		connector.setGreen(BigInteger.valueOf(0));
+		connector.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
+		connector.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
+		connector.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
 		connector.setAlpha(BigInteger.valueOf(255));
 		statusMap.put(STATUS_CONNECTOR, connector);
 	}
