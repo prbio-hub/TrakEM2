@@ -127,6 +127,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -6414,6 +6415,29 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("stat")){
 			Display.getFront().getProject().getRhizoMain().getRhizoStatistics().writeStatistics();
 		}
+		else if(command.equals("aboutRhizo")){
+			Object[] options = { "OK" };
+			String year = Integer.toString(Calendar.getInstance().get(Calendar.YEAR));
+//			String rev = ALDVersionProviderFactory.getProviderInstance().getVersion();
+			String rev = "Test";
+			if (rev.contains("=")) {
+				int equalSign = rev.indexOf("=");
+				int closingBracket = rev.lastIndexOf("]");
+				rev = rev.substring(0, equalSign + 9) + rev.substring(closingBracket);
+			}
+			String msg = "<html>rhizoTrak - Annotation of Minirhizotron Time-Series Images<p><p>"
+		    + "Release " + rev + "<p>" + "\u00a9 2018 - " + year + "   "
+		    + "Martin Luther University Halle-Wittenberg<p>"
+		    + "Institute of Computer Science, Faculty of Natural Sciences III<p><p>"
+		    + "Email: rhizoTrak@informatik.uni-halle.de<p>"
+		    + "Internet: <i>https://github.com/prbio-hub/rhizoTrak</i><p>"
+		    + "License: GPL 3.0, <i>http://www.gnu.org/licenses/gpl.html</i></html>";
+
+			JOptionPane.showOptionDialog(null, new JLabel(msg),
+				"Information about rhizoTrak", JOptionPane.DEFAULT_OPTION,
+			  	JOptionPane.INFORMATION_MESSAGE, null, //ALDIcon.getInstance().getIcon(), 
+			  		options, options[0]);
+		}
 		// rhizo commands end
 		else {
 			Utils.log2("Display: don't know what to do with command " + command);
@@ -7203,6 +7227,13 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	statButton.setEnabled(true);
     	panel.add(statButton);
     	
+    	JButton aboutButton = new JButton("About rhizoTrak");
+    	aboutButton.setToolTipText("");
+    	aboutButton.setActionCommand("aboutRhizo");
+    	aboutButton.addActionListener(this);
+    	aboutButton.setEnabled(true);
+    	panel.add(aboutButton);
+
     	JButton devTest = new JButton("Test");
     	devTest.setToolTipText("");
     	devTest.setActionCommand("testtest");
