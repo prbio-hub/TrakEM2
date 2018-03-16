@@ -116,7 +116,7 @@ public class RhizoStatistics
 						Segment currentSegment = new Segment(rhizoMain.getRhizoIO(), RhizoAddons.getPatch(ctree), ctree, cObj.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
 						segmentID++;
 
-						if(currentSegment.checkNodesInImage()) allSegments.add(currentSegment);
+						if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
 					}
 				}
 				
@@ -141,7 +141,7 @@ public class RhizoStatistics
 					Segment currentSegment = new Segment(rhizoMain.getRhizoIO(), RhizoAddons.getPatch(tl), tl, tl.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
 					segmentID++;
 
-					if(currentSegment.checkNodesInImage()) allSegments.add(currentSegment);
+					if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
 				}
 			}
 			
@@ -181,6 +181,14 @@ public class RhizoStatistics
  */
 class Segment
 {
+	// used for clipping
+	private final int INSIDE = 0;
+	private final int LEFT   = 1;
+	private final int RIGHT  = 2;
+	private final int BOTTOM = 4;
+	private final int TOP    = 8;
+
+
 	private RadiusNode child;
 	private RadiusNode parent;
 	
@@ -280,95 +288,102 @@ class Segment
 
 		return result;
 	}
-	
-	// TODO: add checks for division by zero
-	public boolean checkNodesInImage()
-	{
-		// no image
-		if(null == p) return true;
 
+	
+	// Cohen-Sutherland line clipping algorithm with the image
+	public boolean cohenSutherlandLineClipping()
+	{
 		ImagePlus image = p.getImagePlus();
-		
+		double xMin = 0;
+		double yMin = 0;
+		double xMax = image.getWidth();
+		double yMax = image.getHeight();
+
 		AffineTransform at = t.getAffineTransform();
-		
 		Point2D p1 = at.transform(new Point2D.Float(parent.getX(), parent.getY()), null);
 		Point2D p2 = at.transform(new Point2D.Float(child.getX(), child.getY()), null);
-		
-		Utils.log(p1.getX() + " " + p1.getY() + " " + p2.getX() + " " + p2.getY() + "\t" + image.getWidth() + " " + image.getHeight());
-		
-		// both nodes are inside
-		if(p1.getX() < image.getWidth() && p1.getY() < image.getHeight() && p2.getX() < image.getWidth() && p2.getY() < image.getHeight()) return true;
-		// both nodes are outside
-		else if((p1.getX() > image.getWidth() || p1.getY() > image.getHeight()) && (p2.getX() > image.getWidth() || p2.getY() > image.getHeight())) return false; 
-		// parent node is outside, child is inside
-		else if((p1.getX() > image.getWidth() || p1.getY() > image.getHeight()) && (p2.getX() < image.getWidth() && p2.getY() < image.getHeight()))
-		{
-			try
-			{
-				double m = 0;
-				if(p1.getX() - p2.getX() != 0) m = (p1.getY() - p2.getY())/(p1.getX() - p2.getX());
-				double b = p1.getY() - m*p1.getX();
-				
-				if(p1.getX() > image.getWidth())
-				{
-					double newY = m*image.getWidth() + b;
-					
-					Point2D newPoint = at.inverseTransform(new Point2D.Double(image.getWidth(), newY), null);
-					parent = new RadiusNode((float) newPoint.getX(), (float) newPoint.getY(), layer, parent.getData());
-					calculate();
-					return true;
-				}			
-				if(p1.getY() > image.getHeight())
-				{
-					double newX = (image.getHeight() - b) / m;
-					
-					Point2D newPoint = at.inverseTransform(new Point2D.Double(newX, image.getHeight()), null);
-					parent = new RadiusNode((float) newPoint.getX(), (float) newPoint.getY(), layer, parent.getData());
-					calculate();
-					return true;
-				}
-			} 
-			catch (NoninvertibleTransformException e)
-			{
-				e.printStackTrace();
-			}
 
-		}
-		// child node is outside, parent is inside
-		else if((p1.getX() < image.getWidth() && p1.getY() < image.getHeight()) && (p2.getX() > image.getWidth() || p2.getY() > image.getHeight()))
-		{
-			try
-			{
-				double m = 0;
-				if(p1.getX() - p2.getX() != 0) m = (p1.getY() - p2.getY())/(p1.getX() - p2.getX());
-				double b = p1.getY() - m*p1.getX();
-				
-				if(p2.getX() > image.getWidth())
-				{
-					double newY = m*image.getWidth() + b;
-					
-					Point2D newPoint = at.inverseTransform(new Point2D.Double(image.getWidth(), newY), null);
-					child = new RadiusNode((float) newPoint.getX(), (float) newPoint.getY(), layer, parent.getData());
-					calculate();
-					return true;
-				}			
-				if(p2.getY() > image.getHeight())
-				{
-					double newX = (image.getHeight() - b) / m;
-					
-					Point2D newPoint = at.inverseTransform(new Point2D.Double(newX, image.getHeight()), null);
-					child = new RadiusNode((float) newPoint.getX(), (float) newPoint.getY(), layer, parent.getData());
-					calculate();
-					return true;
-				}
-			}
-			catch (NoninvertibleTransformException e)
-			{
-				e.printStackTrace();
-			}
-		}
+		double qx = 0d;
+        double qy = 0d;
+        
+        boolean vertical = (p1.getX() == p2.getX());
+        
+        double slope = vertical ? 0d : (p2.getY()-p1.getY())/(p2.getX() - p1.getX());
+        
+        int c1 = regionCode(p1.getX(), p1.getY(), xMin, yMin, xMax, yMax);
+        int c2 = regionCode(p2.getX(), p2.getY(), xMin, yMin, xMax, yMax);
+        
+        while(c1 != INSIDE || c2 != INSIDE) 
+        {
+        	Utils.log("cutting " + c1 + " " + c2);
+        	if ((c1 & c2) != INSIDE) return false; // both nodes outside
 
-	
-		return false;
+        	int c = c1 == INSIDE ? c2 : c1;
+
+        	if ((c & LEFT) != INSIDE) 
+        	{
+        		qx = xMin;
+        		qy = (qx-p1.getX())*slope + p1.getY();
+        	}
+        	else if ((c & RIGHT) != INSIDE) 
+        	{
+        		qx = xMax;
+        		qy = (qx-p1.getX())*slope + p1.getY();
+        	}
+        	else if ((c & BOTTOM) != INSIDE) 
+        	{
+        		qy = yMin;
+        		qx = vertical ? p1.getX() : (qy-p1.getY())/slope + p1.getX();
+        	}
+        	else if ((c & TOP) != INSIDE) 
+        	{
+        		qy = yMax;
+        		qx = vertical ? p1.getX() : (qy-p1.getY())/slope + p1.getX();
+        	}
+        	
+        	Utils.log(qx + " " + qy);
+
+        	if (c == c1) 
+        	{
+        		p1.setLocation(qx, qy);
+        		c1  = regionCode(p1.getX(), p1.getY(), xMin, yMin, xMax, yMax);
+        	}
+        	else 
+        	{
+        		p2.setLocation(qx, qy);
+        		c2 = regionCode(p2.getX(), p2.getY(), xMin, yMin, xMax, yMax);
+        	}
+        }
+        
+        Utils.log("end cutting");
+        
+        try
+		{
+        	
+        	Utils.log("newParent: " + p1.getX() + " " + p1.getY());
+        	Utils.log("newChild: " + p2.getX()  + " " + p2.getY());
+        	
+        	Point2D newParent = at.inverseTransform(p1, null);
+        	Point2D newChild = at.inverseTransform(p2, null);
+        	
+        	this.parent = new RadiusNode((float) newParent.getX(), (float) newParent.getY(), layer, parent.getData());
+        	this.child = new RadiusNode((float) newChild.getX(), (float) newChild.getY(), layer, child.getData());
+        	
+        	calculate();
+		}
+		catch(NoninvertibleTransformException e)
+		{
+			e.printStackTrace();
+		}
+        
+        return true;
 	}
+	
+	private final int regionCode(double x, double y, double xMin, double yMin, double xMax, double yMax) 
+	{
+        int code = x < xMin ? LEFT : x > xMax ? RIGHT : INSIDE;
+        if (y < yMin) code |= BOTTOM;
+        else if (y > yMax) code |= TOP;
+        return code;
+    }
 }
