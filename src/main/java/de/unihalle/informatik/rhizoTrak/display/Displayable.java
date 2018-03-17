@@ -104,6 +104,7 @@ import java.util.Map;
 import java.util.Set;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.display.graphics.AddARGBComposite;
 import de.unihalle.informatik.rhizoTrak.display.graphics.ColorYCbCrComposite;
 import de.unihalle.informatik.rhizoTrak.display.graphics.DifferenceARGBComposite;
@@ -1410,7 +1411,9 @@ public abstract class Displayable extends DBObject implements Paintable  {
 		if (!visible) sb_body.append(in).append("visible=\"false\"\n");
 		// 'style' is taken care in subclasses
 		if (null != title && title.length() > 0) {
-			sb_body.append(in).append("title=\"").append(title.replaceAll("\"", "^#^")).append("\"\n"); // fix possible harm by '"' characters (backslash should be taken care of as well TODO)
+			// code string for html
+			sb_body.append(in).append("title=\"").append( RhizoMain.htmlCode( title.replaceAll("\"", "^#^"))).append("\"\n"); // fix possible harm by '"' characters (backslash should be taken care of as well TODO)
+//			sb_body.append(in).append("title=\"").append(title.replaceAll("\"", "^#^")).append("\"\n"); // fix possible harm by '"' characters (backslash should be taken care of as well TODO)
 		}
 		
 		if (COMPOSITE_NORMAL != compositeMode) {
