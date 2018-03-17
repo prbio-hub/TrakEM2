@@ -37,13 +37,21 @@ public class RhizoImages
 	{
 		String title = "Image Loader";
 		if(null != imageDir) title = "Image Loader - " + imageDir.getAbsolutePath();
-		
-		imageLoaderFrame = new JFrame(title);
-		imageLoaderFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		JPanel temp = new ImageImport(rhizoMain);
-		imageLoaderFrame.add(temp);
-		imageLoaderFrame.pack();
-		imageLoaderFrame.setVisible(true);
+		if(imageLoaderFrame!=null)
+		{
+			imageLoaderFrame.setVisible(true);
+			imageLoaderFrame.toFront();
+		}
+		else
+		{
+			imageLoaderFrame = new JFrame(title);
+			imageLoaderFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+			JPanel temp = new ImageImport(rhizoMain);
+			imageLoaderFrame.add(temp);
+			imageLoaderFrame.pack();
+			imageLoaderFrame.setVisible(true);
+		}
+
 	}
 	
 	/**
