@@ -237,6 +237,9 @@ public class RhizoIO
 				
 				
 				statusMap.put(i, oldStatus);
+				
+				this.rhizoMain.getProjectConfig().addStatusLabel(  
+						new RhizoStatusLabel(newStatus.getFullName(), newStatus.getAbbreviation()));
 			}
 
 			setFixedStatus();
@@ -251,6 +254,9 @@ public class RhizoIO
 				for(int i = 0; i < sl.size(); i++)
 				{
 					statusMap.put(i, sl.get(i));
+					this.rhizoMain.getProjectConfig().addStatusLabel(  
+							new RhizoStatusLabel(sl.get(i).getFullName(), sl.get(i).getAbbreviation()));
+
 				}
 
 				setFixedStatus();
@@ -399,6 +405,33 @@ public class RhizoIO
 		{
 			e.printStackTrace();
 		}
+		
+		try 
+		{
+			JAXBContext context = JAXBContext.newInstance(RhizoTrakProjectConfig.class);
+                        Marshaller m = context.createMarshaller();
+                        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+	        
+            de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList sl = 
+                        		new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList();
+	        for( int i = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabel() ; i++ ) {
+	        	de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status newStatus =
+	        			new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status();
+	        	newStatus.setFullName( rhizoMain.getProjectConfig().getStatusLabel(i).getName());
+	        	newStatus.setAbbreviation( rhizoMain.getProjectConfig().getStatusLabel(i).getAbbrev());
+	        	sl.getStatus().add( newStatus);
+	        }
+
+	        RhizoTrakProjectConfig config = new RhizoTrakProjectConfig();
+	        config.setStatusList(sl);
+	        
+	        m.marshal(config, new File(file.getAbsolutePath().replace(".xml", ".cfg")+ ".new"));
+		}
+		catch (Exception e) 
+		{
+			e.printStackTrace();
+		}
+
 	}
 
 	/**

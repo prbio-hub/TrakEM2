@@ -15,6 +15,11 @@ public class RhizoMain
 	
 	private Project p;
 	
+	/**
+	 * The (mainly) project specific configuration
+	 */
+	private ProjectConfig projectConfig = new ProjectConfig();
+	
 	public RhizoMain(Project p)
 	{
 		this.p = p;
@@ -65,6 +70,13 @@ public class RhizoMain
 	
     
     /**
+	 * @return the projectConfig
+	 */
+	public ProjectConfig getProjectConfig() {
+		return projectConfig;
+	}
+
+	/**
     * Used for disposing JFrames when closing the control window
     * @return The image loader JFrame
     */
