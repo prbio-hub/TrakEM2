@@ -41,7 +41,7 @@ public class RhizoStatistics
 		this.rhizoMain = rhizoMain;
 	}
 	
-	/**
+	/**o
 	 * TODO return/error messages
 	 */
 	public void writeStatistics()
@@ -204,12 +204,12 @@ class Segment
 
 	private long treeID;
 	
-	private double scale;
+	private float scale;
 	private final double inchToMM = 25.4;
 	
-	private final double minRadius = 1;
-	private double r1 = minRadius;
-	private double r2 = minRadius;
+	private final float minRadius = 0.5f;
+	private float radiusParent = minRadius;
+	private float radiusChild = minRadius;
 	
 	private Patch p;
 	
@@ -222,16 +222,16 @@ class Segment
 		this.t = t;
 		
 		if(null == p) this.scale = 1;
-		else if(unit.equals("inch")) this.scale = p.getImagePlus().getCalibration().pixelWidth;
-		else if(unit.equals("mm")) this.scale = p.getImagePlus().getCalibration().pixelWidth * inchToMM;
+		else if(unit.equals("inch")) this.scale = (float) p.getImagePlus().getCalibration().pixelWidth;
+		else if(unit.equals("mm")) this.scale = (float) (p.getImagePlus().getCalibration().pixelWidth * inchToMM);
 		else this.scale = 1;
 		
 		this.child = child;
 		this.parent = parent;
 		this.layer = child.getLayer();
 		
-		if(parent.getData() > 0) this.r1 = parent.getData() * scale;
-		if(child.getData() > 0) this.r2 = child.getData() * scale;
+		if(parent.getData() > minRadius) this.radiusParent = parent.getData() * scale;
+		if(child.getData() > minRadius) this.radiusChild = child.getData() * scale;
 		
 		if(null != p) this.imageName = p.getImagePlus().getTitle();
 		else this.imageName = "";
@@ -249,10 +249,10 @@ class Segment
 	private void calculate()
 	{
 		this.length = Math.sqrt(Math.pow(parent.getX() - child.getX(), 2) + Math.pow(parent.getY() - child.getY(), 2)) * scale;
-		this.avgRadius = (r1 + r2) / 2;
-		double s = Math.sqrt(Math.pow((r1 - r2), 2) + Math.pow(this.length, 2));
-		this.surfaceArea = (Math.PI * Math.pow(r1, 2) + Math.PI * Math.pow(r2, 2) + Math.PI * s * (r1 + r2));
-		this.volume = ((Math.PI * length * (Math.pow(r1, 2) + Math.pow(r1, 2) + r1 * r2)) / 3);
+		this.avgRadius = (radiusParent + radiusChild) / 2;
+		double s = Math.sqrt(Math.pow((radiusParent - radiusChild), 2) + Math.pow(this.length, 2));
+		this.surfaceArea = (Math.PI * Math.pow(radiusParent, 2) + Math.PI * Math.pow(radiusChild, 2) + Math.PI * s * (radiusParent + radiusChild));
+		this.volume = ((Math.PI * length * (Math.pow(radiusParent, 2) + Math.pow(radiusParent, 2) + radiusParent * radiusChild)) / 3);
 		this.numberOfChildren = child.getChildrenCount();
 	}
 	
@@ -373,38 +373,38 @@ class Segment
         	Point2D newChild = at.inverseTransform(p2, null);
         	
         	// adjust radii
-        	float parentRadius = parent.getData();
-        	float childRadius = child.getData();
-        	if(parentRadius != childRadius)
+//        	float parentRadius = parent.getData();
+//        	float childRadius = child.getData();
+        	if( this.radiusParent != this.radiusChild)
         	{
-        		boolean parentGreater = parentRadius > childRadius;
+        		boolean parentGreater = radiusParent > radiusChild;
         		
-        		double fullConeHeight = parentGreater ? length + (length*r2) / (r1 - r2) :  length + (length*r1) / (r2 - r1);
+        		double fullConeHeight = parentGreater ? length + (length*radiusChild) / (radiusParent - radiusChild) :  length + (length*radiusParent) / (radiusChild - radiusParent);
         		
         		if(!p1.equals(oldp1))
         		{
         			double h = parentGreater ? p1.distance(oldp1) : p1.distance(oldp2);
-        			parentRadius = (float) (parentGreater ? (r1 - r1*h/fullConeHeight) : (r2 - r2*h/fullConeHeight));
+        			radiusParent = (float) (parentGreater ? (radiusParent - radiusParent*h/fullConeHeight) : (radiusChild - radiusChild*h/fullConeHeight));
         			Utils.log("cone heights p1: " + fullConeHeight + " " + h);
         		}
         		
         		if(!p2.equals(oldp2))
         		{
         			double h = parentGreater ? p2.distance(oldp1) : p2.distance(oldp2);
-        			childRadius = (float) (parentGreater ? (r1 - r1*h/fullConeHeight) : (r2 - r2*h/fullConeHeight));
+        			radiusChild = (float) (parentGreater ? (radiusParent - radiusParent*h/fullConeHeight) : (radiusChild - radiusChild*h/fullConeHeight));
         			Utils.log("cone heights p2: " + fullConeHeight + " " + h);
         		}
         		
         	}
         	
-        	Utils.log("old radii: " + r1 + " " + r2);
-        	Utils.log("new radii: " + parentRadius + " " + childRadius);
+        	Utils.log("old radii: " + radiusParent + " " + radiusChild);
+        	Utils.log("new radii: " + radiusParent + " " + radiusChild);
         	
-        	this.r1 = parentRadius;
-        	this.r2 = childRadius;
+        	this.radiusParent = radiusParent;
+        	this.radiusChild = radiusChild;
         	
-        	this.parent = new RadiusNode((float) newParent.getX(), (float) newParent.getY(), layer, parentRadius);
-        	this.child = new RadiusNode((float) newChild.getX(), (float) newChild.getY(), layer, childRadius);
+        	this.parent = new RadiusNode((float) newParent.getX(), (float) newParent.getY(), layer, radiusParent);
+        	this.child = new RadiusNode((float) newChild.getX(), (float) newChild.getY(), layer, radiusChild);
         	
         	calculate();
 		}
