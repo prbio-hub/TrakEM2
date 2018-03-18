@@ -121,6 +121,7 @@ public class RhizoIO
 		if (!userSettingsFile.exists())
 		{
 			setDefaultGlobalStatus();
+			
 			Utils.log("unable to load user settings: file not found");
 			return;
 		}
@@ -132,7 +133,7 @@ public class RhizoIO
 			globalStatusList.addAll(gs.getGlobalStatusList().getGlobalStatus());
 			Utils.log(globalStatusList.size());
 
-			if(null == gs.getHighlightcolorList())
+			if(null == gs.getHighlightcolorList() || null == gs.getHighlightcolorList().getColor() || gs.getHighlightcolorList().getColor().size() < 2)
 			{
 				rhizoMain.getRhizoColVis().setHighlightColor1(Color.MAGENTA);
 				rhizoMain.getRhizoColVis().setHighlightColor2(Color.PINK);
@@ -145,6 +146,25 @@ public class RhizoIO
 
 
 			updateStatusMap();
+			
+			// new data structure
+			System.out.println("XX ");
+			for ( GlobalStatus status : globalStatusList ) {
+				System.out.println("XX " + status.getFullName());
+				rhizoMain.getProjectConfig().addStatusLabelToSet( status.getFullName(), status.getAbbreviation(),
+						new Color( status.getRed().intValue(), status.getGreen().intValue(), status.getBlue().intValue()),
+								status.getAlpha().intValue());
+			}
+			for ( RhizoStatusLabel sl : rhizoMain.getProjectConfig().getAllStatusLabel()) {
+				System.out.println("YYY " + sl.getName());
+			}
+			
+			if(null != gs.getHighlightcolorList() || null != gs.getHighlightcolorList().getColor() ) {
+				if ( gs.getHighlightcolorList().getColor().size() > 0)
+					rhizoMain.getProjectConfig().setHighlightColor1(settingsToColor( gs.getHighlightcolorList().getColor().get( 0) ));
+				if ( gs.getHighlightcolorList().getColor().size() > 1)
+					rhizoMain.getProjectConfig().setHighlightColor2(settingsToColor( gs.getHighlightcolorList().getColor().get( 1) ));
+			}
 		} 
 		catch (JAXBException e) 
 		{
@@ -202,6 +222,9 @@ public class RhizoIO
 		if(null == path) // user cancelled the open file dialog
 		{
 			setDefaultStatus();
+			// new data structure
+			rhizoMain.getProjectConfig().setDefaultUserStatusLabel();
+
 			return;
 		}
 		
@@ -213,6 +236,9 @@ public class RhizoIO
 		{
 			Utils.showMessage( "config file " + configFile.getPath() + " not found: using default settings");
 			setDefaultStatus();
+			// new data structure
+			rhizoMain.getProjectConfig().setDefaultUserStatusLabel();
+
 			return;
 		}
 
@@ -237,9 +263,7 @@ public class RhizoIO
 				
 				
 				statusMap.put(i, oldStatus);
-				
-				this.rhizoMain.getProjectConfig().addStatusLabel(  
-						new RhizoStatusLabel(newStatus.getFullName(), newStatus.getAbbreviation()));
+				this.rhizoMain.getProjectConfig().appendStatusLabelToList( newStatus.getFullName(), newStatus.getAbbreviation());
 			}
 
 			setFixedStatus();
@@ -254,8 +278,7 @@ public class RhizoIO
 				for(int i = 0; i < sl.size(); i++)
 				{
 					statusMap.put(i, sl.get(i));
-					this.rhizoMain.getProjectConfig().addStatusLabel(  
-							new RhizoStatusLabel(sl.get(i).getFullName(), sl.get(i).getAbbreviation()));
+					this.rhizoMain.getProjectConfig().appendStatusLabelToList( sl.get(i).getFullName(), sl.get(i).getAbbreviation());
 
 				}
 
@@ -264,7 +287,9 @@ public class RhizoIO
 			} catch (JAXBException e1) 		{
 				Utils.showMessage( "cannot parse config file " + configFile.getPath() + ": using default settings");
 				setDefaultStatus();
-
+				
+				// new data structure
+				rhizoMain.getProjectConfig().setDefaultUserStatusLabel();
 			}
 		}
 
@@ -406,6 +431,7 @@ public class RhizoIO
 			e.printStackTrace();
 		}
 		
+		// new data structure
 		try 
 		{
 			JAXBContext context = JAXBContext.newInstance(RhizoTrakProjectConfig.class);
@@ -414,7 +440,7 @@ public class RhizoIO
 	        
             de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList sl = 
                         		new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList();
-	        for( int i = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabel() ; i++ ) {
+	        for( int i = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabelSet() ; i++ ) {
 	        	de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status newStatus =
 	        			new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status();
 	        	newStatus.setFullName( rhizoMain.getProjectConfig().getStatusLabel(i).getName());
@@ -510,6 +536,45 @@ public class RhizoIO
 			Utils.showMessage( "cannot write user settings to " + userSettingsFile.getPath());
 			e.printStackTrace();
 		}
+		
+		// new data structure
+		try {
+			if(!userSettingsFile.getParentFile().exists()) userSettingsFile.getParentFile().mkdirs();
+
+			JAXBContext context = JAXBContext.newInstance(GlobalSettings.class);
+			Marshaller m = context.createMarshaller();
+			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+   
+	        GlobalStatusList gsl = new GlobalStatusList();
+	        for ( RhizoStatusLabel sl : rhizoMain.getProjectConfig().getAllStatusLabel() ) {
+	        	GlobalStatus gStatus = new GlobalStatus();
+				gStatus.setFullName( sl.getName());
+				gStatus.setAbbreviation( sl.getAbbrev());
+
+				gStatus.setRed( BigInteger.valueOf(sl.getColor().getRed()));
+				gStatus.setGreen( BigInteger.valueOf( sl.getColor().getGreen()));
+				gStatus.setBlue( BigInteger.valueOf(sl.getColor().getBlue()));
+				gStatus.setAlpha(BigInteger.valueOf( sl.getAlpha()));
+				gStatus.setSelectable( sl.isSelectable());
+				
+				gsl.getGlobalStatus().add( gStatus);
+			}
+
+	        // highlight colors
+	        HighlightcolorList hlc = new HighlightcolorList();
+	        hlc.getColor().add( colorToSettings( rhizoMain.getProjectConfig().getHighlightColor1()));
+	        hlc.getColor().add( colorToSettings( rhizoMain.getProjectConfig().getHighlightColor2()));
+	        
+	        GlobalSettings gs = new GlobalSettings();
+	        gs.setGlobalStatusList(gsl);
+	        gs.setHighlightcolorList(hlc);
+			
+			m.marshal(gs, new File( userSettingsFile.getPath() + ".new"));
+		} catch(Exception e) {
+			Utils.showMessage( "cannot write user settings to " + userSettingsFile.getPath() + ".new");
+			e.printStackTrace();
+		}
+	
 	}
 	
 	/** convert a awt Color to the xsd representation in user settings
@@ -579,7 +644,7 @@ public class RhizoIO
 	{
 		GlobalStatus undefined = new GlobalStatus();
 		undefined.setFullName("UNDEFINED");
-//		undefined.setAbbreviation("*");
+		undefined.setAbbreviation("*");
 		undefined.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
 		undefined.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
 		undefined.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
@@ -589,7 +654,7 @@ public class RhizoIO
 		
 		GlobalStatus connector = new GlobalStatus();
 		connector.setFullName("CONNECTOR");
-//		connector.setAbbreviation("@");
+		connector.setAbbreviation("@");
 		connector.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
 		connector.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
 		connector.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
@@ -599,7 +664,7 @@ public class RhizoIO
 		
 		GlobalStatus virtual = new GlobalStatus();
 		virtual.setFullName("VIRTUAL");
-//		virtual.setAbbreviation("-");
+		virtual.setAbbreviation("-");
 		virtual.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
 		virtual.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
 		virtual.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
@@ -609,7 +674,7 @@ public class RhizoIO
 		
 		GlobalStatus living = new GlobalStatus();
 		living.setFullName("LIVING");
-//		living.setAbbreviation("L");
+		living.setAbbreviation("L");
 		living.setRed(BigInteger.valueOf( DEFAULT_STATUS_COLOR.getRed()));
 		living.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
 		living.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
@@ -619,7 +684,7 @@ public class RhizoIO
 		
 		GlobalStatus dead = new GlobalStatus();
 		dead.setFullName("DEAD");
-//		dead.setAbbreviation("D");
+		dead.setAbbreviation("D");
 		dead.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
 		dead.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
 		dead.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
@@ -629,7 +694,7 @@ public class RhizoIO
 		
 		GlobalStatus decayed = new GlobalStatus();
 		decayed.setFullName("DECAYED");
-//		decayed.setAbbreviation("Y");
+		decayed.setAbbreviation("Y");
 		decayed.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
 		decayed.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
 		decayed.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
@@ -639,7 +704,7 @@ public class RhizoIO
 		
 		GlobalStatus gap = new GlobalStatus();
 		gap.setFullName("GAP");
-//		gap.setAbbreviation("G");
+		gap.setAbbreviation("G");
 		gap.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
 		gap.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
 		gap.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
