@@ -372,6 +372,7 @@ class Segment
         	Point2D newParent = at.inverseTransform(p1, null);
         	Point2D newChild = at.inverseTransform(p2, null);
         	
+        	Utils.log("old radii: " + radiusParent + " " + radiusChild);
         	// adjust radii
 //        	float parentRadius = parent.getData();
 //        	float childRadius = child.getData();
@@ -383,28 +384,24 @@ class Segment
         		
         		if(!p1.equals(oldp1))
         		{
-        			double h = parentGreater ? p1.distance(oldp1) : p1.distance(oldp2);
+        			double h = (parentGreater ? p1.distance(oldp1) : p1.distance(oldp2)) * scale;
         			radiusParent = (float) (parentGreater ? (radiusParent - radiusParent*h/fullConeHeight) : (radiusChild - radiusChild*h/fullConeHeight));
         			Utils.log("cone heights p1: " + fullConeHeight + " " + h);
         		}
         		
         		if(!p2.equals(oldp2))
         		{
-        			double h = parentGreater ? p2.distance(oldp1) : p2.distance(oldp2);
+        			double h = (parentGreater ? p2.distance(oldp1) : p2.distance(oldp2)) * scale;
         			radiusChild = (float) (parentGreater ? (radiusParent - radiusParent*h/fullConeHeight) : (radiusChild - radiusChild*h/fullConeHeight));
         			Utils.log("cone heights p2: " + fullConeHeight + " " + h);
         		}
         		
         	}
-        	
-        	Utils.log("old radii: " + radiusParent + " " + radiusChild);
+
         	Utils.log("new radii: " + radiusParent + " " + radiusChild);
         	
-        	this.radiusParent = radiusParent;
-        	this.radiusChild = radiusChild;
-        	
-        	this.parent = new RadiusNode((float) newParent.getX(), (float) newParent.getY(), layer, radiusParent);
-        	this.child = new RadiusNode((float) newChild.getX(), (float) newChild.getY(), layer, radiusChild);
+        	this.parent = new RadiusNode((float) newParent.getX(), (float) newParent.getY(), layer, radiusParent / scale);
+        	this.child = new RadiusNode((float) newChild.getX(), (float) newChild.getY(), layer, radiusChild / scale);
         	
         	calculate();
 		}
