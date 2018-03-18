@@ -1,5 +1,6 @@
 package de.unihalle.informatik.rhizoTrak.addon;
 
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.JOptionPane;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
@@ -45,6 +47,13 @@ import ij.ImagePlus;
 public class RhizoMTBXML
 {
 	private RhizoMain rhizoMain;
+	
+	private final int INSIDE = 0;
+	private final int LEFT   = 1;
+	private final int RIGHT  = 2;
+	private final int BOTTOM = 4;
+	private final int TOP    = 8;
+
 
 	public RhizoMTBXML(RhizoMain rhizoMain)
 	{
@@ -447,7 +456,20 @@ public class RhizoMTBXML
 			Utils.log(e.getMessage());
 			Utils.log(e.getLocalizedMessage());
 		} 
-
+		
+		// temporary: only remove treelines that are completely outside of the image
+		if(!allTreelinesIntersect())
+		{
+			int answer = JOptionPane.showConfirmDialog(null, "Some treelines appear to be completely outside of the image.\nDo you want to remove them?", "", JOptionPane.YES_NO_OPTION);
+			if(answer == JOptionPane.YES_OPTION) removeTreelinesOutsideOfImage();
+		}
+		
+		// TODO: cutting
+//		if(!allNodesInside())
+//		{
+//			int answer = JOptionPane.showConfirmDialog(null, "Some segments appear to be outside of the image.\nDo you want to cut them to the image bounds?", "", JOptionPane.YES_NO_OPTION);
+//			if(answer == JOptionPane.YES_OPTION) cutTreelines();
+//		}
 	}
 	
 	
@@ -503,6 +525,164 @@ public class RhizoMTBXML
 		
 		return treelines;
 	}
+	
+	private boolean allTreelinesIntersect()
+	{
+		// get layers
+		Display display = Display.getFront();	
+		LayerSet layerSet = display.getLayerSet();  
+		
+		// all treelines in the project
+		List<Displayable> allTreelines = layerSet.get(Treeline.class);
+		
+		for(int j = 0; j < allTreelines.size(); j++)
+		{
+			Treeline currentTreeline = (Treeline) allTreelines.get(j);
+
+			if(null == currentTreeline.getFirstLayer()) continue;
+
+			Patch p = RhizoAddons.getPatch(currentTreeline);
+			if(null == p) continue;
+			
+			ImagePlus image = p.getImagePlus();
+
+			if(isTreelineCompletelyOutside(currentTreeline, image)) return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean allNodesInside()
+	{
+		// get layers
+		Display display = Display.getFront();	
+		LayerSet layerSet = display.getLayerSet();  
+		
+		// all treelines in the project
+		List<Displayable> allTreelines = layerSet.get(Treeline.class);
+		
+		for(int j = 0; j < allTreelines.size(); j++)
+		{
+			Treeline currentTreeline = (Treeline) allTreelines.get(j);
+
+			if(null == currentTreeline.getFirstLayer()) continue;
+			
+			List<Node<Float>> treelineNodes = new ArrayList<Node<Float>>(currentTreeline.getNodesAt(currentTreeline.getFirstLayer()));
+			
+			Patch p = RhizoAddons.getPatch(currentTreeline);
+			if(null == p) continue;
+			
+			ImagePlus image = p.getImagePlus();
+
+			for(Node<Float> n: treelineNodes)
+			{
+				AffineTransform at = currentTreeline.getAffineTransform();
+				Point2D point = at.transform(new Point2D.Float(n.getX(), n.getY()), null);
+				if(regionCode(point.getX(), point.getY(), 0, 0, image.getWidth(), image.getHeight()) != INSIDE) return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	private void cutTreelines()
+	{
+		// get layers
+		Display display = Display.getFront();	
+		LayerSet layerSet = display.getLayerSet();  
+		
+		// all treelines in the project
+		List<Displayable> allTreelines = layerSet.get(Treeline.class);
+		
+		for(int j = 0; j < allTreelines.size(); j++)
+		{
+			Treeline currentTreeline = (Treeline) allTreelines.get(j);
+			AffineTransform at = currentTreeline.getAffineTransform();
+			
+			if(null == currentTreeline.getFirstLayer()) continue;
+			Patch p = RhizoAddons.getPatch(currentTreeline);
+			if(null == p) continue;
+			
+			ImagePlus image = p.getImagePlus();
+
+			// delete treeline if it is completely outside of the image
+			if(isTreelineCompletelyOutside(currentTreeline, image))
+			{
+				rhizoMain.getProject().remove(currentTreeline);
+				continue;
+			}
+			
+			List<Node<Float>> treelineNodes = new ArrayList<Node<Float>>(currentTreeline.getNodesAt(currentTreeline.getFirstLayer()));
+					
+			for(Node<Float> n: treelineNodes)
+			{		
+				if(null != n.getParent())
+				{		
+					Point2D parent = at.transform(new Point2D.Float(n.getParent().getX(), n.getParent().getY()), null);
+					Point2D point = at.transform(new Point2D.Float(n.getX(), n.getY()), null);
+					if(regionCode(point.getX(), point.getY(), 0, 0, image.getWidth(), image.getHeight()) != INSIDE
+							&& regionCode(parent.getX(), parent.getY(), 0, 0, image.getWidth(), image.getHeight()) != INSIDE)
+					{
+						currentTreeline.removeNode(n);
+					}
+				}
+			}
+
+			currentTreeline.updateCache();
+			
+		}
+		
+		
+	}
+	
+	private void removeTreelinesOutsideOfImage()
+	{
+		// get layers
+		Display display = Display.getFront();	
+		LayerSet layerSet = display.getLayerSet();  
+		
+		// all treelines in the project
+		List<Displayable> allTreelines = layerSet.get(Treeline.class);
+		
+		for(int j = 0; j < allTreelines.size(); j++)
+		{
+			Treeline currentTreeline = (Treeline) allTreelines.get(j);
+
+			if(null == currentTreeline.getFirstLayer()) continue;
+			Patch p = RhizoAddons.getPatch(currentTreeline);
+			if(null == p) continue;
+			
+			ImagePlus image = p.getImagePlus();
+
+			// delete treeline if it is completely outside of the image
+			if(isTreelineCompletelyOutside(currentTreeline, image))
+			{
+				rhizoMain.getProject().remove(currentTreeline);
+			}	
+		}
+		
+		
+	}
+	
+	private boolean isTreelineCompletelyOutside(Treeline t, ImagePlus image)
+	{
+		List<Node<Float>> treelineNodes = new ArrayList<Node<Float>>(t.getNodesAt(t.getFirstLayer()));
+				
+		for(Node<Float> n: treelineNodes)
+		{
+			Point2D point = t.getAffineTransform().transform(new Point2D.Float(n.getX(), n.getY()), null);
+			if(regionCode(point.getX(), point.getY(), 0, 0, image.getWidth(), image.getHeight()) == INSIDE) return false;
+		}
+		
+		return true;
+	}
 
 	
+	private final int regionCode(double x, double y, double xMin, double yMin, double xMax, double yMax) 
+	{
+        int code = x < xMin ? LEFT : x > xMax ? RIGHT : INSIDE;
+        if (y < yMin) code |= BOTTOM;
+        else if (y > yMax) code |= TOP;
+        return code;
+    }
 }
