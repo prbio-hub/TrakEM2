@@ -420,7 +420,7 @@ public class RhizoIO
 			if(!temp.contains(s.getFullName())) // add new global status
 			{
 				GlobalStatus gStatus = new GlobalStatus();
-				gStatus.setAbbreviation(s.getAbbreviation());
+//				gStatus.setAbbreviation(s.getAbbreviation());
 				gStatus.setFullName(s.getFullName());
 				gStatus.setRed(s.getRed());
 				gStatus.setGreen(s.getGreen());
@@ -432,7 +432,7 @@ public class RhizoIO
 			} else  {// update existing global status
 				for(GlobalStatus g: globalStatusList) {
 					if(g.getFullName().equals(s.getFullName())) {
-						g.setAbbreviation(s.getAbbreviation());
+//						g.setAbbreviation(s.getAbbreviation());
 						g.setRed(s.getRed());
 						g.setGreen(s.getGreen());
 						g.setBlue(s.getBlue());
@@ -546,7 +546,7 @@ public class RhizoIO
 	{
 		GlobalStatus undefined = new GlobalStatus();
 		undefined.setFullName("UNDEFINED");
-		undefined.setAbbreviation("*");
+//		undefined.setAbbreviation("*");
 		undefined.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
 		undefined.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
 		undefined.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
@@ -556,7 +556,7 @@ public class RhizoIO
 		
 		GlobalStatus connector = new GlobalStatus();
 		connector.setFullName("CONNECTOR");
-		connector.setAbbreviation("@");
+//		connector.setAbbreviation("@");
 		connector.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
 		connector.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
 		connector.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
@@ -566,7 +566,7 @@ public class RhizoIO
 		
 		GlobalStatus virtual = new GlobalStatus();
 		virtual.setFullName("VIRTUAL");
-		virtual.setAbbreviation("-");
+//		virtual.setAbbreviation("-");
 		virtual.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
 		virtual.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
 		virtual.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
@@ -576,7 +576,7 @@ public class RhizoIO
 		
 		GlobalStatus living = new GlobalStatus();
 		living.setFullName("LIVING");
-		living.setAbbreviation("L");
+//		living.setAbbreviation("L");
 		living.setRed(BigInteger.valueOf( DEFAULT_STATUS_COLOR.getRed()));
 		living.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
 		living.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
@@ -586,7 +586,7 @@ public class RhizoIO
 		
 		GlobalStatus dead = new GlobalStatus();
 		dead.setFullName("DEAD");
-		dead.setAbbreviation("D");
+//		dead.setAbbreviation("D");
 		dead.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
 		dead.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
 		dead.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
@@ -596,7 +596,7 @@ public class RhizoIO
 		
 		GlobalStatus decayed = new GlobalStatus();
 		decayed.setFullName("DECAYED");
-		decayed.setAbbreviation("Y");
+//		decayed.setAbbreviation("Y");
 		decayed.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
 		decayed.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
 		decayed.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
@@ -606,7 +606,7 @@ public class RhizoIO
 		
 		GlobalStatus gap = new GlobalStatus();
 		gap.setFullName("GAP");
-		gap.setAbbreviation("G");
+//		gap.setAbbreviation("G");
 		gap.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
 		gap.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
 		gap.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
