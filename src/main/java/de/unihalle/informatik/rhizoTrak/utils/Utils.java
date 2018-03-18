@@ -169,7 +169,7 @@ public class Utils implements ij.plugin.PlugIn {
 
 	static public String version = "1.0a 2012-07-04";
 
-	static public boolean rhizoTrakDebug = true; // aeekz
+	static public boolean rhizoTrakDebug = false;
 	
 	static public boolean debug = false;
 	static public boolean debug_mouse = false;

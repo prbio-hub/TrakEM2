@@ -290,7 +290,12 @@ class Segment
 	}
 
 	
-	// Cohen-Sutherland line clipping algorithm with the image
+	
+	/**
+	 * Cohen-Sutherland line clipping algorithm.
+	 * @return true - if both nodes are inside the image or if at least one node is outside and the line is clipped with the image
+	 * 		  false - if both nodes are outside and the line does not intersect with the image
+	 */
 	public boolean cohenSutherlandLineClipping()
 	{
 		ImagePlus image = p.getImagePlus();
@@ -302,6 +307,10 @@ class Segment
 		AffineTransform at = t.getAffineTransform();
 		Point2D p1 = at.transform(new Point2D.Float(parent.getX(), parent.getY()), null);
 		Point2D p2 = at.transform(new Point2D.Float(child.getX(), child.getY()), null);
+		
+		// save original points
+		Point2D oldp1 = (Point2D) p1.clone();
+		Point2D oldp2 = (Point2D) p2.clone();
 
 		double qx = 0d;
         double qy = 0d;
@@ -313,10 +322,11 @@ class Segment
         int c1 = regionCode(p1.getX(), p1.getY(), xMin, yMin, xMax, yMax);
         int c2 = regionCode(p2.getX(), p2.getY(), xMin, yMin, xMax, yMax);
         
+        if(c1 == INSIDE && c2 == INSIDE) return true; // both nodes inside - no need to calculate new radii
+        
         while(c1 != INSIDE || c2 != INSIDE) 
         {
-        	Utils.log("cutting " + c1 + " " + c2);
-        	if ((c1 & c2) != INSIDE) return false; // both nodes outside
+        	if ((c1 & c2) != INSIDE) return false; // both nodes outside and on the same side
 
         	int c = c1 == INSIDE ? c2 : c1;
 
@@ -340,8 +350,6 @@ class Segment
         		qy = yMax;
         		qx = vertical ? p1.getX() : (qy-p1.getY())/slope + p1.getX();
         	}
-        	
-        	Utils.log(qx + " " + qy);
 
         	if (c == c1) 
         	{
@@ -354,9 +362,7 @@ class Segment
         		c2 = regionCode(p2.getX(), p2.getY(), xMin, yMin, xMax, yMax);
         	}
         }
-        
-        Utils.log("end cutting");
-        
+
         try
 		{
         	
@@ -366,8 +372,39 @@ class Segment
         	Point2D newParent = at.inverseTransform(p1, null);
         	Point2D newChild = at.inverseTransform(p2, null);
         	
-        	this.parent = new RadiusNode((float) newParent.getX(), (float) newParent.getY(), layer, parent.getData());
-        	this.child = new RadiusNode((float) newChild.getX(), (float) newChild.getY(), layer, child.getData());
+        	// adjust radii
+        	float parentRadius = parent.getData();
+        	float childRadius = child.getData();
+        	if(parentRadius != childRadius)
+        	{
+        		boolean parentGreater = parentRadius > childRadius;
+        		
+        		double fullConeHeight = parentGreater ? length + (length*r2) / (r1 - r2) :  length + (length*r1) / (r2 - r1);
+        		
+        		if(!p1.equals(oldp1))
+        		{
+        			double h = parentGreater ? p1.distance(oldp1) : p1.distance(oldp2);
+        			parentRadius = (float) (parentGreater ? (r1 - r1*h/fullConeHeight) : (r2 - r2*h/fullConeHeight));
+        			Utils.log("cone heights p1: " + fullConeHeight + " " + h);
+        		}
+        		
+        		if(!p2.equals(oldp2))
+        		{
+        			double h = parentGreater ? p2.distance(oldp1) : p2.distance(oldp2);
+        			childRadius = (float) (parentGreater ? (r1 - r1*h/fullConeHeight) : (r2 - r2*h/fullConeHeight));
+        			Utils.log("cone heights p2: " + fullConeHeight + " " + h);
+        		}
+        		
+        	}
+        	
+        	Utils.log("old radii: " + r1 + " " + r2);
+        	Utils.log("new radii: " + parentRadius + " " + childRadius);
+        	
+        	this.r1 = parentRadius;
+        	this.r2 = childRadius;
+        	
+        	this.parent = new RadiusNode((float) newParent.getX(), (float) newParent.getY(), layer, parentRadius);
+        	this.child = new RadiusNode((float) newChild.getX(), (float) newChild.getY(), layer, childRadius);
         	
         	calculate();
 		}
@@ -386,4 +423,5 @@ class Segment
         else if (y > yMax) code |= TOP;
         return code;
     }
+	
 }
