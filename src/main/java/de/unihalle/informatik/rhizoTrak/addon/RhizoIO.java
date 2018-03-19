@@ -670,6 +670,8 @@ public class RhizoIO
 		}
 		
 		setFixedStatus();
+		
+		Node.MAX_EDGE_CONFIDENCE = getStatusMapSize();
 	}
 	
 	/**
