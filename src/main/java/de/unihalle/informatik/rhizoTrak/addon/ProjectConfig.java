@@ -60,6 +60,7 @@ public class ProjectConfig {
 	
 	/**
 	 * defines the mapping from integer status values to status label names
+	 * fixed and user defined status labels
 	 */
 	private HashMap<String,RhizoStatusLabel> statusLabelSet = new HashMap<String,RhizoStatusLabel>();
 	
@@ -72,6 +73,9 @@ public class ProjectConfig {
 		fixedStatusLabelMap.put( STATUS_UNDEFINED, new RhizoStatusLabel( "UNDEFINED", "*", DEFAULT_FIXED_STATUS_COLOR));
 		fixedStatusLabelMap.put( STATUS_VIRTUAL, new RhizoStatusLabel( "VIRTUAL", "-", DEFAULT_FIXED_STATUS_COLOR));
 		fixedStatusLabelMap.put( STATUS_CONNECTOR, new RhizoStatusLabel( "CONNECTOR", "@", DEFAULT_FIXED_STATUS_COLOR));
+		statusLabelSet.put( "UNDEFINED", fixedStatusLabelMap.get(STATUS_UNDEFINED));
+		statusLabelSet.put( "VIRTUAL", fixedStatusLabelMap.get(STATUS_VIRTUAL));
+		statusLabelSet.put( "CONNECTOR", fixedStatusLabelMap.get(STATUS_CONNECTOR));		
 	}
 	
 	/** Append status label as the last label to the list.
@@ -82,7 +86,7 @@ public class ProjectConfig {
 	 * @param sl
 	 */
 	public void appendStatusLabelToList( String name, String abbrev) {
-		RhizoStatusLabel sl = statusLabelSet. get(name);
+		RhizoStatusLabel sl = statusLabelSet.get(name);
 		if ( sl == null ) {
 			sl = new RhizoStatusLabel(name, abbrev, DEFAULT_STATUS_COLOR);
 			statusLabelSet.put(name, sl);
@@ -148,13 +152,17 @@ public class ProjectConfig {
 	 * @param alpha
 	 */
 	public void addStatusLabelToSet( String name, String abbrev, Color color, int alpha) {
+		System.out.println(" XX <" + name + "> - <" + this.getStatusLabel(-1).getName() + "> " + name.equals(this.getStatusLabel(-1).getName()));
 		RhizoStatusLabel sl = this.statusLabelSet.get( name);
 		if ( sl != null ) {
 			sl.setAbbrev(abbrev);
 			sl.setColor(color);
 			sl.setAlpha(alpha);
+			System.out.println("THEN");
 		} else {
 			statusLabelSet.put( name, new RhizoStatusLabel(name, abbrev, color, alpha));
+			System.out.println("ELSE");
+			printStatusLabelSet();
 		}
 	}
 	
@@ -182,7 +190,6 @@ public class ProjectConfig {
 		LinkedList<RhizoStatusLabel> sll = new LinkedList<RhizoStatusLabel>();
 
 		sll.addAll( statusLabelSet.values());
-		sll.addAll( fixedStatusLabelMap.values());
 
 		return sll;
 	}
@@ -203,6 +210,14 @@ public class ProjectConfig {
 	public int sizeStatusLabelList() {
 		return statusLabelList.size();
 	}
+	
+	/** 
+	 * @return number of fixed status labels
+	 */
+	public int sizeFixedStatusLabelList() {
+		return fixedStatusLabelMap.size();
+	}
+	
 	/** return the status label associated with <code>i</code>.
 	 * 
 	 * @param i
@@ -210,12 +225,15 @@ public class ProjectConfig {
 	 */
 	public RhizoStatusLabel getStatusLabel( int i) {
 		if ( i >= 0 ) {
-			if ( statusLabelList.get(i) != null)
+			if ( i < sizeStatusLabelList() )
 				return statusLabelSet.get( statusLabelList.get(i));
 			else
 				return null;
 		} else {
-			return fixedStatusLabelMap.get(i);
+			if ( i >= - sizeFixedStatusLabelList() )
+				return fixedStatusLabelMap.get(i);
+			else 
+				return null;
 		}
 	}
 	
@@ -237,6 +255,14 @@ public class ProjectConfig {
 		}			
 	}
  
+	public Color getColorForStatus( int i) {
+		RhizoStatusLabel sl = getStatusLabel(i);
+		if ( sl != null ) {
+			return sl.getColor();
+		} else {
+			return getStatusLabel(STATUS_UNDEFINED).getColor();
+		}
+	}
 	/**
 	 * Set the default user defined status label
 	 * <ul>
@@ -290,5 +316,26 @@ public class ProjectConfig {
 	public void setHighlightColor2(Color highlightColor2) {
 		this.highlightColor2 = highlightColor2;
 	}
+	
+	public void printStatusLabelSet() {
+		System.out.println( "StatusLabelSet");
+		for ( RhizoStatusLabel sl : this.getAllStatusLabel()) {
+			System.out.println("\t" + sl.getName() + " " + sl.getAbbrev() );
+		}
 
+	}
+
+	public void printStatusLabelList() {
+		System.out.println( "StatusLabelList");
+		for ( String name : this.statusLabelList ) {
+			System.out.println("\t" + name);
+		}
+	}
+	
+	public void printFixStatusLabels() {
+		System.out.println( "FixStatusLabels");
+	    for ( int i : fixedStatusLabelMap.keySet() ) {
+	    	System.out.println(  i + " --> " + fixedStatusLabelMap.get(i).getName());
+	    }
+	}
 }

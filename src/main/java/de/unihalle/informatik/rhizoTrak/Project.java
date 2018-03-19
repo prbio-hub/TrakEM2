@@ -578,17 +578,25 @@ public class Project extends DBObject {
 
 			Project project = createNewProject(loader, !("blank".equals(arg) || "amira".equals(arg)), template_root);
 
-			// aeekz
-			final OpenDialog od = new OpenDialog("Select status file", dir_project, null);
-			project.getRhizoMain().getRhizoIO().loadConfigFile(od.getPath());
-			
-			project.getRhizoMain().getRhizoImages().setImageDir( new File( dir_project));
-			
+			// first load user settings
 			if(RhizoIO.userSettingsFile.exists())
 			{
 				Utils.log("@Project: called loadUserSettings(");
 				project.getRhizoMain().getRhizoIO().loadUserSettings();
 			}
+			System.out.println("read usersettings");
+			project.getRhizoMain().getProjectConfig().printStatusLabelSet();
+
+			// aeekz
+			final OpenDialog od = new OpenDialog("Select status file", dir_project, null);
+			project.getRhizoMain().getRhizoIO().loadConfigFile(od.getPath());
+			System.out.println("read project config");
+			project.getRhizoMain().getProjectConfig().printStatusLabelSet();
+			project.getRhizoMain().getProjectConfig().printStatusLabelList();
+			project.getRhizoMain().getProjectConfig().printFixStatusLabels();
+
+			project.getRhizoMain().getRhizoImages().setImageDir( new File( dir_project));
+			
 	
 			// help the helpless users:
 			if (autocreate_one_layer && null != project && ControlWindow.isGUIEnabled()) {

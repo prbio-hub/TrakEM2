@@ -79,6 +79,7 @@ import org.scijava.vecmath.Point3f;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoIO;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.M;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
@@ -428,12 +429,17 @@ public abstract class Node<T> implements Taggable {
 				int i = (int) this.getConfidence();
 //				if(i > rhizoMain.getRhizoIO().getStatusMapSize()) Utils.log("@Node: confidence is higher than status list size");
 //				String s = rhizoMain.getRhizoIO().getStatusMap().get(i).getAbbreviation();
-				Status status = rhizoMain.getRhizoIO().getStatusMap().get(i);
+				
+				// ##################
+//				Status status = rhizoMain.getRhizoIO().getStatusMap().get(i);
+				RhizoStatusLabel status = rhizoMain.getProjectConfig().getStatusLabel(i);
 				String s;
 				if ( status != null ) {
-					s = status.getAbbreviation();
+					s = status.getAbbrev();
 				} else {
-					s = rhizoMain.getRhizoIO().getStatusMap().get( RhizoIO.STATUS_UNDEFINED).getAbbreviation();
+					// ###############
+//					s = rhizoMain.getRhizoIO().getStatusMap().get( RhizoIO.STATUS_UNDEFINED).getAbbreviation();
+					s = rhizoMain.getProjectConfig().getStatusLabel( rhizoMain.getProjectConfig().STATUS_UNDEFINED).getAbbrev();
 				}
 				
 				final Dimension dim = Utils.getDimensions(s, g.getFont());
@@ -1283,10 +1289,13 @@ public abstract class Node<T> implements Taggable {
 	
 	//actyc: get the righ color aka wheter non, first or seconded highlight
 	private Color getCorrectedColor(){
-                if(!rhizoAddonsExists()){
-                    return Color.LIGHT_GRAY;     
-                }
-		Color result = this.rhizoMain.getRhizoIO().getColorFromStatusMap(this.getConfidence());
+		if(!rhizoAddonsExists()){
+			return Color.LIGHT_GRAY;     
+		}
+                
+        // ############
+//		Color result = this.rhizoMain.getRhizoIO().getColorFromStatusMap(this.getConfidence());
+		Color result = this.rhizoMain.getProjectConfig().getColorForStatus( getConfidence());
 
 		if(high[0]) return rhizoMain.getRhizoColVis().getHighlightColor1();
 		if(high[1]) return rhizoMain.getRhizoColVis().getHighlightColor2();

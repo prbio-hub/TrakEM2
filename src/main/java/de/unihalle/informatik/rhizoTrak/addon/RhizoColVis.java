@@ -74,7 +74,10 @@ public class RhizoColVis
 			for (Node<Float> cnode : ctree.getRoot().getSubtreeNodes())
 			{
 				byte currentConfi = cnode.getConfidence();
-				Color newColor = rhizoMain.getRhizoIO().getColorFromStatusMap(currentConfi);
+				// ################
+//				Color newColor = rhizoMain.getRhizoIO().getColorFromStatusMap(currentConfi);
+				Color newColor = rhizoMain.getProjectConfig().getColorForStatus(currentConfi);
+
 
 				if (cnode.getColor()==null || !cnode.getColor().equals(newColor))
 				{
@@ -191,7 +194,8 @@ public class RhizoColVis
     {
         if(colorFrame==null) return;
         
-        rhizoMain.getRhizoIO().clearColorVisibilityLists();
+        // ######################
+//        rhizoMain.getRhizoIO().clearColorVisibilityLists();
     	colorFrame.dispose();
     }
 

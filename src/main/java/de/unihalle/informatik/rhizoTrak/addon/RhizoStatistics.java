@@ -113,7 +113,7 @@ public class RhizoStatistics
 				{
 					if(!node.equals(ctree.getRoot()))
 					{
-						Segment currentSegment = new Segment(rhizoMain.getRhizoIO(), RhizoAddons.getPatch(ctree), ctree, cObj.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+						Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(ctree), ctree, cObj.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
 						segmentID++;
 
 						if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
@@ -138,7 +138,7 @@ public class RhizoStatistics
 			{
 				if(!node.equals(tl.getRoot()))
 				{
-					Segment currentSegment = new Segment(rhizoMain.getRhizoIO(), RhizoAddons.getPatch(tl), tl, tl.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+					Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(tl), tl, tl.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
 					segmentID++;
 
 					if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
@@ -213,10 +213,10 @@ class Segment
 	
 	private Patch p;
 	
-	private RhizoIO r;
+	private RhizoMain rhizoMain;
 
 	// TODO: add warning that if no images are present the unit will be pixel
-	public Segment(RhizoIO r, Patch p, Treeline t, long treeID, int segmentID, RadiusNode child, RadiusNode parent, String unit, int status)
+	public Segment(RhizoMain rhizoMain, Patch p, Treeline t, long treeID, int segmentID, RadiusNode child, RadiusNode parent, String unit, int status)
 	{
 		this.p = p;
 		this.t = t;
@@ -241,7 +241,7 @@ class Segment
 		this.treeID = treeID;
 		this.segmentID = segmentID;
 		this.status = status;
-		this.r = r;
+		this.rhizoMain = rhizoMain;
 		
 		calculate();
 	}
@@ -284,7 +284,10 @@ class Segment
 	{
 		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) + sep + Integer.toString(segmentID) + sep + Integer.toString((int) layer.getZ() + 1)  +
 				sep + Double.toString(length) + sep + Double.toString(avgRadius) + sep + Double.toString(surfaceArea) +
-				sep + Double.toString(volume) + sep + Integer.toString(numberOfChildren) + sep + status + sep + r.getStatusMap().get(status).getFullName();
+// #########
+				//				sep + Double.toString(volume) + sep + Integer.toString(numberOfChildren) + sep + status + sep + r.getStatusMap().get(status).getFullName();
+		        sep + Double.toString(volume) + sep + Integer.toString(numberOfChildren) + sep + status + sep + 
+		        rhizoMain.getProjectConfig().getStatusLabel(status).getName();
 
 		return result;
 	}

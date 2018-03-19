@@ -233,16 +233,23 @@ public class RhizoMTBXML
 				rootSegment.setEndPoint(xmlEnd);
 				rootSegment.setEndRadius(endRadius);
 				
-				LinkedHashMap<Integer, Status> statusMap = rhizoMain.getRhizoIO().getStatusMap();
-				if(null != statusMap.get((int) n.getConfidence()))
-				{
-					String statusName = statusMap.get((int) n.getConfidence()).getFullName();
+				// ###############
+//				LinkedHashMap<Integer, Status> statusMap = rhizoMain.getRhizoIO().getStatusMap();
+//				if(null != statusMap.get((int) n.getConfidence()))
+//				{
+//					String statusName = statusMap.get((int) n.getConfidence()).getFullName();
+				
+				RhizoStatusLabel sl = rhizoMain.getProjectConfig().getStatusLabel( (int) n.getConfidence());
+				if ( sl != null ) {
+					String statusName = sl.getName();
+
 					if(statusName.equals("DEAD")) rootSegment.setType(MTBXMLRootSegmentStatusType.DEAD);
 					else if(statusName.equals("DECAYED")) rootSegment.setType(MTBXMLRootSegmentStatusType.DECAYED);
 					else if(statusName.equals("GAP")) rootSegment.setType(MTBXMLRootSegmentStatusType.GAP);
 					else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING);
+				} else {
+					rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING);
 				}
-				else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING);
 				
 				rootSegmentsArray[i] = rootSegment;
 			}
@@ -316,13 +323,17 @@ public class RhizoMTBXML
 		
 		try 
 		{
-			LinkedHashMap<Integer, Status> statusMap = rhizoMain.getRhizoIO().getStatusMap();
+//			LinkedHashMap<Integer, Status> statusMap = rhizoMain.getRhizoIO().getStatusMap();
 
 			// error if default status is not defined
 			List<String> fullNames = new ArrayList<String>();
-			for(int i: statusMap.keySet())
-			{
-				fullNames.add(statusMap.get(i).getFullName());
+			// ###############
+//			for(int i: statusMap.keySet())
+//			{
+//				fullNames.add(statusMap.get(i).getFullName());
+//			}
+			for ( RhizoStatusLabel sl : rhizoMain.getProjectConfig().getAllStatusLabel()) {
+				fullNames.add( sl.getName());
 			}
 			
 			if(!fullNames.contains("LIVING") || !fullNames.contains("DEAD") || !fullNames.contains("DECAYED") || !fullNames.contains("GAP"))
@@ -421,11 +432,14 @@ public class RhizoMTBXML
 	    				MTBXMLRootSegmentType currentRootSegment = rootSegments[k];
 	    				
     					// assuming that default status are defined
-	    				byte s = -1;
-
-	    				for(int index: statusMap.keySet())
-	    				{
-	    					String statusName = statusMap.get(index).getFullName();
+	    				byte s = (byte) rhizoMain.getProjectConfig().STATUS_UNDEFINED;
+	    				
+	    				// #############
+//	    				for(int index: statusMap.keySet())
+	    				for(int index = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabelList() ; i++) {
+	    					// ######
+//	    					String statusName = statusMap.get(index).getFullName();
+	    					String statusName = rhizoMain.getProjectConfig().getStatusLabel(i).getName();
 	    					if(statusName.equals("LIVING") && currentRootSegment.getType() == MTBXMLRootSegmentStatusType.LIVING) s = (byte) index;
 	    					else if(statusName.equals("DEAD") && currentRootSegment.getType() == MTBXMLRootSegmentStatusType.DEAD) s = (byte) index;
 	    					else if(statusName.equals("GAP") && currentRootSegment.getType() == MTBXMLRootSegmentStatusType.GAP) s = (byte) index;
