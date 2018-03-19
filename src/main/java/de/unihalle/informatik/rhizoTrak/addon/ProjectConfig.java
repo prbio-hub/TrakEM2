@@ -152,17 +152,13 @@ public class ProjectConfig {
 	 * @param alpha
 	 */
 	public void addStatusLabelToSet( String name, String abbrev, Color color, int alpha) {
-		System.out.println(" XX <" + name + "> - <" + this.getStatusLabel(-1).getName() + "> " + name.equals(this.getStatusLabel(-1).getName()));
 		RhizoStatusLabel sl = this.statusLabelSet.get( name);
 		if ( sl != null ) {
 			sl.setAbbrev(abbrev);
 			sl.setColor(color);
 			sl.setAlpha(alpha);
-			System.out.println("THEN");
 		} else {
 			statusLabelSet.put( name, new RhizoStatusLabel(name, abbrev, color, alpha));
-			System.out.println("ELSE");
-			printStatusLabelSet();
 		}
 	}
 	
@@ -227,13 +223,24 @@ public class ProjectConfig {
 		if ( i >= 0 ) {
 			if ( i < sizeStatusLabelList() )
 				return statusLabelSet.get( statusLabelList.get(i));
-			else
-				return null;
+			else {
+//				System.out.println( "WARNING:getStatusLabel( int i) returns " + 
+//						fixedStatusLabelMap.get( STATUS_UNDEFINED).getName() +  " for " + i);
+//
+//				for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+//					System.out.println(ste);
+//				}
+
+//				return null;
+				return fixedStatusLabelMap.get( STATUS_UNDEFINED);
+			}
 		} else {
 			if ( i >= - sizeFixedStatusLabelList() )
 				return fixedStatusLabelMap.get(i);
-			else 
+			else  {
+				System.out.println( "WARNING:getStatusLabel( int i) returns null for " + i);
 				return null;
+			}
 		}
 	}
 	
@@ -251,6 +258,7 @@ public class ProjectConfig {
 				if ( sl.getName().equals(name)  )
 					return sl;
 			}
+			System.out.println( "WARNING: getStatusLabel( String) returns null for " + name);
 			return null;
 		}			
 	}

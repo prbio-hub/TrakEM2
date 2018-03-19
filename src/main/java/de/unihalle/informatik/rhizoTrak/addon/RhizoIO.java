@@ -157,9 +157,6 @@ public class RhizoIO
 								status.getAlpha().intValue());
 			}
 			
-			System.out.print("loadUserSettings " );
-			rhizoMain.getProjectConfig().printStatusLabelSet();
-			
 			if(null != gs.getHighlightcolorList() || null != gs.getHighlightcolorList().getColor() ) {
 				if ( gs.getHighlightcolorList().getColor().size() > 0)
 					rhizoMain.getProjectConfig().setHighlightColor1(settingsToColor( gs.getHighlightcolorList().getColor().get( 0) ));

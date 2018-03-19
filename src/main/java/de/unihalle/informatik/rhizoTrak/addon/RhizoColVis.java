@@ -23,6 +23,7 @@ public class RhizoColVis
 	
 	private RhizoMain rhizoMain;
 	
+	// ######
 	private Color highlightColor1 = Color.MAGENTA;
 	private Color highlightColor2 = Color.PINK;
 
