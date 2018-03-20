@@ -18,7 +18,7 @@ public class RhizoMain
 	/**
 	 * The (mainly) project specific configuration
 	 */
-	private ProjectConfig projectConfig = new ProjectConfig();
+	private RhizoProjectConfig projectConfig = new RhizoProjectConfig();
 	
 	public RhizoMain(Project p)
 	{
@@ -72,7 +72,7 @@ public class RhizoMain
     /**
 	 * @return the projectConfig
 	 */
-	public ProjectConfig getProjectConfig() {
+	public RhizoProjectConfig getProjectConfig() {
 		return projectConfig;
 	}
 

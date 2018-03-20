@@ -1,12 +1,9 @@
 package de.unihalle.informatik.rhizoTrak.addon;
 
 import java.awt.Color;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Set;
 import java.util.Stack;
 
 /** Hold all project specific settings, including some general and fixed ones.
@@ -25,13 +22,18 @@ import java.util.Stack;
  * @author posch
  *
  */
-public class ProjectConfig {
+public class RhizoProjectConfig {
 	
 	/**
 	 * to represent a non-negative integer status value with has (currently) no label name
 	 * associated in the <code>statusLabelList</code>
 	 */
 	public static final int STATUS_UNDEFINED = -1;
+	
+	/**
+	 * The name for <code><STATUS_UNDEFINE/code>
+	 */
+	public static final String NAME_UNDEFINED = "UNDEFINED";
 	/**
 	 * to represent /virtual) segments created on import from RSML to connect all
 	 * branches (polylines) of a root to form one (connected) treeline
@@ -40,18 +42,28 @@ public class ProjectConfig {
 	public static final int STATUS_VIRTUAL = -2;
 	
 	/**
+	 * The name for <code>STATUS_VIRTUAL</code>
+	 */
+	public static final String NAME_VIRTUAL= "VIRTUAL";
+	
+	/**
 	 * segments of a connector treeline
 	 */
 	public static final int STATUS_CONNECTOR = -3;
+	
+	/**
+	 * The name for <code>STATUS_CONNECTOR</code>
+	 */
+	public static final String NAME_CONNECTOR= "CONNECTOR";
+	
 	
 	public static final Color DEFAULT_STATUS_COLOR = new Color( 255, 255, 0);
 	public static final Color DEFAULT_FIXED_STATUS_COLOR = new Color( 0, 255, 255);
 
 	/**
-	 * map to hold all fixed status labels used for internal purpose
+	 * map  fixed status labels used for internal purpose to to their names
 	 */
-	private HashMap< Integer,RhizoStatusLabel> fixedStatusLabelMap = new HashMap<Integer, RhizoStatusLabel>();
-	
+	private final HashMap<Integer,String> fixedStatusLabelMap = new HashMap<Integer, String>();
 
 	/** definitions of user defines status labels
 	 * does only hold the names, a name may be contained multiple times, order cares
@@ -64,18 +76,25 @@ public class ProjectConfig {
 	 */
 	private HashMap<String,RhizoStatusLabel> statusLabelSet = new HashMap<String,RhizoStatusLabel>();
 	
+	/**
+	 * This status label is return (instead of null) in case a request with invalid integer status value
+	 * of name is issued
+	 */
+	private RhizoStatusLabel INVALID_STATUS_LABEL = new RhizoStatusLabel( "INVALID_STATUS_LABEL", "?", Color.BLACK);
+	
 	// highlight colors
 	private Color highlightColor1 = Color.MAGENTA;
 	private Color highlightColor2 = Color.PINK;
 	
-	public ProjectConfig() {
+	public RhizoProjectConfig() {
 		// we always need the fixed status labels
-		fixedStatusLabelMap.put( STATUS_UNDEFINED, new RhizoStatusLabel( "UNDEFINED", "*", DEFAULT_FIXED_STATUS_COLOR));
-		fixedStatusLabelMap.put( STATUS_VIRTUAL, new RhizoStatusLabel( "VIRTUAL", "-", DEFAULT_FIXED_STATUS_COLOR));
-		fixedStatusLabelMap.put( STATUS_CONNECTOR, new RhizoStatusLabel( "CONNECTOR", "@", DEFAULT_FIXED_STATUS_COLOR));
-		statusLabelSet.put( "UNDEFINED", fixedStatusLabelMap.get(STATUS_UNDEFINED));
-		statusLabelSet.put( "VIRTUAL", fixedStatusLabelMap.get(STATUS_VIRTUAL));
-		statusLabelSet.put( "CONNECTOR", fixedStatusLabelMap.get(STATUS_CONNECTOR));		
+		statusLabelSet.put( NAME_UNDEFINED, new RhizoStatusLabel( NAME_UNDEFINED, "*", DEFAULT_FIXED_STATUS_COLOR));
+		statusLabelSet.put( NAME_VIRTUAL, new RhizoStatusLabel( NAME_VIRTUAL, "-", DEFAULT_FIXED_STATUS_COLOR));
+		statusLabelSet.put( NAME_CONNECTOR, new RhizoStatusLabel( NAME_CONNECTOR, "@", DEFAULT_FIXED_STATUS_COLOR));
+		fixedStatusLabelMap.put( STATUS_UNDEFINED, NAME_UNDEFINED);
+		fixedStatusLabelMap.put( STATUS_VIRTUAL, NAME_VIRTUAL);
+		fixedStatusLabelMap.put( STATUS_CONNECTOR, NAME_CONNECTOR);	
+
 	}
 	
 	/** Append status label as the last label to the list.
@@ -217,7 +236,7 @@ public class ProjectConfig {
 	/** return the status label associated with <code>i</code>.
 	 * 
 	 * @param i
-	 * @return the status label or null, if not defined
+	 * @return the status label or <code>INVALID_STATUS_LABEL</code>l, if not defined
 	 */
 	public RhizoStatusLabel getStatusLabel( int i) {
 		if ( i >= 0 ) {
@@ -226,20 +245,17 @@ public class ProjectConfig {
 			else {
 //				System.out.println( "WARNING:getStatusLabel( int i) returns " + 
 //						fixedStatusLabelMap.get( STATUS_UNDEFINED).getName() +  " for " + i);
-//
-//				for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
-//					System.out.println(ste);
 //				}
 
 //				return null;
-				return fixedStatusLabelMap.get( STATUS_UNDEFINED);
+				return statusLabelSet.get(  fixedStatusLabelMap.get( STATUS_UNDEFINED));
 			}
 		} else {
 			if ( i >= - sizeFixedStatusLabelList() )
-				return fixedStatusLabelMap.get(i);
+				return statusLabelSet.get( fixedStatusLabelMap.get(i));
 			else  {
 				System.out.println( "WARNING:getStatusLabel( int i) returns null for " + i);
-				return null;
+				return INVALID_STATUS_LABEL;
 			}
 		}
 	}
@@ -247,19 +263,19 @@ public class ProjectConfig {
 	/** return the status label associated with <code>name</code>.
 	 * 
 	 * @param name
-	 * @return the status label or null, if not defined
+	 * @return the status label or <code>INVALID_STATUS_LABEL</code>, if not defined
 	 */
 	public RhizoStatusLabel getStatusLabel( String name) {
 	
 		if ( statusLabelSet.get(name) != null ) {
 				return statusLabelSet.get(name);
 		} else {
-			for ( RhizoStatusLabel sl : fixedStatusLabelMap.values()) {
-				if ( sl.getName().equals(name)  )
-					return sl;
+			for ( String namel : fixedStatusLabelMap.values()) {
+				if ( name.equals(name)  )
+					return statusLabelSet.get(name);
 			}
 			System.out.println( "WARNING: getStatusLabel( String) returns null for " + name);
-			return null;
+			return INVALID_STATUS_LABEL;
 		}			
 	}
  
@@ -343,7 +359,7 @@ public class ProjectConfig {
 	public void printFixStatusLabels() {
 		System.out.println( "FixStatusLabels");
 	    for ( int i : fixedStatusLabelMap.keySet() ) {
-	    	System.out.println(  i + " --> " + fixedStatusLabelMap.get(i).getName());
+	    	System.out.println(  i + " --> " + fixedStatusLabelMap.get(i));
 	    }
 	}
 }
