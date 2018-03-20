@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Stack;
 
+import de.unihalle.informatik.rhizoTrak.utils.Utils;
+
 /** Hold all project specific settings, including some general and fixed ones.
  * Most of these will be imported/exported to project specific files.
  * <p>
@@ -16,8 +18,9 @@ import java.util.Stack;
  * <li>highlight colors
  * </ul>
  * <p>
- * Status integer values for user defined status is a contiguous range of positive values starting with 0.
+ * Status integer values for user defined status is a contiguous range of non negative  values starting with 0.
  * Multiple integer status value may be mapped to the same status label.
+ * Fixed status labels are mapped via negative integers which need not be contiguous
  * 
  * @author posch
  *
@@ -33,6 +36,7 @@ public class RhizoProjectConfig {
 	/**
 	 * The name for <code><STATUS_UNDEFINE/code>
 	 */
+	
 	public static final String NAME_UNDEFINED = "UNDEFINED";
 	/**
 	 * to represent /virtual) segments created on import from RSML to connect all
@@ -61,7 +65,7 @@ public class RhizoProjectConfig {
 	public static final Color DEFAULT_FIXED_STATUS_COLOR = new Color( 0, 255, 255);
 
 	/**
-	 * map  fixed status labels used for internal purpose to to their names
+	 * map fixed status integer values used for internal purpose to their names
 	 */
 	private final HashMap<Integer,String> fixedStatusLabelMap = new HashMap<Integer, String>();
 
@@ -71,16 +75,16 @@ public class RhizoProjectConfig {
 	private Stack<String> statusLabelList = new Stack<String>();
 	
 	/**
-	 * defines the mapping from integer status values to status label names
-	 * fixed and user defined status labels
+	 * Defines the mapping from integer status values to status label names for
+	 * fixed and user defined status labels.
 	 */
 	private HashMap<String,RhizoStatusLabel> statusLabelSet = new HashMap<String,RhizoStatusLabel>();
 	
 	/**
 	 * This status label is return (instead of null) in case a request with invalid integer status value
-	 * of name is issued
+	 * or name is issued
 	 */
-	private RhizoStatusLabel INVALID_STATUS_LABEL = new RhizoStatusLabel( "INVALID_STATUS_LABEL", "?", Color.BLACK);
+	public static final  RhizoStatusLabel INVALID_STATUS_LABEL = new RhizoStatusLabel( "INVALID_STATUS_LABEL", "?", Color.BLACK);
 	
 	// highlight colors
 	private Color highlightColor1 = Color.MAGENTA;
@@ -115,7 +119,6 @@ public class RhizoProjectConfig {
 		
 		statusLabelList.push( name);
 	}
-			
 
 	/**
 	 * remove the last label from the list
@@ -126,7 +129,7 @@ public class RhizoProjectConfig {
 	}
 	
 	/** Add the status label to the set. If one with the same name already exists
-	 * it will be replaced.
+	 * the abbreviation, color, alpha, and selectable will be replaced.
 	 * @param sl
 	 */
 	public void addStatusLabelToSet( RhizoStatusLabel sl) {	
@@ -142,7 +145,7 @@ public class RhizoProjectConfig {
 	}
 	
 	/**Add a status label with the given information to the set. If one with the same name already exists
-	 * it will be replaced.
+	 * the abbreviation, color, alpha, and selectable will be replaced.
 	 * 
 	 * @param name
 	 * @param abbrev
@@ -163,7 +166,7 @@ public class RhizoProjectConfig {
 	}
 	
 	/**Add a status label with the given information to the set. If one with the same name already exists
-	 * it will be replaced.
+	 * the abbreviation, color and, alpha will be replaced.
 	 * 
 	 * @param name
 	 * @param abbrev
@@ -182,7 +185,7 @@ public class RhizoProjectConfig {
 	}
 	
 	/**Add a status label with the given information to the set. If one with the same name already exists
-	 * it will be replaced.
+	 * the abbreviation and color  will be replaced.
 	 * 
 	 * @param name
 	 * @param abbrev
@@ -198,14 +201,12 @@ public class RhizoProjectConfig {
 		}
 	}
 	
-	/** Return all defined status labels, i.e. fixed and user defined ones.
+	/** Return names of all defined status labels, i.e. fixed and user defined ones.
 	 * @return
 	 */
 	public Collection<RhizoStatusLabel> getAllStatusLabel() {
 		LinkedList<RhizoStatusLabel> sll = new LinkedList<RhizoStatusLabel>();
-
 		sll.addAll( statusLabelSet.values());
-
 		return sll;
 	}
 
@@ -218,7 +219,7 @@ public class RhizoProjectConfig {
 	}
 	
 	/**
-	 * @return The number of status labels in the list, i.e. the number of currently valid
+	 * @return The number of user defined status labels in the list, i.e. the number of currently valid
 	 * mappings from integer to label names. Otherwise stated: the number returned miuns one is
 	 * the largest mapped integer.
 	 */
@@ -226,32 +227,31 @@ public class RhizoProjectConfig {
 		return statusLabelList.size();
 	}
 	
-	/** 
-	 * @return number of fixed status labels
+	/**
+	 * @return All (negative) status integer values of known fixed status labels
 	 */
-	public int sizeFixedStatusLabelList() {
-		return fixedStatusLabelMap.size();
+	public Collection<Integer> getFixedStatusLabelInt() {
+		return fixedStatusLabelMap.keySet();
 	}
 	
 	/** return the status label associated with <code>i</code>.
 	 * 
 	 * @param i
-	 * @return the status label or <code>INVALID_STATUS_LABEL</code>l, if not defined
+	 * @return <ul>
+	 *         <li> the status label associated with <code>i</code>, if it exists
+	 *         <li> the status label associated with <code>STATUS_UNDEFINED</code>, if not existing and <code>i</code> is non negative
+	 *         <li> <code>INVALID_STATUS_LABEL</code>,  if not existing and <code>i</code> is negative
+	 *         </ul>
 	 */
 	public RhizoStatusLabel getStatusLabel( int i) {
 		if ( i >= 0 ) {
 			if ( i < sizeStatusLabelList() )
 				return statusLabelSet.get( statusLabelList.get(i));
 			else {
-//				System.out.println( "WARNING:getStatusLabel( int i) returns " + 
-//						fixedStatusLabelMap.get( STATUS_UNDEFINED).getName() +  " for " + i);
-//				}
-
-//				return null;
 				return statusLabelSet.get(  fixedStatusLabelMap.get( STATUS_UNDEFINED));
 			}
 		} else {
-			if ( i >= - sizeFixedStatusLabelList() )
+			if ( fixedStatusLabelMap.containsKey( i) )
 				return statusLabelSet.get( fixedStatusLabelMap.get(i));
 			else  {
 				System.out.println( "WARNING:getStatusLabel( int i) returns null for " + i);
@@ -263,31 +263,45 @@ public class RhizoProjectConfig {
 	/** return the status label associated with <code>name</code>.
 	 * 
 	 * @param name
-	 * @return the status label or <code>INVALID_STATUS_LABEL</code>, if not defined
+	 * @return the status label or <code>INVALID_STATUS_LABEL</code>, if non existing
 	 */
 	public RhizoStatusLabel getStatusLabel( String name) {
 	
 		if ( statusLabelSet.get(name) != null ) {
 				return statusLabelSet.get(name);
 		} else {
-			for ( String namel : fixedStatusLabelMap.values()) {
-				if ( name.equals(name)  )
-					return statusLabelSet.get(name);
-			}
-			System.out.println( "WARNING: getStatusLabel( String) returns null for " + name);
+			Utils.log( "RhizoProjectConfig WARNING: getStatusLabel( String) non existing for " + name);
 			return INVALID_STATUS_LABEL;
 		}			
 	}
  
+	/**
+	 * @param i
+	 * @return <ul>
+	 *         <li> the color of status label associated with <code>i</code>, if it exists
+	 *         <li> the color of status label associated with <code>STATUS_UNDEFINED</code>, if not existing and <code>i</code> is non negative
+	 *         <li> color of  <code>INVALID_STATUS_LABEL</code>,  if not existing and <code>i</code> is negative
+	 *         </ul>
+	 */
 	public Color getColorForStatus( int i) {
-		RhizoStatusLabel sl = getStatusLabel(i);
-		if ( sl != null ) {
-			return sl.getColor();
+		if ( i >= 0 ) {
+			if ( i < sizeStatusLabelList() )
+				return statusLabelSet.get( statusLabelList.get(i)).getColor();
+			else {
+				return statusLabelSet.get(  fixedStatusLabelMap.get( STATUS_UNDEFINED)).getColor();
+			}
 		} else {
-			return getStatusLabel(STATUS_UNDEFINED).getColor();
+			if ( fixedStatusLabelMap.containsKey( i) )
+				return statusLabelSet.get( fixedStatusLabelMap.get(i)).getColor();
+			else  {
+				System.out.println( "WARNING:getStatusLabel( int i) returns null for " + i);
+				return INVALID_STATUS_LABEL.getColor();
+			}
 		}
 	}
+	
 	/**
+	 * 
 	 * Set the default user defined status label
 	 * <ul>
 	 * <li> LIVING
@@ -317,7 +331,7 @@ public class RhizoProjectConfig {
 	 * @return the highlightColor1
 	 */
 	public Color getHighlightColor1() {
-		return highlightColor1;
+		return this.highlightColor1;
 	}
 
 	/**
@@ -331,7 +345,7 @@ public class RhizoProjectConfig {
 	 * @return the highlightColor2
 	 */
 	public Color getHighlightColor2() {
-		return highlightColor2;
+		return this.highlightColor2;
 	}
 
 	/**

@@ -151,7 +151,7 @@ public class VisibilityPanel extends JPanel {
 //			if ( i>= 0 ) addStatus( i, map);
 //		}               
 		for ( int i = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabelList() ; i++) {
-			System.out.println( "add " + i);
+			Utils.log( "VisibilityPanel: add " + i);
 			addStatus( i);
 		}
 		
@@ -162,17 +162,18 @@ public class VisibilityPanel extends JPanel {
 //		for(int i: map.keySet()) {
 //			if ( i < 0 ) addStatus( i, map);
 //		}  
-		for ( int i = 0 ; i < rhizoMain.getProjectConfig().sizeFixedStatusLabelList() ; i++) {
-			System.out.println(  "add " + (-1-i ));
-			addStatus( -1-i);
+		for ( int i : rhizoMain.getProjectConfig().getFixedStatusLabelInt() ) {
+			Utils.log( "VisibilityPanel: add " + i);
+			addStatus( i);
 		}
 		
 		// add highlighting color
 		add(new JSeparator());
-		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING1, rhizoMain.getRhizoColVis().getHighlightColor1());
-		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING2, rhizoMain.getRhizoColVis().getHighlightColor2());
+//		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING1, rhizoMain.getRhizoColVis().getHighlightColor1());
+//		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING2, rhizoMain.getRhizoColVis().getHighlightColor2());
+		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING1, rhizoMain.getProjectConfig().getHighlightColor1());
+		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING2, rhizoMain.getProjectConfig().getHighlightColor1());
 		
-		System.out.println("DON");
 		add(new JSeparator());
 	}
        
@@ -188,7 +189,6 @@ public class VisibilityPanel extends JPanel {
 //		Status s = map.get(i);
 		
 		RhizoStatusLabel sl = rhizoMain.getProjectConfig().getStatusLabel(i);
-		System.out.println(" ABC " + sl.getName());
 		
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
@@ -271,11 +271,11 @@ public class VisibilityPanel extends JPanel {
 
 			if (selectedColor != null)  {
 				if ( e.getActionCommand().equals( HIGHLIGHTCOLOR1ACTIONSTRING1) ) {
-					rhizoMain.getRhizoColVis().setHighlightColor1( new Color( 
+					rhizoMain.getProjectConfig().setHighlightColor1( new Color( 
 							selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue()));
 
 				} else if ( e.getActionCommand().equals( HIGHLIGHTCOLOR1ACTIONSTRING2) ) {
-					rhizoMain.getRhizoColVis().setHighlightColor2( new Color( 
+					rhizoMain.getProjectConfig().setHighlightColor2( new Color( 
 							selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue()));
 				} else {
 					// ##########

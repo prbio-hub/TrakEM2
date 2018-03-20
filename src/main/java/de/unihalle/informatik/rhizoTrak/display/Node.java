@@ -1295,10 +1295,12 @@ public abstract class Node<T> implements Taggable {
                 
         // ############
 //		Color result = this.rhizoMain.getRhizoIO().getColorFromStatusMap(this.getConfidence());
+//		if(high[0]) return rhizoMain.getRhizoColVis().getHighlightColor1();
+//		if(high[1]) return rhizoMain.getRhizoColVis().getHighlightColor2();
 		Color result = this.rhizoMain.getProjectConfig().getColorForStatus( getConfidence());
+		if(high[0]) return rhizoMain.getProjectConfig().getHighlightColor1();
+		if(high[1]) return rhizoMain.getProjectConfig().getHighlightColor2();
 
-		if(high[0]) return rhizoMain.getRhizoColVis().getHighlightColor1();
-		if(high[1]) return rhizoMain.getRhizoColVis().getHighlightColor2();
 		return result;
 	}
         

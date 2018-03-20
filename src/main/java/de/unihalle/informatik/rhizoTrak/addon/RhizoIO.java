@@ -302,7 +302,7 @@ public class RhizoIO
 		
 		// ##############
 //		Node.MAX_EDGE_CONFIDENCE = getStatusMapSize();
-		Node.MAX_EDGE_CONFIDENCE = (byte) rhizoMain.getProjectConfig().sizeStatusLabelList();
+		Node.MAX_EDGE_CONFIDENCE = (byte)( rhizoMain.getProjectConfig().sizeStatusLabelList() + 1);
 
 		}
 	
