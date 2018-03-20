@@ -590,10 +590,6 @@ public class Project extends DBObject {
 			// aeekz
 			final OpenDialog od = new OpenDialog("Select status file", dir_project, null);
 			project.getRhizoMain().getRhizoIO().loadConfigFile(od.getPath());
-			System.out.println("read project config");
-			project.getRhizoMain().getProjectConfig().printStatusLabelSet();
-			project.getRhizoMain().getProjectConfig().printStatusLabelList();
-			project.getRhizoMain().getProjectConfig().printFixStatusLabels();
 
 			project.getRhizoMain().getRhizoImages().setImageDir( new File( dir_project));
 			

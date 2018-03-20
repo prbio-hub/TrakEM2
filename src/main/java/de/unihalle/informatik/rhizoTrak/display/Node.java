@@ -77,13 +77,12 @@ import java.util.TreeSet;
 import org.scijava.vecmath.Point3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
-import de.unihalle.informatik.rhizoTrak.addon.RhizoIO;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.M;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
-import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
 
 /** Can only have one parent, so there aren't cyclic graphs. */
 public abstract class Node<T> implements Taggable {
@@ -432,15 +431,13 @@ public abstract class Node<T> implements Taggable {
 				
 				// ##################
 //				Status status = rhizoMain.getRhizoIO().getStatusMap().get(i);
-				RhizoStatusLabel status = rhizoMain.getProjectConfig().getStatusLabel(i);
-				String s;
-				if ( status != null ) {
-					s = status.getAbbrev();
-				} else {
-					// ###############
+//				String s;
+//				if ( status != null ) {
+//					s = status.getAbbrev();
+//				} else {
 //					s = rhizoMain.getRhizoIO().getStatusMap().get( RhizoIO.STATUS_UNDEFINED).getAbbreviation();
-					s = rhizoMain.getProjectConfig().getStatusLabel( rhizoMain.getProjectConfig().STATUS_UNDEFINED).getAbbrev();
-				}
+//				}
+				String s = rhizoMain.getProjectConfig().getStatusLabel(i).getAbbrev();
 				
 				final Dimension dim = Utils.getDimensions(s, g.getFont());
 				g.setColor(Color.white);

@@ -152,7 +152,8 @@ public class RhizoIO
 			
 			// new data structure
 			for ( GlobalStatus status : gs.getGlobalStatusList().getGlobalStatus() ) {
-				rhizoMain.getProjectConfig().addStatusLabelToSet( status.getFullName(), status.getAbbreviation(),
+				// we have no abbreviation in user settings, however only status labels in project.cfg will be used
+				rhizoMain.getProjectConfig().addStatusLabelToSet( status.getFullName(), "",
 						new Color( status.getRed().intValue(), status.getGreen().intValue(), status.getBlue().intValue()),
 								status.getAlpha().intValue());
 			}
@@ -567,7 +568,6 @@ public class RhizoIO
 	        for ( RhizoStatusLabel sl : rhizoMain.getProjectConfig().getAllStatusLabel() ) {
 	        	GlobalStatus gStatus = new GlobalStatus();
 				gStatus.setFullName( sl.getName());
-				gStatus.setAbbreviation( sl.getAbbrev());
 
 				gStatus.setRed( BigInteger.valueOf(sl.getColor().getRed()));
 				gStatus.setGreen( BigInteger.valueOf( sl.getColor().getGreen()));

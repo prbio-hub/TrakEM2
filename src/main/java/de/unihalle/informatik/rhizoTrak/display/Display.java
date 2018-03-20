@@ -2310,7 +2310,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				// ###################
 //				if(nearestNode.getConfidence() > 0 && !this.getProject().getRhizoMain().getRhizoIO().getStatusMap().get((int) nearestNode.getConfidence()).isSelectable()) {
 
-				if(nearestNode.getConfidence() > 0 && !this.getProject().getRhizoMain().getProjectConfig().getStatusLabel((int) nearestNode.getConfidence()).isSelectable()) {
+				if(nearestNode.getConfidence() >= 0 && !this.getProject().getRhizoMain().getProjectConfig().getStatusLabel((int) nearestNode.getConfidence()).isSelectable()) {
 					alternatedList.add(displayable);
 				}
 			}

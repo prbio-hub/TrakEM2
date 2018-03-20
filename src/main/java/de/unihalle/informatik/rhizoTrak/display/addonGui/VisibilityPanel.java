@@ -52,9 +52,6 @@ package de.unihalle.informatik.rhizoTrak.display.addonGui;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.math.BigInteger;
-import java.util.HashMap;
-
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Box;
@@ -71,11 +68,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import de.unihalle.informatik.rhizoTrak.addon.RhizoIO;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
-import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
-import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 public class VisibilityPanel extends JPanel {
@@ -172,7 +166,7 @@ public class VisibilityPanel extends JPanel {
 //		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING1, rhizoMain.getRhizoColVis().getHighlightColor1());
 //		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING2, rhizoMain.getRhizoColVis().getHighlightColor2());
 		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING1, rhizoMain.getProjectConfig().getHighlightColor1());
-		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING2, rhizoMain.getProjectConfig().getHighlightColor1());
+		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING2, rhizoMain.getProjectConfig().getHighlightColor2());
 		
 		add(new JSeparator());
 	}

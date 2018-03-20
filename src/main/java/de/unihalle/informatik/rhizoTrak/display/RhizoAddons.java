@@ -727,8 +727,7 @@ public class RhizoAddons
 				}
 				// #########
 //				if(nearestNode.getConfidence() > 0 && !rhizoMain.getRhizoIO().getStatusMap().get((int) nearestNode.getConfidence()).isSelectable())
-
-				if(nearestNode.getConfidence() > 0 && !rhizoMain.getProjectConfig().getStatusLabel((int) nearestNode.getConfidence()).isSelectable())
+				if(nearestNode.getConfidence() >= 0 && !rhizoMain.getProjectConfig().getStatusLabel((int) nearestNode.getConfidence()).isSelectable())
 				{
 					alternatedList.add(displayable);
 				}
