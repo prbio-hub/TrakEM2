@@ -89,7 +89,7 @@ public abstract class Node<T> implements Taggable {
 	/** Maximum possible confidence in an edge (ranges from 0 to 5, inclusive).*/
 
 	// aeekz: is changed when a status file exists
-	static public byte MAX_EDGE_CONFIDENCE = 0;
+//	static public byte MAX_EDGE_CONFIDENCE = 0;
 	
 	static public byte DEFAULT_EDGE_CONFIDENCE = 0;
 	
@@ -746,14 +746,14 @@ public abstract class Node<T> implements Taggable {
 	}
 	/** Set the confidence value of this node with its parent. */
 	synchronized public final boolean setConfidence(final byte conf) {
-		if (conf < 0 || conf > MAX_EDGE_CONFIDENCE) return false;
+		if (conf < 0 || conf > rhizoMain.getProjectConfig().getMaxEdgeConfidence() ) return false;
 		confidence = conf;
 		return true;
 	}
 	/** Adjust the confidence value of this node with its parent. */
 	final public boolean adjustConfidence(final int inc) {
 		final byte conf = (byte)((confidence&0xff) + inc);
-		if (conf < 0 || conf > MAX_EDGE_CONFIDENCE) return false;
+		if (conf < 0 || conf > rhizoMain.getProjectConfig().getMaxEdgeConfidence()) return false;
 		confidence = conf;
 		return true;
 	}

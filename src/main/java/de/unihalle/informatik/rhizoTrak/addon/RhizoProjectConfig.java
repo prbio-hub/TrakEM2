@@ -164,7 +164,7 @@ public class RhizoProjectConfig {
 			statusLabelSet.put( name, new RhizoStatusLabel(name, abbrev, color, alpha, selectable));
 		}
 	}
-	
+		
 	/**Add a status label with the given information to the set. If one with the same name already exists
 	 * the abbreviation, color and, alpha will be replaced.
 	 * 
@@ -225,6 +225,13 @@ public class RhizoProjectConfig {
 	 */
 	public int sizeStatusLabelList() {
 		return statusLabelList.size();
+	}
+	
+	/** This is a convenience function for compaittility with former rhizoTrak/trakEM version.
+	 * @return largest user status integer value currently existing
+	 */
+	public int getMaxEdgeConfidence () {
+		return sizeStatusLabelList()-1;
 	}
 	
 	/**

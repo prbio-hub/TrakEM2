@@ -817,7 +817,7 @@ public class TMLHandler extends DefaultHandler {
 					last_root_node = node;
 				} else {
 					final String sconf = ht_attributes.get("c");
-					nodes.getLast().add((Node)node, null == sconf ? Node.MAX_EDGE_CONFIDENCE : Byte.parseByte(sconf));
+					nodes.getLast().add((Node)node, null == sconf ? Node.DEFAULT_EDGE_CONFIDENCE : Byte.parseByte(sconf));
 				}
 				// color?
 				final String scolor = ht_attributes.get("color");

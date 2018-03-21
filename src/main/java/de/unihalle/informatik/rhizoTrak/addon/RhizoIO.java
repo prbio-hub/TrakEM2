@@ -9,7 +9,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.xml.bind.JAXBContext;
@@ -28,7 +27,6 @@ import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
-import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
@@ -303,7 +301,7 @@ public class RhizoIO
 		
 		// ##############
 //		Node.MAX_EDGE_CONFIDENCE = getStatusMapSize();
-		Node.MAX_EDGE_CONFIDENCE = (byte)( rhizoMain.getProjectConfig().sizeStatusLabelList() + 1);
+//		Node.MAX_EDGE_CONFIDENCE = (byte)( rhizoMain.getProjectConfig().sizeStatusLabelList() + 1);
 
 		}
 	
