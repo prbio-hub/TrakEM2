@@ -74,6 +74,7 @@ package de.unihalle.informatik.rhizoTrak;
 
 import ij.IJ;
 import ij.gui.GenericDialog;
+import ij.gui.YesNoCancelDialog;
 import ij.io.DirectoryChooser;
 import ij.io.OpenDialog;
 
@@ -875,14 +876,16 @@ public class Project extends DBObject {
 					String path = save();
 					this.getRhizoMain().getRhizoIO().addonSaver(new File(path));
 				}
-				else
-				{
-					this.getRhizoMain().getRhizoIO().saveUserSettings();
-				}
 			} else {
 				Utils.log2("WARNING: closing project '" + title  + "' with unsaved changes.");
 			}
 		}
+		
+		final YesNoDialog yn2 = ControlWindow.makeYesNoDialog("rhizoTrak", "Save user settings?");
+		if (yn2.yesPressed()) {
+			this.getRhizoMain().getRhizoIO().saveUserSettings();
+		}
+
 		try {
 			if (null != autosaving) autosaving.cancel(true);
 		} catch (Throwable t) {}
