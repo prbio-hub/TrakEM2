@@ -5,3 +5,4 @@ target/
 .settings
 .classpath
 src/main/java/de/unihalle/informatik/rhizoTrak/xsd/*
+src/main/java/META-INF/sun-jaxb.episode
