@@ -343,14 +343,12 @@ public class RhizoIO
     }
 	
 	/**
-	 * Main method for saving user settings and connector data
+	 * Main method project configuration and connector data
 	 * @param file - The project save file
 	 * @author Axel
 	 */
 	public void addonSaver(File file)
 	{
-		//save user settings
-		saveUserSettings();
 		//save connector data
 		saveConnectorData(file);
 		saveConfigFile(file);
