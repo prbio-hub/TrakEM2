@@ -585,7 +585,6 @@ public class Project extends DBObject {
 				Utils.log("@Project: called loadUserSettings(");
 				project.getRhizoMain().getRhizoIO().loadUserSettings();
 			}
-			System.out.println("read usersettings");
 
 			// aeekz
 			final OpenDialog od = new OpenDialog("Select status file", dir_project, null);

@@ -166,6 +166,25 @@ public class RhizoProjectConfig {
 	}
 		
 	/**Add a status label with the given information to the set. If one with the same name already exists
+	 * the color, alpha, and selectable will be replaced.
+	 * 
+	 * @param name
+	 * @param color
+	 * @param alpha
+	 * @param selectable
+	 */
+	public void addStatusLabelToSet( String name, Color color, int alpha, boolean selectable) {
+		RhizoStatusLabel sl = this.getStatusLabel(  name);
+		if ( sl != null ) {
+			sl.setColor(color);
+			sl.setAlpha(alpha);
+			sl.setSelectable(selectable);
+		} else {
+			statusLabelSet.put( name, new RhizoStatusLabel(name, color, alpha, selectable));
+		}
+	}
+		
+	/**Add a status label with the given information to the set. If one with the same name already exists
 	 * the abbreviation, color and, alpha will be replaced.
 	 * 
 	 * @param name
@@ -201,6 +220,21 @@ public class RhizoProjectConfig {
 		}
 	}
 	
+	/**Add a status label with the given information to the set. If one with the same name already exists
+	 * the abbreviation  will be replaced.
+	 * 
+	 * @param name
+	 * @param abbrev
+	 */
+	public void addStatusLabelToSet( String name, String abbrev) {
+		RhizoStatusLabel sl = this.statusLabelSet.get( name);
+		if ( sl != null ) {
+			sl.setAbbrev(abbrev);
+		} else {
+			statusLabelSet.put( name, new RhizoStatusLabel(name, abbrev));
+		}
+	}
+
 	/** Return names of all defined status labels, i.e. fixed and user defined ones.
 	 * @return
 	 */

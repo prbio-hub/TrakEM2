@@ -12,7 +12,7 @@ import org.python.antlr.base.boolop;
  */
 public class RhizoStatusLabel{
 	private String name;
-	private String abbrev;
+	private String abbrev = "";
 	private Color color;
 	private int alpha = 255;
 	boolean selectable = true;
@@ -35,6 +35,18 @@ public class RhizoStatusLabel{
 		this.abbrev = abbrev;
 		this.color = color;
 		this.alpha = alpha;
+	}
+
+	public RhizoStatusLabel(String name, Color color, int alpha, boolean selectable) {
+		this.name = name;
+		this.color = color;
+		this.alpha = alpha;
+		this.selectable = selectable;
+	}
+
+	public RhizoStatusLabel(String name, String abbrev) {
+		this.name = name;
+		this.abbrev = abbrev;
 	}
 
 	/**
