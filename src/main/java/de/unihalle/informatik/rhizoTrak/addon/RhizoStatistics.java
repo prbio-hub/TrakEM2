@@ -154,8 +154,8 @@ public class RhizoStatistics
 			File saveFile = Utils.chooseFile(System.getProperty("user.home"), null, ".csv");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
 
-			bw.write("experiment"+sep+"tube"+sep+"timepoint"+sep+"rootID"+sep+"segmentID"+sep+"layer"+sep+"length"+sep+"avgRadius"+sep+"surfaceArea"+sep+"volume"+sep+"children"+sep
-					+"status"+sep+"statusName"+"\n");
+			bw.write("experiment"+sep+"tube"+sep+"timepoint"+sep+"rootID"+sep+"segmentID"+sep+"layer"+sep+"length_"+unit+sep+"avgRadius_"+unit
+					+sep+"surfaceArea_"+unit+"^2"+sep+"volume_"+unit+"^3"+sep+"children"+sep+"status"+sep+"statusName"+"\n");
 			for (Segment segment : allSegments)
 			{
 				bw.write(segment.getStatistics(sep));
@@ -251,8 +251,8 @@ class Segment
 		this.length = Math.sqrt(Math.pow(parent.getX() - child.getX(), 2) + Math.pow(parent.getY() - child.getY(), 2)) * scale;
 		this.avgRadius = (radiusParent + radiusChild) / 2;
 		double s = Math.sqrt(Math.pow((radiusParent - radiusChild), 2) + Math.pow(this.length, 2));
-		this.surfaceArea = (Math.PI * Math.pow(radiusParent, 2) + Math.PI * Math.pow(radiusChild, 2) + Math.PI * s * (radiusParent + radiusChild));
-		this.volume = ((Math.PI * length * (Math.pow(radiusParent, 2) + Math.pow(radiusParent, 2) + radiusParent * radiusChild)) / 3);
+		this.surfaceArea = Math.PI * s * (radiusParent + radiusChild);
+		this.volume = (Math.PI * length * (Math.pow(radiusParent, 2) + Math.pow(radiusChild, 2) + radiusParent * radiusChild)) / 3;
 		this.numberOfChildren = child.getChildrenCount();
 	}
 	
