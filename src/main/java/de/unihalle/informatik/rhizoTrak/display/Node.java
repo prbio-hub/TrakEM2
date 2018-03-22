@@ -1261,7 +1261,9 @@ public abstract class Node<T> implements Taggable {
 	
 	public void high(boolean[] high)
 	{
-		this.high = high;
+		for(int i=0;i<high.length;i++) {
+			this.high[i]= high[i];
+		}
 	}
 	
 	// set normal and choose highlight
