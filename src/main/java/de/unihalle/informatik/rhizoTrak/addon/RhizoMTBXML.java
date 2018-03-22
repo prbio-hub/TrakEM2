@@ -233,12 +233,6 @@ public class RhizoMTBXML
 				rootSegment.setEndPoint(xmlEnd);
 				rootSegment.setEndRadius(endRadius);
 				
-				// ###############
-//				LinkedHashMap<Integer, Status> statusMap = rhizoMain.getRhizoIO().getStatusMap();
-//				if(null != statusMap.get((int) n.getConfidence()))
-//				{
-//					String statusName = statusMap.get((int) n.getConfidence()).getFullName();
-				
 				RhizoStatusLabel sl = rhizoMain.getProjectConfig().getStatusLabel( (int) n.getConfidence());
 				if ( sl != null ) {
 					String statusName = sl.getName();
@@ -323,15 +317,9 @@ public class RhizoMTBXML
 		
 		try 
 		{
-//			LinkedHashMap<Integer, Status> statusMap = rhizoMain.getRhizoIO().getStatusMap();
 
 			// error if default status is not defined
 			List<String> fullNames = new ArrayList<String>();
-			// ###############
-//			for(int i: statusMap.keySet())
-//			{
-//				fullNames.add(statusMap.get(i).getFullName());
-//			}
 			for ( RhizoStatusLabel sl : rhizoMain.getProjectConfig().getAllStatusLabel()) {
 				fullNames.add( sl.getName());
 			}
@@ -434,11 +422,7 @@ public class RhizoMTBXML
     					// assuming that default status are defined
 	    				byte s = (byte) rhizoMain.getProjectConfig().STATUS_UNDEFINED;
 	    				
-	    				// #############
-//	    				for(int index: statusMap.keySet())
 	    				for(int index = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabelList() ; i++) {
-	    					// ######
-//	    					String statusName = statusMap.get(index).getFullName();
 	    					String statusName = rhizoMain.getProjectConfig().getStatusLabel(i).getName();
 	    					if(statusName.equals("LIVING") && currentRootSegment.getType() == MTBXMLRootSegmentStatusType.LIVING) s = (byte) index;
 	    					else if(statusName.equals("DEAD") && currentRootSegment.getType() == MTBXMLRootSegmentStatusType.DEAD) s = (byte) index;

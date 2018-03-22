@@ -33,24 +33,9 @@ import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 public class RhizoIO
 {
-// ###############
-//	public static final int FIXEDSTATUSSIZE = 3;
-//	public static final int STATUS_UNDEFINED = -1;
-//	public static final int STATUS_VIRTUAL = -2;
-//	public static final int STATUS_CONNECTOR = -3;
-//	
-//	public static final Color DEFAULT_STATUS_COLOR = new Color( 255, 255, 0);
-//	public static final Color DEFAULT_FIXED_STATUS_COLOR = new Color( 0, 255, 255);
-			
 	private RhizoMain rhizoMain;
 	
 	public static File userSettingsFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings.xml");
-	
-	// ########################
-//	public List<GlobalStatus> globalStatusList = new ArrayList<GlobalStatus>();
-//
-//	// used for drawing, GUI and save/load operations
-//	private LinkedHashMap<Integer, Status> statusMap = new LinkedHashMap<Integer, Status>();
 	
 	public RhizoIO(RhizoMain rhizoMain)
 	{
@@ -119,9 +104,6 @@ public class RhizoIO
 	{
 		if (!userSettingsFile.exists())
 		{
-			// ################
-//			setDefaultGlobalStatus();
-			
 			Utils.log("unable to load user settings: file not found");
 			return;
 		}
@@ -131,24 +113,6 @@ public class RhizoIO
 			Unmarshaller um = context.createUnmarshaller();
 
 			GlobalSettings gs = (GlobalSettings) um.unmarshal(userSettingsFile);
-//			globalStatusList.addAll(gs.getGlobalStatusList().getGlobalStatus());
-//			Utils.log(globalStatusList.size());
-//
-//			if(null == gs.getHighlightcolorList() || null == gs.getHighlightcolorList().getColor() || gs.getHighlightcolorList().getColor().size() < 2)
-//			{
-//				rhizoMain.getRhizoColVis().setHighlightColor1(Color.MAGENTA);
-//				rhizoMain.getRhizoColVis().setHighlightColor2(Color.PINK);
-//			}
-//			else
-//			{
-//				rhizoMain.getRhizoColVis().setHighlightColor1( settingsToColor( gs.getHighlightcolorList().getColor().get( 0)));
-//				rhizoMain.getRhizoColVis().setHighlightColor2( settingsToColor( gs.getHighlightcolorList().getColor().get( 1)));
-//			}
-
-// ################
-//			updateStatusMap();
-			
-			// new data structure
 			for ( GlobalStatus status : gs.getGlobalStatusList().getGlobalStatus() ) {
 				// we have no abbreviation in user settings, however only status labels in project.cfg will be used
 				rhizoMain.getProjectConfig().addStatusLabelToSet( status.getFullName(),
@@ -177,36 +141,6 @@ public class RhizoIO
 		return color;
 	}
 
-
-	// ##########################
-//	/**
-//	 * Updates the local status map with the global user settings
-//	 * @author Tino
-//	 */
-//	public void updateStatusMap() 
-//	{
-//		for(int i: statusMap.keySet())
-//		{
-//			Status s = statusMap.get(i);
-//			
-//			for(GlobalStatus gs: globalStatusList)
-//			{
-//				if(s.getFullName().equals(gs.getFullName()))
-//				{
-//					Status sTemp = s;
-//					sTemp.setRed(gs.getRed());
-//					sTemp.setGreen(gs.getGreen());
-//					sTemp.setBlue(gs.getBlue());
-//					sTemp.setAlpha(gs.getAlpha());
-//					sTemp.setSelectable(gs.isSelectable());
-//					statusMap.put(i, sTemp);
-//				}
-//			}
-//		}
-//		
-//	}
-
-
 	/**
 	 * 
 	 * Loads the user settings on project file level.
@@ -215,15 +149,10 @@ public class RhizoIO
 	 */
 	public void loadConfigFile(String path)
 	{
-		// TODO: add popup warnings
 		// New project..
 		if(null == path) // user cancelled the open file dialog
 		{
-			// ####################
-//			setDefaultStatus();
-			// new data structure
 			rhizoMain.getProjectConfig().setDefaultUserStatusLabel();
-
 			return;
 		}
 		
@@ -233,10 +162,6 @@ public class RhizoIO
 		
 		if(!configFile.exists()) {
 			Utils.showMessage( "config file " + configFile.getPath() + " not found: using default settings");
-			
-			// ##############
-//			setDefaultStatus();
-			// new data structure
 			rhizoMain.getProjectConfig().setDefaultUserStatusLabel();
 
 			return;
@@ -261,14 +186,9 @@ public class RhizoIO
 				oldStatus.setAlpha(BigInteger.valueOf(255));
 				oldStatus.setSelectable(true);
 				
-				// #######
-//				statusMap.put(i, oldStatus);
 				this.rhizoMain.getProjectConfig().appendStatusLabelToList( newStatus.getFullName(), newStatus.getAbbreviation());
 			}
 
-			// #################################
-//			setFixedStatus();
-//			updateStatusMap();
 		} catch (JAXBException e) {    
 			try {
 				JAXBContext context = JAXBContext.newInstance(Config.class);
@@ -276,36 +196,18 @@ public class RhizoIO
 				Config config = (Config) um.unmarshal(configFile);
 				List<Status> sl = config.getStatusList().getStatus();
 
-				for(int i = 0; i < sl.size(); i++)
-				{
-					// ###########
-//					statusMap.put(i, sl.get(i));
+				for(int i = 0; i < sl.size(); i++) {
 					this.rhizoMain.getProjectConfig().appendStatusLabelToList( sl.get(i).getFullName(), sl.get(i).getAbbreviation());
-
 				}
 
-				// ############################
-//				setFixedStatus();
-//				updateStatusMap();
 			} catch (JAXBException e1) 		{
 				Utils.showMessage( "cannot parse config file " + configFile.getPath() + ": using default settings");
 				
-				// ###############
-//				setDefaultStatus();
-				
-				// new data structure
 				rhizoMain.getProjectConfig().setDefaultUserStatusLabel();
 			}
 		}
-
-		
-		// ##############
-//		Node.MAX_EDGE_CONFIDENCE = getStatusMapSize();
-//		Node.MAX_EDGE_CONFIDENCE = (byte)( rhizoMain.getProjectConfig().sizeStatusLabelList() + 1);
-
 		}
 	
-    //TODO: needs to be recode for non-static behavior
     /**
      * Loads the connector file
      *
@@ -480,79 +382,6 @@ public class RhizoIO
 	 */
 	public void saveUserSettings()
 	{
-		// ####################
-//		// string list for easy comparisons
-//		List<String> temp = new ArrayList<String>();
-//		
-//		// global status list
-//		for(GlobalStatus s: globalStatusList) { 
-//			temp.add(s.getFullName());
-//		}
-//		
-//		// local status list
-//		for(Status s: statusMap.values()) {
-//			if(!temp.contains(s.getFullName())) // add new global status
-//			{
-//				GlobalStatus gStatus = new GlobalStatus();
-////				gStatus.setAbbreviation(s.getAbbreviation());
-//				gStatus.setFullName(s.getFullName());
-//				gStatus.setRed(s.getRed());
-//				gStatus.setGreen(s.getGreen());
-//				gStatus.setBlue(s.getBlue());
-//				gStatus.setAlpha(s.getAlpha());
-//				gStatus.setSelectable(s.isSelectable());
-//			
-//				globalStatusList.add(gStatus);
-//			} else  {// update existing global status
-//				for(GlobalStatus g: globalStatusList) {
-//					if(g.getFullName().equals(s.getFullName())) {
-////						g.setAbbreviation(s.getAbbreviation());
-//						g.setRed(s.getRed());
-//						g.setGreen(s.getGreen());
-//						g.setBlue(s.getBlue());
-//						g.setAlpha(s.getAlpha());
-//						g.setSelectable(s.isSelectable());
-//					}
-//				}
-//			}
-//		}
-//		
-//		// highlight colors
-//		List<de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color> highligthColorList =
-//				new ArrayList<de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList.Color>(2);
-//		
-//		
-//		highligthColorList.add( colorToSettings( rhizoMain.getRhizoColVis().getHighlightColor1()));
-//		highligthColorList.add( colorToSettings( rhizoMain.getRhizoColVis().getHighlightColor2()));
-//
-//		try
-//		{
-//			if(!userSettingsFile.getParentFile().exists()) userSettingsFile.getParentFile().mkdirs();
-//
-//			JAXBContext context = JAXBContext.newInstance(GlobalSettings.class);
-//			Marshaller m = context.createMarshaller();
-//			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-//
-//			
-//	        GlobalStatusList gsl = new GlobalStatusList();
-//	        gsl.getGlobalStatus().addAll(globalStatusList);
-//	        
-//	        HighlightcolorList hlc = new HighlightcolorList();
-//			hlc.getColor().addAll( highligthColorList);
-//	        
-//	        GlobalSettings gs = new GlobalSettings();
-//	        gs.setGlobalStatusList(gsl);
-//	        gs.setHighlightcolorList(hlc);
-//			
-//			m.marshal(gs, userSettingsFile);
-//		}
-//		catch(Exception e) 
-//		{
-//			Utils.showMessage( "cannot write user settings to " + userSettingsFile.getPath());
-//			e.printStackTrace();
-//		}
-		
-		// new data structure
 		try {
 			if(!userSettingsFile.getParentFile().exists()) userSettingsFile.getParentFile().mkdirs();
 
@@ -649,182 +478,6 @@ public class RhizoIO
 			tempconFile.renameTo(conFile);
 		}
 	}
-
-    // #############
-//	/**
-//	 * Sets up the default global status list. Only gets called if no settings file exists in the users home folder.
-//	 * @author Tino
-//	 */
-//	public void setDefaultGlobalStatus() 
-//	{
-//		GlobalStatus undefined = new GlobalStatus();
-//		undefined.setFullName("UNDEFINED");
-//		undefined.setAbbreviation("*");
-//		undefined.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
-//		undefined.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
-//		undefined.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
-//		undefined.setAlpha(BigInteger.valueOf(255));
-//		undefined.setSelectable(true);
-//		globalStatusList.add(undefined);
-//		
-//		GlobalStatus connector = new GlobalStatus();
-//		connector.setFullName("CONNECTOR");
-//		connector.setAbbreviation("@");
-//		connector.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
-//		connector.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
-//		connector.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
-//		connector.setAlpha(BigInteger.valueOf(255));
-//		connector.setSelectable(true);
-//		globalStatusList.add(connector);
-//		
-//		GlobalStatus virtual = new GlobalStatus();
-//		virtual.setFullName("VIRTUAL");
-//		virtual.setAbbreviation("-");
-//		virtual.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
-//		virtual.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
-//		virtual.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
-//		virtual.setAlpha(BigInteger.valueOf(255));
-//		virtual.setSelectable(true);
-//		globalStatusList.add(virtual);
-//		
-//		GlobalStatus living = new GlobalStatus();
-//		living.setFullName("LIVING");
-//		living.setAbbreviation("L");
-//		living.setRed(BigInteger.valueOf( DEFAULT_STATUS_COLOR.getRed()));
-//		living.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
-//		living.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
-//		living.setAlpha(BigInteger.valueOf(255));
-//		living.setSelectable(true);
-//		globalStatusList.add(living);
-//		
-//		GlobalStatus dead = new GlobalStatus();
-//		dead.setFullName("DEAD");
-//		dead.setAbbreviation("D");
-//		dead.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
-//		dead.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
-//		dead.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
-//		dead.setAlpha(BigInteger.valueOf(255));
-//		dead.setSelectable(true);
-//		globalStatusList.add(dead);
-//		
-//		GlobalStatus decayed = new GlobalStatus();
-//		decayed.setFullName("DECAYED");
-//		decayed.setAbbreviation("Y");
-//		decayed.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
-//		decayed.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
-//		decayed.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
-//		decayed.setAlpha(BigInteger.valueOf(255));
-//		decayed.setSelectable(true);
-//		globalStatusList.add(decayed);
-//		
-//		GlobalStatus gap = new GlobalStatus();
-//		gap.setFullName("GAP");
-//		gap.setAbbreviation("G");
-//		gap.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
-//		gap.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
-//		gap.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
-//		gap.setAlpha(BigInteger.valueOf(255));
-//		gap.setSelectable(true);
-//		globalStatusList.add(gap);
-//	}
-//	
-//	/**
-//	 * Sets up the default status map. Only gets called if the user cancels the file dialog to select a .cfg file or
-//	 * no .cfg file is found when opening a project.
-//	 * @author Tino
-//	 */
-//	public void setDefaultStatus() 
-//	{
-//		
-//		List<Status> statusList = new ArrayList<Status>();
-//		Status living = new Status();
-//		living.setFullName("LIVING");
-//		living.setAbbreviation("L");
-//		living.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
-//		living.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
-//		living.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
-//		living.setAlpha(BigInteger.valueOf(255));
-//		living.setSelectable(true);
-//		statusList.add(living);
-//		
-//		Status dead = new Status();
-//		dead.setFullName("DEAD");
-//		dead.setAbbreviation("D");
-//		dead.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
-//		dead.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
-//		dead.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
-//		dead.setAlpha(BigInteger.valueOf(255));
-//		dead.setSelectable(true);
-//		statusList.add(dead);
-//		
-//		Status decayed = new Status();
-//		decayed.setFullName("DECAYED");
-//		decayed.setAbbreviation("Y");
-//		decayed.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
-//		decayed.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
-//		decayed.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
-//		decayed.setAlpha(BigInteger.valueOf(255));
-//		decayed.setSelectable(true);
-//		statusList.add(decayed);
-//		
-//		Status gap = new Status();
-//		gap.setFullName("GAP");
-//		gap.setAbbreviation("G");
-//		gap.setRed(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getRed()));
-//		gap.setGreen(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getGreen()));
-//		gap.setBlue(BigInteger.valueOf(DEFAULT_STATUS_COLOR.getBlue()));
-//		gap.setAlpha(BigInteger.valueOf(255));
-//		gap.setSelectable(true);
-//		statusList.add(gap);
-//		
-//		for(int i = 0; i < statusList.size(); i++)
-//		{
-//			statusMap.put(i, statusList.get(i));
-//		}
-//		
-//		setFixedStatus();
-//	}
-//	
-//	/**
-//	 * Puts the fixed status UNDEFINED, VIRTUAL and CONNECTOR to the status map. Always included.
-//	 * @author Tino
-//	 */
-//	private void setFixedStatus()
-//	{
-//		// Standard status - always included
-//		Status undefined = new Status();
-//		undefined.setFullName("UNDEFINED");
-//		undefined.setAbbreviation("*");
-//		undefined.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
-//		undefined.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
-//		undefined.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
-//		undefined.setAlpha(BigInteger.valueOf(255));
-//		statusMap.put(STATUS_UNDEFINED, undefined);
-//
-//		Status virtual = new Status();
-//		virtual.setFullName("VIRTUAL");
-//		virtual.setAbbreviation("-");
-//		virtual.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
-//		virtual.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
-//		virtual.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
-//		virtual.setAlpha(BigInteger.valueOf(255));
-//		statusMap.put(STATUS_VIRTUAL, virtual);
-//
-//		Status connector = new Status();
-//		connector.setFullName("CONNECTOR");
-//		connector.setAbbreviation("@");
-//		connector.setRed(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getRed()));
-//		connector.setBlue(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getGreen()));
-//		connector.setGreen(BigInteger.valueOf(DEFAULT_FIXED_STATUS_COLOR.getBlue()));
-//		connector.setAlpha(BigInteger.valueOf(255));
-//		statusMap.put(STATUS_CONNECTOR, connector);
-//	}
-//
-//
-//	public byte getStatusMapSize() 
-//	{
-//		return (byte) (statusMap.size() - FIXEDSTATUSSIZE - 1);
-//	}
 	
 	/**
 	 * 
@@ -837,24 +490,20 @@ public class RhizoIO
 		String result = "";
 		StringBuilder sb = new StringBuilder();
 		
-		try (FileReader fr = new FileReader(file))
-		{
+		try (FileReader fr = new FileReader(file)) {
 			int c = fr.read();
 			while (c != -1)
 			{
 				sb.append((char) c);
 				c = fr.read();
 			}
-		}
-		catch (IOException e)
-		{
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
 		result = sb.toString();
 		return result;
 	}
-	
 	
 	/**
 	 * 
@@ -865,48 +514,14 @@ public class RhizoIO
 	 */
 	public static boolean writeStringToFile(File file, String string)
 	{
-		try (FileWriter fr = new FileWriter(file))
-		{
+		try (FileWriter fr = new FileWriter(file)) {
 			file.createNewFile();
 			fr.write(string);
 			fr.close();
-		} 
-		catch (IOException e)
-		{
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
 		return true;
 	}
-	
-	// #####################
-//	/**
-//	 * Converts RGBA from a status object to a color object.
-//	 * @param i - Node confidence value
-//	 * @return A color object with the retrieved RGBA values.
-//	 * @author Tino
-//	 */
-//	public Color getColorFromStatusMap(int i)
-//	{
-//		Status s = statusMap.get(i);
-//		if(null == s) return Color.BLACK;
-//		return new Color(s.getRed().intValue(), s.getGreen().intValue(), s.getBlue().intValue(), s.getAlpha().intValue());
-//	}
-//	
-//	public LinkedHashMap<Integer, Status> getStatusMap()
-//	{
-//		return statusMap;
-//	}
-//	
-//	public void putStatus(int i, Status s)
-//	{
-//		statusMap.put(i, s);
-//	}
-//	
-//
-//    public void clearColorVisibilityLists()
-//    {
-//    	statusMap.clear();
-//    }
-    
 }

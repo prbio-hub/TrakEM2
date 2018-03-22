@@ -190,10 +190,7 @@ public class RhizoAddons
 					copy.setLayer(nextLayer, true);
 					for (Node<Float> cnode : copy.getRoot().getSubtreeNodes()) {
 						cnode.setLayer(nextLayer);
-						// ################
-//						Color col = rhizoMain.getRhizoIO().getColorFromStatusMap((cnode.getConfidence()));
 						Color col = rhizoMain.getProjectConfig().getColorForStatus((cnode.getConfidence()));
-
 						cnode.setColor(col);
 					}
 					copy.setTitle("treeline");
@@ -724,8 +721,6 @@ public class RhizoAddons
 					alternatedList.add(displayable);
 					continue;
 				}
-				// #########
-//				if(nearestNode.getConfidence() > 0 && !rhizoMain.getRhizoIO().getStatusMap().get((int) nearestNode.getConfidence()).isSelectable())
 				if(nearestNode.getConfidence() >= 0 && !rhizoMain.getProjectConfig().getStatusLabel((int) nearestNode.getConfidence()).isSelectable())
 				{
 					alternatedList.add(displayable);

@@ -426,17 +426,7 @@ public abstract class Node<T> implements Taggable {
 				// aeekz actyc
 				
 				int i = (int) this.getConfidence();
-//				if(i > rhizoMain.getRhizoIO().getStatusMapSize()) Utils.log("@Node: confidence is higher than status list size");
-//				String s = rhizoMain.getRhizoIO().getStatusMap().get(i).getAbbreviation();
 				
-				// ##################
-//				Status status = rhizoMain.getRhizoIO().getStatusMap().get(i);
-//				String s;
-//				if ( status != null ) {
-//					s = status.getAbbrev();
-//				} else {
-//					s = rhizoMain.getRhizoIO().getStatusMap().get( RhizoIO.STATUS_UNDEFINED).getAbbreviation();
-//				}
 				String s = rhizoMain.getProjectConfig().getStatusLabel(i).getAbbrev();
 				
 				final Dimension dim = Utils.getDimensions(s, g.getFont());
@@ -1292,15 +1282,13 @@ public abstract class Node<T> implements Taggable {
 			return Color.LIGHT_GRAY;     
 		}
                 
-        // ############
-//		Color result = this.rhizoMain.getRhizoIO().getColorFromStatusMap(this.getConfidence());
-//		if(high[0]) return rhizoMain.getRhizoColVis().getHighlightColor1();
-//		if(high[1]) return rhizoMain.getRhizoColVis().getHighlightColor2();
-		Color result = this.rhizoMain.getProjectConfig().getColorForStatus( getConfidence());
-		if(high[0]) return rhizoMain.getProjectConfig().getHighlightColor1();
-		if(high[1]) return rhizoMain.getProjectConfig().getHighlightColor2();
-
-		return result;
+		if(high[0]) {
+		    return rhizoMain.getProjectConfig().getHighlightColor1(); 
+		} else if(high[1]) {
+		    return rhizoMain.getProjectConfig().getHighlightColor2(); 
+		} else {
+		    return this.rhizoMain.getProjectConfig().getColorForStatus( getConfidence());
+		}
 	}
         
 	//actyc: helper to verify that rhizoAddons is set when possible

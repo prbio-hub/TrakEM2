@@ -137,13 +137,6 @@ public class VisibilityPanel extends JPanel {
 
 		add(jPanelNames);
 		
-		// ###############
-//		HashMap<Integer, Status> map = rhizoMain.getRhizoIO().getStatusMap();
-//		
-//		// first add user definable status labels
-//		for(int i: map.keySet()) {
-//			if ( i>= 0 ) addStatus( i, map);
-//		}               
 		for ( int i = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabelList() ; i++) {
 			Utils.log( "VisibilityPanel: add " + i);
 			addStatus( i);
@@ -152,10 +145,6 @@ public class VisibilityPanel extends JPanel {
 		add(new JSeparator());
 		 
 		// then add the fixed labels
-		// #########
-//		for(int i: map.keySet()) {
-//			if ( i < 0 ) addStatus( i, map);
-//		}  
 		for ( int i : rhizoMain.getProjectConfig().getFixedStatusLabelInt() ) {
 			Utils.log( "VisibilityPanel: add " + i);
 			addStatus( i);
@@ -163,32 +152,22 @@ public class VisibilityPanel extends JPanel {
 		
 		// add highlighting color
 		add(new JSeparator());
-//		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING1, rhizoMain.getRhizoColVis().getHighlightColor1());
-//		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING2, rhizoMain.getRhizoColVis().getHighlightColor2());
 		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING1, rhizoMain.getProjectConfig().getHighlightColor1());
 		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING2, rhizoMain.getProjectConfig().getHighlightColor2());
 		
 		add(new JSeparator());
 	}
        
-	// ########
-//	private void addStatus( int i, HashMap<Integer, Status> map) {
-	
 	/** we assume that the status label for <code>i</code> exists
 	 * 
 	 * @param i
 	 */
 	private void addStatus( int i) {
-		// ######
-//		Status s = map.get(i);
-		
 		RhizoStatusLabel sl = rhizoMain.getProjectConfig().getStatusLabel(i);
 		
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
-		// ###########
-//		String temp = s.getAbbreviation()+" | "+s.getFullName();
 		String temp = sl.getAbbrev() + " | " + sl.getName();
 
 		JLabel lab = new JLabel(temp);
@@ -201,9 +180,6 @@ public class VisibilityPanel extends JPanel {
 		slider.setMinimum(0);
 		slider.setName(Integer.toString(i));
 		slider.setMaximum(255);
-		
-		// ########
-//		slider.setValue(s.getAlpha().intValue());
 		slider.setValue(sl.getAlpha());
 
 		slider.addChangeListener(sliderAction);
@@ -222,8 +198,6 @@ public class VisibilityPanel extends JPanel {
 		button.setPreferredSize(new java.awt.Dimension(33, 12));
 		button.setContentAreaFilled(false);
 		button.setOpaque(true);
-		// ###########
-//		button.setBackground(rhizoMain.getRhizoIO().getColorFromStatusMap(i));
 		button.setBackground(rhizoMain.getProjectConfig().getColorForStatus(i));
 		panel.add(button);
 
@@ -272,13 +246,6 @@ public class VisibilityPanel extends JPanel {
 					rhizoMain.getProjectConfig().setHighlightColor2( new Color( 
 							selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue()));
 				} else {
-					// ##########
-//					int index = Integer.parseInt(e.getActionCommand());
-//					Status s = rhizoMain.getRhizoIO().getStatusMap().get(index);
-//					s.setRed(BigInteger.valueOf(selectedColor.getRed()));
-//					s.setGreen(BigInteger.valueOf(selectedColor.getGreen()));
-//					s.setBlue(BigInteger.valueOf(selectedColor.getBlue()));
-//					rhizoMain.getRhizoIO().putStatus(index, s);
 					int index = Integer.parseInt(e.getActionCommand());
 					RhizoStatusLabel s = rhizoMain.getProjectConfig().getStatusLabel(index);
 					s.setColor(selectedColor);
@@ -298,16 +265,10 @@ public class VisibilityPanel extends JPanel {
 			JSlider currentSlider = (JSlider) e.getSource();
 			int index = Integer.parseInt(currentSlider.getName()); // name will always be an integer
 			
-			// #####################
-//			Status s = rhizoMain.getRhizoIO().getStatusMap().get(index);
-//			s.setAlpha(BigInteger.valueOf(currentSlider.getValue()));
-//			rhizoMain.getRhizoIO().putStatus(index, s);
 			RhizoStatusLabel s = rhizoMain.getProjectConfig().getStatusLabel(index);
 			s.setAlpha(currentSlider.getValue());
 
 			rhizoMain.getRhizoColVis().applyCorrespondingColor();
-			// cButton.setBackground(newColor);
-
 		}
 	};
 
@@ -317,10 +278,6 @@ public class VisibilityPanel extends JPanel {
 			int index = Integer.parseInt(e.getActionCommand());
 			JCheckBox source = (JCheckBox) e.getSource();
 
-			// ###########
-//			Status s = rhizoMain.getRhizoIO().getStatusMap().get(index);
-//			s.setSelectable(source.isSelected());
-//			rhizoMain.getRhizoIO().putStatus(index, s);
 			RhizoStatusLabel s = rhizoMain.getProjectConfig().getStatusLabel(index);
 			s.setSelectable(source.isSelected());
 		}

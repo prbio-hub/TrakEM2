@@ -284,8 +284,6 @@ class Segment
 	{
 		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) + sep + Integer.toString(segmentID) + sep + Integer.toString((int) layer.getZ() + 1)  +
 				sep + Double.toString(length) + sep + Double.toString(avgRadius) + sep + Double.toString(surfaceArea) +
-// #########
-				//				sep + Double.toString(volume) + sep + Integer.toString(numberOfChildren) + sep + status + sep + r.getStatusMap().get(status).getFullName();
 		        sep + Double.toString(volume) + sep + Integer.toString(numberOfChildren) + sep + status + sep + 
 		        rhizoMain.getProjectConfig().getStatusLabel(status).getName();
 
