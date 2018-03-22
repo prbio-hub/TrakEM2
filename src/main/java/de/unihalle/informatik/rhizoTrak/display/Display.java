@@ -180,6 +180,7 @@ import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.analysis.Graph;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
+import de.unihalle.informatik.rhizoTrak.display.addonGui.SplitDialog;
 import de.unihalle.informatik.rhizoTrak.display.inspect.InspectPatchTrianglesMode;
 import de.unihalle.informatik.rhizoTrak.imaging.Blending;
 import de.unihalle.informatik.rhizoTrak.imaging.LayerStack;
@@ -5581,6 +5582,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			final LayerSet.DoChangeTrees step2 = getLayerSet().addChangeTreesStep();
 			step2.addDependents(deps2);
 			Display.repaint(getLayerSet());
+			//actyc: call split dialog if needed
+			SplitDialog.splitDialog(ts);
 		} else if (command.equals("Show tabular view")) {
 			if (!(active instanceof Tree<?>)) return;
 			((Tree<?>)active).createMultiTableView();

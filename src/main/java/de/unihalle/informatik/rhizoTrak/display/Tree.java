@@ -875,18 +875,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				a.add(this);
 				a.add(t);
 			}
-			this.calculateBoundingBox(null); // outside synch
-			//actyc: inform the Connector
-			if(this.getClass().equals(Treeline.class)){
-				ArrayList<Treeline> interestingTrees = new ArrayList<Treeline>();  
-				for (Tree<T> tree : a) {
-					interestingTrees.add((Treeline)tree);
-				}
-				TreeEvent te = new TreeEvent((Treeline) this,"split",null,interestingTrees);
-				treeSingleAction(te);
-			}
-			
-			
+			this.calculateBoundingBox(null); // outside synch			
 			return a;
 		} catch (final Exception e) {
 			IJError.print(e);

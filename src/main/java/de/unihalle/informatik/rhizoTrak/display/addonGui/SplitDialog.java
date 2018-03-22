@@ -60,6 +60,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -69,11 +70,13 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import de.unihalle.informatik.rhizoTrak.display.Display;
+import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Tree;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
+import de.unihalle.informatik.rhizoTrak.display.ZDisplayable;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 public class SplitDialog extends JDialog implements ActionListener {
@@ -104,10 +107,6 @@ public class SplitDialog extends JDialog implements ActionListener {
 		
 		upstream.updateCache();
 		downstream.updateCache();
-		
-		upstream.getLayerSet().add(downstream); // will change Display.this.active !
-		upstream.getProject().getProjectTree().addSibling(upstream, downstream);
-		Display.repaint(upstream.getLayerSet());		
 		
 		this.setLocationByPlatform(true);
 		this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -241,4 +240,19 @@ public class SplitDialog extends JDialog implements ActionListener {
 	};
 	
 
+	public static void splitDialog(List<ZDisplayable> zdisps) 
+	{
+		ArrayList<Treeline> trees = new ArrayList<Treeline>();
+		for(ZDisplayable d: zdisps)
+		{
+			if(d instanceof Treeline)
+			{
+				trees.add( (Treeline) d);
+			}
+		}
+		if(!trees.isEmpty() && trees.get(0).getTreeEventListener().size()>0) 
+		{
+			new SplitDialog(trees, trees.get(0).getProject().getRhizoMain());
+		}
+	}
 }
