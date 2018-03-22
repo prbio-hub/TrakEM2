@@ -6,7 +6,10 @@ import java.math.BigInteger;
 import org.python.antlr.base.boolop;
 
 /**
- * A status label string with its abbreviation
+ * A status label string with its abbreviation and so forth.
+ * 
+ * <b>NOTE</> setting of values should only be done via {@link RhizoProjectConfig} to let is control if
+ * user settings were changed
  * @author posch
  *
  */
@@ -66,7 +69,7 @@ public class RhizoStatusLabel{
 	/**
 	 * @param abbrev the abbrev to set
 	 */
-	public void setAbbrev(String abbrev) {
+	void setAbbrev(String abbrev) {
 		this.abbrev = abbrev;
 	}
 
@@ -80,7 +83,7 @@ public class RhizoStatusLabel{
 	/**
 	 * @param color the color to set
 	 */
-	public void setColor(Color color) {
+	void setColor(Color color) {
 		this.color = color;
 	}
 
@@ -94,7 +97,7 @@ public class RhizoStatusLabel{
 	/**
 	 * @param alpha the alpha to set
 	 */
-	public void setAlpha(int alpha) {
+	 void setAlpha(int alpha) {
 		this.alpha = alpha;
 	}
 
@@ -108,7 +111,7 @@ public class RhizoStatusLabel{
 	/**
 	 * @param selectable the selectable to set
 	 */
-	public void setSelectable(boolean selectable) {
+	 void setSelectable(boolean selectable) {
 		this.selectable = selectable;
 	}
 

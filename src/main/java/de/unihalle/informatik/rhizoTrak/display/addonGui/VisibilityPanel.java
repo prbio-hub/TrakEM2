@@ -247,8 +247,7 @@ public class VisibilityPanel extends JPanel {
 							selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue()));
 				} else {
 					int index = Integer.parseInt(e.getActionCommand());
-					RhizoStatusLabel s = rhizoMain.getProjectConfig().getStatusLabel(index);
-					s.setColor(selectedColor);
+					rhizoMain.getProjectConfig().setColor(index, selectedColor);
 				}
 				
 				rhizoMain.getRhizoColVis().applyCorrespondingColor();
@@ -265,8 +264,7 @@ public class VisibilityPanel extends JPanel {
 			JSlider currentSlider = (JSlider) e.getSource();
 			int index = Integer.parseInt(currentSlider.getName()); // name will always be an integer
 			
-			RhizoStatusLabel s = rhizoMain.getProjectConfig().getStatusLabel(index);
-			s.setAlpha(currentSlider.getValue());
+			rhizoMain.getProjectConfig().setAlpha( index, currentSlider.getValue());
 
 			rhizoMain.getRhizoColVis().applyCorrespondingColor();
 		}
@@ -278,8 +276,7 @@ public class VisibilityPanel extends JPanel {
 			int index = Integer.parseInt(e.getActionCommand());
 			JCheckBox source = (JCheckBox) e.getSource();
 
-			RhizoStatusLabel s = rhizoMain.getProjectConfig().getStatusLabel(index);
-			s.setSelectable(source.isSelected());
+			rhizoMain.getProjectConfig().setSelectable(index, source.isSelected());
 		}
 	};
 }

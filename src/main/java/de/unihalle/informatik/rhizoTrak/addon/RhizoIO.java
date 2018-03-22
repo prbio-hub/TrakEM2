@@ -60,9 +60,12 @@ public class RhizoIO
 			{
 				//set imgDir
 				project.getRhizoMain().getRhizoImages().setImageDir(file.getParentFile());
-				// load connector data
+				
+				// load user settings 
 				Utils.log2("loading user settings...");
 				loadUserSettings();
+				// reset changed in project config
+				project.getRhizoMain().getProjectConfig().resetChanged();
 				Utils.log2("done");
 
 				Utils.log2("loading connector data...");
@@ -81,9 +84,7 @@ public class RhizoIO
                                 
 				//lock all images
 				RhizoAddons.lockAllImagesInAllProjects();
-				
-				//
-				
+					
 				return;
 			}
 
@@ -126,9 +127,9 @@ public class RhizoIO
 				if ( gs.getHighlightcolorList().getColor().size() > 1)
 					rhizoMain.getProjectConfig().setHighlightColor2(settingsToColor( gs.getHighlightcolorList().getColor().get( 1) ));
 			}
-		} 
-		catch (JAXBException e) 
-		{
+			
+			rhizoMain.getProjectConfig().resetChanged();
+		} catch (JAXBException e) {
 			Utils.showMessage( "cannot load user settings from config file " + userSettingsFile.getPath());
 			e.printStackTrace();
 		}
@@ -147,8 +148,7 @@ public class RhizoIO
 	 * @param path - The project file
 	 * @author Tino
 	 */
-	public void loadConfigFile(String path)
-	{
+	public void loadConfigFile(String path) {
 		// New project..
 		if(null == path) // user cancelled the open file dialog
 		{
@@ -167,30 +167,23 @@ public class RhizoIO
 			return;
 		}
 
-		
 		try {
+			
+			// try RhizoTrakProjectConfig.xsd, i.e. current version
 			JAXBContext context = JAXBContext.newInstance(RhizoTrakProjectConfig.class);
 			Unmarshaller um = context.createUnmarshaller();
 			RhizoTrakProjectConfig config = (RhizoTrakProjectConfig) um.unmarshal(configFile);
 			List<de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status> sl = config.getStatusList().getStatus();
 
-			for(int i = 0; i < sl.size(); i++)
-			{
-				Status oldStatus = new Status();
+			for(int i = 0; i < sl.size(); i++) {
 				de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status newStatus = sl.get(i);
-				oldStatus.setFullName(  newStatus.getFullName());
-				oldStatus.setAbbreviation( newStatus.getAbbreviation());
-				oldStatus.setRed(BigInteger.valueOf(255));
-				oldStatus.setGreen(BigInteger.valueOf(255));
-				oldStatus.setBlue(BigInteger.valueOf(0));
-				oldStatus.setAlpha(BigInteger.valueOf(255));
-				oldStatus.setSelectable(true);
 				
 				this.rhizoMain.getProjectConfig().appendStatusLabelToList( newStatus.getFullName(), newStatus.getAbbreviation());
 			}
 
 		} catch (JAXBException e) {    
 			try {
+				// try old version: config.xsd
 				JAXBContext context = JAXBContext.newInstance(Config.class);
 				Unmarshaller um = context.createUnmarshaller();
 				Config config = (Config) um.unmarshal(configFile);
@@ -206,7 +199,7 @@ public class RhizoIO
 				rhizoMain.getProjectConfig().setDefaultUserStatusLabel();
 			}
 		}
-		}
+	}
 	
     /**
      * Loads the connector file
@@ -251,7 +244,6 @@ public class RhizoIO
                     String[] content = line.split(";");
                     if (content.length > 1) {
                         long currentConID = Long.parseLong(content[0]);
-                        ArrayList<Treeline> conTrees = new ArrayList<Treeline>();
 
                         Connector rightConn = null;
 
@@ -312,36 +304,6 @@ public class RhizoIO
 		
 		File configFile = new File(file.getAbsolutePath().replace(".xml", ".cfg"));
 		
-		// ######
-//		try 
-//		{
-//			JAXBContext context = JAXBContext.newInstance(RhizoTrakProjectConfig.class);
-//                        Marshaller m = context.createMarshaller();
-//                        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-//	        
-//            de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList sl = 
-//                        		new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList();
-//	        for(int i: statusMap.keySet()) 	        {
-//	        	// ignore undefined, virtual and connector
-//	        	Status oldStatus = statusMap.get(i);
-//	        	de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status newStatus =
-//	        			new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status();
-//	        	newStatus.setFullName( oldStatus.getFullName());
-//	        	newStatus.setAbbreviation( oldStatus.getAbbreviation());
-//	        	if(i >= 0) sl.getStatus().add( newStatus);
-//	        }
-//
-//	        RhizoTrakProjectConfig config = new RhizoTrakProjectConfig();
-//	        config.setStatusList(sl);
-//	        
-//	        m.marshal(config, configFile);
-//		}
-//		catch (Exception e) 
-//		{
-//			e.printStackTrace();
-//		}
-		
-		// new data structure
 		try 
 		{
 			JAXBContext context = JAXBContext.newInstance(RhizoTrakProjectConfig.class);
@@ -351,7 +313,6 @@ public class RhizoIO
             de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList jaxbStatusList = 
                         		new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList();
 	        for( int i = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabelList() ; i++ ) {
-//            for ( RhizoStatusLabel statusLabel : rhizoMain.getProjectConfig().getAllStatusLabel()) {
 	        	de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status
 	        	newStatus =
 	        			new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status();
@@ -365,7 +326,6 @@ public class RhizoIO
 	        RhizoTrakProjectConfig config = new RhizoTrakProjectConfig();
 	        config.setStatusList(jaxbStatusList);
 	        
-//	        m.marshal(config, new File(file.getAbsolutePath().replace(".xml", ".cfg")+ ".new"));
 	        m.marshal(config, configFile);
 		}
 		catch (Exception e) 
@@ -379,9 +339,10 @@ public class RhizoIO
 	/**
 	 * Saves the global user settings in the users home folder.
 	 * @author Axel, Tino
+	
+	 * @return return true if saving was sucessful
 	 */
-	public void saveUserSettings()
-	{
+	public boolean saveUserSettings() 	{
 		try {
 			if(!userSettingsFile.getParentFile().exists()) userSettingsFile.getParentFile().mkdirs();
 
@@ -416,8 +377,10 @@ public class RhizoIO
 		} catch(Exception e) {
 			Utils.showMessage( "cannot write user settings to " + userSettingsFile.getPath());
 			e.printStackTrace();
+			return false;
 		}
-	
+		
+		return true;
 	}
 	
 	/** convert a awt Color to the xsd representation in user settings

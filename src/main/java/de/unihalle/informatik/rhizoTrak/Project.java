@@ -584,6 +584,7 @@ public class Project extends DBObject {
 			{
 				Utils.log("@Project: called loadUserSettings(");
 				project.getRhizoMain().getRhizoIO().loadUserSettings();
+				project.getRhizoMain().getProjectConfig().resetChanged();
 			}
 
 			// aeekz
@@ -879,9 +880,13 @@ public class Project extends DBObject {
 			}
 		}
 		
-		final YesNoDialog yn2 = ControlWindow.makeYesNoDialog("rhizoTrak", "Save user settings?");
-		if (yn2.yesPressed()) {
-			this.getRhizoMain().getRhizoIO().saveUserSettings();
+		if ( this.getRhizoMain().getProjectConfig().hasChanged()) {
+			final YesNoDialog yn2 = ControlWindow.makeYesNoDialog("rhizoTrak", "Save user settings?");
+			if (yn2.yesPressed()) {
+				if ( this.getRhizoMain().getRhizoIO().saveUserSettings() ) {
+					this.getRhizoMain().getProjectConfig().resetChanged();
+				}
+			}
 		}
 
 		try {
