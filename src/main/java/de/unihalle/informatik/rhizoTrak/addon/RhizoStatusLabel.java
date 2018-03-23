@@ -14,40 +14,46 @@ import org.python.antlr.base.boolop;
  *
  */
 public class RhizoStatusLabel{
+	private final  RhizoProjectConfig projectConfig;
 	private String name;
 	private String abbrev = "";
 	private Color color;
 	private int alpha = 255;
 	boolean selectable = true;
 	
-	RhizoStatusLabel( String name, String abbrev, Color color) {
+	RhizoStatusLabel( RhizoProjectConfig projectConfig, String name, String abbrev, Color color) {
+		this.projectConfig = projectConfig;
 		this.name = name;
 		this.abbrev = abbrev;
 		this.color = color;
 	}
 
-	RhizoStatusLabel( String name, String abbrev, Color color, int alpha, boolean selectable) {
+	RhizoStatusLabel( RhizoProjectConfig projectConfig, String name, String abbrev, Color color, int alpha, boolean selectable) {
+		this.projectConfig = projectConfig;
 		this.name = name;
 		this.abbrev = abbrev;
 		this.color = color;
 		this.alpha = alpha;
 		this.selectable = selectable;
 	}
-	public RhizoStatusLabel(String name, String abbrev, Color color, int alpha) {
+	public RhizoStatusLabel(RhizoProjectConfig projectConfig, String name, String abbrev, Color color, int alpha) {
+		this.projectConfig = projectConfig;
 		this.name = name;
 		this.abbrev = abbrev;
 		this.color = color;
 		this.alpha = alpha;
 	}
 
-	public RhizoStatusLabel(String name, Color color, int alpha, boolean selectable) {
+	public RhizoStatusLabel( RhizoProjectConfig projectConfig, String name, Color color, int alpha, boolean selectable) {
+		this.projectConfig = projectConfig;
 		this.name = name;
 		this.color = color;
 		this.alpha = alpha;
 		this.selectable = selectable;
 	}
 
-	public RhizoStatusLabel(String name, String abbrev) {
+	public RhizoStatusLabel( RhizoProjectConfig projectConfig, String name, String abbrev) {
+		this.projectConfig = projectConfig;
 		this.name = name;
 		this.abbrev = abbrev;
 	}
@@ -83,8 +89,9 @@ public class RhizoStatusLabel{
 	/**
 	 * @param color the color to set
 	 */
-	void setColor(Color color) {
+	public void setColor(Color color) {
 		this.color = color;
+		this.projectConfig.setUserSettingsChanged();
 	}
 
 	/**
@@ -97,8 +104,9 @@ public class RhizoStatusLabel{
 	/**
 	 * @param alpha the alpha to set
 	 */
-	 void setAlpha(int alpha) {
+	 public void setAlpha(int alpha) {
 		this.alpha = alpha;
+		this.projectConfig.setUserSettingsChanged();
 	}
 
 	/**
@@ -111,8 +119,9 @@ public class RhizoStatusLabel{
 	/**
 	 * @param selectable the selectable to set
 	 */
-	 void setSelectable(boolean selectable) {
+	 public void setSelectable(boolean selectable) {
 		this.selectable = selectable;
+		this.projectConfig.setUserSettingsChanged();
 	}
 
 }

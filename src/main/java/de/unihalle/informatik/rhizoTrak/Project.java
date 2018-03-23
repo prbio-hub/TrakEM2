@@ -880,7 +880,7 @@ public class Project extends DBObject {
 			}
 		}
 		
-		if ( this.getRhizoMain().getProjectConfig().hasChanged()) {
+		if ( this.getRhizoMain().getProjectConfig().userSettingsChanged()) {
 			final YesNoDialog yn2 = ControlWindow.makeYesNoDialog("rhizoTrak", "Save user settings?");
 			if (yn2.yesPressed()) {
 				if ( this.getRhizoMain().getRhizoIO().saveUserSettings() ) {

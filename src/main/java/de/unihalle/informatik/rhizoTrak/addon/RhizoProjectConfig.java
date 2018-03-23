@@ -84,7 +84,7 @@ public class RhizoProjectConfig {
 	 * This status label is return (instead of null) in case a request with invalid integer status value
 	 * or name is issued
 	 */
-	public static final  RhizoStatusLabel INVALID_STATUS_LABEL = new RhizoStatusLabel( "INVALID_STATUS_LABEL", "?", Color.BLACK);
+	public final  RhizoStatusLabel INVALID_STATUS_LABEL = new RhizoStatusLabel( this, "INVALID_STATUS_LABEL", "?", Color.BLACK);
 	
 	// highlight colors
 	private Color highlightColor1 = Color.MAGENTA;
@@ -93,13 +93,13 @@ public class RhizoProjectConfig {
 	/**
 	 * true if anything in the user setting part of instance has change, e.g. after last save operation
 	 */
-	private boolean hasChangedUserSettings = false;
+	private boolean userSettingsChanged = false;
 	
 	public RhizoProjectConfig() {
 		// we always need the fixed status labels
-		statusLabelSet.put( NAME_UNDEFINED, new RhizoStatusLabel( NAME_UNDEFINED, "*", DEFAULT_FIXED_STATUS_COLOR));
-		statusLabelSet.put( NAME_VIRTUAL, new RhizoStatusLabel( NAME_VIRTUAL, "-", DEFAULT_FIXED_STATUS_COLOR));
-		statusLabelSet.put( NAME_CONNECTOR, new RhizoStatusLabel( NAME_CONNECTOR, "@", DEFAULT_FIXED_STATUS_COLOR));
+		statusLabelSet.put( NAME_UNDEFINED, new RhizoStatusLabel( this, NAME_UNDEFINED, "*", DEFAULT_FIXED_STATUS_COLOR));
+		statusLabelSet.put( NAME_VIRTUAL, new RhizoStatusLabel( this, NAME_VIRTUAL, "-", DEFAULT_FIXED_STATUS_COLOR));
+		statusLabelSet.put( NAME_CONNECTOR, new RhizoStatusLabel( this, NAME_CONNECTOR, "@", DEFAULT_FIXED_STATUS_COLOR));
 		fixedStatusLabelMap.put( STATUS_UNDEFINED, NAME_UNDEFINED);
 		fixedStatusLabelMap.put( STATUS_VIRTUAL, NAME_VIRTUAL);
 		fixedStatusLabelMap.put( STATUS_CONNECTOR, NAME_CONNECTOR);	
@@ -117,8 +117,8 @@ public class RhizoProjectConfig {
 		// mind: abbreviations are not part of user settings, so do not set hasChanged
 		RhizoStatusLabel sl = this.statusLabelSet.get(name);
 		if ( sl == null ) {
-			sl = new RhizoStatusLabel(name, abbrev, DEFAULT_STATUS_COLOR);
-			statusLabelSet.put(name, sl);
+			sl = new RhizoStatusLabel( this, name, abbrev, DEFAULT_STATUS_COLOR);
+			addStatusLabelToSet(sl);
 		} else {
 			if ( ! abbrev.equals(sl.getAbbrev()) ) {
 				sl.setAbbrev(abbrev);
@@ -145,14 +145,13 @@ public class RhizoProjectConfig {
 		RhizoStatusLabel oldsl = this.statusLabelSet.get(  sl.getName());
 		if ( oldsl == null) {
 			statusLabelSet.put( sl.getName(), sl);
+			this.userSettingsChanged = true;
 		} else {
 			oldsl.setAbbrev(  sl.getAbbrev());
 			oldsl.setColor(  sl.getColor());
 			oldsl.setAlpha( sl.getAlpha());
 			oldsl.setSelectable( sl.isSelectable());
 		}
-		
-		this.hasChangedUserSettings = true;
 	}
 	
 	/**Add a status label with the given information to the set. If one with the same name already exists
@@ -172,10 +171,9 @@ public class RhizoProjectConfig {
 			sl.setAlpha(alpha);
 			sl.setSelectable(selectable);
 		} else {
-			statusLabelSet.put( name, new RhizoStatusLabel(name, abbrev, color, alpha, selectable));
+			statusLabelSet.put( name, new RhizoStatusLabel( this, name, abbrev, color, alpha, selectable));
+			this.userSettingsChanged = true;
 		}
-		
-		this.hasChangedUserSettings = true;
 	}
 		
 	/**Add a status label with the given information to the set. If one with the same name already exists
@@ -193,10 +191,9 @@ public class RhizoProjectConfig {
 			sl.setAlpha(alpha);
 			sl.setSelectable(selectable);
 		} else {
-			statusLabelSet.put( name, new RhizoStatusLabel(name, color, alpha, selectable));
+			statusLabelSet.put( name, new RhizoStatusLabel( this, name, color, alpha, selectable));
+			this.userSettingsChanged = true;
 		}
-		
-		this.hasChangedUserSettings = true;
 	}
 		
 	/**Add a status label with the given information to the set. If one with the same name already exists
@@ -214,10 +211,9 @@ public class RhizoProjectConfig {
 			sl.setColor(color);
 			sl.setAlpha(alpha);
 		} else {
-			statusLabelSet.put( name, new RhizoStatusLabel(name, abbrev, color, alpha));
+			statusLabelSet.put( name, new RhizoStatusLabel( this, name, abbrev, color, alpha));
+			this.userSettingsChanged = true;
 		}
-		
-		this.hasChangedUserSettings = true;
 	}
 	
 	/**Add a status label with the given information to the set. If one with the same name already exists
@@ -233,10 +229,9 @@ public class RhizoProjectConfig {
 			sl.setAbbrev(abbrev);
 			sl.setColor(color);
 		} else {
-			statusLabelSet.put( name, new RhizoStatusLabel(name, abbrev, color));
+			statusLabelSet.put( name, new RhizoStatusLabel( this, name, abbrev, color));
+			this.userSettingsChanged = true;
 		}
-		
-		this.hasChangedUserSettings = true;
 	}
 	
 	/**Add a status label with the given information to the set. If one with the same name already exists
@@ -250,10 +245,9 @@ public class RhizoProjectConfig {
 		if ( sl != null ) {
 			sl.setAbbrev(abbrev);
 		} else {
-			statusLabelSet.put( name, new RhizoStatusLabel(name, abbrev));
+			statusLabelSet.put( name, new RhizoStatusLabel( this, name, abbrev));
+			this.userSettingsChanged = true;
 		}
-		
-		this.hasChangedUserSettings = true;
 	}
 
 	/** Return names of all defined status labels, i.e. fixed and user defined ones.
@@ -381,66 +375,13 @@ public class RhizoProjectConfig {
 		appendStatusLabelToList( "DEAD", "D");
 		appendStatusLabelToList( "DECAYED", "Y");
 		appendStatusLabelToList( "GAP", "G");
-		this.hasChangedUserSettings = true;
 	}
 	/**
 	 * clear the list of user define status labels
 	 */
 	public void clearStatusLabels() {
 		statusLabelList.clear();
-		this.hasChangedUserSettings = true;
 	}
-
-	/** Set the color of the status label associated with the <code>name</code>.
-	 * If non exiting ignore
-	 * @param name
-	 * @param color
-	 */
-	public void setColor( String name, Color color) {
-		if ( this.statusLabelSet.containsKey(name)) {
-			this.getStatusLabel( name).setColor(color);
-			this.hasChangedUserSettings = true;
-		}			
-	}
-	
-	/** Set the color of the status label associated with the <code>i</code>
-	 * in the list of status labels
-	 * @param i
-	 * @param color
-	 */
-	public void setColor( int i, Color color) {
-		RhizoStatusLabel sl = this.getStatusLabel(i);
-		if ( sl != INVALID_STATUS_LABEL) {
-			sl.setColor(color);
-			this.hasChangedUserSettings = true;
-		}
-	}
-	
-	/**Set the alpha of the status label associated with the <code>i</code>
-	 * in the list of status labels
-	 * @param i
-	 * @param color
-	 */
-	public void setAlpha( int i, int alpha) {
-		RhizoStatusLabel sl = this.getStatusLabel(i);
-		if ( sl != INVALID_STATUS_LABEL) {
-			sl.setAlpha(alpha);
-			this.hasChangedUserSettings = true;
-		}
-	}
-	/**Set the selectable of the status label associated with the <code>i</code>
-	 * in the list of status labels
-	 * @param i
-	 * @param color
-	 */
-	public void setSelectable( int i, boolean selectable) {
-		RhizoStatusLabel sl = this.getStatusLabel(i);
-		if ( sl != INVALID_STATUS_LABEL) {
-			sl.setSelectable(selectable);
-			this.hasChangedUserSettings = true;
-		}
-	}
-	
 
 	/**
 	 * @return the highlightColor1
@@ -473,15 +414,22 @@ public class RhizoProjectConfig {
 	/**
 	 * @return true if the state of the instance which is part of user settings has change since instantiation or after last {@link #resetChanged}
 	 */
-	public boolean hasChanged() {
-		return hasChangedUserSettings;
+	public boolean userSettingsChanged() {
+		return userSettingsChanged;
+	}
+
+	/**
+	 * Notify that  the state of the instance which is part of user settings has change since instantiatio
+	 */
+	void setUserSettingsChanged() {
+		userSettingsChanged = true;
 	}
 
 	/**
 	 * Reset the changed state of the instance which is part of user settings to false, e.g. subsequent to saving the project configuration
 	 */
 	public void resetChanged() {
-		this.hasChangedUserSettings = false;
+		this.userSettingsChanged = false;
 	}
 
 	public void printStatusLabelSet() {
