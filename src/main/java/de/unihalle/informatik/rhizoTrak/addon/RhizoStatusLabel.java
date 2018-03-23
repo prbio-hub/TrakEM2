@@ -8,8 +8,10 @@ import org.python.antlr.base.boolop;
 /**
  * A status label string with its abbreviation and so forth.
  * 
- * <b>NOTE</> setting of values should only be done via {@link RhizoProjectConfig} to let is control if
+ * <b>NOTE</> if the value of a member change notify the  {@link #projectConfig} that its
  * user settings were changed
+ * </b>
+ * 
  * @author posch
  *
  */

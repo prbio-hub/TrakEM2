@@ -105,6 +105,7 @@ import javax.swing.JTree;
 import javax.swing.UIManager;
 import javax.swing.plaf.FileChooserUI;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
 import de.unihalle.informatik.rhizoTrak.addon.RhizoIO;
@@ -577,7 +578,17 @@ public class Project extends DBObject {
 			}
 			loader = new FSLoader(dir_project);
 
-			Project project = createNewProject(loader, !("blank".equals(arg) || "amira".equals(arg)), template_root);
+			Project project;
+			if ( arg.equals( "default")) {
+				template_root = new TemplateThing( "rootstack");
+				template_root.addChild( new TemplateThing( "treeline"));
+				template_root.addChild( new TemplateThing( "connector"));
+
+				project = createNewProject(loader, false, template_root);
+				
+			} else {
+				project = createNewProject(loader, !("blank".equals(arg) || "amira".equals(arg)), template_root);
+			}
 
 			// first load user settings
 			if(RhizoIO.userSettingsFile.exists())
@@ -602,6 +613,21 @@ public class Project extends DBObject {
 				project.layer_set.add(layer);
 				project.layer_tree.addLayer(project.layer_set, layer);
 				layer.recreateBuckets();
+				
+				if ( arg.equals( "default") ) {
+					ProjectTree projectTree = project.getProjectTree();
+					ProjectThing rootNode = null;
+					rootNode = (ProjectThing) project.getProjectTree().getRoot().getUserObject();
+					if ( rootNode != null ) {
+						ProjectThing rootstackThing = rootNode.createChild("rootstack");
+						DefaultMutableTreeNode node = new DefaultMutableTreeNode(rootstackThing);
+						DefaultMutableTreeNode parentNode = DNDTree.findNode(rootNode, projectTree);
+						((DefaultTreeModel) projectTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
+					} else {
+						Utils.log( "@Project: can not add rootstack");
+					}
+				}
+
 				Display.createDisplay(project, layer);
 			}
 			try {
