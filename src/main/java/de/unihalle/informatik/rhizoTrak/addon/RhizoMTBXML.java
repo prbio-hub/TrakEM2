@@ -365,12 +365,26 @@ public class RhizoMTBXML
 				MTBXMLRootImageAnnotationType currentRootSet = rootSets[i];
 				
 				ProjectThing possibleParent = RhizoAddons.findParentAllowing("treeline", project);
-				if(possibleParent == null)
-				{
-				    Utils.showMessage("Project does not contain object that can hold treelines.");
-				    return;
+				if(possibleParent == null) 	{
+					try {
+						//ProjectTree projectTree = project.getProjectTree();
+						ProjectThing rootNode = null;
+						rootNode = (ProjectThing) projectTree.getRoot().getUserObject();
+						if ( rootNode != null ) {
+							ProjectThing rootstackThing = rootNode.createChild("rootstack");
+							DefaultMutableTreeNode node = new DefaultMutableTreeNode(rootstackThing);
+							DefaultMutableTreeNode parentNode = DNDTree.findNode(rootNode, projectTree);
+							((DefaultTreeModel) projectTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
+						} else {	
+							Utils.showMessage("Project does not contain object that can hold treelines.");
+							return;
+						} 
+					} catch (Exception ex) {
+						Utils.showMessage("Project does not contain object that can hold treelines.");
+						return;
+					}
 				}
-				
+
 				MTBXMLRootType[] roots = currentRootSet.getRootsArray();
 				Utils.log("@readMTBXML: number of roots in rootset "+ i + ": " + roots.length);
 		

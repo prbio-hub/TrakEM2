@@ -599,7 +599,7 @@ public class Project extends DBObject {
 			}
 
 			// aeekz
-			final OpenDialog od = new OpenDialog("Select status file", dir_project, null);
+			final OpenDialog od = new OpenDialog("Select status file (abort yields default status labels)", dir_project, null);
 			project.getRhizoMain().getRhizoIO().loadConfigFile(od.getPath());
 
 			project.getRhizoMain().getRhizoImages().setImageDir( new File( dir_project));
@@ -617,7 +617,7 @@ public class Project extends DBObject {
 				if ( arg.equals( "default") ) {
 					ProjectTree projectTree = project.getProjectTree();
 					ProjectThing rootNode = null;
-					rootNode = (ProjectThing) project.getProjectTree().getRoot().getUserObject();
+					rootNode = (ProjectThing) projectTree.getRoot().getUserObject();
 					if ( rootNode != null ) {
 						ProjectThing rootstackThing = rootNode.createChild("rootstack");
 						DefaultMutableTreeNode node = new DefaultMutableTreeNode(rootstackThing);
