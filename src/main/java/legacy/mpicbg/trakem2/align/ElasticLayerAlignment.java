@@ -110,6 +110,7 @@ import mpicbg.models.Transforms;
 import mpicbg.models.TranslationModel2D;
 import mpicbg.models.Vertex;
 import mpicbg.trakem2.transform.CoordinateTransform;
+import mpicbg.trakem2.transform.MovingLeastSquaresTransform2;
 import mpicbg.trakem2.transform.ThinPlateSplineTransform;
 import mpicbg.trakem2.util.Triple;
 
@@ -145,6 +146,8 @@ public class ElasticLayerAlignment
 		public int maxPlateauwidthSpringMesh = 200;
 		public boolean useLegacyOptimizer = true;
 
+		public boolean useTps = true;
+
 		public boolean setup( final Rectangle box )
 		{
 			/* Block Matching */
@@ -177,6 +180,7 @@ public class ElasticLayerAlignment
 			gdBlockMatching.addMessage( "Miscellaneous:" );
 			gdBlockMatching.addCheckbox( "layers_are_pre-aligned", isAligned );
 			gdBlockMatching.addNumericField( "test_maximally :", maxNumNeighbors, 0, 6, "layers" );
+			gdBlockMatching.addChoice( "elastic_transformation :", new String[] {"thin plate spline", "moving least squares" },  "thin plate spline" );
 
 			gdBlockMatching.showDialog();
 
@@ -197,6 +201,7 @@ public class ElasticLayerAlignment
 			maxLocalTrust = ( float )gdBlockMatching.getNextNumber();
 			isAligned = gdBlockMatching.getNextBoolean();
 			maxNumNeighbors = ( int )gdBlockMatching.getNextNumber();
+			useTps = gdBlockMatching.getNextChoiceIndex() == 0;
 
 
 			if ( !isAligned )
@@ -312,7 +317,8 @@ public class ElasticLayerAlignment
 				final float rodR,
 				final int searchRadius,
 				final double stiffnessSpringMesh,
-				final boolean useLocalSmoothnessFilter )
+				final boolean useLocalSmoothnessFilter,
+				final boolean useTps )
 		{
 			super(
 					SIFTfdBins,
@@ -359,6 +365,7 @@ public class ElasticLayerAlignment
 			this.searchRadius = searchRadius;
 			this.stiffnessSpringMesh = stiffnessSpringMesh;
 			this.useLocalSmoothnessFilter = useLocalSmoothnessFilter;
+			this.useTps = useTps;
 		}
 
 		@Override
@@ -410,7 +417,8 @@ public class ElasticLayerAlignment
 					rodR,
 					searchRadius,
 					stiffnessSpringMesh,
-					useLocalSmoothnessFilter );
+					useLocalSmoothnessFilter,
+					useTps );
 		}
 	}
 
@@ -428,7 +436,6 @@ public class ElasticLayerAlignment
 
 	}
 
-
 	/**
 	 *
 	 * @param param
@@ -437,6 +444,7 @@ public class ElasticLayerAlignment
 	 * @param emptyLayers
 	 * @param box
 	 * @param filter
+	 * @param useTps true if using TPS transforms, otherwise MLS
 	 * @throws Exception
 	 */
 	@SuppressWarnings( "deprecation" )
@@ -755,14 +763,21 @@ public class ElasticLayerAlignment
 			if ( propagateTransformAfter )
 			{
 				final Layer last = layerRange.get( layerRange.size() - 1 );
-				final ThinPlateSplineTransform tps = makeTPS( meshes.get( meshes.size() - 1 ).getVA().keySet() );
+				final CoordinateTransform ct;
+				if ( param.useTps )
+					ct = makeTPS( meshes.get( meshes.size() - 1 ).getVA().keySet() );
+				else {
+					final MovingLeastSquaresTransform2 mls = new MovingLeastSquaresTransform2();
+					mls.setMatches( meshes.get( meshes.size() - 1 ).getVA().keySet() );
+					ct = mls;
+				}
 				final int lastLayerIndex = last.getParent().getLayerIndex( last.getId() );
 				for ( int i = lastLayerIndex + 1; i < layers.size(); ++i )
                 {
-                    applyTransformToLayer( layers.get( i ), tps, filter );
+                    applyTransformToLayer( layers.get( i ), ct, filter );
                     for (final VectorData vd : vectorData)
                     {
-                        vd.apply(layers.get(i), infArea, tps);
+                        vd.apply(layers.get(i), infArea, ct);
                     }
                 }
 			}
