@@ -512,6 +512,10 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		final Node<T> nd = newNode(lx, ly, layer, modelNode);
 		if (null == modelNode) return nd;
 		nd.setColor(modelNode.getColor());
+		if ( layer != null ) {
+			nd.rhizoMain = getProject().getRhizoMain();
+		}
+		
 		return nd;
 	}
         
