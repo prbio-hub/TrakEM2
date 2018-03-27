@@ -80,6 +80,7 @@ import javax.swing.tree.DefaultTreeModel;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
 import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
@@ -231,20 +232,28 @@ public class RhizoAddons
 				Project project = display.getProject();
 				ProjectTree currentTree = project.getProjectTree();
 				
-				// try to find if there is ProjectThing that can contain the new treeline
-				ProjectThing parent;
-				parent = RhizoAddons.findParentAllowing("treeline", project);
-				// inform user if no ProjectThing is found
-				if (parent == null)
-				{
-					Utils.showMessage("Project does not contain object that can hold treelines.");
-					return;
+//				// try to find if there is ProjectThing that can contain the new treeline
+//				ProjectThing parent;
+//				parent = RhizoAddons.findParentAllowing("treeline", project);
+//				// inform user if no ProjectThing is found
+//				if (parent == null)
+//				{
+//					Utils.showMessage("Project does not contain object that can hold treelines.");
+//					return;
+//				}
+				
+				// find one rootstack
+				ProjectThing rootstackProjectThing = RhizoUtils.getOneRootstack(project);
+				if ( rootstackProjectThing == null ) {
+					Utils.showMessage( "Create treeline: WARNING  can not find a rootstack in project tree");
+					return;	
 				}
+						
 				// make new treeline
-				ProjectThing pt = parent.createChild("treeline");
+				ProjectThing pt = rootstackProjectThing.createChild("treeline");
 				pt.setTitle(pt.getUniqueIdentifier());
 				// add new treeline to the project tree
-				DefaultMutableTreeNode parentNode = DNDTree.findNode(parent, currentTree);
+				DefaultMutableTreeNode parentNode = DNDTree.findNode(rootstackProjectThing, currentTree);
 				DefaultMutableTreeNode node = new DefaultMutableTreeNode(pt);
 				((DefaultTreeModel) currentTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
 			}

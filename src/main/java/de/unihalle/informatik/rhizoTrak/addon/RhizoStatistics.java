@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
+import de.unihalle.informatik.rhizoTrak.display.TreeEventListener;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
@@ -38,6 +40,8 @@ import ij.ImagePlus;
 public class RhizoStatistics
 {
 
+	private final String ONLY_STRING = "Current layer only";
+	private final String ALL_STRING = "All layers";
 	private RhizoMain rhizoMain;
 
 	public RhizoStatistics(RhizoMain rhizoMain)
@@ -52,7 +56,7 @@ public class RhizoStatistics
 	{
 		String[] choices1 = {"{Tab}" , "{;}", "{,}", "Space"};
 		String[] choices1_ = {"\t", ";", ",", " "};
-		String[] choices2 = {"Current layer only", "All layers"};
+		String[] choices2 = { ONLY_STRING, ALL_STRING};
 		String[] choices3 = {"pixel", "inch", "mm"};
 		
 		JComboBox<String> combo1 = new JComboBox<String>(choices1);
@@ -86,34 +90,24 @@ public class RhizoStatistics
 		Display display = Display.getFront();
 		Layer currentLayer = display.getLayer();
 		LayerSet currentLayerSet = currentLayer.getParent();
-
-		List<Displayable> processedTreelines = new ArrayList<Displayable>();
-		List<Displayable> trees = null;
-		List<Segment> allSegments = new ArrayList<Segment>();		
-
-		if(outputType.equals("All layers")) 
-			trees = currentLayerSet.get(Treeline.class);
-		else 
-			trees = RhizoAddons.filterTreelinesByLayer(currentLayer, currentLayerSet.get(Treeline.class));
+		// ######################### new
+		boolean onlyCurrentLayer = outputType.equals( ONLY_STRING);
 		
-		// #########################
 		Project project =  Display.getFront().getProject();
-		ProjectTree projectTree = project.getProjectTree();
-		ProjectThing projectTreeRoot;
-		try {
-			projectTreeRoot = (ProjectThing)projectTree.getRoot().getUserObject();
-		} catch ( Exception ex ) {
-			Utils.log( "RhizoStatistics: Warning can not find a rootstack in project tree");
-			return;
-		}
 		
 		// all treelines below a rootstack
 		LinkedList<Treeline> allTreelines = new LinkedList<Treeline>();
-		// all conectors below a rootstack
+		// all connectors below a rootstack
 		LinkedList<Connector> allConnectors = new LinkedList<Connector>();
 		
 		System.out.println( "Find rootstacks");
-		for ( ProjectThing rootstackThing : projectTreeRoot.findChildrenOfTypeR( "rootstack") ) {
+		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
+		if ( rootstackThings == null) {
+			Utils.showMessage( "WriteStatistics warning: no rootstack found");
+			return;
+		}
+		
+		for ( ProjectThing rootstackThing :rootstackThings ) {
 			System.out.println( "found rootstack " + rootstackThing.getId());
 			
 			System.out.println("Find treelines");
@@ -123,7 +117,9 @@ public class RhizoStatistics
 				if ( tl.getClass().equals( Treeline.class)) {
 					System.out.println( "found Treeline " + tl.getId() + 
 							(currentLayer.equals( tl.getFirstLayer()) ? " contained" : " not contained"));
-					allTreelines.add(tl);
+					if ( ! onlyCurrentLayer || currentLayer.equals( tl.getFirstLayer())) {
+						allTreelines.add(tl);
+					}
 
 				} else if ( tl.getClass().equals( Connector.class)) {
 					Connector conn = (Connector)tl;
@@ -136,6 +132,30 @@ public class RhizoStatistics
 				}
 			}
 		}
+		
+		for ( Treeline tl : allTreelines)  {
+			System.out.println( "add to statistics " + tl.getId());
+		
+			HashSet<Connector> connectorSet = new HashSet<>();
+
+			for(TreeEventListener tel: tl.getTreeEventListener()) { 
+				connectorSet.add(tel.getConnector());
+				System.out.println( "     connector " + tel.getConnector().getId() + " " +
+				allConnectors.contains(tel.getConnector()));
+			}            
+		}
+
+		// end new
+
+		List<Displayable> processedTreelines = new ArrayList<Displayable>();
+		List<Displayable> trees = null;
+		List<Segment> allSegments = new ArrayList<Segment>();		
+
+		if(outputType.equals("All layers")) 
+			trees = currentLayerSet.get(Treeline.class);
+		else 
+			trees = RhizoAddons.filterTreelinesByLayer(currentLayer, currentLayerSet.get(Treeline.class));
+		
 
 		List<Displayable> connectors = currentLayerSet.get(Connector.class);
 
@@ -215,6 +235,7 @@ public class RhizoStatistics
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 	}
 }
 
