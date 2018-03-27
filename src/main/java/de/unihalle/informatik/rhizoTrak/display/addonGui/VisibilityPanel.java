@@ -185,7 +185,7 @@ public class VisibilityPanel extends JPanel {
 		slider.addChangeListener(sliderAction);
 		panel.add(slider);
 
-		JCheckBox checkBox = new JCheckBox("", true);
+		JCheckBox checkBox = new JCheckBox("", sl.isSelectable());
 		checkBox.setActionCommand(Integer.toString(i));
 		checkBox.addActionListener(clickablityAction);
 		panel.add(checkBox);
