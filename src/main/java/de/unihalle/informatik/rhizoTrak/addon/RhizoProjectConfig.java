@@ -342,20 +342,28 @@ public class RhizoProjectConfig {
 	public Color getColorForStatus( int i) {
 		if ( i >= 0 ) {
 			if ( i < sizeStatusLabelList() )
-				return statusLabelSet.get( statusLabelList.get(i)).getColor();
+				return makeColor( statusLabelSet.get( statusLabelList.get(i)));
 			else {
-				return statusLabelSet.get(  fixedStatusLabelMap.get( STATUS_UNDEFINED)).getColor();
+				return makeColor( statusLabelSet.get(  fixedStatusLabelMap.get( STATUS_UNDEFINED)));
 			}
 		} else {
 			if ( fixedStatusLabelMap.containsKey( i) )
-				return statusLabelSet.get( fixedStatusLabelMap.get(i)).getColor();
+				return makeColor( statusLabelSet.get( fixedStatusLabelMap.get(i)));
 			else  {
 				System.out.println( "WARNING:getStatusLabel( int i) returns null for " + i);
-				return INVALID_STATUS_LABEL.getColor();
+				return makeColor( INVALID_STATUS_LABEL);
 			}
 		}
 	}
 	
+	/** make color including alpha from status label
+	 * @param sl
+	 * @return
+	 */
+	private Color makeColor( RhizoStatusLabel sl) {
+		return new Color( sl.getColor().getRed(), sl.getColor().getGreen(),sl.getColor().getBlue(), sl.getAlpha() );
+	}
+
 	/**
 	 * 
 	 * Set the default user defined status label
