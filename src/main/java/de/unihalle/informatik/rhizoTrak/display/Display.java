@@ -4576,9 +4576,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		final double depth = (last.getZ() - ls.getLayer(0).getZ() + last.getThickness()) * cal.pixelWidth;
 		final String title = new StringBuilder(100)
 			.append(layer.getParent().indexOf(layer) + 1).append('/').append(layer.getParent().size())
-			.append("  z:").append(layer.getZ() * cal.pixelWidth).append(' ').append(cal.getUnits()).append(' ') // Not pixelDepth
-			.append(' ').append(layer.getLayerThingTitle())
-			.append(scale)
+//			.append("  z:").append(layer.getZ() * cal.pixelWidth).append(' ').append(cal.getUnits()).append(' ') // Not pixelDepth
+//			.append(' ').append(layer.getLayerThingTitle())
+//			.append(scale)
 			.append(" -- ").append(getProject().toString())
 			.append(' ').append(' ').append(Utils.cutNumber(layer.getParent().getLayerWidth() * cal.pixelWidth, 2, true))
 			.append('x').append(Utils.cutNumber(layer.getParent().getLayerHeight() * cal.pixelHeight, 2, true))

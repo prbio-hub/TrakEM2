@@ -16,6 +16,11 @@ public class RhizoMain
 	private Project p;
 	
 	/**
+	 * if true the layer window displays the z coordinate in the title (as trakem does)
+	 */
+	private boolean titleWithZcoord = false;
+	
+	/**
 	 * The (mainly) project specific configuration
 	 */
 	private RhizoProjectConfig projectConfig = new RhizoProjectConfig();
@@ -105,4 +110,19 @@ public class RhizoMain
 	   }
 	   return out.toString();
    }
+
+	/** true if title of layer window should contain the z coordinate
+	 * @return
+	 */
+	public boolean getTitleWithZcoord() {
+		return titleWithZcoord;
+	}
+
+	/**
+	 * set to true 
+	 * @param titleWithZcoord the titleWithZcoord to set if title of layer window should contain the z coordinate
+	 */
+	public void setTitleWithZcoord(boolean titleWithZcoord) {
+		this.titleWithZcoord = titleWithZcoord;
+	}
 }
