@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JComboBox;
@@ -18,6 +19,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
@@ -28,6 +30,8 @@ import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
+import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
+import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.ImagePlus;
 
@@ -87,8 +91,51 @@ public class RhizoStatistics
 		List<Displayable> trees = null;
 		List<Segment> allSegments = new ArrayList<Segment>();		
 
-		if(outputType.equals("All layers")) trees = currentLayerSet.get(Treeline.class);
-		else trees = RhizoAddons.filterTreelinesByLayer(currentLayer, currentLayerSet.get(Treeline.class));
+		if(outputType.equals("All layers")) 
+			trees = currentLayerSet.get(Treeline.class);
+		else 
+			trees = RhizoAddons.filterTreelinesByLayer(currentLayer, currentLayerSet.get(Treeline.class));
+		
+		// #########################
+		Project project =  Display.getFront().getProject();
+		ProjectTree projectTree = project.getProjectTree();
+		ProjectThing projectTreeRoot;
+		try {
+			projectTreeRoot = (ProjectThing)projectTree.getRoot().getUserObject();
+		} catch ( Exception ex ) {
+			Utils.log( "RhizoStatistics: Warning can not find a rootstack in project tree");
+			return;
+		}
+		
+		// all treelines below a rootstack
+		LinkedList<Treeline> allTreelines = new LinkedList<Treeline>();
+		// all conectors below a rootstack
+		LinkedList<Connector> allConnectors = new LinkedList<Connector>();
+		
+		System.out.println( "Find rootstacks");
+		for ( ProjectThing rootstackThing : projectTreeRoot.findChildrenOfTypeR( "rootstack") ) {
+			System.out.println( "found rootstack " + rootstackThing.getId());
+			
+			System.out.println("Find treelines");
+			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
+				// we also find connectors!
+				Treeline tl = (Treeline)pt.getObject();
+				if ( tl.getClass().equals( Treeline.class)) {
+					System.out.println( "found Treeline " + tl.getId() + 
+							(currentLayer.equals( tl.getFirstLayer()) ? " contained" : " not contained"));
+					allTreelines.add(tl);
+
+				} else if ( tl.getClass().equals( Connector.class)) {
+					Connector conn = (Connector)tl;
+					allConnectors.add(conn);
+					System.out.println( "found Connector " + conn.getId());
+					for ( Treeline connectedTl : conn.getConTreelines()) {
+						System.out.println( "   linked " + connectedTl.getId());
+					}
+					
+				}
+			}
+		}
 
 		List<Displayable> connectors = currentLayerSet.get(Connector.class);
 
