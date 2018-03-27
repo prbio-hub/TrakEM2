@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -77,147 +78,95 @@ public class RhizoStatistics
 		String sep = "";
 		String outputType = "";
 		String unit = "";
-		if(result == JOptionPane.OK_OPTION)
-		{
-			sep = choices1_[Arrays.asList(choices1).indexOf(combo1.getSelectedItem())];
-			outputType = (String) combo2.getSelectedItem();
-			unit = (String) combo3.getSelectedItem();
-			
-			if(sep.equals("") || outputType.equals("") || unit.equals("")) return;
-		}
-		else return;
-
-		Display display = Display.getFront();
-		Layer currentLayer = display.getLayer();
-		LayerSet currentLayerSet = currentLayer.getParent();
-		// ######################### new
-		boolean onlyCurrentLayer = outputType.equals( ONLY_STRING);
-		
-		Project project =  Display.getFront().getProject();
-		
-		// all treelines below a rootstack
-		LinkedList<Treeline> allTreelines = new LinkedList<Treeline>();
-		// all connectors below a rootstack
-		LinkedList<Connector> allConnectors = new LinkedList<Connector>();
-		
-		System.out.println( "Find rootstacks");
-		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
-		if ( rootstackThings == null) {
-			Utils.showMessage( "WriteStatistics warning: no rootstack found");
+		if(result != JOptionPane.OK_OPTION) {
 			return;
 		}
 		
-		for ( ProjectThing rootstackThing :rootstackThings ) {
-			System.out.println( "found rootstack " + rootstackThing.getId());
-			
-			System.out.println("Find treelines");
-			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
-				// we also find connectors!
-				Treeline tl = (Treeline)pt.getObject();
-				if ( tl.getClass().equals( Treeline.class)) {
-					System.out.println( "found Treeline " + tl.getId() + 
-							(currentLayer.equals( tl.getFirstLayer()) ? " contained" : " not contained"));
-					if ( ! onlyCurrentLayer || currentLayer.equals( tl.getFirstLayer())) {
-						allTreelines.add(tl);
-					}
+		sep = choices1_[Arrays.asList(choices1).indexOf(combo1.getSelectedItem())];
+		outputType = (String) combo2.getSelectedItem();
+		unit = (String) combo3.getSelectedItem();
 
-				} else if ( tl.getClass().equals( Connector.class)) {
-					Connector conn = (Connector)tl;
-					allConnectors.add(conn);
-					System.out.println( "found Connector " + conn.getId());
-					for ( Treeline connectedTl : conn.getConTreelines()) {
-						System.out.println( "   linked " + connectedTl.getId());
-					}
-					
-				}
-			}
-		}
-		
-		for ( Treeline tl : allTreelines)  {
-			System.out.println( "add to statistics " + tl.getId());
-		
-			HashSet<Connector> connectorSet = new HashSet<>();
-
-			for(TreeEventListener tel: tl.getTreeEventListener()) { 
-				connectorSet.add(tel.getConnector());
-				System.out.println( "     connector " + tel.getConnector().getId() + " " +
-				allConnectors.contains(tel.getConnector()));
-			}            
-		}
-
-		// end new
-
-		List<Displayable> processedTreelines = new ArrayList<Displayable>();
-		List<Displayable> trees = null;
-		List<Segment> allSegments = new ArrayList<Segment>();		
-
-		if(outputType.equals("All layers")) 
-			trees = currentLayerSet.get(Treeline.class);
-		else 
-			trees = RhizoAddons.filterTreelinesByLayer(currentLayer, currentLayerSet.get(Treeline.class));
+		if(sep.equals("") || outputType.equals("") || unit.equals(""))
+			return;
 		
 
-		List<Displayable> connectors = currentLayerSet.get(Connector.class);
+//		Display display = Display.getFront();
+//		Layer currentLayer = display.getLayer();
+//		LayerSet currentLayerSet = currentLayer.getParent();
+//
+//		List<Displayable> processedTreelines = new ArrayList<Displayable>();
+//		List<Displayable> trees = null;
+//		List<Segment> allSegments = new ArrayList<Segment>();		
+//			
+//		if(outputType.equals("All layers")) 
+//			trees = currentLayerSet.get(Treeline.class);
+//		else 
+//			trees = RhizoAddons.filterTreelinesByLayer(currentLayer, currentLayerSet.get(Treeline.class));
+//
+//		List<Displayable> connectors = currentLayerSet.get(Connector.class);
+//
+//		for(Displayable cObj: connectors)
+//		{
+//			Connector c = (Connector) cObj;
+//
+//			List<Treeline> treelines = c.getConTreelines();
+//
+//			for(Treeline ctree: treelines)
+//			{
+//				if(null == ctree || null == ctree.getRoot()) continue; // empty treelines
+//				if(processedTreelines.contains(ctree)) continue; // already processed treelines
+//				if(!trees.contains(ctree)) continue; // when current layer only is selected
+//				
+//				trees.remove(ctree);
+//
+//				int segmentID = 1;
+//				Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
+//
+//				for(Node<Float> node : allNodes)
+//				{
+//					if(!node.equals(ctree.getRoot()))
+//					{
+//						Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(ctree), ctree, cObj.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+//						segmentID++;
+//
+//						if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
+//					}
+//				}
+//				
+//				processedTreelines.add(ctree);
+//			}
+//		}
+//
+//		Utils.log(trees.size());
+//
+//		for(Displayable t: trees)
+//		{
+//			Treeline tl = (Treeline) t;
+//			if(processedTreelines.contains(tl)) continue;
+//			
+//			int segmentID = 1;
+//			Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
+//
+//			for(Node<Float> node : allNodes)
+//			{
+//				if(!node.equals(tl.getRoot()))
+//				{
+//					Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(tl), tl, tl.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+//					segmentID++;
+//
+//					if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
+//				}
+//			}
+//			
+//			processedTreelines.add(tl);
+//		}
 
-		for(Displayable cObj: connectors)
-		{
-			Connector c = (Connector) cObj;
-
-			List<Treeline> treelines = c.getConTreelines();
-
-			for(Treeline ctree: treelines)
-			{
-				if(null == ctree || null == ctree.getRoot()) continue; // empty treelines
-				if(processedTreelines.contains(ctree)) continue; // already processed treelines
-				if(!trees.contains(ctree)) continue; // when current layer only is selected
-				
-				trees.remove(ctree);
-
-				int segmentID = 1;
-				Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
-
-				for(Node<Float> node : allNodes)
-				{
-					if(!node.equals(ctree.getRoot()))
-					{
-						Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(ctree), ctree, cObj.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
-						segmentID++;
-
-						if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
-					}
-				}
-				
-				processedTreelines.add(ctree);
-			}
-		}
-
-		Utils.log(trees.size());
-
-		for(Displayable t: trees)
-		{
-			Treeline tl = (Treeline) t;
-			if(processedTreelines.contains(tl)) continue;
-			
-			int segmentID = 1;
-			Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
-
-			for(Node<Float> node : allNodes)
-			{
-				if(!node.equals(tl.getRoot()))
-				{
-					Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(tl), tl, tl.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
-					segmentID++;
-
-					if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
-				}
-			}
-			
-			processedTreelines.add(tl);
-		}
-
+		boolean allLayers = outputType.equals("All layers");
+		List<Segment> allSegments = computeStatistics( Display.getFront().getProject(), allLayers ? null : Display.getFront().getLayer(), unit);
+		
 		// write
-		try
-		{
+		try {
+			// TODO: rather get the project home
 			File saveFile = Utils.chooseFile(System.getProperty("user.home"), null, ".csv");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
 
@@ -229,13 +178,100 @@ public class RhizoStatistics
 				bw.newLine();
 			}
 			bw.close();
-		} 
-		catch (IOException e)
-		{
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Utils.showMessage( "WriteStatistics failed to write");
 		}
 		
+	}
+	
+	// WARNING: scale TODO !!!!!!
+	/**
+	 * @param project
+	 * @param currentLayer if null all layers are considered 
+	 * @param unit 
+	 */
+	private List<Segment> computeStatistics( Project project, Layer currentLayer, String unit) {
+		List<Segment> allSegments = new ArrayList<Segment>();
+
+		// all treelines below a rootstack
+		LinkedList<Treeline> allTreelines = new LinkedList<Treeline>();
+		// all connectors below a rootstack
+		LinkedList<Connector> allConnectors = new LinkedList<Connector>();
+
+		// find all rootstacks
+		System.out.println( "Find rootstacks");
+		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
+		if ( rootstackThings == null) {
+			Utils.showMessage( "WriteStatistics warning: no rootstack found");
+			return allSegments;
+		}
+
+		// and collect treelines and connectors below all rootstacks
+		for ( ProjectThing rootstackThing :rootstackThings ) {
+			System.out.println( "found rootstack " + rootstackThing.getId());
+
+			System.out.println("Find treelines");
+			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
+				// we also find connectors!
+				Treeline tl = (Treeline)pt.getObject();
+				if ( tl.getClass().equals( Treeline.class)) {
+//					System.out.println( "found Treeline " + tl.getId() + 
+//							(currentLayer.equals( tl.getFirstLayer()) ? " contained" : " not contained"));
+					if ( currentLayer == null || currentLayer.equals( tl.getFirstLayer())) {
+						allTreelines.add(tl);
+					}
+
+				} else if ( tl.getClass().equals( Connector.class)) {
+					Connector conn = (Connector)tl;
+					allConnectors.add(conn);
+					System.out.println( "found Connector " + conn.getId());
+					for ( Treeline connectedTl : conn.getConTreelines()) {
+						System.out.println( "   linked " + connectedTl.getId());
+					}
+
+				}
+			}
+		}
+
+		// all segments to write to the csv file
+		for ( Treeline tl : allTreelines)  {
+			System.out.println( "add to statistics " + tl.getId());
+
+			HashSet<Connector> connectorSet = new HashSet<>();
+			for(TreeEventListener tel: tl.getTreeEventListener()) { 
+				connectorSet.add(tel.getConnector());
+				System.out.println( "     connector " + tel.getConnector().getId() + " " +
+						allConnectors.contains(tel.getConnector()));
+			}  
+
+			long treelineID;
+			if ( connectorSet.size() == 0 ) {
+				treelineID = tl.getId();
+			} else {
+				Iterator<Connector> itr = connectorSet.iterator();
+				treelineID = itr.next().getId();
+				if ( connectorSet.size() > 1 ) {
+					Utils.showMessage( "WriteStatitics warning: treeline " + tl.getId() + " has more than one connector");
+				}
+			}
+
+			int segmentID = 1;
+			Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
+
+			for(Node<Float> node : allNodes) {
+				if(!node.equals(tl.getRoot())) {
+					Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(tl), tl, treelineID, 
+							segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+					segmentID++;
+
+					if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
+				}
+			}
+		}
+		
+		return allSegments;
 	}
 }
 
