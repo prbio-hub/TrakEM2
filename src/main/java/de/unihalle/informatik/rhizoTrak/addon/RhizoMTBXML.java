@@ -364,29 +364,10 @@ public class RhizoMTBXML
 				Layer currentLayer = layers.get(i); // order of rootsets has to correspond to the layer if we don't care about image names
 				MTBXMLRootImageAnnotationType currentRootSet = rootSets[i];
 				
-//				ProjectThing possibleParent = RhizoAddons.findParentAllowing("treeline", project);
 				ProjectThing rootstackProjectThing = RhizoUtils.getOneRootstack(project);
 				
 				if(rootstackProjectThing == null) 	{
 					// TODO should we create a rootstack??
-					// does not work as follows, probably we need to fine a node which wants to hold a rootstack
-//					try {
-//						//ProjectTree projectTree = project.getProjectTree();
-//						ProjectThing rootNode = null;
-//						rootNode = (ProjectThing) projectTree.getRoot().getUserObject();
-//						if ( rootNode != null ) {
-//							rootstackProjectThing = rootNode.createChild("rootstack");
-//							DefaultMutableTreeNode node = new DefaultMutableTreeNode(rootstackProjectThing);
-//							DefaultMutableTreeNode parentNode = DNDTree.findNode(rootNode, projectTree);
-//							((DefaultTreeModel) projectTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
-//						} else {	
-//							Utils.showMessage("Project does not contain object that can hold treelines.");
-//							return;
-//						} 
-//					} catch (Exception ex) {
-//						Utils.showMessage("Project does not contain object that can hold treelines.");
-//						return;
-//					}
 					Utils.showMessage("Project does not contain a rootstack");
 					return;
 				}
@@ -411,7 +392,6 @@ public class RhizoMTBXML
 	    			currentLayer.mtbxml = true;
 	    			
 	    			MTBXMLRootSegmentType[] rootSegments = currentRoot.getRootSegmentsArray();
-//	    			Utils.log("@readMTBXML: number of segments in root "+ j + " in rootset "+ i + ": " + rootSegments.length);
 	    			
 	    			// create node -> ID map to later assign parents and children according to segment IDs and parent IDs
 	    			HashMap<Integer, RadiusNode> nodeIDmap = new HashMap<Integer, RadiusNode>();

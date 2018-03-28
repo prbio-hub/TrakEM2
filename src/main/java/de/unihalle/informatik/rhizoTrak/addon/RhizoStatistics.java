@@ -57,7 +57,7 @@ public class RhizoStatistics
 	{
 		String[] choices1 = {"{Tab}" , "{;}", "{,}", "Space"};
 		String[] choices1_ = {"\t", ";", ",", " "};
-		String[] choices2 = { ONLY_STRING, ALL_STRING};
+		String[] choices2 = {ALL_STRING, ONLY_STRING};
 		String[] choices3 = {"pixel", "inch", "mm"};
 		
 		JComboBox<String> combo1 = new JComboBox<String>(choices1);
@@ -90,76 +90,6 @@ public class RhizoStatistics
 			return;
 		
 
-//		Display display = Display.getFront();
-//		Layer currentLayer = display.getLayer();
-//		LayerSet currentLayerSet = currentLayer.getParent();
-//
-//		List<Displayable> processedTreelines = new ArrayList<Displayable>();
-//		List<Displayable> trees = null;
-//		List<Segment> allSegments = new ArrayList<Segment>();		
-//			
-//		if(outputType.equals("All layers")) 
-//			trees = currentLayerSet.get(Treeline.class);
-//		else 
-//			trees = RhizoAddons.filterTreelinesByLayer(currentLayer, currentLayerSet.get(Treeline.class));
-//
-//		List<Displayable> connectors = currentLayerSet.get(Connector.class);
-//
-//		for(Displayable cObj: connectors)
-//		{
-//			Connector c = (Connector) cObj;
-//
-//			List<Treeline> treelines = c.getConTreelines();
-//
-//			for(Treeline ctree: treelines)
-//			{
-//				if(null == ctree || null == ctree.getRoot()) continue; // empty treelines
-//				if(processedTreelines.contains(ctree)) continue; // already processed treelines
-//				if(!trees.contains(ctree)) continue; // when current layer only is selected
-//				
-//				trees.remove(ctree);
-//
-//				int segmentID = 1;
-//				Collection<Node<Float>> allNodes = ctree.getRoot().getSubtreeNodes();
-//
-//				for(Node<Float> node : allNodes)
-//				{
-//					if(!node.equals(ctree.getRoot()))
-//					{
-//						Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(ctree), ctree, cObj.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
-//						segmentID++;
-//
-//						if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
-//					}
-//				}
-//				
-//				processedTreelines.add(ctree);
-//			}
-//		}
-//
-//		Utils.log(trees.size());
-//
-//		for(Displayable t: trees)
-//		{
-//			Treeline tl = (Treeline) t;
-//			if(processedTreelines.contains(tl)) continue;
-//			
-//			int segmentID = 1;
-//			Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
-//
-//			for(Node<Float> node : allNodes)
-//			{
-//				if(!node.equals(tl.getRoot()))
-//				{
-//					Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(tl), tl, tl.getId(), segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
-//					segmentID++;
-//
-//					if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
-//				}
-//			}
-//			
-//			processedTreelines.add(tl);
-//		}
 
 		boolean allLayers = outputType.equals("All layers");
 		List<Segment> allSegments = computeStatistics( Display.getFront().getProject(), allLayers ? null : Display.getFront().getLayer(), unit);
@@ -170,8 +100,9 @@ public class RhizoStatistics
 			File saveFile = Utils.chooseFile(System.getProperty("user.home"), null, ".csv");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
 
-			bw.write("experiment"+sep+"tube"+sep+"timepoint"+sep+"rootID"+sep+"segmentID"+sep+"layer"+sep+"length_"+unit+sep+"avgRadius_"+unit
-					+sep+"surfaceArea_"+unit+"^2"+sep+"volume_"+unit+"^3"+sep+"children"+sep+"status"+sep+"statusName"+"\n");
+			bw.write("experiment" + sep + "tube" + sep + "timepoint" + sep + "rootID" + sep + "layerID" +sep + "segmentID" +  
+					sep + "length_" + unit + sep + "startRadius_" + unit + sep + "endRadius_" + unit +
+					sep + "surfaceArea_" + unit + "^2" + sep + "volume_" + unit + "^3" + sep + "children" + sep + "status" + sep + "statusName" + "\n");
 			for (Segment segment : allSegments)
 			{
 				bw.write(segment.getStatistics(sep));
@@ -201,7 +132,6 @@ public class RhizoStatistics
 		LinkedList<Connector> allConnectors = new LinkedList<Connector>();
 
 		// find all rootstacks
-		System.out.println( "Find rootstacks");
 		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
 		if ( rootstackThings == null) {
 			Utils.showMessage( "WriteStatistics warning: no rootstack found");
@@ -210,15 +140,10 @@ public class RhizoStatistics
 
 		// and collect treelines and connectors below all rootstacks
 		for ( ProjectThing rootstackThing :rootstackThings ) {
-			System.out.println( "found rootstack " + rootstackThing.getId());
-
-			System.out.println("Find treelines");
 			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
 				// we also find connectors!
 				Treeline tl = (Treeline)pt.getObject();
 				if ( tl.getClass().equals( Treeline.class)) {
-//					System.out.println( "found Treeline " + tl.getId() + 
-//							(currentLayer.equals( tl.getFirstLayer()) ? " contained" : " not contained"));
 					if ( currentLayer == null || currentLayer.equals( tl.getFirstLayer())) {
 						allTreelines.add(tl);
 					}
@@ -226,24 +151,15 @@ public class RhizoStatistics
 				} else if ( tl.getClass().equals( Connector.class)) {
 					Connector conn = (Connector)tl;
 					allConnectors.add(conn);
-					System.out.println( "found Connector " + conn.getId());
-					for ( Treeline connectedTl : conn.getConTreelines()) {
-						System.out.println( "   linked " + connectedTl.getId());
-					}
-
 				}
 			}
 		}
 
 		// all segments to write to the csv file
 		for ( Treeline tl : allTreelines)  {
-			System.out.println( "add to statistics " + tl.getId());
-
 			HashSet<Connector> connectorSet = new HashSet<>();
 			for(TreeEventListener tel: tl.getTreeEventListener()) { 
 				connectorSet.add(tel.getConnector());
-				System.out.println( "     connector " + tel.getConnector().getId() + " " +
-						allConnectors.contains(tel.getConnector()));
 			}  
 
 			long treelineID;
@@ -253,6 +169,7 @@ public class RhizoStatistics
 				Iterator<Connector> itr = connectorSet.iterator();
 				treelineID = itr.next().getId();
 				if ( connectorSet.size() > 1 ) {
+					// TODO rather in error window or similar, without focus
 					Utils.showMessage( "WriteStatitics warning: treeline " + tl.getId() + " has more than one connector");
 				}
 			}
@@ -386,10 +303,12 @@ class Segment
 
 	public String getStatistics(String sep)
 	{
-		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) + sep + Integer.toString(segmentID) + sep + Integer.toString((int) layer.getZ() + 1)  +
-				sep + Double.toString(length) + sep + Double.toString(avgRadius) + sep + Double.toString(surfaceArea) +
-		        sep + Double.toString(volume) + sep + Integer.toString(numberOfChildren) + sep + status + sep + 
-		        rhizoMain.getProjectConfig().getStatusLabel(status).getName();
+		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) +
+				sep + Integer.toString((int) layer.getZ() + 1)  +
+				sep + Integer.toString(segmentID) +
+				sep + Double.toString(length) + sep + Double.toString(radiusParent) + sep + Double.toString(radiusChild) +
+				sep + Double.toString(surfaceArea) + sep + Double.toString(volume) + 
+				sep + Integer.toString(numberOfChildren) + sep + status + sep + rhizoMain.getProjectConfig().getStatusLabel(status).getName();
 
 		return result;
 	}

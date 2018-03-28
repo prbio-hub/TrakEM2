@@ -231,17 +231,7 @@ public class RhizoAddons
 				Display.clearSelection();
 				Project project = display.getProject();
 				ProjectTree currentTree = project.getProjectTree();
-				
-//				// try to find if there is ProjectThing that can contain the new treeline
-//				ProjectThing parent;
-//				parent = RhizoAddons.findParentAllowing("treeline", project);
-//				// inform user if no ProjectThing is found
-//				if (parent == null)
-//				{
-//					Utils.showMessage("Project does not contain object that can hold treelines.");
-//					return;
-//				}
-				
+								
 				// find one rootstack
 				ProjectThing rootstackProjectThing = RhizoUtils.getOneRootstack(project);
 				if ( rootstackProjectThing == null ) {
