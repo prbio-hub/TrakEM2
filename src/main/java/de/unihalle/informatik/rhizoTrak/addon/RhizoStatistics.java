@@ -140,15 +140,21 @@ public class RhizoStatistics
 
 		// and collect treelines and connectors below all rootstacks
 		for ( ProjectThing rootstackThing :rootstackThings ) {
+//			System.out.println("rootstack " + rootstackThing.getId());
 			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
 				// we also find connectors!
 				Treeline tl = (Treeline)pt.getObject();
+//				System.out.println( "    treeline " + tl.getId());
+
 				if ( tl.getClass().equals( Treeline.class)) {
 					if ( currentLayer == null || currentLayer.equals( tl.getFirstLayer())) {
+//						System.out.println( "           as treeline");
 						allTreelines.add(tl);
 					}
 
 				} else if ( tl.getClass().equals( Connector.class)) {
+//					System.out.println( "           as conector");
+
 					Connector conn = (Connector)tl;
 					allConnectors.add(conn);
 				}
@@ -157,11 +163,15 @@ public class RhizoStatistics
 
 		// all segments to write to the csv file
 		for ( Treeline tl : allTreelines)  {
+//			System.out.println( "segment to write " + tl.getId());
 			HashSet<Connector> connectorSet = new HashSet<>();
-			for(TreeEventListener tel: tl.getTreeEventListener()) { 
-				connectorSet.add(tel.getConnector());
-			}  
+			if ( tl.getTreeEventListener() != null ) { 
+				for(TreeEventListener tel: tl.getTreeEventListener()) { 
+					connectorSet.add(tel.getConnector());
+				}  
+			}
 
+//			System.out.println( "got connset" + connectorSet);
 			long treelineID;
 			if ( connectorSet.size() == 0 ) {
 				treelineID = tl.getId();
@@ -173,17 +183,19 @@ public class RhizoStatistics
 					Utils.showMessage( "WriteStatitics warning: treeline " + tl.getId() + " has more than one connector");
 				}
 			}
+			if ( tl.getRoot() != null) {
+				int segmentID = 1;
+				Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
 
-			int segmentID = 1;
-			Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
 
-			for(Node<Float> node : allNodes) {
-				if(!node.equals(tl.getRoot())) {
-					Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(tl), tl, treelineID, 
-							segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
-					segmentID++;
+				for(Node<Float> node : allNodes) {
+					if(!node.equals(tl.getRoot())) {
+						Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(tl), tl, treelineID, 
+								segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
+						segmentID++;
 
-					if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
+						if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
+					}
 				}
 			}
 		}
