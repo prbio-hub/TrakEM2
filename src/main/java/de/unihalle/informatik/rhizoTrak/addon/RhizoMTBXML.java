@@ -6,10 +6,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -41,7 +39,6 @@ import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
-import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
 import ij.ImagePlus;
 
 public class RhizoMTBXML
@@ -54,6 +51,7 @@ public class RhizoMTBXML
 	private final int BOTTOM = 4;
 	private final int TOP    = 8;
 
+	private final float DEFAULT_RADIUS = 0f;
 
 	public RhizoMTBXML(RhizoMain rhizoMain)
 	{
@@ -62,40 +60,51 @@ public class RhizoMTBXML
 
 	
     /**
-     *  Writes the current project to a xmlbeans file. In contrast to the standard TrakEM xml format, this file may be opened with MiToBo
+     *  Writes the current project to a xmlbeans file.
      *  @author Tino
      */
     public void writeMTBXML()
 	{
 		try 
 		{
-			File saveFile = Utils.chooseFile(System.getProperty("user.home"), null, ".xml");
-			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
-			
-			Hashtable<Treeline, int[]> rootsTable = new Hashtable<Treeline, int[]>();
-			
 			// get layers
 			Display display = Display.getFront();	
 			LayerSet layerSet = display.getLayerSet();  
 			ArrayList<Layer> layers = layerSet.getLayers();
 			
+			if(layers.isEmpty()) return; // add warning message
+
+			File saveFile = Utils.chooseFile(System.getProperty("user.home"), null, ".xml");
+			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
+			
+			Hashtable<Treeline, int[]> rootsTable = new Hashtable<Treeline, int[]>();
+			
 			// get image names
 			List<Patch> patches = layerSet.getAll(Patch.class);
-			ImagePlus imagePlus = patches.get(0).getImagePlus();
-			String[] imageNames = imagePlus.getImageStack().getSliceLabels();
+			ImagePlus imagePlus = null;
+			if(!patches.isEmpty()) imagePlus = patches.get(0).getImagePlus();
+			
+			String[] imageNames = new String[layers.size()];
+			if(null != imagePlus) imageNames = imagePlus.getImageStack().getSliceLabels();
+			
 			
 			// setup xml file --- stack of images = rootProject
 			MTBXMLRootProjectDocument xmlRootProjectDocument = MTBXMLRootProjectDocument.Factory.newInstance();
 			MTBXMLRootProjectType xmlRootProject = xmlRootProjectDocument.addNewMTBXMLRootProject();
 			xmlRootProject.setXsize((int) layers.get(0).getLayerWidth());
 			xmlRootProject.setYsize((int) layers.get(0).getLayerHeight());
-			xmlRootProject.setXresolution((float) imagePlus.getCalibration().getX(1));
-			xmlRootProject.setYresolution((float) imagePlus.getCalibration().getY(1));
+			
+			float xCal = imagePlus == null ? -1 : (float) imagePlus.getCalibration().getX(1);
+			float yCal = imagePlus == null ? -1 : (float) imagePlus.getCalibration().getY(1);
+			xmlRootProject.setXresolution(xCal);
+			xmlRootProject.setYresolution(yCal);
 			
 			MTBXMLRootImageAnnotationType[] xmlRootSets = new MTBXMLRootImageAnnotationType[layers.size()];
 
 			// all treelines in the project
 			List<Displayable> allTreelines = layerSet.get(Treeline.class);
+			
+			Utils.log("@writeMTBXML: "+allTreelines.size() + " " + layers.size());
 			
 			// layer = rootSet
 			for(int i = 0; i < layers.size(); i++)
@@ -103,7 +112,7 @@ public class RhizoMTBXML
 				Layer currentLayer = layers.get(i); 
 				MTBXMLRootImageAnnotationType rootSet = MTBXMLRootImageAnnotationType.Factory.newInstance();
 				
-				rootSet.setImagename(imageNames[i]); // TODO: why does this not work?
+				rootSet.setImagename(imageNames[i]);
 				rootSet.setRootSetID(i);
 				
 				List<MTBXMLRootType> roots = new ArrayList<MTBXMLRootType>(); // arraylist for convenience
@@ -169,9 +178,9 @@ public class RhizoMTBXML
 			Utils.log("Created xml file - "+saveFile.getAbsolutePath());
 				
 		} 
-		catch (Exception e) 
+		catch(Exception e) 
 		{
-			Utils.log(e.getMessage());
+			e.printStackTrace();
 		}
 	}	
     
@@ -188,23 +197,23 @@ public class RhizoMTBXML
 		MTBXMLRootType xmlRoot = MTBXMLRootType.Factory.newInstance();
 
 		xmlRoot.setRootID(rootId);
-		xmlRoot.setStartSegmentID(0); // TODO?
 		
-		List<Node<Float>> treelineNodes = new ArrayList<Node<Float>>(treeline.getNodesAt(currentLayer)); // arraylist for convenience
-		treelineNodes.remove(treeline.getRoot()); // skip the root node
+		Set<Node<Float>> treelineNodes = treeline.getNodesAt(currentLayer);
+		List<Node<Float>> nodes = new ArrayList<Node<Float>>(treelineNodes);
 
-		// TODO: some nodes in annotated projects (roman) appear to be parentless? how?
-		List<Node<Float>> nodes = sortTreelineNodes(treelineNodes, treeline);
+		xmlRoot.setStartSegmentID(0);
 		
-		MTBXMLRootSegmentType[] rootSegmentsArray = new MTBXMLRootSegmentType[nodes.size()];
+		List<MTBXMLRootSegmentType> rootSegmentList = new ArrayList<MTBXMLRootSegmentType>();
+
+		Utils.log("@treelineToXMLType: " + nodes.size());
 		
 		for(int i = 0; i < nodes.size(); i++)
 		{
 			Node<Float> n = nodes.get(i);
-			float startRadius = 1; // default if node is not a RadiusNode
-			float endRadius = 1; // default if node is not a RadiusNode 
+			float startRadius = DEFAULT_RADIUS; // default if node is not a RadiusNode
+			float endRadius = DEFAULT_RADIUS; // default if node is not a RadiusNode 
 			
-			if(!n.equals(treeline.getRoot()))
+			if(null != n.getParent())
 			{
 				if(n.getParent() instanceof RadiusNode) startRadius = ((RadiusNode) n.getParent()).getData();
 				if(n instanceof RadiusNode) endRadius = ((RadiusNode) n).getData();
@@ -212,8 +221,12 @@ public class RhizoMTBXML
 				MTBXMLRootSegmentType rootSegment = MTBXMLRootSegmentType.Factory.newInstance();
 				rootSegment.setRootID(xmlRoot.getRootID());
 				rootSegment.setSegmentID(i); 
-				if(n.getParent().equals(treeline.getRoot())) rootSegment.setParentID(-1);
-				else rootSegment.setParentID(i-1); // this works because nodes are sorted
+				if(n.getParent().equals(treeline.getRoot()))
+				{
+					 rootSegment.setParentID(-1);
+					 xmlRoot.setStartSegmentID(i);
+				}
+				else rootSegment.setParentID(nodes.indexOf(n.getParent()));
 
 				MTBXMLRootSegmentPointType xmlStart = MTBXMLRootSegmentPointType.Factory.newInstance();
 				// transform local coordinates to global
@@ -232,74 +245,31 @@ public class RhizoMTBXML
 				
 				rootSegment.setEndPoint(xmlEnd);
 				rootSegment.setEndRadius(endRadius);
-				
+
 				RhizoStatusLabel sl = rhizoMain.getProjectConfig().getStatusLabel( (int) n.getConfidence());
-				if ( sl != null ) {
+				if(sl != null) 
+				{
 					String statusName = sl.getName();
 
 					if(statusName.equals("DEAD")) rootSegment.setType(MTBXMLRootSegmentStatusType.DEAD);
 					else if(statusName.equals("DECAYED")) rootSegment.setType(MTBXMLRootSegmentStatusType.DECAYED);
 					else if(statusName.equals("GAP")) rootSegment.setType(MTBXMLRootSegmentStatusType.GAP);
 					else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING);
-				} else {
-					rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING);
 				}
-				
-				rootSegmentsArray[i] = rootSegment;
+				else rootSegment.setType(MTBXMLRootSegmentStatusType.LIVING);
+
+				rootSegmentList.add(rootSegment);
 			}
 		}
 		
-		xmlRoot.setRootSegmentsArray(rootSegmentsArray);
+		Utils.log(rootSegmentList.size());
+		xmlRoot.setRootSegmentsArray(rootSegmentList.toArray(new MTBXMLRootSegmentType[rootSegmentList.size()]));
 		return xmlRoot;
 	}
 	
-	/**
-	 * Sorts the nodes of a treeline according their start and end coordinates
-	 * @param List of nodes in a treeline
-	 * @return Sorted list of nodes
-	 * @author Tino
-	 */
-	private static List<Node<Float>> sortTreelineNodes(List<Node<Float>> treelineNodes, Treeline treeline)
-	{
-		List<Node<Float>> result = new ArrayList<Node<Float>>();
-		// first node
-		Node<Float> current = null;
-		for(Node<Float> n: treelineNodes)
-		{
-			if(n.getParent().equals(treeline.getRoot()))
-			{
-				result.add(n);
-				current = n;
-			}
-		}
-
-		while(result.size() < treelineNodes.size())
-		{
-			boolean found = false;
-			for(Node<Float> n: treelineNodes)
-			{
-				if(n.getParent().equals(current))
-				{
-					result.add(n);
-					current = n;
-					found = true;
-					break;
-				}
-			}
-			
-			if(!found)
-			{
-				Utils.log("treeline "+treeline+" has parentless nodes.");
-				break;
-			}
-		}
-
-		return result;
-	}
 
 	/**
 	 * Converts MTBXML to TrakEM project.
-	 * INCOMPLETE - TODO: add connectors, image names, find better workaround
 	 * @author Tino
 	 */
 	public void readMTBXML()
@@ -317,7 +287,6 @@ public class RhizoMTBXML
 		
 		try 
 		{
-
 			// error if default status is not defined
 			List<String> fullNames = new ArrayList<String>();
 			for ( RhizoStatusLabel sl : rhizoMain.getProjectConfig().getAllStatusLabel()) {
@@ -346,30 +315,35 @@ public class RhizoMTBXML
 			
 			while(rootSets.length > layers.size())
 			{
-				Utils.showMessage("Number of rootSets in the xml file is greater than the number of layers.");
-				filepath = Utils.selectFile("test");
-				file = new File(filepath[0] + filepath[1]);
-				
-				rootProjectDocument = MTBXMLRootProjectDocument.Factory.parse(file);
-				rootProject = rootProjectDocument.getMTBXMLRootProject();
-				rootSets = rootProject.getCollectionOfImageAnnotationsArray();
+				Utils.showMessage("Number of rootSets in the xml file is greater than the number of layers.\nCancelling MTBXML import.");
+				return;
 			}
 			
-			
-			/* catch exceptions:
-			 * - check resolution 
-			 */
+
 			for(int i = 0; i < rootSets.length; i++)
 			{
 				Layer currentLayer = layers.get(i); // order of rootsets has to correspond to the layer if we don't care about image names
 				MTBXMLRootImageAnnotationType currentRootSet = rootSets[i];
 				
-				ProjectThing rootstackProjectThing = RhizoUtils.getOneRootstack(project);
-				
-				if(rootstackProjectThing == null) 	{
-					// TODO should we create a rootstack??
-					Utils.showMessage("Project does not contain a rootstack");
-					return;
+				ProjectThing possibleParent = RhizoAddons.findParentAllowing("treeline", project);
+				if(possibleParent == null) 	{
+					try {
+						//ProjectTree projectTree = project.getProjectTree();
+						ProjectThing rootNode = null;
+						rootNode = (ProjectThing) projectTree.getRoot().getUserObject();
+						if ( rootNode != null ) {
+							ProjectThing rootstackThing = rootNode.createChild("rootstack");
+							DefaultMutableTreeNode node = new DefaultMutableTreeNode(rootstackThing);
+							DefaultMutableTreeNode parentNode = DNDTree.findNode(rootNode, projectTree);
+							((DefaultTreeModel) projectTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
+						} else {	
+							Utils.showMessage("Project does not contain object that can hold treelines.");
+							return;
+						} 
+					} catch (Exception ex) {
+						Utils.showMessage("Project does not contain object that can hold treelines.");
+						return;
+					}
 				}
 
 				MTBXMLRootType[] roots = currentRootSet.getRootsArray();
@@ -379,9 +353,9 @@ public class RhizoMTBXML
 				{
 					MTBXMLRootType currentRoot = roots[j];
 					
-					ProjectThing treelineThing = rootstackProjectThing.createChild("treeline");
+					ProjectThing treelineThing = possibleParent.createChild("treeline");
 					
-					DefaultMutableTreeNode parentNode = DNDTree.findNode(rootstackProjectThing, projectTree);
+					DefaultMutableTreeNode parentNode = DNDTree.findNode(possibleParent, projectTree);
 	    			DefaultMutableTreeNode node = new DefaultMutableTreeNode(treelineThing);
 	    			((DefaultTreeModel) projectTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
 	    			
@@ -392,6 +366,7 @@ public class RhizoMTBXML
 	    			currentLayer.mtbxml = true;
 	    			
 	    			MTBXMLRootSegmentType[] rootSegments = currentRoot.getRootSegmentsArray();
+//	    			Utils.log("@readMTBXML: number of segments in root "+ j + " in rootset "+ i + ": " + rootSegments.length);
 	    			
 	    			// create node -> ID map to later assign parents and children according to segment IDs and parent IDs
 	    			HashMap<Integer, RadiusNode> nodeIDmap = new HashMap<Integer, RadiusNode>();
@@ -420,10 +395,12 @@ public class RhizoMTBXML
 	    				MTBXMLRootSegmentType currentRootSegment = rootSegments[k];
 	    				
     					// assuming that default status are defined
-	    				byte s = (byte) rhizoMain.getProjectConfig().STATUS_UNDEFINED;
+	    				byte s = (byte) RhizoProjectConfig.STATUS_UNDEFINED;
 	    				
-	    				for(int index = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabelList() ; i++) {
-	    					String statusName = rhizoMain.getProjectConfig().getStatusLabel(i).getName();
+	    				for(int index = 0 ; index < rhizoMain.getProjectConfig().sizeStatusLabelList() ; index++) 
+	    				{
+	    					String statusName = rhizoMain.getProjectConfig().getStatusLabel(index).getName();
+	    					
 	    					if(statusName.equals("LIVING") && currentRootSegment.getType() == MTBXMLRootSegmentStatusType.LIVING) s = (byte) index;
 	    					else if(statusName.equals("DEAD") && currentRootSegment.getType() == MTBXMLRootSegmentStatusType.DEAD) s = (byte) index;
 	    					else if(statusName.equals("GAP") && currentRootSegment.getType() == MTBXMLRootSegmentStatusType.GAP) s = (byte) index;
@@ -451,23 +428,14 @@ public class RhizoMTBXML
 		}
 		catch (Exception e) 
 		{
-			Utils.log(e.getMessage());
-			Utils.log(e.getLocalizedMessage());
+			e.printStackTrace();
 		} 
 		
-		// temporary: only remove treelines that are completely outside of the image
-		if(!allTreelinesIntersect())
+		if(!endNodesInside())
 		{
-			int answer = JOptionPane.showConfirmDialog(null, "Some treelines appear to be completely outside of the image.\nDo you want to remove them?", "", JOptionPane.YES_NO_OPTION);
-			if(answer == JOptionPane.YES_OPTION) removeTreelinesOutsideOfImage();
+			int answer = JOptionPane.showConfirmDialog(null, "Some segments appear to be outside of the image.\nDo you want to trim them to the image bounds?", "", JOptionPane.YES_NO_OPTION);
+			if(answer == JOptionPane.YES_OPTION) cutTreelines();
 		}
-		
-		// TODO: cutting
-//		if(!allNodesInside())
-//		{
-//			int answer = JOptionPane.showConfirmDialog(null, "Some segments appear to be outside of the image.\nDo you want to cut them to the image bounds?", "", JOptionPane.YES_NO_OPTION);
-//			if(answer == JOptionPane.YES_OPTION) cutTreelines();
-//		}
 	}
 	
 	
@@ -524,33 +492,7 @@ public class RhizoMTBXML
 		return treelines;
 	}
 	
-	private boolean allTreelinesIntersect()
-	{
-		// get layers
-		Display display = Display.getFront();	
-		LayerSet layerSet = display.getLayerSet();  
-		
-		// all treelines in the project
-		List<Displayable> allTreelines = layerSet.get(Treeline.class);
-		
-		for(int j = 0; j < allTreelines.size(); j++)
-		{
-			Treeline currentTreeline = (Treeline) allTreelines.get(j);
-
-			if(null == currentTreeline.getFirstLayer()) continue;
-
-			Patch p = RhizoAddons.getPatch(currentTreeline);
-			if(null == p) continue;
-			
-			ImagePlus image = p.getImagePlus();
-
-			if(isTreelineCompletelyOutside(currentTreeline, image)) return false;
-		}
-		
-		return true;
-	}
-	
-	private boolean allNodesInside()
+	private boolean endNodesInside()
 	{
 		// get layers
 		Display display = Display.getFront();	
@@ -565,14 +507,14 @@ public class RhizoMTBXML
 
 			if(null == currentTreeline.getFirstLayer()) continue;
 			
-			List<Node<Float>> treelineNodes = new ArrayList<Node<Float>>(currentTreeline.getNodesAt(currentTreeline.getFirstLayer()));
+			Set<Node<Float>> endNodes = currentTreeline.getEndNodes();
 			
 			Patch p = RhizoAddons.getPatch(currentTreeline);
 			if(null == p) continue;
 			
 			ImagePlus image = p.getImagePlus();
 
-			for(Node<Float> n: treelineNodes)
+			for(Node<Float> n: endNodes)
 			{
 				AffineTransform at = currentTreeline.getAffineTransform();
 				Point2D point = at.transform(new Point2D.Float(n.getX(), n.getY()), null);
@@ -583,6 +525,9 @@ public class RhizoMTBXML
 		return true;
 	}
 	
+	/**
+	 * Clips imported treelines with the image bounds.
+	 */
 	private void cutTreelines()
 	{
 		// get layers
@@ -595,13 +540,14 @@ public class RhizoMTBXML
 		for(int j = 0; j < allTreelines.size(); j++)
 		{
 			Treeline currentTreeline = (Treeline) allTreelines.get(j);
-			AffineTransform at = currentTreeline.getAffineTransform();
+			AffineTransform at = currentTreeline.getAffineTransform();			
 			
 			if(null == currentTreeline.getFirstLayer()) continue;
 			Patch p = RhizoAddons.getPatch(currentTreeline);
 			if(null == p) continue;
 			
 			ImagePlus image = p.getImagePlus();
+			Utils.log(image.getWidth() + " " + image.getHeight());
 
 			// delete treeline if it is completely outside of the image
 			if(isTreelineCompletelyOutside(currentTreeline, image))
@@ -610,57 +556,40 @@ public class RhizoMTBXML
 				continue;
 			}
 			
-			List<Node<Float>> treelineNodes = new ArrayList<Node<Float>>(currentTreeline.getNodesAt(currentTreeline.getFirstLayer()));
+			Set<Node<Float>> endNodes = currentTreeline.getEndNodes();
+			
+			Utils.log("endnodes of " + currentTreeline.getId() + ": "  + endNodes.size());
 					
-			for(Node<Float> n: treelineNodes)
-			{		
-				if(null != n.getParent())
-				{		
-					Point2D parent = at.transform(new Point2D.Float(n.getParent().getX(), n.getParent().getY()), null);
-					Point2D point = at.transform(new Point2D.Float(n.getX(), n.getY()), null);
+			for(Node<Float> n: endNodes)
+			{					
+				Node<Float> temp = n;
+				Node<Float> temp2 = temp.getParent(); // second temp node because removeNode sets parent pointer to null
+
+				while(null != temp2)
+				{			
+ 					Point2D parent = at.transform(new Point2D.Float(temp2.getX(), temp2.getY()), null);
+					Point2D point = at.transform(new Point2D.Float(temp.getX(), temp.getY()), null);
+					
+					Utils.log(parent + " " + point);
+					
 					if(regionCode(point.getX(), point.getY(), 0, 0, image.getWidth(), image.getHeight()) != INSIDE
 							&& regionCode(parent.getX(), parent.getY(), 0, 0, image.getWidth(), image.getHeight()) != INSIDE)
 					{
-						currentTreeline.removeNode(n);
+						temp2 = temp.getParent();
+						currentTreeline.removeNode(temp);
 					}
+					else break; // at least one node inside
+
+					temp = temp2;
+					temp2 = temp.getParent();
 				}
 			}
 
 			currentTreeline.updateCache();
-			
 		}
-		
-		
 	}
 	
-	private void removeTreelinesOutsideOfImage()
-	{
-		// get layers
-		Display display = Display.getFront();	
-		LayerSet layerSet = display.getLayerSet();  
-		
-		// all treelines in the project
-		List<Displayable> allTreelines = layerSet.get(Treeline.class);
-		
-		for(int j = 0; j < allTreelines.size(); j++)
-		{
-			Treeline currentTreeline = (Treeline) allTreelines.get(j);
-
-			if(null == currentTreeline.getFirstLayer()) continue;
-			Patch p = RhizoAddons.getPatch(currentTreeline);
-			if(null == p) continue;
-			
-			ImagePlus image = p.getImagePlus();
-
-			// delete treeline if it is completely outside of the image
-			if(isTreelineCompletelyOutside(currentTreeline, image))
-			{
-				rhizoMain.getProject().remove(currentTreeline);
-			}	
-		}
-		
-		
-	}
+	
 	
 	private boolean isTreelineCompletelyOutside(Treeline t, ImagePlus image)
 	{
@@ -681,6 +610,7 @@ public class RhizoMTBXML
         int code = x < xMin ? LEFT : x > xMax ? RIGHT : INSIDE;
         if (y < yMin) code |= BOTTOM;
         else if (y > yMax) code |= TOP;
+        Utils.log("region code: "+code);
         return code;
     }
 }
