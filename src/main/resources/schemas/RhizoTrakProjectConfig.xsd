@@ -18,6 +18,7 @@
 				</xs:sequence>
 			</xs:complexType>
 			</xs:element>
+			<xs:element name="imageSeachDir" type="xs:string"></xs:element>
 		</xs:sequence>
 	</xs:complexType>
 	</xs:element>

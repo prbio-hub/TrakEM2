@@ -221,7 +221,8 @@ public class ImageImport extends JPanel {
 		jPanel1.add(jButtonSelectImageDir);
 		
 		JFrame parentFrame = (JFrame) SwingUtilities.getRoot(this);
-		if(null != parentFrame && null != rhizoMain.getRhizoImages().getImageDir()) parentFrame.setTitle("Image Loader - "+ rhizoMain.getRhizoImages().getImageDir().getAbsolutePath());
+		if(null != parentFrame && null != rhizoMain.getProjectConfig().getImageSearchDir()) 
+			parentFrame.setTitle("Image Loader - "+ rhizoMain.getProjectConfig().getImageSearchDir().getAbsolutePath());
 		
 		
 		add(jPanel1, BorderLayout.EAST);
@@ -231,7 +232,7 @@ public class ImageImport extends JPanel {
 		
 		JFileChooser chooser = new JFileChooser();
 		chooser.setMultiSelectionEnabled(true);
-		chooser.setCurrentDirectory(rhizoMain.getRhizoImages().getImageDir());
+		chooser.setCurrentDirectory(rhizoMain.getProjectConfig().getImageSearchDir());
 
 		Component frame = null;
 
@@ -326,17 +327,17 @@ public class ImageImport extends JPanel {
 	
 	private void chooseImageDir()
 	{
-		JFileChooser dialog = new JFileChooser();
+		JFileChooser dialog = new JFileChooser(rhizoMain.getProjectConfig().getImageSearchDir() );
 		dialog.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		
 		int indicator = dialog.showSaveDialog(this);
 		if(indicator == JFileChooser.APPROVE_OPTION)
 		{
 			File dir = dialog.getSelectedFile();
-			rhizoMain.getRhizoImages().setImageDir(dir);
+			rhizoMain.getProjectConfig().setImageSearchDir(dir);
 			JFrame parentFrame = (JFrame) SwingUtilities.getRoot(this);
 			if(null != parentFrame) 
-				parentFrame.setTitle("Image Loader - "+ rhizoMain.getRhizoImages().getImageDir().getAbsolutePath());
+				parentFrame.setTitle("Image Loader - "+ rhizoMain.getProjectConfig().getImageSearchDir().getAbsolutePath());
 		}
 		
 	}
@@ -348,7 +349,7 @@ public class ImageImport extends JPanel {
 	private void searchNewImages()
 	{
 		Utils.log2("Start searching for new images:");
-		File imageDir = rhizoMain.getRhizoImages().getImageDir();
+		File imageDir = rhizoMain.getProjectConfig().getImageSearchDir();
 		if(imageDir == null)
 		{
 			return;

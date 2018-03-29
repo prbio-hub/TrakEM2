@@ -57,10 +57,7 @@ public class RhizoIO
 			}
 			@Override
 			public void run()
-			{
-				//set imgDir
-				project.getRhizoMain().getRhizoImages().setImageDir(file.getParentFile());
-				
+			{	
 				// load user settings 
 				Utils.log2("loading user settings...");
 				loadUserSettings();
@@ -180,6 +177,15 @@ public class RhizoIO
 				
 				this.rhizoMain.getProjectConfig().appendStatusLabelToList( newStatus.getFullName(), newStatus.getAbbreviation());
 			}
+			
+			if ( config.getImageSeachDir() != null ) {
+				this.rhizoMain.getProjectConfig().setImageSearchDir( new File( config.getImageSeachDir()));
+			} else if ( rhizoMain.getStorageFolder() != null ) {
+				this.rhizoMain.getProjectConfig().setImageSearchDir( new File( rhizoMain.getStorageFolder()));
+			} else {
+				this.rhizoMain.getProjectConfig().setImageSearchDir(  new File( System.getProperty("user.home")));
+			}
+			
 
 		} catch (JAXBException e) {    
 			try {
@@ -325,6 +331,13 @@ public class RhizoIO
 
 	        RhizoTrakProjectConfig config = new RhizoTrakProjectConfig();
 	        config.setStatusList(jaxbStatusList);
+	        if ( rhizoMain.getProjectConfig().getImageSearchDir() != null ) {
+	        	config.setImageSeachDir(  rhizoMain.getProjectConfig().getImageSearchDir().getAbsolutePath());
+	        } else if ( rhizoMain.getStorageFolder() != null) {
+	        	config.setImageSeachDir( rhizoMain.getStorageFolder());
+	        } else {
+	        	config.setImageSeachDir( System.getProperty("user.home"));
+	        }
 	        
 	        m.marshal(config, configFile);
 		}

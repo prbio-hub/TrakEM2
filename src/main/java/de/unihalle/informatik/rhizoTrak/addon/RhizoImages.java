@@ -19,7 +19,6 @@ import de.unihalle.informatik.rhizoTrak.persistence.Loader;
 public class RhizoImages
 {
 	
-	private File imageDir = null;
 	private JFrame imageLoaderFrame;
 	
 	private RhizoMain rhizoMain;
@@ -36,7 +35,8 @@ public class RhizoImages
 	public void createImageLoaderFrame()
 	{
 		String title = "Image Loader";
-		if(null != imageDir) title = "Image Loader - " + imageDir.getAbsolutePath();
+		if(null != rhizoMain.getProjectConfig().getImageSearchDir());
+			title = "Image Loader - " + rhizoMain.getProjectConfig().getImageSearchDir().getAbsolutePath();
 		if(imageLoaderFrame!=null)
 		{
 			imageLoaderFrame.setVisible(true);
@@ -62,7 +62,7 @@ public class RhizoImages
 	public String convertToRelativPath(String currentPathString){
 		if(currentPathString.contains(File.separator) && !currentPathString.contains(".")){
 			Path currentPath = Paths.get(currentPathString);
-			Path base = Paths.get(imageDir.getAbsolutePath());
+			Path base = Paths.get(rhizoMain.getProjectConfig().getImageSearchDir().getAbsolutePath());
 			Path relativPath = base.relativize(currentPath);
 			//Utils.log("convert path from: "+currentPathString+" to: "+relativPath.toString());
 			return relativPath.toString();
@@ -187,15 +187,4 @@ public class RhizoImages
         
     	imageLoaderFrame.dispose();
     }
-    
-    public File getImageDir()
-    {
-    	return imageDir;
-    }
-    
-    public void setImageDir(File imageDir)
-    {
-    	this.imageDir = imageDir;
-    }
-
 }

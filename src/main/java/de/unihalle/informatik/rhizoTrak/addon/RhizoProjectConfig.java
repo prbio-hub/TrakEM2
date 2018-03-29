@@ -1,6 +1,7 @@
 package de.unihalle.informatik.rhizoTrak.addon;
 
 import java.awt.Color;
+import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -94,6 +95,11 @@ public class RhizoProjectConfig {
 	 * true if anything in the user setting part of instance has change, e.g. after last save operation
 	 */
 	private boolean userSettingsChanged = false;
+
+	/**
+	 * Director where to search new images in
+	 */
+	private File imageSearchDir = null;
 	
 	public RhizoProjectConfig() {
 		// we always need the fixed status labels
@@ -419,6 +425,20 @@ public class RhizoProjectConfig {
 		this.highlightColor2 = highlightColor2;
 	}
 	
+	/**
+	 * @return the imageSearchDir
+	 */
+	public File getImageSearchDir() {
+		return imageSearchDir;
+	}
+
+	/**
+	 * @param imageSearchDir the imageSearchDir to set
+	 */
+	public void setImageSearchDir(File imageSearchDir) {
+		this.imageSearchDir = imageSearchDir;
+	}
+
 	/**
 	 * @return true if the state of the instance which is part of user settings has change since instantiation or after last {@link #resetChanged}
 	 */
