@@ -22,6 +22,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import org.python.antlr.base.boolop;
+
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Display;
@@ -42,9 +44,10 @@ public class RhizoStatistics
 	private final String ONLY_STRING = "Current layer only";
 	private final String ALL_STRING = "All layers";
 	private RhizoMain rhizoMain;
+	
+	private boolean debug = false;
 
-	public RhizoStatistics(RhizoMain rhizoMain)
-	{
+	public RhizoStatistics(RhizoMain rhizoMain) 	{
 		this.rhizoMain = rhizoMain;
 	}
 	
@@ -146,20 +149,20 @@ public class RhizoStatistics
 
 		// and collect treelines and connectors below all rootstacks
 		for ( ProjectThing rootstackThing :rootstackThings ) {
-//			System.out.println("rootstack " + rootstackThing.getId());
+			if ( debug)	System.out.println("rootstack " + rootstackThing.getId());
 			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
 				// we also find connectors!
 				Treeline tl = (Treeline)pt.getObject();
-//				System.out.println( "    treeline " + tl.getId());
+				if ( debug)	System.out.println( "    treeline " + tl.getId());
 
 				if ( tl.getClass().equals( Treeline.class)) {
 					if ( currentLayer == null || currentLayer.equals( tl.getFirstLayer())) {
-//						System.out.println( "           as treeline");
+						if ( debug)	System.out.println( "           as treeline");
 						allTreelines.add(tl);
 					}
 
 				} else if ( tl.getClass().equals( Connector.class)) {
-//					System.out.println( "           as conector");
+					if ( debug)	System.out.println( "           as conector");
 
 					Connector conn = (Connector)tl;
 					allConnectors.add(conn);
@@ -169,7 +172,7 @@ public class RhizoStatistics
 
 		// all segments to write to the csv file
 		for ( Treeline tl : allTreelines)  {
-//			System.out.println( "segment to write " + tl.getId());
+			if ( debug)	System.out.println( "segment to write " + tl.getId());
 			HashSet<Connector> connectorSet = new HashSet<>();
 			if ( tl.getTreeEventListener() != null ) { 
 				for(TreeEventListener tel: tl.getTreeEventListener()) { 
@@ -177,11 +180,13 @@ public class RhizoStatistics
 				}  
 			}
 
-//			System.out.println( "got connset" + connectorSet);
+			if ( debug)	System.out.println( "got connset" + connectorSet);
 			long treelineID;
 			if ( connectorSet.size() == 0 ) {
+				if ( debug)	System.out.println( "no connector, use treeline ID");
 				treelineID = tl.getId();
 			} else {
+				if ( debug)	System.out.println( "no connector, use connector ID");
 				Iterator<Connector> itr = connectorSet.iterator();
 				treelineID = itr.next().getId();
 				if ( connectorSet.size() > 1 ) {
@@ -189,6 +194,8 @@ public class RhizoStatistics
 					Utils.showMessage( "WriteStatitics warning: treeline " + tl.getId() + " has more than one connector");
 				}
 			}
+			if ( debug)	System.out.println( "Id " + treelineID);
+			
 			if ( tl.getRoot() != null) {
 				int segmentID = 1;
 				Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
@@ -196,14 +203,20 @@ public class RhizoStatistics
 
 				for(Node<Float> node : allNodes) {
 					if(!node.equals(tl.getRoot())) {
+						if ( debug)	System.out.println( "    create segment for node " + node.getConfidence());
+						if ( debug)	System.out.println( "    path " + RhizoAddons.getPatch(tl));
+						Patch tlPatch = RhizoAddons.getPatch(tl);
 						Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(tl), tl, treelineID, 
 								segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
 						segmentID++;
 
+						if ( debug)	System.out.println( "   before Sutherland");
 						if(currentSegment.cohenSutherlandLineClipping()) allSegments.add(currentSegment);
+						if ( debug)	System.out.println( "   after Sutherland");
 					}
 				}
 			}
+			if ( debug)	System.out.println( "created segments");
 		}
 		
 		return allSegments;
@@ -334,12 +347,16 @@ class Segment
 	
 	
 	/**
-	 * Cohen-Sutherland line clipping algorithm.
+	 * Cohen-Sutherland line clipping algorithm. if path is null (i.e. no image associated) no clipping is done.
+	 * 
 	 * @return true - if both nodes are inside the image or if at least one node is outside and the line is clipped with the image
 	 * 		  false - if both nodes are outside and the line does not intersect with the image
 	 */
 	public boolean cohenSutherlandLineClipping()
 	{
+		if ( p == null)
+			return true;
+		
 		ImagePlus image = p.getImagePlus();
 		double xMin = 0;
 		double yMin = 0;

@@ -562,7 +562,8 @@ public class RhizoAddons
 	/**
 	 * @author Tino
 	 * @param t - a treeline
-	 * @return - The patch t is displayed on
+	 * @return - The patch t is displayed on; if no patches are defined in the project (probably
+	 * no image loaded yet) null is returned
 	 */
 	public static Patch getPatch(Treeline t)
 	{
