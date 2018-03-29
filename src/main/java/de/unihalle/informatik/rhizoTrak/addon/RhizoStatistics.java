@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -24,9 +25,7 @@ import javax.swing.JPanel;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Display;
-import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
-import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
@@ -34,7 +33,6 @@ import de.unihalle.informatik.rhizoTrak.display.TreeEventListener;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
-import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.ImagePlus;
 
@@ -95,9 +93,19 @@ public class RhizoStatistics
 		List<Segment> allSegments = computeStatistics( Display.getFront().getProject(), allLayers ? null : Display.getFront().getLayer(), unit);
 		
 		// write
+		File saveFile = null;
 		try {
-			// TODO: rather get the project home
-			File saveFile = Utils.chooseFile(System.getProperty("user.home"), null, ".csv");
+			String xmlname = rhizoMain.getXmlName().replaceFirst(".xml\\z", "");
+			
+			String folder;
+			if  ( rhizoMain.getStorageFolder() == null )
+				folder = System.getProperty("user.home");
+			else 
+				folder = rhizoMain.getStorageFolder();
+			
+		
+			saveFile = Utils.chooseFile( folder, xmlname, ".csv");
+			
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
 
 			bw.write("experiment" + sep + "tube" + sep + "timepoint" + sep + "rootID" + sep + "layerID" +sep + "segmentID" +  
@@ -110,9 +118,7 @@ public class RhizoStatistics
 			}
 			bw.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			Utils.showMessage( "WriteStatistics failed to write");
+			Utils.showMessage( "WriteStatistics cannot write to " + saveFile.getAbsolutePath());
 		}
 		
 	}

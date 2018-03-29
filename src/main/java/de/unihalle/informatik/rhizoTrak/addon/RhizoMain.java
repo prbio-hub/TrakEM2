@@ -1,7 +1,11 @@
 package de.unihalle.informatik.rhizoTrak.addon;
 
+import java.io.File;
+
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
+import de.unihalle.informatik.rhizoTrak.persistence.FSLoader;
+import de.unihalle.informatik.rhizoTrak.persistence.Loader;
 
 public class RhizoMain
 {
@@ -90,6 +94,76 @@ public class RhizoMain
    		rCV.disposeColorVisibilityFrame();
    		rI.disposeImageLoaderFrame();
    		rA.getConflictManager().disposeConflictFrame();
+   }
+
+	/** Code a string to conform to html convention
+	 * @param rel_path
+	 * @return
+	 */
+   public static String htmlCode( String s) {
+	   StringBuilder out = new StringBuilder(Math.max(16, s.length()));
+	   for (int i = 0; i < s.length(); i++) {
+		   char c = s.charAt(i);
+		   if (c > 127 || c == '"' || c == '<' || c == '>' || c == '&') {
+			   out.append("&#");
+			   out.append((int) c);
+			   out.append(';');
+		   } else {
+			   out.append(c);
+		   }
+	   }
+	   return out.toString();
+   }
+   
+   /** Get the <code>xmlPath</code> of the project, that is where the project .xml file
+    * is to be saved
+    * 
+    * @return xmlpath or null
+    */
+   public String getXmlPath() {
+	   try   {
+		   Loader loader = this.getProject().getLoader();
+
+		   if ( loader instanceof FSLoader) {
+			   File f = new File(((FSLoader)loader).getProjectXMLPath());
+			   return f.getAbsolutePath();
+		   } else {
+			   return null;
+		   }
+	   } catch (Exception ex) {
+		   return null;
+	   }
+   }
+   
+   /** Get the filename part of <code>xmlPath</code> of the project, that is where the project .xml file
+    * is to be saved
+    * 
+    * @return filename part of xmlpath or null
+    */
+   public String getXmlName() {
+	   try   {
+		   Loader loader = this.getProject().getLoader();
+
+		   if ( loader instanceof FSLoader) {
+			   File f = new File(((FSLoader)loader).getProjectXMLPath());
+			   return f.getName();
+		   } else {
+			   return null;
+		   }
+	   } catch (Exception ex) {
+		   return null;
+	   }
+   }
+   
+   /** get the storage folder of this projects, i.e. the directory where this project is located in the file system
+    * @return storage folder or null
+    */
+   public String getStorageFolder() {
+	   try {
+		   return this.getProject().getLoader().getStorageFolder();
+	   } catch (Exception ex) {
+		   return null;
+	   }
    }
 
 	/** true if title of layer window should contain the z coordinate
