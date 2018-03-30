@@ -215,6 +215,11 @@ public final class FSLoader extends Loader {
 		}
 	}
 
+	public FSLoader(final String dir_project,final  String xmlpath) throws Exception {
+		this( dir_project);
+		this.project_file_path = xmlpath;
+	}
+
 	private String createUNUId(String dir_storage) {
 		synchronized (db_lock) {
 			try {

@@ -74,8 +74,6 @@ package de.unihalle.informatik.rhizoTrak;
 
 import ij.IJ;
 import ij.gui.GenericDialog;
-import ij.gui.YesNoCancelDialog;
-import ij.io.DirectoryChooser;
 import ij.io.OpenDialog;
 
 import java.awt.Rectangle;
@@ -103,7 +101,7 @@ import java.util.jar.JarFile;
 import javax.swing.JFileChooser;
 import javax.swing.JTree;
 import javax.swing.UIManager;
-import javax.swing.plaf.FileChooserUI;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
@@ -125,7 +123,6 @@ import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.display.Pipe;
 import de.unihalle.informatik.rhizoTrak.display.Polyline;
 import de.unihalle.informatik.rhizoTrak.display.Profile;
-import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Stack;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.display.YesNoDialog;
@@ -566,18 +563,38 @@ public class Project extends DBObject {
 		FSLoader loader = null;
 		try {
 			String dir_project = storage_folder;
+			String xmlpath = null;
 			if (null == dir_project || !new File(dir_project).isDirectory()) {
-				DirectoryChooser dc = new DirectoryChooser("Select storage folder");
-				dir_project = dc.getDirectory();
-				if (null == dir_project) return null; // user cancelled dialog
+				// trakem version selecting the storage folder
+				//				DirectoryChooser dc = new DirectoryChooser("Select storage folder");
+				//				dir_project = dc.getDirectory();
+				//				if (null == dir_project) return null; // user cancelled dialog
+				
+				JFileChooser fileChooser = new JFileChooser();
+				FileNameExtensionFilter filter = new FileNameExtensionFilter( "Proejct file", "xml"); 
+				fileChooser.setFileFilter(filter);
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setDialogTitle( "Select a project file");
+				int returnVal = fileChooser.showOpenDialog(null);
+
+				if (returnVal != JFileChooser.APPROVE_OPTION)
+					return null; // user cancelled dialog
+
+				File file = fileChooser.getSelectedFile();
+				xmlpath = file.getAbsolutePath();
+				if ( ! xmlpath.endsWith( ".xml"))
+					xmlpath = xmlpath + ".xml";
+				dir_project = file.getParent();
+
 				if (!Loader.canReadAndWriteTo(dir_project)) {
 					Utils.showMessage("Can't read/write to the selected storage folder.\nPlease check folder permissions.");
 					return null;
 				}
 				if (IJ.isWindows()) dir_project = dir_project.replace('\\', '/');
 			}
-			loader = new FSLoader(dir_project);
-
+			
+			loader = new FSLoader(dir_project, xmlpath);
+	
 			Project project;
 			if ( arg.equals( "default")) {
 				template_root = new TemplateThing( "rootstack");
