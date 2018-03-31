@@ -571,7 +571,7 @@ public class Project extends DBObject {
 				//				if (null == dir_project) return null; // user cancelled dialog
 				
 				JFileChooser fileChooser = new JFileChooser();
-				FileNameExtensionFilter filter = new FileNameExtensionFilter( "Proejct file", "xml"); 
+				FileNameExtensionFilter filter = new FileNameExtensionFilter( "Project file", "xml"); 
 				fileChooser.setFileFilter(filter);
 				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				fileChooser.setDialogTitle( "Select a project file");
