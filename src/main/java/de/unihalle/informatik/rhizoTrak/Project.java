@@ -581,6 +581,14 @@ public class Project extends DBObject {
 					return null; // user cancelled dialog
 
 				File file = fileChooser.getSelectedFile();
+				if ( file.exists()) {
+					final YesNoDialog yn = ControlWindow.makeYesNoDialog("rhizoTrak", "The file " + file.getAbsolutePath() + 
+							" already exists and will be overriden on save. Proceed?");
+					if (! yn.yesPressed()) {
+						return null;
+					}				
+				}
+				
 				xmlpath = file.getAbsolutePath();
 				if ( ! xmlpath.endsWith( ".xml"))
 					xmlpath = xmlpath + ".xml";
