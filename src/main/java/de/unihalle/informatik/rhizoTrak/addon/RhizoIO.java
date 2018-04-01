@@ -23,10 +23,12 @@ import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.GlobalStatusList;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.GlobalStatusList.GlobalStatus;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList;
+import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.ReceiverNodeColor;
 import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
+import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
@@ -123,6 +125,16 @@ public class RhizoIO
 					rhizoMain.getProjectConfig().setHighlightColor1(settingsToColor( gs.getHighlightcolorList().getColor().get( 0) ));
 				if ( gs.getHighlightcolorList().getColor().size() > 1)
 					rhizoMain.getProjectConfig().setHighlightColor2(settingsToColor( gs.getHighlightcolorList().getColor().get( 1) ));
+			}
+			
+			if ( null != gs.getReceiverNodeColor() ) {
+				rhizoMain.getProjectConfig().setReceiverNodeColor(
+						new Color( gs.getReceiverNodeColor().getRed().intValue(), 
+								gs.getReceiverNodeColor().getGreen().intValue(), 
+								gs.getReceiverNodeColor().getBlue().intValue()));
+			} else {
+				// set the default color from Node
+				rhizoMain.getProjectConfig().setReceiverNodeColor( Node.getReceiverColor());
 			}
 			
 			rhizoMain.getProjectConfig().resetChanged();
@@ -382,9 +394,17 @@ public class RhizoIO
 	        hlc.getColor().add( colorToSettings( rhizoMain.getProjectConfig().getHighlightColor1()));
 	        hlc.getColor().add( colorToSettings( rhizoMain.getProjectConfig().getHighlightColor2()));
 	        
+	        // node receiver color
+	        ReceiverNodeColor receiverColor = new ReceiverNodeColor();
+	        receiverColor.setRed(BigInteger.valueOf( rhizoMain.getProjectConfig().getReceiverNodeColor().getRed()));
+	        receiverColor.setGreen(BigInteger.valueOf( rhizoMain.getProjectConfig().getReceiverNodeColor().getGreen()));
+	        receiverColor.setBlue(BigInteger.valueOf( rhizoMain.getProjectConfig().getReceiverNodeColor().getBlue()));
+
+	        
 	        GlobalSettings gs = new GlobalSettings();
 	        gs.setGlobalStatusList(gsl);
 	        gs.setHighlightcolorList(hlc);
+	        gs.setReceiverNodeColor(receiverColor);
 			
 			m.marshal(gs, userSettingsFile);
 		} catch(Exception e) {

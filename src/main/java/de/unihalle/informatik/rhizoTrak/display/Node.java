@@ -441,7 +441,15 @@ public abstract class Node<T> implements Taggable {
 		return tagsTask;
 	}
 
-	static private final Color receiver_color = Color.green.brighter();
+	static private  Color receiver_color = Color.green.brighter();
+	
+	public static void setReceiverColor( Color color) {
+		receiver_color = color;
+	}
+	
+	public static Color getReceiverColor() {
+		return receiver_color;
+	}
 
 	protected void paintHandle(final Graphics2D g, final Rectangle srcRect, final double magnification, final Tree<T> t) {
 		paintHandle(g, srcRect, magnification, t, false);

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Stack;
 
+import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 /** Hold all project specific settings, including some general and fixed ones.
@@ -100,6 +101,12 @@ public class RhizoProjectConfig {
 	 * Director where to search new images in
 	 */
 	private File imageSearchDir = null;
+	
+	/**
+	 * The color of the receiver node, i.e. the active node
+	 */
+	private Color receiverNodeColor = null;
+	
 	
 	public RhizoProjectConfig() {
 		// we always need the fixed status labels
@@ -437,6 +444,23 @@ public class RhizoProjectConfig {
 	 */
 	public void setImageSearchDir(File imageSearchDir) {
 		this.imageSearchDir = imageSearchDir;
+	}
+
+	/**
+	 * @return the receiverNodeColor
+	 */
+	public Color getReceiverNodeColor() {
+		return receiverNodeColor;
+	}
+
+	/**
+	 * @param receiverNodeColor the receiverNodeColor to set
+	 */
+	// we use the static member in Node as thus no reference to RhizoMain is needed in Node
+	public void setReceiverNodeColor(Color color) {
+		Node.setReceiverColor( color);
+		setUserSettingsChanged();
+		this.receiverNodeColor = color;
 	}
 
 	/**

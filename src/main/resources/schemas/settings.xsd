@@ -36,6 +36,15 @@
 				</xs:sequence>
 			</xs:complexType>
 			</xs:element>
+			<xs:element name="ReceiverNodeColor">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="red" type="xs:integer"> </xs:element>
+						<xs:element name="green" type="xs:integer"> </xs:element>
+						<xs:element name="blue" type="xs:integer"> </xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 	</xs:element>
