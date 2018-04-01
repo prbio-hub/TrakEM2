@@ -91,9 +91,11 @@ import ij.ImagePlus;
 
 public class RhizoAddons
 {
+	private boolean debug = true;
+	
 	public boolean splitDialog = false;
 	
-	public Node lastEditedOrActiveNode = null;
+	public Node<?> lastEditedOrActiveNode = null;
 
 	private ConflictManager conflictManager = null;
 
@@ -372,38 +374,46 @@ public class RhizoAddons
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				
+				Utils.log2("mergeTool after choose target");
+				
 				// Utils.log(display.getActive());
-				if(parentTl.getMarked()==null)
-				{
-					Utils.log("no active node in parent treeline");
+				if(parentTl.getMarked()==null) {
+					Utils.log2("no active node in parent treeline");
 					return;
 				}
-				if (oldActive.equals(display.getActive()))
-				{
-					Utils.log("found no target");
+				
+				if ( oldActive.equals(display.getActive()) ) {
+					Utils.log2("found no target");
 					parentTl.unmark();
 					return;
 				}
-				Treeline target = (Treeline) display.getActive();
-				if (target == null)
-				{
-					Utils.log("no active Treeline found");
+				
+				Treeline target;
+				if ( display.getActive() != null && display.getActive().getClass().equals( Treeline.class) ) {
+					target = (Treeline) display.getActive();
+				} else {
+					Utils.log2("no active Treeline found");
 					parentTl.unmark();
 					return;
 				}
-				RadiusNode nd = (RadiusNode) target.findClosestNodeW(target.getNodesToPaint(la), po.x, po.y, dc.getMagnification());
-				if (nd == null)
-				{
-					Utils.log("found no target node");
+				
+				Node<Float> tmpNode = target.findClosestNodeW(target.getNodesToPaint(la), po.x, po.y, dc.getMagnification());
+				RadiusNode nd;
+				if ( tmpNode != null && tmpNode instanceof RadiusNode ) {
+					nd = (RadiusNode) tmpNode;
+				} else {
+					Utils.log2("found no target node");
 					parentTl.unmark();
 					return;
 				}
-				if (parentTl.getClass().equals(Treeline.class) == false)
-				{
+				
+				if (parentTl.getClass().equals(Treeline.class) == false) {
 					Utils.log("to-be-parent is no treeline");
 					parentTl.unmark();
 					return;
 				}
+				
 				//check if the merge create conflict and communicate with the user if the action should be continued
 				HashSet<Treeline> treelineSet = new HashSet<Treeline>();
 				treelineSet.add(parentTl);
@@ -545,7 +555,7 @@ public class RhizoAddons
 	 */
 	public static ProjectThing findParentAllowing(String type, Project project)
 	{
-		Enumeration enum_nodes;
+		Enumeration<?> enum_nodes;
 		enum_nodes = project.getProjectTree().getRoot().depthFirstEnumeration();
 		while (enum_nodes.hasMoreElements())
 		{
@@ -698,14 +708,21 @@ public class RhizoAddons
 			{
 			};
 		};
-		Layer layer = currentDisplay.getFrontLayer();
-                
-                RhizoAddons rhizoAddons = layer.getProject().getRhizoMain().getRhizoAddons();
-                ConflictManager conflictManager = rhizoAddons.getConflictManager();                
-                
+		Layer layer = Display.getFrontLayer();
+
+		RhizoAddons rhizoAddons = layer.getProject().getRhizoMain().getRhizoAddons();
+		ConflictManager conflictManager = rhizoAddons.getConflictManager();                
+
 		final ArrayList<Displayable> al = new ArrayList<Displayable>(layer.find(x_p, y_p, true));
 		al.addAll(layer.getParent().findZDisplayables(layer, x_p, y_p, true)); // only visible ones
 
+		if ( debug ) {
+			System.out.println( "choose: al");
+			for ( Displayable d : al ) {
+				System.out.println( "    id" + d.getId() + "  " + d.getClass());
+			}
+		}
+		
 		// actyc: remove those trees that contain a non clickable node at xp und yp
 		ArrayList<Displayable> alternatedList = new ArrayList<Displayable>();
 		for (Displayable displayable : al)
@@ -734,6 +751,14 @@ public class RhizoAddons
 			}
 		}
 		al.removeAll(alternatedList);
+
+		if ( debug ) {
+			System.out.println( "choose: al after remove");
+			for ( Displayable d : al ) {
+				System.out.println( "    id" + d.getId() + "  " + d.getClass());
+			}
+		}
+		
 
 		if (al.isEmpty())
 		{
