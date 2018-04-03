@@ -116,7 +116,7 @@ public class RhizoProjectConfig {
 		fixedStatusLabelMap.put( STATUS_UNDEFINED, NAME_UNDEFINED);
 		fixedStatusLabelMap.put( STATUS_VIRTUAL, NAME_VIRTUAL);
 		fixedStatusLabelMap.put( STATUS_CONNECTOR, NAME_CONNECTOR);	
-
+		setReceiverNodeColor( Node.getReceiverColor());	
 	}
 	
 	/** Append status label as the last label to the list.

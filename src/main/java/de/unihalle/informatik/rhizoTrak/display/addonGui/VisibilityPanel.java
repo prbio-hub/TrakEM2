@@ -157,8 +157,7 @@ public class VisibilityPanel extends JPanel {
 		addColor(HIGHLIGHTCOLOR1ACTIONSTRING2, rhizoMain.getProjectConfig().getHighlightColor2());
 		
 		addColor( RECEIVERNODECOLORSTRING, rhizoMain.getProjectConfig().getReceiverNodeColor());
-		
-		add(new JSeparator());
+
 	}
        
 	/** we assume that the status label for <code>i</code> exists
