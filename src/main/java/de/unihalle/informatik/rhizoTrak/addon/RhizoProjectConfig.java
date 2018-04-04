@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Stack;
 
+import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 /** Hold all project specific settings, including some general and fixed ones.
@@ -101,6 +102,12 @@ public class RhizoProjectConfig {
 	 */
 	private File imageSearchDir = null;
 	
+	/**
+	 * The color of the receiver node, i.e. the active node
+	 */
+	private Color receiverNodeColor = null;
+	
+	
 	public RhizoProjectConfig() {
 		// we always need the fixed status labels
 		statusLabelSet.put( NAME_UNDEFINED, new RhizoStatusLabel( this, NAME_UNDEFINED, "*", DEFAULT_FIXED_STATUS_COLOR));
@@ -109,7 +116,7 @@ public class RhizoProjectConfig {
 		fixedStatusLabelMap.put( STATUS_UNDEFINED, NAME_UNDEFINED);
 		fixedStatusLabelMap.put( STATUS_VIRTUAL, NAME_VIRTUAL);
 		fixedStatusLabelMap.put( STATUS_CONNECTOR, NAME_CONNECTOR);	
-
+		setReceiverNodeColor( Node.getReceiverColor());	
 	}
 	
 	/** Append status label as the last label to the list.
@@ -437,6 +444,23 @@ public class RhizoProjectConfig {
 	 */
 	public void setImageSearchDir(File imageSearchDir) {
 		this.imageSearchDir = imageSearchDir;
+	}
+
+	/**
+	 * @return the receiverNodeColor
+	 */
+	public Color getReceiverNodeColor() {
+		return receiverNodeColor;
+	}
+
+	/**
+	 * @param receiverNodeColor the receiverNodeColor to set
+	 */
+	// we use the static member in Node as thus no reference to RhizoMain is needed in Node
+	public void setReceiverNodeColor(Color color) {
+		Node.setReceiverColor( color);
+		setUserSettingsChanged();
+		this.receiverNodeColor = color;
 	}
 
 	/**

@@ -581,18 +581,24 @@ public class Project extends DBObject {
 					return null; // user cancelled dialog
 
 				File file = fileChooser.getSelectedFile();
-				if ( file.exists()) {
+				xmlpath = file.getAbsolutePath();
+				if ( ! xmlpath.endsWith( ".xml")) {
+					xmlpath = xmlpath + ".xml";
+					final YesNoDialog yn = ControlWindow.makeYesNoDialog("rhizoTrak", "Appended .xml to project file, yielding: " +
+							xmlpath + " Proceed?");
+					if (! yn.yesPressed()) {
+						return null;
+					}
+				}
+				dir_project = file.getParent();
+				
+				if ( new File( xmlpath).exists()) {
 					final YesNoDialog yn = ControlWindow.makeYesNoDialog("rhizoTrak", "The file " + file.getAbsolutePath() + 
 							" already exists and will be overriden on save. Proceed?");
 					if (! yn.yesPressed()) {
 						return null;
 					}				
 				}
-				
-				xmlpath = file.getAbsolutePath();
-				if ( ! xmlpath.endsWith( ".xml"))
-					xmlpath = xmlpath + ".xml";
-				dir_project = file.getParent();
 
 				if (!Loader.canReadAndWriteTo(dir_project)) {
 					Utils.showMessage("Can't read/write to the selected storage folder.\nPlease check folder permissions.");

@@ -89,6 +89,7 @@ public class VisibilityPanel extends JPanel {
 	static private final String HIGHLIGHTCOLOR1ACTIONSTRING1 ="Highlightcolor 1";
 	static private final String HIGHLIGHTCOLOR1ACTIONSTRING2 ="Highlightcolor 2";
 
+	static private final String RECEIVERNODECOLORSTRING = "Color active node of treeline";
 
 	public VisibilityPanel(RhizoMain rhizoMain)
 	{
@@ -152,10 +153,11 @@ public class VisibilityPanel extends JPanel {
 		
 		// add highlighting color
 		add(new JSeparator());
-		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING1, rhizoMain.getProjectConfig().getHighlightColor1());
-		addHighlightColor(HIGHLIGHTCOLOR1ACTIONSTRING2, rhizoMain.getProjectConfig().getHighlightColor2());
+		addColor(HIGHLIGHTCOLOR1ACTIONSTRING1, rhizoMain.getProjectConfig().getHighlightColor1());
+		addColor(HIGHLIGHTCOLOR1ACTIONSTRING2, rhizoMain.getProjectConfig().getHighlightColor2());
 		
-		add(new JSeparator());
+		addColor( RECEIVERNODECOLORSTRING, rhizoMain.getProjectConfig().getReceiverNodeColor());
+
 	}
        
 	/** we assume that the status label for <code>i</code> exists
@@ -204,7 +206,7 @@ public class VisibilityPanel extends JPanel {
 		add(panel);
 	}
 	
-	private void addHighlightColor( String label, Color color) {
+	private void addColor( String label, Color color) {
 		// add highlighting color
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
@@ -244,6 +246,9 @@ public class VisibilityPanel extends JPanel {
 
 				} else if ( e.getActionCommand().equals( HIGHLIGHTCOLOR1ACTIONSTRING2) ) {
 					rhizoMain.getProjectConfig().setHighlightColor2( new Color( 
+							selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue()));
+				} else if ( e.getActionCommand().equals( RECEIVERNODECOLORSTRING) ) {
+					rhizoMain.getProjectConfig().setReceiverNodeColor( new Color( 
 							selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue()));
 				} else {
 					int index = Integer.parseInt(e.getActionCommand());

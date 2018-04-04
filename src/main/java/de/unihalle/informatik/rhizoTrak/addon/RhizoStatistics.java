@@ -15,14 +15,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Pattern;
-
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-
-import org.python.antlr.base.boolop;
 
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
@@ -51,7 +47,7 @@ public class RhizoStatistics
 		this.rhizoMain = rhizoMain;
 	}
 	
-	/**o
+	/**
 	 * TODO return/error messages
 	 */
 	public void writeStatistics()
@@ -112,7 +108,7 @@ public class RhizoStatistics
 			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
 
 			bw.write("experiment" + sep + "tube" + sep + "timepoint" + sep + "rootID" + sep + "layerID" +sep + "segmentID" +  
-					sep + "length_" + unit + sep + "startRadius_" + unit + sep + "endRadius_" + unit +
+					sep + "length_" + unit + sep + "startDiameter_" + unit + sep + "endDiameter_" + unit +
 					sep + "surfaceArea_" + unit + "^2" + sep + "volume_" + unit + "^3" + sep + "children" + sep + "status" + sep + "statusName" + "\n");
 			for (Segment segment : allSegments)
 			{
@@ -205,7 +201,6 @@ public class RhizoStatistics
 					if(!node.equals(tl.getRoot())) {
 						if ( debug)	System.out.println( "    create segment for node " + node.getConfidence());
 						if ( debug)	System.out.println( "    path " + RhizoAddons.getPatch(tl));
-						Patch tlPatch = RhizoAddons.getPatch(tl);
 						Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(tl), tl, treelineID, 
 								segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), unit, (int) node.getConfidence());
 						segmentID++;
@@ -249,7 +244,7 @@ class Segment
 	
 	// infos
 	private String imageName, experiment, tube, timepoint;
-	private double length, avgRadius, surfaceArea, volume;
+	private double length, surfaceArea, volume;
 	private int segmentID, numberOfChildren;
 	
 	private int status;
@@ -301,7 +296,6 @@ class Segment
 	private void calculate()
 	{
 		this.length = Math.sqrt(Math.pow(parent.getX() - child.getX(), 2) + Math.pow(parent.getY() - child.getY(), 2)) * scale;
-		this.avgRadius = (radiusParent + radiusChild) / 2;
 		double s = Math.sqrt(Math.pow((radiusParent - radiusChild), 2) + Math.pow(this.length, 2));
 		this.surfaceArea = Math.PI * s * (radiusParent + radiusChild);
 		this.volume = (Math.PI * length * (Math.pow(radiusParent, 2) + Math.pow(radiusChild, 2) + radiusParent * radiusChild)) / 3;
@@ -337,7 +331,7 @@ class Segment
 		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) +
 				sep + Integer.toString((int) layer.getZ() + 1)  +
 				sep + Integer.toString(segmentID) +
-				sep + Double.toString(length) + sep + Double.toString(radiusParent) + sep + Double.toString(radiusChild) +
+				sep + Double.toString(length) + sep + Double.toString(2*radiusParent) + sep + Double.toString(2*radiusChild) +
 				sep + Double.toString(surfaceArea) + sep + Double.toString(volume) + 
 				sep + Integer.toString(numberOfChildren) + sep + status + sep + rhizoMain.getProjectConfig().getStatusLabel(status).getName();
 
