@@ -58,8 +58,11 @@ public class RhizoIO
 				setPriority(Thread.NORM_PRIORITY);
 			}
 			@Override
-			public void run()
-			{	
+			public void run() 	{	
+				
+			    // the project filename without extension .xml or .xml.gz
+				String filenameWoExtension = removeProjectfileExtension( file.getAbsolutePath());
+
 				// load user settings 
 				Utils.log2("loading user settings...");
 				loadUserSettings();
@@ -68,7 +71,7 @@ public class RhizoIO
 				Utils.log2("done");
 
 				Utils.log2("loading connector data...");
-				loadConnector(file);
+				loadConnector( filenameWoExtension);
 				Utils.log2("done");
 				
 				Utils.log2("restoring conflicts...");
@@ -78,7 +81,7 @@ public class RhizoIO
 				Utils.log2("done");
 				
 				Utils.log2("restoring status conventions...");
-				loadConfigFile(file.getAbsolutePath());
+				loadConfigFile( filenameWoExtension);
 				Utils.log2("done");
                                 
 				//lock all images
@@ -152,22 +155,25 @@ public class RhizoIO
 	}
 
 	/**
+	 * Loads the project config file. If <code>path</code> is null or the file cannot be parse the default configuration is
+	 * used.
+	 * <p>
+	 * Also the first xml-version is supported.
 	 * 
-	 * Loads the user settings on project file level.
-	 * @param path - The project file
-	 * @author Tino
+	 * @param path Filename for the config file without extension <code>.cfg</code>
+	 * 
+	 * if <code>null</code> the default settings will be set
+	 * 
+	 * @author Tino, Posch
 	 */
 	public void loadConfigFile(String path) {
 		// New project..
-		if(null == path) // user cancelled the open file dialog
-		{
+		if(null == path){
 			rhizoMain.getProjectConfig().setDefaultUserStatusLabel();
 			return;
 		}
 		
-		// TODO: check file ending if coming from file chooser
-		// Open project..
-		File configFile = new File(path.replace(".xml", ".cfg")); // looking for cfg file in directory
+		File configFile = new File( path + ".cfg");
 		
 		if(!configFile.exists()) {
 			Utils.showMessage( "config file " + configFile.getPath() + " not found: using default settings");
@@ -211,6 +217,11 @@ public class RhizoIO
 					this.rhizoMain.getProjectConfig().appendStatusLabelToList( sl.get(i).getFullName(), sl.get(i).getAbbreviation());
 				}
 
+				if ( rhizoMain.getStorageFolder() != null ) {
+					this.rhizoMain.getProjectConfig().setImageSearchDir( new File( rhizoMain.getStorageFolder()));
+				} else {
+					this.rhizoMain.getProjectConfig().setImageSearchDir(  new File( System.getProperty("user.home")));
+				}
 			} catch (JAXBException e1) 		{
 				Utils.showMessage( "cannot parse config file " + configFile.getPath() + ": using default settings");
 				
@@ -222,28 +233,27 @@ public class RhizoIO
     /**
      * Loads the connector file
      *
-     * @param file - The project save file
+     * @param filenameWoExtension Filename for the connector file without extension <code>.con</code>
+     * @return success
+     * 
      * @author Axel
      */
-    public void loadConnector(File file) {
+    public boolean loadConnector(String filenameWoExtension) {
         // read the save file
-        File conFile = new File(file.getParentFile().getAbsolutePath() + File.separator + file.getName().replace(".xml", ".con"));
-
-        if (!conFile.exists()) {
-            // no con file create a new
-            try {
-                conFile.createNewFile();
-                return;
-            } catch (IOException e) {
-                Utils.log("error: no *.con file found creating new one");
-                e.printStackTrace();
-                return;
-            }
-        }
+        File conFile = new File(filenameWoExtension + ".con");
 
         FileReader fr;
+
         try {
-            fr = new FileReader(conFile);
+        	fr = new FileReader(conFile);
+        } catch (FileNotFoundException e) {
+        	e.printStackTrace();
+
+        	Utils.showMessage( "rhizoTrak", "Warning: connector file " + conFile.getAbsolutePath() + " not found");
+        	return false;
+        }
+
+        try {
             BufferedReader br = new BufferedReader(fr);
 
             String line = br.readLine();
@@ -287,23 +297,32 @@ public class RhizoIO
                 line = br.readLine();
             }
             br.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
+        	Utils.showMessage( "rhizoTrak", "Warning: can not parse connector file " + conFile.getAbsolutePath());
+
             e.printStackTrace();
+            return false;
         }
+        
+        return true;
     }
 	
 	/**
 	 * Main method project configuration and connector data
-	 * @param file - The project save file
+	 * 
+	 * @param file - The project save file. It is assume that the filename ends with <code>.xml</code> or
+	 * <code>.xml.gz</code>
+	 * 
 	 * @author Axel
 	 */
-	public void addonSaver(File file)
-	{
+	public void addonSaver(File file) {
+	
+	    // the project filename without extension .xml or .xml.gz
+		String filenameWoExtension = removeProjectfileExtension( file.getAbsolutePath());
+		
 		//save connector data
-		saveConnectorData(file);
-		saveConfigFile(file);
+		saveConnectorData(filenameWoExtension);
+		saveConfigFile(filenameWoExtension);
 		
 		return;		
 	}
@@ -311,19 +330,13 @@ public class RhizoIO
 	/**
 	 * Crates a new config file (.cfg) or overwrites an existing one in the same directory and with the same name as the project file. 
 	 * 
-	 * @param file - The project xml file
+	 * @param filename  the filename for the config file without extension  
 	 * @author Tino
 	 */
-	public void saveConfigFile(File file) 
-	{
-		Utils.log(file.getAbsolutePath());
-		// TODO: add warnings
-		if(null == file) return;
+	public void saveConfigFile(String filename) {
+		File configFile = new File(filename + ".cfg");
 		
-		File configFile = new File(file.getAbsolutePath().replace(".xml", ".cfg"));
-		
-		try 
-		{
+		try {
 			JAXBContext context = JAXBContext.newInstance(RhizoTrakProjectConfig.class);
                         Marshaller m = context.createMarshaller();
                         m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
@@ -332,8 +345,7 @@ public class RhizoIO
                         		new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList();
 	        for( int i = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabelList() ; i++ ) {
 	        	de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status
-	        	newStatus =
-	        			new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status();
+	        	newStatus = new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status();
 	        	RhizoStatusLabel statusLabel = rhizoMain.getProjectConfig().getStatusLabel( i);
 	        				
 	        	newStatus.setFullName( statusLabel.getName());
@@ -353,9 +365,8 @@ public class RhizoIO
 	        
 	        m.marshal(config, configFile);
 		}
-		catch (Exception e) 
-		{
-			Utils.showMessage( "cannot write project configuration to " + configFile.getPath());
+		catch (Exception e) {
+			Utils.showMessage( "rhizoTrak", "cannot write project configuration to " + configFile.getPath());
 			e.printStackTrace();
 		}
 
@@ -433,10 +444,14 @@ public class RhizoIO
     /**
      * Saves the connector data
      *
-     * @param file - The project save file
+     * @param filename - The project save file without extension 
      * @author Axel
      */
-    public void saveConnectorData(File file) {
+    /**
+     * @param filename
+     * @return sucess
+     */
+    public boolean saveConnectorData(String filename) {
         LayerSet layerSet = rhizoMain.getRhizoAddons().getProject().getRootLayerSet();
 
         StringBuilder sb = new StringBuilder(); // content of the save file
@@ -455,51 +470,60 @@ public class RhizoIO
         sb.append("###" + "\n");
         String saveText = sb.toString();
 
-        File conFile = new File(file.getParentFile().getAbsolutePath() + File.separator + file.getName().split("\\.")[0] + ".con");																														// file
-        File tempconFile = new File(file.getParentFile().getAbsolutePath() + File.separator + "temp_" + file.getName().split("\\.")[0] + ".con");
-
+        File conFile = new File( filename + ".con");																														// file
+//        File tempconFile = new File(filename.getParentFile().getAbsolutePath() + File.separator + "temp_" + filename.getName().split("\\.")[0] + ".con");
+        File tempconFile = new File( filename + ".con.bak");
+        
+        boolean savedOldVersion = false;
         if (conFile.exists()) {
-            String old = readFileToString(conFile); // read current file
-            writeStringToFile(tempconFile, old); // and save to temp
+        	conFile.renameTo( tempconFile);
+        	savedOldVersion = true;
+//            String old = readFileToString(conFile); // read current file
+//            if ( old != null ) {
+//            	savedOldVersion = writeStringToFile(tempconFile, old); // and save to temp
+//            }
         }
 
-		if (conFile.exists())
-		{
-			String old = readFileToString(conFile); // read current file
-			writeStringToFile(tempconFile, old); // and save to temp
-		}
-
-		if (!writeStringToFile(conFile, saveText) && tempconFile.exists())
-		{
-			tempconFile.renameTo(conFile);
+		if (!writeStringToFile(conFile, saveText) ) {
+			if ( savedOldVersion) {
+				tempconFile.renameTo(conFile);
+				Utils.showMessage( "rhizoTrak", "Warning: cannot save connector data to " + conFile.getAbsolutePath() +
+						" reusing previous version");
+			} else {
+				Utils.showMessage( "rhizoTrak", "Warning: cannot save connector data to " + conFile.getAbsolutePath());
+			}
+			return false;
+		} else {
+			return true;
 		}
 	}
 	
-	/**
-	 * 
-	 * @param file - File to be read
-	 * @return The contents of the file as string
-	 * @author Axel
-	 */
-	public static String readFileToString(File file)
-	{
-		String result = "";
-		StringBuilder sb = new StringBuilder();
-		
-		try (FileReader fr = new FileReader(file)) {
-			int c = fr.read();
-			while (c != -1)
-			{
-				sb.append((char) c);
-				c = fr.read();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		result = sb.toString();
-		return result;
-	}
+//	/**
+//	 * 
+//	 * @param file - File to be read
+//	 * @return The contents of the file as string or null if an error occurred
+//	 * @author Axel
+//	 */
+//	public static String readFileToString(File file)
+//	{
+//		String result = "";
+//		StringBuilder sb = new StringBuilder();
+//		
+//		try (FileReader fr = new FileReader(file)) {
+//			int c = fr.read();
+//			while (c != -1)
+//			{
+//				sb.append((char) c);
+//				c = fr.read();
+//			}
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			return null;
+//		}
+//		
+//		result = sb.toString();
+//		return result;
+//	}
 	
 	/**
 	 * 
@@ -516,8 +540,24 @@ public class RhizoIO
 			fr.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+			return false;
 		}
 		
 		return true;
+	}
+	
+	private String removeProjectfileExtension( String filename) {
+		String filenameWoExtension;
+		
+		if ( filename.endsWith( ".xml")) {
+			filenameWoExtension = filename.substring(0, filename.length()-4);
+		} else if ( filename.endsWith( ".xml.gz") ) {
+			filenameWoExtension = filename.substring(0, filename.length()-7);
+		} else {
+			filenameWoExtension = filename;
+			Utils.showMessage( "rhizoTrak", "Warning: can not construct correct filenames for .con and .cfg files. Using " +
+					filename + "{.con|.cfg} instead");
+		}
+		return filenameWoExtension;
 	}
 }
