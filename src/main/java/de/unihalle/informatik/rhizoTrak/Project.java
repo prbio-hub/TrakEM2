@@ -582,8 +582,14 @@ public class Project extends DBObject {
 
 				File file = fileChooser.getSelectedFile();
 				xmlpath = file.getAbsolutePath();
-				if ( ! xmlpath.endsWith( ".xml"))
+				if ( ! xmlpath.endsWith( ".xml")) {
 					xmlpath = xmlpath + ".xml";
+					final YesNoDialog yn = ControlWindow.makeYesNoDialog("rhizoTrak", "Appended .xml to project file, yielding: " +
+							xmlpath + " Proceed?");
+					if (! yn.yesPressed()) {
+						return null;
+					}
+				}
 				dir_project = file.getParent();
 				
 				if ( new File( xmlpath).exists()) {
@@ -593,8 +599,6 @@ public class Project extends DBObject {
 						return null;
 					}				
 				}
-				
-
 
 				if (!Loader.canReadAndWriteTo(dir_project)) {
 					Utils.showMessage("Can't read/write to the selected storage folder.\nPlease check folder permissions.");
