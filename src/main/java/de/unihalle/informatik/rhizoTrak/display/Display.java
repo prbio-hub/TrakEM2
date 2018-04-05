@@ -5565,7 +5565,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			}
 		} else if (command.equals("Part subtree")) {
 			if (!(active instanceof Tree<?>)) return;
-			if (!Utils.check("Really part the subtree?")) return;
+			// ask user whether to proceed unless we find the rhizoTrak project connfig and there
+			// askSplitTree is false
+			if ( front == null ||  front.getProject() == null || front.getProject().getRhizoMain() == null 
+					|| front.getProject().getRhizoMain().getProjectConfig().isAskSplitTreeline() ) {
+				if (!Utils.check("Really part the subtree?")) return;
+			}
 			final LayerSet.DoChangeTrees step = getLayerSet().addChangeTreesStep();
 			final Set<DoStep> deps = new HashSet<DoStep>();
 			deps.add(new Displayable.DoEdit(active).init(active, new String[]{"data"})); // I hate java

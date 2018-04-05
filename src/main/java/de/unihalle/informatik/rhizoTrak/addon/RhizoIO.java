@@ -139,6 +139,11 @@ public class RhizoIO
 				// set the default color from Node
 				rhizoMain.getProjectConfig().setReceiverNodeColor( Node.getReceiverColor());
 			}
+		
+			if ( gs.isAskMergeTreelines() != null)
+				rhizoMain.getProjectConfig().setAskMergeTreelines( gs.isAskMergeTreelines());
+			if ( gs.isAskSplitTreeline() != null)
+				rhizoMain.getProjectConfig().setAskSplitTreeline(  gs.isAskSplitTreeline());
 			
 			rhizoMain.getProjectConfig().resetChanged();
 		} catch (JAXBException e) {
@@ -416,6 +421,8 @@ public class RhizoIO
 	        gs.setGlobalStatusList(gsl);
 	        gs.setHighlightcolorList(hlc);
 	        gs.setReceiverNodeColor(receiverColor);
+	        gs.setAskMergeTreelines( rhizoMain.getProjectConfig().isAskMergeTreelines());
+	        gs.setAskSplitTreeline( rhizoMain.getProjectConfig().isAskSplitTreeline());
 			
 			m.marshal(gs, userSettingsFile);
 		} catch(Exception e) {

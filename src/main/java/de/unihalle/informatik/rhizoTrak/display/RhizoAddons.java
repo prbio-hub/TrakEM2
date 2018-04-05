@@ -89,7 +89,7 @@ import ij.ImagePlus;
 
 public class RhizoAddons
 {
-	private boolean debug = true;
+	private boolean debug = false;
 	
 	public boolean splitDialog = false;
 	
@@ -429,12 +429,12 @@ public class RhizoAddons
 				}
 				
 				//check if the merge create conflict and communicate with the user if the action should be continued
-				HashSet<Treeline> treelineSet = new HashSet<Treeline>();
-				treelineSet.add(parentTl);
-				treelineSet.add(target);
 				int goAhead=conflictManager.mergeInteraction(parentTl, target);
-				if(goAhead==0) 				{
+				
+				if(goAhead==0) {
 					parentTl.unmark();
+					Display.updateVisibleTabs();				
+					Display.repaint(display.getLayerSet());
 					return;
 				}
 
@@ -445,10 +445,23 @@ public class RhizoAddons
 
 				target.setLastMarked(nd);
 				joinList.add(target);
-				if(goAhead==1) 				{
+				
+				if(goAhead==1) {
+					HashSet<Treeline> treelineSet = new HashSet<Treeline>();
+					treelineSet.add(parentTl);
+					treelineSet.add(target);
+
 					conflictManager.resolveTree(treelineSet);
 				} else 	if(goAhead==2) {
 					transferConnector(target, parentTl);
+				} else if ( goAhead==3 ) {
+					if ( rhizoMain.getProjectConfig().isAskMergeTreelines() &&
+						! Utils.checkYN("Proceed to merge treelines #" + parentTl.getId() + " and #" + target.getId()) ) {
+						parentTl.unmark();
+						Display.updateVisibleTabs();				
+						Display.repaint(display.getLayerSet());
+						return;
+					}
 				}
 				
 				parentTl.join(joinList);

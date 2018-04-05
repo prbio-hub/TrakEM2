@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Stack;
 
+import org.python.antlr.base.boolop;
+
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
@@ -106,6 +108,16 @@ public class RhizoProjectConfig {
 	 * The color of the receiver node, i.e. the active node
 	 */
 	private Color receiverNodeColor = null;
+	
+	/**
+	 * If true the user will be asked before merging treelines
+	 */
+	private boolean askMergeTreelines = true;
+	
+	/**
+	 * If true the user will be asked before splitting a treeline
+	 */
+	private boolean askSplitTreeline = true;
 	
 	
 	public RhizoProjectConfig() {
@@ -461,6 +473,36 @@ public class RhizoProjectConfig {
 		Node.setReceiverColor( color);
 		setUserSettingsChanged();
 		this.receiverNodeColor = color;
+	}
+
+	/**
+	 * @param askMergeTreelines the askMergeTreelines to set
+	 */
+	public void setAskMergeTreelines(boolean askMergeTreelines) {
+		setUserSettingsChanged();
+		this.askMergeTreelines = askMergeTreelines;
+	}
+
+	/**
+	 * @return the askMergeTreelines
+	 */
+	public boolean isAskMergeTreelines() {
+		return askMergeTreelines;
+	}
+
+	/**
+	 * @return the askSplitTreeline
+	 */
+	public boolean isAskSplitTreeline() {
+		return askSplitTreeline;
+	}
+
+	/**
+	 * @param askSplitTreeline the askSplitTreeline to set
+	 */
+	public void setAskSplitTreeline(boolean askSplitTreeline) {
+		setUserSettingsChanged();
+		this.askSplitTreeline = askSplitTreeline;
 	}
 
 	/**
