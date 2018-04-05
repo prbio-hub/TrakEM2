@@ -65,8 +65,6 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
@@ -177,7 +175,7 @@ public class RhizoAddons
 		Layer nextLayer = currentLayerSet.next(currentLayer);
 		//copytreelineconnector
 		if (nextLayer == null || nextLayer.getZ()==currentLayer.getZ()) {
-			Utils.showMessage("Can't copy. This is the last layer.");
+			Utils.showMessage("rhizoTrak", "Copy treelines failed: Can not copy from the last layer.");
 			return;
 		}
 		// get treelines of current layerset
@@ -186,10 +184,9 @@ public class RhizoAddons
 			Treeline ctree = (Treeline) cObj;
 			// Utils.log2("current Tree first Layer: " + ctree.getFirstLayer());
 			if (ctree.getFirstLayer() == currentLayer) {
-				Treeline copy = null;
 				try {
 					// copy current tree
-					copy = Tree.copyAs(ctree, Treeline.class, Treeline.RadiusNode.class);
+					Treeline copy = Tree.copyAs(ctree, Treeline.class, Treeline.RadiusNode.class);
 					copy.setLayer(nextLayer, true);
 					for (Node<Float> cnode : copy.getRoot().getSubtreeNodes()) {
 						cnode.setLayer(nextLayer);
@@ -204,15 +201,16 @@ public class RhizoAddons
 					// get the parent connector; if non exists a new will be create
 					//copytreelineconnector
 					if(!RhizoAddons.getRightPC(ctree, copy)){
-						Utils.showMessage("error: couldn't add connector automatically");
+						Utils.showMessage("rhizoTrak", "Copy treelines can not connector automatically between #" +
+								ctree.getId() + " and #" + copy.getId());
 					}
 					Display.update(currentLayerSet);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+					Utils.showMessage("rhizoTrak", "Copy treelines failed for treeline #"  + ctree.getId());
 				}
 			}
-
 		}
 	}
 
@@ -344,48 +342,61 @@ public class RhizoAddons
 	 * @param y_p - Mouse y position
 	 * @param mag - Current magnification
 	 * @param anode - Selected active node
-	 * @param parentTl - Selected active treeline
+	 * @param parentTl - Selected active treeline, assumed to be non <code>null</code>
 	 * @param me - MouseEvent
+	 * 
 	 * @author Axel
 	 */
 	public void mergeTool(final Layer la, final int x_p, final int y_p, double mag, RadiusNode anode, Treeline parentTl, MouseEvent me)
 	{
-		Thread mergeRun = new Thread()
-		{
+		Thread mergeRun = new Thread() {
 			{
 				setPriority(Thread.NORM_PRIORITY);
 			}
 
 			@Override
-			public void run()
-			{
+			public void run() {
 				Display display = Display.getFront();
-				DisplayCanvas dc = display.getCanvas();
-				final Point po = dc.getCursorLoc();
-				// Utils.log(display.getActive());
-				Displayable oldActive = display.getActive();
-				Thread t = choose(me.getX(), me.getY(), x_p, y_p, Treeline.class, display);
-				t.start();
-				try
-				{
-					t.join();
-				} catch (InterruptedException e)
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 				
-				Utils.log2("mergeTool after choose target");
-				
-				// Utils.log(display.getActive());
-				if(parentTl.getMarked()==null) {
-					Utils.log2("no active node in parent treeline");
+				// check parent treeline (should not happen but to be sure)
+				if (parentTl.getClass().equals(Treeline.class) == false) {
+					Utils.log("to-be-parent is no treeline");
+					Utils.showMessage( "rhizoTrak", "merging treelines failed: parent is not a treeline");
+					parentTl.unmark();
+					Display.updateVisibleTabs();				
+					Display.repaint(display.getLayerSet());
 					return;
 				}
 				
+				if(parentTl.getMarked()==null) {
+					Utils.log2("no active node in parent treeline");
+					Utils.showMessage( "rhizoTrak", "merging treelines failed: no active node in parent treeline");
+					Display.updateVisibleTabs();				
+					Display.repaint(display.getLayerSet());
+					return;
+				}
+
+				// let the user choose the child treeline
+				Displayable oldActive = display.getActive();
+
+				Thread t = choose(me.getX(), me.getY(), x_p, y_p, Treeline.class, display);
+				t.start();
+				try {
+					t.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					Utils.showMessage( "rhizoTrak", "merging treelines failed: choosing child treeline interrupted");
+					Display.updateVisibleTabs();				
+					Display.repaint(display.getLayerSet());
+					return;
+				}
+								
 				if ( oldActive.equals(display.getActive()) ) {
-					Utils.log2("found no target");
+					Utils.log2("merging treelines canceled: parent and child treeline are identical");
 					parentTl.unmark();
+					Utils.showMessage( "rhizoTrak", "merging treelines canceled: parent and target treeline are identical");
+					Display.updateVisibleTabs();				
+					Display.repaint(display.getLayerSet());
 					return;
 				}
 				
@@ -393,24 +404,27 @@ public class RhizoAddons
 				if ( display.getActive() != null && display.getActive().getClass().equals( Treeline.class) ) {
 					target = (Treeline) display.getActive();
 				} else {
-					Utils.log2("no active Treeline found");
+					Utils.log2("merging treelines canceled: no target treeline selected");
 					parentTl.unmark();
+					Utils.showMessage( "rhizoTrak", "merging treelines canceled: no target treeline selected");
+					Display.updateVisibleTabs();				
+					Display.repaint(display.getLayerSet());
 					return;
 				}
 				
+				DisplayCanvas dc = display.getCanvas();
+				final Point po = dc.getCursorLoc();
+
 				Node<Float> tmpNode = target.findClosestNodeW(target.getNodesToPaint(la), po.x, po.y, dc.getMagnification());
 				RadiusNode nd;
 				if ( tmpNode != null && tmpNode instanceof RadiusNode ) {
 					nd = (RadiusNode) tmpNode;
 				} else {
-					Utils.log2("found no target node");
+					Utils.log2("merging treelines failed: found no target node on child treeline");	
+					Utils.showMessage( "rhizoTrak", "merging treelines failed: found no target node on child treeline");
 					parentTl.unmark();
-					return;
-				}
-				
-				if (parentTl.getClass().equals(Treeline.class) == false) {
-					Utils.log("to-be-parent is no treeline");
-					parentTl.unmark();
+					Display.updateVisibleTabs();				
+					Display.repaint(display.getLayerSet());
 					return;
 				}
 				
@@ -419,8 +433,7 @@ public class RhizoAddons
 				treelineSet.add(parentTl);
 				treelineSet.add(target);
 				int goAhead=conflictManager.mergeInteraction(parentTl, target);
-				if(goAhead==0)
-				{
+				if(goAhead==0) 				{
 					parentTl.unmark();
 					return;
 				}
@@ -428,17 +441,13 @@ public class RhizoAddons
 				display.setActive(parentTl);
 				
 				ArrayList<Tree<Float>> joinList = new ArrayList<>();
-
 				joinList.add(parentTl);
 
 				target.setLastMarked(nd);
 				joinList.add(target);
-				if(goAhead==1)
-				{
+				if(goAhead==1) 				{
 					conflictManager.resolveTree(treelineSet);
-				}
-				if(goAhead==2)
-				{
+				} else 	if(goAhead==2) {
 					transferConnector(target, parentTl);
 				}
 				
@@ -446,7 +455,7 @@ public class RhizoAddons
 				parentTl.unmark();
 				
 				target.remove2(false);
-                                Display.updateVisibleTabs();				
+				Display.updateVisibleTabs();				
 				Display.repaint(display.getLayerSet());
 			};
 		};
