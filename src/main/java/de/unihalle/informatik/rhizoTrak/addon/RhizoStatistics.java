@@ -254,7 +254,7 @@ class Segment
 	private float scale;
 	private final double inchToMM = 25.4;
 	
-	private final float minRadius = 0.5f;
+	private final float minRadius = 0.0f;
 	private float radiusParent = minRadius;
 	private float radiusChild = minRadius;
 	
