@@ -165,7 +165,7 @@ public class RhizoIO
 	 * <p>
 	 * Also the first xml-version is supported.
 	 * 
-	 * @param path Filename for the config file without extension <code>.cfg</code>
+	 * @param path Filename for the config file. If it does not end with  <code>.cfg</code> this extension is appended
 	 * 
 	 * if <code>null</code> the default settings will be set
 	 * 
@@ -178,7 +178,11 @@ public class RhizoIO
 			return;
 		}
 		
-		File configFile = new File( path + ".cfg");
+		File configFile;
+		if ( ! path.endsWith( ".cfg"))
+			configFile = new File( path + ".cfg");
+		else 
+			configFile = new File( path);
 		
 		if(!configFile.exists()) {
 			Utils.showMessage( "config file " + configFile.getPath() + " not found: using default settings");
@@ -238,14 +242,19 @@ public class RhizoIO
     /**
      * Loads the connector file
      *
-     * @param filenameWoExtension Filename for the connector file without extension <code>.con</code>
+     * @param path Filename for the connector filename. if it does not end wtih <code>.con</code> this extension is appended
      * @return success
      * 
-     * @author Axel
+     * @author Axel, posch
      */
-    public boolean loadConnector(String filenameWoExtension) {
+    public boolean loadConnector(String path) {
         // read the save file
-        File conFile = new File(filenameWoExtension + ".con");
+    	
+        File conFile;
+        if ( path.endsWith( ".con"))
+        	conFile = new File( path);
+        else
+        	conFile = new File(path + ".con");
 
         FileReader fr;
 
