@@ -83,7 +83,7 @@ public class RhizoIO
 				Utils.log2("done");
 				
 				Utils.log2("restoring status conventions...");
-				loadConfigFile( filenameWoExtension);
+				loadConfigFile( filenameWoExtension + ".cfg");
 				Utils.log2("done");
                                 
 				//lock all images
@@ -349,8 +349,8 @@ public class RhizoIO
 		String filenameWoExtension = removeProjectfileExtension( file.getAbsolutePath());
 		
 		//save connector data
-		saveConnectorData(filenameWoExtension);
-		saveConfigFile(filenameWoExtension);
+		saveConnectorData(filenameWoExtension + ".con");
+		saveConfigFile(filenameWoExtension + ".cfg");
 		
 		return;		
 	}
@@ -358,12 +358,12 @@ public class RhizoIO
 	/**
 	 * Crates a new config file (.cfg) or overwrites an existing one in the same directory and with the same name as the project file. 
 	 * 
-	 * @param filename  the filename for the config file without extension  
-	 * @author Tino
+	 * @param filename  the filename for the config file  
+	 * @author Tino, Posch
 	 */
-	public void saveConfigFile(String filename) {
-		File configFile = new File(filename + ".cfg");
-		
+	public void saveConfigFile(String filename) {	
+		File configFile = new File(filename);
+
 		try {
 			JAXBContext context = JAXBContext.newInstance(RhizoTrakProjectConfig.class);
                         Marshaller m = context.createMarshaller();
@@ -500,8 +500,7 @@ public class RhizoIO
         sb.append("###" + "\n");
         String saveText = sb.toString();
 
-        File conFile = new File( filename + ".con");																														// file
-//        File tempconFile = new File(filename.getParentFile().getAbsolutePath() + File.separator + "temp_" + filename.getName().split("\\.")[0] + ".con");
+        File conFile = new File( filename);																														// file
         File tempconFile = new File( filename + ".con.bak");
         
         boolean savedOldVersion = false;
