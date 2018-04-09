@@ -37,7 +37,9 @@ public class RhizoIO
 {
 	private RhizoMain rhizoMain;
 	
-	public static File userSettingsFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings.xml");
+	public static final File userSettingsFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings.xml");
+	
+	private boolean debug = true;
 	
 	public RhizoIO(RhizoMain rhizoMain)
 	{
@@ -146,6 +148,10 @@ public class RhizoIO
 				rhizoMain.getProjectConfig().setAskSplitTreeline(  gs.isAskSplitTreeline());
 			
 			rhizoMain.getProjectConfig().resetChanged();
+			
+			if ( debug ) {
+				rhizoMain.getProjectConfig().printStatusLabelSet();
+			}
 		} catch (JAXBException e) {
 			Utils.showMessage( "cannot load user settings from config file " + userSettingsFile.getPath());
 			e.printStackTrace();
@@ -202,7 +208,8 @@ public class RhizoIO
 			for(int i = 0; i < sl.size(); i++) {
 				de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status newStatus = sl.get(i);
 				
-				this.rhizoMain.getProjectConfig().appendStatusLabelToList( newStatus.getFullName(), newStatus.getAbbreviation());
+				this.rhizoMain.getProjectConfig().appendStatusLabelToList(
+						this.rhizoMain.getProjectConfig().addStatusLabelToSet( newStatus.getFullName(), newStatus.getAbbreviation()));
 			}
 			
 			if ( config.getImageSeachDir() != null ) {
@@ -223,7 +230,8 @@ public class RhizoIO
 				List<Status> sl = config.getStatusList().getStatus();
 
 				for(int i = 0; i < sl.size(); i++) {
-					this.rhizoMain.getProjectConfig().appendStatusLabelToList( sl.get(i).getFullName(), sl.get(i).getAbbreviation());
+					this.rhizoMain.getProjectConfig().appendStatusLabelToList( 
+							this.rhizoMain.getProjectConfig().addStatusLabelToSet( sl.get(i).getFullName(), sl.get(i).getAbbreviation()));
 				}
 
 				if ( rhizoMain.getStorageFolder() != null ) {
@@ -236,6 +244,12 @@ public class RhizoIO
 				
 				rhizoMain.getProjectConfig().setDefaultUserStatusLabel();
 			}
+		}
+		
+		if ( debug) {
+			rhizoMain.getProjectConfig().printStatusLabelList();
+			rhizoMain.getProjectConfig().printStatusLabelSet();
+			rhizoMain.getProjectConfig().printFixStatusLabels();
 		}
 	}
 	
