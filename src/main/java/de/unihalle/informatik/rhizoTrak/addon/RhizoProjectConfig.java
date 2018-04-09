@@ -151,8 +151,19 @@ public class RhizoProjectConfig {
 		}
 	}
 	
-	public void replaceStatusLabelList( int i, RhizoStatusLabel statusLabel) {
-		statusLabelList.set( i, statusLabel);
+	/** Replaces the i-th entry with the given status label
+	 * @param i
+	 * @param statusLabel
+	 * @return true on success, false if index out of range
+	 */
+	public boolean replaceStatusLabelList( int i, RhizoStatusLabel statusLabel) {
+		if ( i >= 0 && i < statusLabelList.size() ) {
+			statusLabelList.set( i, statusLabel);
+			return true;
+		} else {
+			Utils.log( "rhizotrak", "PRhizoProjectConfig.replaceStatusLabelList index " + i + " out of bounds");
+			return false;
+		}
 	}
 	
 	/** Add the status label to the set. If one with the same name already exists
