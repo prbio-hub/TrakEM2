@@ -555,7 +555,6 @@ public class RhizoProjectConfig {
 	}
 
 	public void printStatusLabelSet() {
-		System.out.println( "StatusLabelSet");
 		for ( RhizoStatusLabel sl : this.getAllStatusLabel()) {
 			System.out.println("\t" + sl.getName() + " " + sl.getAbbrev() + " " + sl.getColor() + " " +
 			sl.getAlpha() + " " + sl.isSelectable());

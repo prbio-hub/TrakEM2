@@ -39,7 +39,7 @@ public class RhizoIO
 	
 	public static final File userSettingsFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings.xml");
 	
-	private boolean debug = true;
+	private boolean debug = false;
 	
 	public RhizoIO(RhizoMain rhizoMain)
 	{
