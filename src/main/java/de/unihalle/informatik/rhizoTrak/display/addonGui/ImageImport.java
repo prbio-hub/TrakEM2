@@ -64,9 +64,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import javax.swing.DefaultListModel;
 import javax.swing.DropMode;
 import javax.swing.JComponent;
@@ -79,6 +76,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoImages;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
@@ -109,8 +107,6 @@ public class ImageImport extends JPanel {
 	 */
 	private ArrayList<File> allFiles = new ArrayList<>();
 	
-	//image filter ini: constant_part > constant across all images; sort_part > part that is used to reconstruct the timeline
-	private String filterReg_constant_part = "_(T|t)\\d*";
 	private RhizoMain rhizoMain = null;
 
 	public ImageImport(RhizoMain rhizoMain) 
@@ -350,16 +346,11 @@ public class ImageImport extends JPanel {
 	{
 		Utils.log2("Start searching for new images:");
 		File imageDir = rhizoMain.getProjectConfig().getImageSearchDir();
-		if(imageDir == null)
-		{
+		if(imageDir == null) {
 			return;
 		}
 		
-		List<Patch> patches = Display.getFrontLayer().getParent().getAll(Patch.class);
-
-		ArrayList<File> toImport = new ArrayList<>();
-		
-				
+		// get all images (according to extension) im image searh directory
 		java.io.FileFilter ioFilter = new FileFilter(){
 			@Override
 			public boolean accept(File pathname) {
@@ -382,6 +373,10 @@ public class ImageImport extends JPanel {
 			return;
 		}
 				
+		// eliminate images already imported
+		ArrayList<File> toImport = new ArrayList<>();
+		List<Patch> patches = Display.getFrontLayer().getParent().getAll(Patch.class);
+		
 		for (File file : files) {
 			boolean imp = true;
 			String currentFileName = file.getName();
@@ -399,21 +394,20 @@ public class ImageImport extends JPanel {
 		// if not images yet loaded keep all
 		//get the tube number
 		if ( patches.size() > 0 ) {
-			String template=patches.get(0).getImagePlus().getTitle();
-			Matcher matcher = Pattern.compile(filterReg_constant_part).matcher(template);
-			matcher.find();
-			String currentTubeNumber = matcher.group();
-			Utils.log2("found tube number was:"+ currentTubeNumber);
+			String filename=patches.get(0).getImagePlus().getTitle();
+			String currentTube = RhizoUtils.getICAPTube( filename);
+			Utils.log2("found tube :"+ currentTube);
 			//filter for the found tube
 			Iterator<File> importIt = toImport.iterator();
 			while(importIt.hasNext()){
-				File currentFile = importIt.next();
-				if(!currentFile.getName().contains(currentTubeNumber)){
+				File nextFilen = importIt.next();
+				if ( ! currentTube.equals( RhizoUtils.getICAPTube(nextFilen.getName())) ) {
 					importIt.remove();
 				}
 			}
 		}
 
+		// now stage for import
 		for(File file : toImport){
 			allFiles.add(file);
 			listModel.addElement(file.getName());
