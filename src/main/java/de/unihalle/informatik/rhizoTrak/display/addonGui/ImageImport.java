@@ -92,7 +92,10 @@ public class ImageImport extends JPanel {
 	private javax.swing.JButton jButtonSelectImageDir;
 	private javax.swing.JButton jButtonSearchNewImages;
 	private javax.swing.JList<String> jImageNameList;
-	private javax.swing.JPanel jPanel1;
+	private javax.swing.JButton jButtonDeleteImage;
+	private javax.swing.JPanel jPanelFunctions;
+	private javax.swing.JPanel jPanelFilenames;
+	private javax.swing.JPanel jPanelRemoveClear;
 	private javax.swing.JScrollPane jScrollPane1;
 	
 	/**
@@ -122,8 +125,9 @@ public class ImageImport extends JPanel {
 		
 		listModel	=	new javax.swing.DefaultListModel<String>();
 		jScrollPane1 = new javax.swing.JScrollPane();
-		jPanel1 = new javax.swing.JPanel();
+		jPanelFunctions = new javax.swing.JPanel();
 		jImageNameList = new javax.swing.JList<String>();
+		jButtonDeleteImage = new javax.swing.JButton();
 		jButtonSelectImage = new javax.swing.JButton();
 		jButtonClearSelection = new javax.swing.JButton();
 		jButtonImportImages = new javax.swing.JButton();
@@ -132,46 +136,46 @@ public class ImageImport extends JPanel {
 		jButtonSearchNewImages = new javax.swing.JButton();
 		filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0),
 				new java.awt.Dimension(0, 32767));
+				
 		
-		
-//		//get current loaded images
-//		LayerSet layerSet	=	Display.getFront().getLayerSet();
-//		List<Patch> patches = layerSet.getAll(Patch.class);
-//		ImagePlus imagePlus = patches.get(0).getImagePlus();
-//		String[] imageNames = imagePlus.getImageStack().getSliceLabels();
-		
-		setLayout(new BorderLayout());
-		//make listModel and load all images that are already in trackem project
-//		for (String string : imageNames) {
-//			if(string!=null){
-//				listModel.addElement(string);	
-//			}
-//		}
 		jImageNameList.setModel(listModel);
 		jImageNameList.setTransferHandler(new ListTransferHandler());
 		jImageNameList.setDragEnabled(true);
 		jImageNameList.setDropMode(DropMode.INSERT);
 		jImageNameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
+				
 		jScrollPane1.setViewportView(jImageNameList);
-		
-		add(jScrollPane1);
 
-		
-		jPanel1.setLayout(new GridLayout(3, 1));
-		
+		jButtonDeleteImage.setText( "Delete selection");
+		jButtonDeleteImage.addActionListener(
+				new ActionListener() {
+					@Override public void actionPerformed( ActionEvent e ) {
+						int index = jImageNameList.getSelectedIndex();
+						if ( index == -1 )
+							return;
+						listModel.remove( index );
+					}
+				} );
+		jButtonClearSelection.setText("Clear");
+		jButtonClearSelection.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				jButtonClearSelectionActionPerformed(evt);
+			}
+		});
 
+		jPanelRemoveClear = new JPanel();
+		jPanelRemoveClear.add(jButtonDeleteImage);
+		jPanelRemoveClear.add(jButtonClearSelection);
+
+		jPanelFilenames = new JPanel();
+		jPanelFilenames.setLayout( new BorderLayout());
+		jPanelFilenames.add(jScrollPane1, BorderLayout.NORTH);
+		jPanelFilenames.add( jPanelRemoveClear, BorderLayout.SOUTH);
+		
 		jButtonSelectImage.setText("Select Images");
 		jButtonSelectImage.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				jButtonSelectImageActionPerformed(evt);
-			}
-		});
-
-		jButtonClearSelection.setText("Clear Image Selection");
-		jButtonClearSelection.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				jButtonClearSelectionActionPerformed(evt);
 			}
 		});
 
@@ -180,9 +184,9 @@ public class ImageImport extends JPanel {
 			public void actionPerformed(ActionEvent evt) {
 				jButtonImportImagesActionPerformed(evt);
 				
-				if(SwingUtilities.getRoot(jPanel1) instanceof JFrame)
+				if(SwingUtilities.getRoot(jPanelFunctions) instanceof JFrame)
 				{
-					JFrame jf = (JFrame) SwingUtilities.getRoot(jPanel1);
+					JFrame jf = (JFrame) SwingUtilities.getRoot(jPanelFunctions);
 					jf.dispose();
 				}
 			}
@@ -209,19 +213,22 @@ public class ImageImport extends JPanel {
 			}
 		});
 		
-		jPanel1.add(jButtonSelectImage);
-		jPanel1.add(jButtonSearchNewImages);
-		jPanel1.add(jButtonSortByTime);
-		jPanel1.add(jButtonClearSelection);
-		jPanel1.add(jButtonImportImages);
-		jPanel1.add(jButtonSelectImageDir);
+
+		jPanelFunctions.add(jButtonSelectImage);
+		jPanelFunctions.add(jButtonSearchNewImages);
+		jPanelFunctions.add(jButtonSortByTime);
+		jPanelFunctions.add(jButtonImportImages);
+		jPanelFunctions.add(jButtonSelectImageDir);
+		jPanelFunctions.setLayout(new GridLayout(0,2));
 		
 		JFrame parentFrame = (JFrame) SwingUtilities.getRoot(this);
 		if(null != parentFrame && null != rhizoMain.getProjectConfig().getImageSearchDir()) 
 			parentFrame.setTitle("Image Loader - "+ rhizoMain.getProjectConfig().getImageSearchDir().getAbsolutePath());
 		
 		
-		add(jPanel1, BorderLayout.EAST);
+		setLayout(new BorderLayout());
+		add( jPanelFilenames);
+		add(jPanelFunctions, BorderLayout.EAST);
 	}
 	
 	private void jButtonSelectImageActionPerformed(java.awt.event.ActionEvent evt){
