@@ -86,7 +86,6 @@ import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 /** Can only have one parent, so there aren't cyclic graphs. */
 public abstract class Node<T> implements Taggable {
-	/** Maximum possible confidence in an edge (ranges from 0 to 5, inclusive).*/
 
 	// aeekz: is changed when a status file exists
 //	static public byte MAX_EDGE_CONFIDENCE = 0;

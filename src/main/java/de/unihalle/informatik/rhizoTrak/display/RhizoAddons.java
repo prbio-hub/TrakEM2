@@ -78,6 +78,7 @@ import javax.swing.tree.DefaultTreeModel;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
@@ -272,7 +273,7 @@ public class RhizoAddons
 				return false;
 			}
 			Node<Float> newRoot = pCon.newNode(pTreeRoot.getX(), pTreeRoot.getY(), pTreeRoot.getLayer(), null);
-			pCon.addNode(null, newRoot, (byte) -3); // aeekz - TODO: -3 does not work why? 
+			pCon.addNode(null, newRoot, (byte) RhizoProjectConfig.STATUS_CONNECTOR); // aeekz  
 			pCon.setRoot(newRoot);
 			pCon.setAffineTransform(ptree.getAffineTransform());
 			boolean suc = pCon.addConTreeline(ptree);
