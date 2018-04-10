@@ -377,7 +377,7 @@ public class RhizoAddons
 				}
 
 				// let the user choose the child treeline
-				Displayable oldActive = display.getActive();
+				Displayable oldActive = display.getActive(); // do not know why we can not use parentTl instead? sp
 
 				Thread t = choose(me.getX(), me.getY(), x_p, y_p, Treeline.class, display);
 				t.start();
@@ -430,7 +430,7 @@ public class RhizoAddons
 				
 				//check if the merge create conflict and communicate with the user if the action should be continued
 				int goAhead=conflictManager.mergeInteraction(parentTl, target);
-				
+
 				if(goAhead==0) {
 					parentTl.unmark();
 					Display.updateVisibleTabs();				
@@ -468,6 +468,8 @@ public class RhizoAddons
 				parentTl.unmark();
 				
 				target.remove2(false);
+				display.setActive(parentTl); // obviously necessary to not have parentTl NOT displayed in the canvas
+
 				Display.updateVisibleTabs();				
 				Display.repaint(display.getLayerSet());
 			};
