@@ -280,10 +280,14 @@ class Segment
 		if(parent.getData() > minRadius) this.radiusParent = parent.getData() * scale;
 		if(child.getData() > minRadius) this.radiusChild = child.getData() * scale;
 		
-		if(null != p) this.imageName = p.getImagePlus().getTitle();
-		else this.imageName = "";
+		if(null != p) 
+			this.imageName = p.getImagePlus().getTitle();
+		else 
+			this.imageName = "";
 		
-		parseImageName(imageName);
+		tube = RhizoUtils.getICAPTube( imageName);
+		experiment = RhizoUtils.getICAPExperiment(imageName);
+		timepoint = RhizoUtils.getICAPTimepoint(imageName);
 		
 		this.treeID = treeID;
 		this.segmentID = segmentID;
@@ -302,30 +306,6 @@ class Segment
 		this.numberOfChildren = child.getChildrenCount();
 	}
 	
-	private void parseImageName(String name)
-	{
-		if(name.equals(""))
-		{
-			experiment = "NA";
-			tube = "NA";
-			timepoint ="NA";
-			return;
-		}
-		
-		String[] split = name.split("_");
-		if(split.length < 6)
-		{
-			experiment = "NA";
-			tube = "NA";
-			timepoint ="NA";
-			return;
-		}
-		
-		experiment = split[0];
-		tube = split[1];
-		timepoint = split[5];
-	}
-
 	public String getStatistics(String sep)
 	{
 		String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) +

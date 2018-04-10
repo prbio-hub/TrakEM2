@@ -17,6 +17,11 @@ import de.unihalle.informatik.rhizoTrak.utils.Utils;
 public class RhizoUtils {
 	
 	/** 
+	 * The default character separating part of an ICAP image filename
+	 */
+	public static final char DEFAULT_IMAGENAME_SEPARATOR = '_';
+
+	/** 
 	 * @param project
 	 * @return all rootstacks in the project tree of <code>project</code> which can hold treelines and connectors or
 	 * null if non are found
@@ -82,5 +87,63 @@ public class RhizoUtils {
 		   return out.toString();
 	   }
  
+		/** Get the tube part of an ICAP image filename
+		 * 
+		 * @param filename
+		 * @return
+		 */
+		public static String getICAPTube(String filename) {
+			String[] s = splitICAP( filename);
+			if ( s == null ) 
+				return "NA";
+			else
+				return s[1];
+
+		}
+
+		/** Get the experiment part of an ICAP image filename
+		 * 
+		 * @param filename
+		 * @return
+		 */
+		public static String getICAPExperiment(String filename) {
+			String[] s = splitICAP( filename);
+			if ( s == null ) 
+				return "NA";
+			else
+				return s[0];
+		}
+
+		/** Get the experiment part of an ICAP image filename
+		 * 
+		 * @param filename
+		 * @return
+		 */
+		public static String getICAPTimepoint(String filename) {
+			String[] s = splitICAP( filename);
+			if ( s == null ) 
+				return "NA";
+			else
+				return s[5];
+		}
+
+		/** splits into ICAP part
+		 * 
+		 * @param filename
+		 * @return ICAP parts or <code>null</code>
+		 */
+		private static String[] splitICAP( String filename) {
+			if ( filename == null)
+				return null;
+			else {
+				String[] s = filename.split( String.valueOf( DEFAULT_IMAGENAME_SEPARATOR));
+				if ( s.length == 7) {
+					return s;
+				} else {
+					return null;
+				}
+			}
+		}
+		
 
 }
