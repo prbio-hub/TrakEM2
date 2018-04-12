@@ -111,7 +111,7 @@ public class RhizoStatistics {
 		}
 		
 		// compile all segments to write
-		boolean allLayers = outputType.equals("All layers");
+		boolean allLayers = outputType.equals( ALL_STRING);
 		List<Segment> allSegments;
 		if ( allLayers ) {
 			allSegments = computeStatistics( Display.getFront().getProject(), null);
@@ -154,6 +154,8 @@ public class RhizoStatistics {
 	/**
 	 * @param project
 	 * @param currentLayer if null all layers are considered 
+	 * 
+	 * @return list of all <code>Segment</code>s to write, null on failure
 	 */
 	private List<Segment> computeStatistics( Project project, Layer currentLayer) {
 		List<Segment> allSegments = new ArrayList<Segment>();
@@ -195,69 +197,71 @@ public class RhizoStatistics {
 			}
 		}
 
-		// in case, output units are not pixels, check if we have patches for all layers
-		// and can convert the units
-		
-		
-		if ( ! this.outputUnit.equals( "pixel")) {
-			allCalibInfos = getCalibrationInfo( allLayers);
-			if ( allCalibInfos == null) {
-				return null;
-			}
-		} else {
-			allCalibInfos = null;
-		}
+		// collect calibration information for all layers
+		allCalibInfos = getCalibrationInfo( allLayers);
+		if ( allCalibInfos == null)
+			return null;
 		
 		// create all segments for these treelines to write to the csv file
 		// consider image bounds if patch has an associated image
-		for ( Treeline tl : allTreelines)  {
-			if ( debug)	System.out.println( "segment to write " + tl.getId());
-			HashSet<Connector> connectorSet = new HashSet<>();
-			if ( tl.getTreeEventListener() != null ) { 
-				for(TreeEventListener tel: tl.getTreeEventListener()) { 
-					connectorSet.add(tel.getConnector());
-				}  
-			}
+		StringBuilder msg = new StringBuilder();
+		try {
+			for ( Treeline tl : allTreelines)  {
+				if ( debug)	System.out.println( "segment to write " + tl.getId());
+				HashSet<Connector> connectorSet = new HashSet<>();
+				if ( tl.getTreeEventListener() != null ) { 
+					for(TreeEventListener tel: tl.getTreeEventListener()) { 
+						connectorSet.add(tel.getConnector());
+					}  
+				}
 
-			if ( debug)	System.out.println( "got connset" + connectorSet);
-			long treelineID;
-			if ( connectorSet.size() == 0 ) {
-				if ( debug)	System.out.println( "no connector, use treeline ID");
-				treelineID = tl.getId();
-			} else {
-				if ( debug)	System.out.println( "no connector, use connector ID");
-				Iterator<Connector> itr = connectorSet.iterator();
-				treelineID = itr.next().getId();
-//				if ( connectorSet.size() > 1 ) {
-					// TODO rather in error window or similar, without focus
-					System.err.println( "WriteStatitics warning: treeline " + tl.getId() + " has more than one connector");
-//				}
-			}
-			if ( debug)	System.out.println( "Id " + treelineID);
-			
-			if ( tl.getRoot() != null) {
-				int segmentID = 1;
-				Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
-
-
-				for(Node<Float> node : allNodes) {
-					if(!node.equals(tl.getRoot())) {
-						if ( debug)	{
-							System.out.println( "    create segment for node " + node.getConfidence() +
-									" patch " + RhizoAddons.getPatch(tl));
-						}
-						Segment currentSegment = new Segment(rhizoMain, RhizoAddons.getPatch(tl), tl, treelineID, 
-								segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), this.outputUnit, (int) node.getConfidence());
-						segmentID++;
-
-						if(currentSegment.cohenSutherlandLineClipping()) 
-							allSegments.add(currentSegment);
+				if ( debug)	System.out.println( "got connset" + connectorSet);
+				long treelineID;
+				if ( connectorSet.size() == 0 ) {
+					if ( debug)	System.out.println( "no connector, use treeline ID");
+					treelineID = tl.getId();
+				} else {
+					if ( debug)	System.out.println( "no connector, use connector ID");
+					Iterator<Connector> itr = connectorSet.iterator();
+					treelineID = itr.next().getId();
+					if ( connectorSet.size() > 1 ) {
+						msg.append( "WriteStatitics warning: treeline " + tl.getId() + " has more than one connector\n");
 					}
 				}
+				if ( debug)	System.out.println( "Id " + treelineID);
+
+				if ( tl.getRoot() != null) {
+					int segmentID = 1;
+					Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
+
+					for(Node<Float> node : allNodes) {
+						if(!node.equals(tl.getRoot())) {
+							if ( debug)	{
+								System.out.println( "    create segment for node " + node.getConfidence() +
+										" patch " + RhizoAddons.getPatch(tl));
+							}
+							Segment currentSegment = new Segment(rhizoMain, tl, treelineID, 
+									segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), this.outputUnit, (int) node.getConfidence());
+							segmentID++;
+
+							if(currentSegment.cohenSutherlandLineClipping()) 
+								allSegments.add(currentSegment);
+						}
+					}
+				}
+
+				if ( debug)	System.out.println( "created segments");
 			}
-			if ( debug)	System.out.println( "created segments");
+		} catch (Exception ex) {
+			Utils.showMessage( "rhizoTrak", "internal error: " + ex.getMessage());
+			ex.printStackTrace();
+			return null;
 		}
-		
+		if ( msg.length() > 1 ) {
+			msg.insert(0, "WARNING Write Statistics\n \n");
+			Utils.showMessage( "rhizoTrak", new String( msg));
+		}
+
 		return allSegments;
 	}	
 	
@@ -277,11 +281,11 @@ public class RhizoStatistics {
 			for(Patch patch: patches) 	{
 				if(patch.getLayer().getZ() == layer.getZ()) {
 					ImagePlus ip = patch.getImagePlus();
-					if (  ip != null  ) {;
-					myAllCalibInfos.put( (int)layer.getZ()+1, new ImagePlusCalibrationInfo(ip));
-					if ( debug ) System.out.println( "found layer " + (int)layer.getZ()+1);
-					found = true;
-					break;
+					if (  ip != null  ) {
+						myAllCalibInfos.put( (int)layer.getZ()+1, new ImagePlusCalibrationInfo(ip));
+						if ( debug ) System.out.println( "found layer " + (int)layer.getZ()+1);
+						found = true;
+						break;
 					} 
 				}
 			}
@@ -293,38 +297,17 @@ public class RhizoStatistics {
 			}
 		}
 
-		LinkedList<Integer> zValues = new LinkedList<Integer>();
-		zValues.addAll( myAllCalibInfos.keySet());
-		Collections.sort( zValues);
+		// if outputUnit != pixels check validity of calibration information
+		// known units and square pixels
+		if ( ! this.outputUnit.equals( "pixel")) {
+			LinkedList<Integer> zValues = new LinkedList<Integer>();
+			zValues.addAll( myAllCalibInfos.keySet());
+			Collections.sort( zValues);
 
-		if ( ! haveAllPatches ) {
-			StringBuilder msg = new StringBuilder("Warning: not for all layers an image is loaded\n");
-			for ( int i : zValues ) {
-				msg.append(  "layer " + i + ": " + myAllCalibInfos.get(i).toString() + "\n");
-			}
-			msg.append( " \nUse pixel units and proceed?\n");
-
-			if ( Utils.checkYN( new String( msg)) ) {
-				this.outputUnit = "pixel";
-			} else {
-				return null;
-			}
-		} else {
-
-			boolean allValid = true;
-			for ( int i : zValues ) {
-				if ( ! myAllCalibInfos.get(i).isValid()) {
-					allValid = false;
-					break;
-				}
-			}
-			if ( ! allValid) {
-				StringBuilder msg = new StringBuilder("Warning: Could not find valid calibration for all layers\n");
-
+			if ( ! haveAllPatches ) {
+				StringBuilder msg = new StringBuilder("Warning: not for all layers an image is loaded\n");
 				for ( int i : zValues ) {
-					msg.append(  "layer " + i + 
-							(myAllCalibInfos.get(i).isValid() ? "(valid): " : "(invalid): ") +
-							myAllCalibInfos.get(i).toString() + "\n");
+					msg.append(  "layer " + i + ": " + myAllCalibInfos.get(i).toString() + "\n");
 				}
 				msg.append( " \nUse pixel units and proceed?\n");
 
@@ -334,15 +317,40 @@ public class RhizoStatistics {
 					return null;
 				}
 			} else {
-				if ( rhizoMain.getProjectConfig().isShowCalibrationInfo() ) {
-					StringBuilder msg = new StringBuilder( "Calibrations for all layers\n");
+
+				boolean allValid = true;
+				for ( int i : zValues ) {
+					if ( ! myAllCalibInfos.get(i).isValid()) {
+						allValid = false;
+						break;
+					}
+				}
+				if ( ! allValid) {
+					StringBuilder msg = new StringBuilder("Warning: Could not find valid calibration for all layers\n");
+
 					for ( int i : zValues ) {
 						msg.append(  "layer " + i + 
-								(myAllCalibInfos.get(i).isValid() ? " (valid): " : " (invalid): ") +
+								(myAllCalibInfos.get(i).isValid() ? "(valid): " : "(invalid): ") +
 								myAllCalibInfos.get(i).toString() + "\n");
 					}
+					msg.append( " \nUse pixel units and proceed?\n");
 
-					Utils.showMessage( new String( msg));
+					if ( Utils.checkYN( new String( msg)) ) {
+						this.outputUnit = "pixel";
+					} else {
+						return null;
+					}
+				} else {
+					if ( rhizoMain.getProjectConfig().isShowCalibrationInfo() ) {
+						StringBuilder msg = new StringBuilder( "Calibrations for all layers\n");
+						for ( int i : zValues ) {
+							msg.append(  "layer " + i + 
+									(myAllCalibInfos.get(i).isValid() ? " (valid): " : " (invalid): ") +
+									myAllCalibInfos.get(i).toString() + "\n");
+						}
+
+						Utils.showMessage( new String( msg));
+					}
 				}
 			}
 		}
@@ -350,6 +358,7 @@ public class RhizoStatistics {
 	}
 	
 	class ImagePlusCalibrationInfo {
+		ImagePlus ip;
 		String imagename;
 		String xUnit;
 		String yUnit;
@@ -357,6 +366,7 @@ public class RhizoStatistics {
 		double pixelHeight;
 		
 		ImagePlusCalibrationInfo( ImagePlus ip) {
+			this.ip = ip;
 			this.imagename = ip.getTitle();
 			this.xUnit = ip.getCalibration().getXUnit();
 			this.yUnit = ip.getCalibration().getYUnit();
@@ -365,6 +375,7 @@ public class RhizoStatistics {
 		}
 		
 		public ImagePlusCalibrationInfo() {
+			this.ip = null;
 			this.imagename = "";
 			this.xUnit = "";
 			this.yUnit = "";
@@ -465,6 +476,7 @@ public class RhizoStatistics {
 		private RadiusNode parent;
 
 		private Layer layer;
+		private int layerIndex;
 		private Treeline t;
 
 		// infos
@@ -481,14 +493,13 @@ public class RhizoStatistics {
 		private float radiusParent = minRadius;
 		private float radiusChild = minRadius;
 
-		private Patch p;
+//		private Patch p;
 
 		private RhizoMain rhizoMain;
 
 		/** if <code>p != null</code> assume that a valid calibration info is available for the layer
 		 * 
 		 * @param rhizoMain
-		 * @param p
 		 * @param t
 		 * @param treeID
 		 * @param segmentID
@@ -497,52 +508,52 @@ public class RhizoStatistics {
 		 * @param outputUnit
 		 * @param status
 		 */
-		public Segment(RhizoMain rhizoMain, Patch p, Treeline t, long treeID, int segmentID, 
-				RadiusNode child, RadiusNode parent, String outputUnit, int status) {
-			this.p = p;
-			this.t = t;
+		public Segment(RhizoMain rhizoMain, Treeline t, long treeID, int segmentID, 
+				RadiusNode child, RadiusNode parent, String outputUnit, int status) throws ExceptionInInitializerError{
 
+			this.t = t;
 			this.child = child;
 			this.parent = parent;
 			this.layer = child.getLayer();
-			
+			this.layerIndex = (int) layer.getZ() + 1;
+
+			ImagePlusCalibrationInfo calibInfo;
+			if ( allCalibInfos == null ||
+					(calibInfo = allCalibInfos.get( this.layerIndex)) == null ) {
+				// ERROR: this should never happen
+				System.err.println( "output Unit " + outputUnit + " but allCalibInfo == null");
+				throw new ExceptionInInitializerError( "output Unit " + outputUnit + " but allCalibInfo == null");
+			}
 
 			if(outputUnit.equals("pixel"))  {
 				this.scale = 1;
-			} else { 
-				if ( allCalibInfos == null ) {
-					// ERROR: this shoukd never happen
-					System.err.println( "output Unit " + outputUnit + " but allCalibInfo == null");
-
-				} else {
-					ImagePlusCalibrationInfo calibInfo = allCalibInfos.get( (int)this.layer.getZ()+1);
-
-					if ( calibInfo.isValid() ) {
-						if(outputUnit.equals("inch")) 
-							this.scale = (float) (calibInfo.getPixelHeightMM() / RhizoStatistics.inchToMM);
-						else if(outputUnit.equals("mm")) 
-							this.scale = (float) (calibInfo.getPixelHeightMM() );
-						else 
-							// ERROR: this shoukd never happen
-							System.err.println( "output Unit " + outputUnit + " unknown");
+			} else {
+				if ( calibInfo.isValid() ) {
+					if(outputUnit.equals("inch")) {
+						this.scale = (float) (calibInfo.getPixelHeightMM() / RhizoStatistics.inchToMM);
+					} else if(outputUnit.equals("mm"))  {
+						this.scale = (float) (calibInfo.getPixelHeightMM() );
 					} else {
-						// ERROR: this shoukd never happen
-						System.err.println( "output Unit " + outputUnit + " but invalid calibration inImagePlusfo");
+						// ERROR: this should never happen
+						System.err.println( "output Unit " + outputUnit + " unknown");
+						throw new ExceptionInInitializerError("output Unit " + outputUnit + " unknown");
 					}
+				} else {
+					// ERROR: this should never happen
+					System.err.println( "output Unit " + outputUnit + " but invalid calibration inImagePlusfo");
+					throw new ExceptionInInitializerError("output Unit " + outputUnit + " but invalid calibration inImagePlusfo");
 				}
 			}
+		
+			if(parent.getData() > minRadius)
+				this.radiusParent = parent.getData() * scale;
+			if(child.getData() > minRadius) 
+				this.radiusChild = child.getData() * scale;
 
-			if(parent.getData() > minRadius) this.radiusParent = parent.getData() * scale;
-			if(child.getData() > minRadius) this.radiusChild = child.getData() * scale;
-
-			if(null != p) 
-				this.imageName = p.getImagePlus().getTitle();
-			else 
-				this.imageName = "";
-
-			tube = RhizoUtils.getICAPTube( imageName);
-			experiment = RhizoUtils.getICAPExperiment(imageName);
-			timepoint = RhizoUtils.getICAPTimepoint(imageName);
+			this.imageName = calibInfo.imagename;
+			this.tube = RhizoUtils.getICAPTube( imageName);
+			this.experiment = RhizoUtils.getICAPExperiment(imageName);
+			this.timepoint = RhizoUtils.getICAPTimepoint(imageName);
 
 			this.treeID = treeID;
 			this.segmentID = segmentID;
@@ -552,8 +563,10 @@ public class RhizoStatistics {
 			calculate();
 		}
 
-		private void calculate()
-		{
+		/**
+		 * calculate length and so forth, also no of children
+		 */
+		private void calculate() {
 			this.length = Math.sqrt(Math.pow(parent.getX() - child.getX(), 2) + Math.pow(parent.getY() - child.getY(), 2)) * scale;
 			double s = Math.sqrt(Math.pow((radiusParent - radiusChild), 2) + Math.pow(this.length, 2));
 			this.surfaceArea = Math.PI * s * (radiusParent + radiusChild);
@@ -561,10 +574,14 @@ public class RhizoStatistics {
 			this.numberOfChildren = child.getChildrenCount();
 		}
 
-		public String getStatistics(String sep)
-		{
+		/**
+		 * return the line for this segment for the csv file
+		 * @param sep
+		 * @return
+		 */
+		public String getStatistics(String sep) {
 			String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) +
-					sep + Integer.toString((int) layer.getZ() + 1)  +
+					sep + this.layerIndex  +
 					sep + Integer.toString(segmentID) +
 					sep + Double.toString(length) + sep + Double.toString(2*radiusParent) + sep + Double.toString(2*radiusChild) +
 					sep + Double.toString(surfaceArea) + sep + Double.toString(volume) + 
@@ -573,24 +590,26 @@ public class RhizoStatistics {
 			return result;
 		}
 
-
-
 		/**
-		 * Cohen-Sutherland line clipping algorithm. if path is null (i.e. no image associated) no clipping is done.
+		 * Cohen-Sutherland line clipping algorithm. if imageplus is null (i.e. no image associated) no clipping is done.
 		 * 
 		 * @return true - if both nodes are inside the image or if at least one node is outside and the line is clipped with the image
 		 * 		  false - if both nodes are outside and the line does not intersect with the image
 		 */
-		public boolean cohenSutherlandLineClipping()
-		{
-			if ( p == null)
-				return true;
+		public boolean cohenSutherlandLineClipping() {
+			
+			ImagePlusCalibrationInfo calibInfo = allCalibInfos.get( this.layerIndex);
+			if ( calibInfo == null )
+				throw new ExceptionInInitializerError( "can not find calibration information");
 
-			ImagePlus image = p.getImagePlus();
+			// we have no image extent and cannot clip therefore
+			if ( calibInfo.ip == null)
+				return true;
+			
 			double xMin = 0;
 			double yMin = 0;
-			double xMax = image.getWidth();
-			double yMax = image.getHeight();
+			double xMax = calibInfo.ip.getWidth();
+			double yMax = calibInfo.ip.getWidth();;
 
 			AffineTransform at = t.getAffineTransform();
 			Point2D p1 = at.transform(new Point2D.Float(parent.getX(), parent.getY()), null);
