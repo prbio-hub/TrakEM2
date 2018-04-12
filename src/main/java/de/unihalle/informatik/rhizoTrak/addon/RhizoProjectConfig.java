@@ -118,6 +118,11 @@ public class RhizoProjectConfig {
 	private boolean askSplitTreeline = true;
 	
 	
+	/**
+	 * If true the image calibration information is shown to the user when writing statistics with non-pixel units
+	 */
+	private boolean showCalibrationInfo = true;
+	
 	public RhizoProjectConfig() {
 		// we always need the fixed status labels
 		statusLabelSet.put( NAME_UNDEFINED, new RhizoStatusLabel( this, NAME_UNDEFINED, "*", DEFAULT_FIXED_STATUS_COLOR));
@@ -530,6 +535,21 @@ public class RhizoProjectConfig {
 	public void setAskSplitTreeline(boolean askSplitTreeline) {
 		setUserSettingsChanged();
 		this.askSplitTreeline = askSplitTreeline;
+	}
+
+	/**
+	 * @return the showCalibrationInfo
+	 */
+	public boolean isShowCalibrationInfo() {
+		return showCalibrationInfo;
+	}
+
+	/**
+	 * @param showCalibrationInfo the showCalibrationInfo to set
+	 */
+	public void setShowCalibrationInfo(boolean showCalibrationInfo) {
+		setUserSettingsChanged();
+		this.showCalibrationInfo = showCalibrationInfo;
 	}
 
 	/**
