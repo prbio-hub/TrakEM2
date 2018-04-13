@@ -277,7 +277,14 @@
             <configuration>
 	      <schemas>
 		<schema>
-		  <url>https://raw.githubusercontent.com/RootSystemML/RSMLValidator/master/rsml.xsd</url>
+		  <fileset>
+		    <!-- Defaults to schemaDirectory. -->
+		    <directory>src/main/resources/schemas/rsml</directory>
+                    <!-- Defaults to schemaIncludes. -->
+		    <includes>
+		      <include>*.xsd</include>
+		    </includes>
+		  </fileset>
 		</schema>
 	      </schemas>
 	      <generateDirectory>${project.build.directory}/generated-sources/xjc/rsml</generateDirectory>
@@ -299,7 +306,7 @@
                 <schema>
 		  <fileset>
 		    <!-- Defaults to schemaDirectory. -->
-		    <directory>src/main/resources/schemas</directory>
+		    <directory>src/main/resources/schemas/config</directory>
                     <!-- Defaults to schemaIncludes. -->
 		    <includes>
 		      <include>*.xsd</include>
