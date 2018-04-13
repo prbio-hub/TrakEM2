@@ -108,7 +108,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -140,14 +139,13 @@ import ij.io.FileOpener;
 import ij.io.TiffDecoder;
 import ij.io.TiffEncoder;
 import ij.plugin.WandToolOptions;
-import ij.plugin.filter.GaussianBlur;
 import ij.plugin.filter.ThresholdToSelection;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
-import legacy.mpicbg.trakem2.transform.ExportUnsignedByte;
+import legacy.mpicbg.trakem2.transform.ExportBestFlatImage;
 import legacy.mpicbg.trakem2.transform.ExportUnsignedShort;
 import mpicbg.imglib.container.shapelist.ShapeList;
 import mpicbg.imglib.image.display.imagej.ImageJFunctions;
@@ -886,8 +884,6 @@ public final class Patch extends Displayable implements ImageData {
 		}
 		sb_body.append(indent).append("<t2_patch\n");
 		String rel_path = null;
-		
-		
 		if (null != path && path.equals(path2)) { // this happens when a DB project is exported. It may be a different path when it's a FS loader
 			//Utils.log2("p id=" + id + "  path==path2");
 			rel_path = path2;
@@ -917,7 +913,6 @@ public final class Patch extends Displayable implements ImageData {
 			}
 		}
 
-		
 		//Utils.log("Patch path is: " + rel_path);
 
 		super.exportXML(sb_body, in, options);
@@ -2228,79 +2223,10 @@ public final class Patch extends Displayable implements ImageData {
      * 
      * @return null when the dimensions are larger than 2GB, or the image otherwise.
      */
+	@Deprecated
     static public final ImageProcessor makeFlatGrayImage(final List< Patch > patches, final Rectangle finalBox, final int backgroundValue, final double scale)
     {
-    	final Loader loader = patches.get(0).getProject().getLoader();
-    	
-    	final long arraySize = finalBox.width * finalBox.height;
-    	
-    	if ( arraySize < Math.pow( 2, 29 ) && loader.isMipMapsRegenerationEnabled() ) // 0.5 GB
-    	{
-    		return new ByteProcessor(loader.getFlatAWTImage( patches.get(0).getLayer(), finalBox, scale, -1, ImagePlus.GRAY8,
-    				Patch.class, patches, true, Color.black, null));
-    	}
-		
-		// Check if the image is too large for java 8.0
-		if ( finalBox.width * scale * finalBox.height * scale > Math.pow(2, 31) )
-		{
-			Utils.log("Cannot create an image larger than 2 GB.");
-			return null;
-		}
-    	
-		if ( loader.isMipMapsRegenerationEnabled() )
-		{
-			// Use mipmaps directly: they are already Gaussian-downsampled
-			return ExportUnsignedByte.makeFlatImage( patches, finalBox, 0, scale ).a;
-		}
-		
-		// Else: no mipmaps
-		
-		
-		// Determine the largest size to work with
-		final double area = ((double)finalBox.width) * ((double)finalBox.height);
-		final double max_area = Math.min( area, Math.pow(2, 31) );
-		
-		// Determine the scale corresponding to the calculated max_area,
-		// with a correction factor to make sure width * height never go above pow(2, 31)
-    	final double scaleUP = Math.min(1.0, Math.sqrt( max_area / area ) ) - Math.max( 1.0 / finalBox.width, 1.0 / finalBox.height );
-
-    	System.out.println( "###\nPatch.makeFlatGrayImage dimensions and quality scale " );
-    	System.out.println( "srcRect w,h: " + finalBox.width + ", " + finalBox.height );
-    	System.out.println( "area: " + area );
-    	System.out.println( "max_area: " + max_area );
-    	System.out.println( "scale: " + scale );
-    	System.out.println( "scaleUP: " + scaleUP );
- 
-    	// Generate an image at the upper scale
-		// using ExportUnsignedShort which works without mipmaps
-		final FloatProcessor ip = new Callable<FloatProcessor>() {
-			// Use a local context to aid in GC'ing the ShortProcessor
-			public FloatProcessor call() {
-				loader.releaseToFit( finalBox.width, finalBox.height, ImagePlus.GRAY16, (float) scaleUP );
-				final ShortProcessor sp = ExportUnsignedShort.makeFlatImage( patches, finalBox, 0, scaleUP );
-				final short[] pixS = (short[]) sp.getPixels();
-				loader.releaseToFit( pixS.length * 4 );
-				final float[] pixF = new float[pixS.length];
-				for ( int i=0; i<pixS.length; ++i) pixF[i] = pixS[i] & 0xffff;
-				return new FloatProcessor( sp.getWidth(), sp.getHeight(), pixF );
-			}
-		}.call();
-		
-		patches.get(0).getProject().getLoader().releaseAll();
-		
-		// Gaussian-downsample
-		final double max_dimension_source = Math.max( ip.getWidth(), ip.getHeight() );
-		final double max_dimension_target = Math.max( ( int ) (finalBox.width  * scale ),
-				                                      ( int ) (finalBox.height * scale ) );
-		final double s = 0.5; // same sigma for source and target
-		final double sigma = s * max_dimension_source / max_dimension_target - s * s ;
-		
-		Utils.log("Gaussian downsampling. If this is slow, check the number of threads in the plugin preferences.");
-		new GaussianBlur().blurFloat( ip, sigma, sigma, 0.0002 );
-		
-		ip.setInterpolationMethod( ImageProcessor.NEAREST_NEIGHBOR );
-
-		return ip.resize( ( int ) Math.ceil( finalBox.width * scale ) ); // TODO is returning a FloatProcessor
+    	return new ExportBestFlatImage( patches, finalBox, backgroundValue, scale ).makeFlatGrayImage();
     }
 
 	/** Make the border have an alpha of zero. */

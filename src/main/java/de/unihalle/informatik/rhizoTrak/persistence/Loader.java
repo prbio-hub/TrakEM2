@@ -2808,8 +2808,18 @@ while (it.hasNext()) {
 	 * @param active Whether to paint a particular Displayable instance in an active state (as if it was selected in the UI).
 	 * @return
 	 */
-	public Image getFlatAWTImage(final Layer layer, final Rectangle srcRect_, final double scale, final int c_alphas, final int type, final Class<?> clazz, List<? extends Displayable> al_displ, boolean quality, final Color background, final Displayable active) {
-
+	public Image getFlatAWTImage(
+			final Layer layer,
+			final Rectangle srcRect_,
+			final double scale,
+			final int c_alphas,
+			final int type,
+			final Class<?> clazz,
+			List<? extends Displayable> al_displ,
+			boolean quality,
+			final Color background,
+			final Displayable active)
+	{
 		try {
 			// dimensions
 			int w = 0;
@@ -4293,7 +4303,8 @@ while (it.hasNext()) {
 			update |= mapIntensities(p, imp);
 			if (update) {
 				// 1: Tag the ImagePlus as altered (misuses fileFormat field, which is unused in any case)
-				imp.getOriginalFileInfo().fileFormat = Loader.PREPROCESSED;
+				final FileInfo fi = imp.getOriginalFileInfo();
+				if (null != fi) fi.fileFormat = Loader.PREPROCESSED; // otherwise, the null original FileInfo is a valid tag by itself in the persistence.Cache
 				// 2: cache
 				cache(p, imp);
 				// 3: update properties of the Patch

@@ -85,6 +85,7 @@ import de.unihalle.informatik.rhizoTrak.parallel.ExecutorProvider;
 import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.Filter;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
+import legacy.mpicbg.trakem2.transform.ExportBestFlatImage;
 import mpicbg.ij.SIFT;
 import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.FloatArray2DSIFT;
@@ -264,7 +265,7 @@ final public class AlignmentUtils
                 final FloatArray2DSIFT sift = new FloatArray2DSIFT( siftParam );
                 final SIFT ijSIFT = new SIFT( sift );
                 fs = new ArrayList< Feature >();
-                ijSIFT.extractFeatures( Patch.makeFlatGrayImage( patches, finalBox, 0, scale ), fs );
+                ijSIFT.extractFeatures( new ExportBestFlatImage( patches, finalBox, 0, scale ).makeFlatGrayImage(), fs );
                 Utils.log( fs.size() + " features extracted for " + layerName );
 
                 if ( !legacy.mpicbg.trakem2.align.Util.serializeFeatures( layer.getProject(), siftParam, "layer", layer.getId(), fs ) )
