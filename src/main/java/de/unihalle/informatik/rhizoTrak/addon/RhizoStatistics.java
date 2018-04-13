@@ -45,6 +45,29 @@
  *
  */
 
+/*
+ * The Cohen-Sutherland line clipping algorithm implemented in the internal
+ * Segment class has been inspired by
+ * 
+ * //
+ *  * CohenSutherland.java 
+ *  * -------------------- 
+ *  * (c) 2007 by Intevation GmbH 
+ *  * 
+ *  * @author Sascha L. Teichmann (teichmann@intevation.de)
+ *  * @author Ludwig Reiter       (ludwig@intevation.de)
+ *  * 
+ *  * This program is free software under the LGPL (>=v2.1) 
+ *  * Read the file LICENSE.txt coming with the sources for details. 
+ *  //
+ *  
+ *  originally released under LGPL (>=v2.1). The original source file can, 
+ *  e.g., be found on Github:
+ *  
+ *  https://github.com/tabulapdf/tabula-java/blob/master/src/main/java/technology/tabula/CohenSutherlandClipping.java
+ *  
+ */
+
 package de.unihalle.informatik.rhizoTrak.addon;
 
 import java.awt.GridLayout;
@@ -523,6 +546,24 @@ public class RhizoStatistics {
 	 * Segment class for writing statistics.
 	 * @author Axel, Tino
 	 *
+	 * Note that the Cohen-Sutherland line clipping algorithm implemented in this 
+	 * class has been inspired by
+	 * 
+	 * //
+	 *  * CohenSutherland.java 
+	 *  * -------------------- 
+	 *  * (c) 2007 by Intevation GmbH 
+	 *  * 
+	 *  * @author Sascha L. Teichmann (teichmann@intevation.de)
+	 *  * @author Ludwig Reiter       (ludwig@intevation.de)
+	 *  * 
+	 *  * This program is free software under the LGPL (>=v2.1) 
+	 *  * Read the file LICENSE.txt coming with the sources for details. 
+	 *  //
+	 *  
+	 *  The original source file can, e.g., be found on Github:
+	 *  https://github.com/tabulapdf/tabula-java/blob/master/src/main/java/technology/tabula/CohenSutherlandClipping.java
+	 *
 	 */
 	class Segment {
 		// used for clipping
@@ -652,10 +693,31 @@ public class RhizoStatistics {
 		}
 
 		/**
-		 * Cohen-Sutherland line clipping algorithm. if imageplus is null (i.e. no image associated) no clipping is done.
+		 * Cohen-Sutherland line clipping algorithm.
+		 * <p>
+		 * The code of this algorithm has been inspired by 
 		 * 
-		 * @return true - if both nodes are inside the image or if at least one node is outside and the line is clipped with the image
-		 * 		  false - if both nodes are outside and the line does not intersect with the image
+		 * //
+		 *  * CohenSutherland.java 
+		 *  * -------------------- 
+		 *  * (c) 2007 by Intevation GmbH 
+		 *  * 
+		 *  * @author Sascha L. Teichmann (teichmann@intevation.de)
+		 *  * @author Ludwig Reiter       (ludwig@intevation.de)
+		 *  * 
+		 *  * This program is free software under the LGPL (>=v2.1) 
+		 *  * Read the file LICENSE.txt coming with the sources for details. 
+		 *  //
+		 *  
+		 *  The original source file can, e.g., be found on Github:
+		 *  https://github.com/tabulapdf/tabula-java/blob/master/src/main/java/technology/tabula/CohenSutherlandClipping.java
+		 *  
+		 * If imageplus is null (i.e. no image associated) no clipping is done.
+		 * 
+		 * @return true - if both nodes are inside the image or if at least one 
+		 * 								node is outside and the line is clipped with the image
+		 * 		  		false - if both nodes are outside and the line does not 
+		 * 									intersect with the image
 		 */
 		public boolean cohenSutherlandLineClipping() {
 			
