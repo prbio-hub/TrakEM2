@@ -54,7 +54,7 @@ public class RhizoStatistics {
 	private final String ALL_STRING = "All layers";
 	private RhizoMain rhizoMain;
 	
-	private boolean debug = true;
+	private boolean debug = false;
 	
 	private String outputUnit; 
 	
@@ -183,13 +183,14 @@ public class RhizoStatistics {
 				if ( debug)	System.out.println( "    treeline " + tl.getId());
 
 				if ( tl.getClass().equals( Treeline.class)) {
-					if ( currentLayer == null || currentLayer.equals( tl.getFirstLayer())) {
+					if ( tl.getFirstLayer() != null && 
+							( currentLayer == null || currentLayer.equals( tl.getFirstLayer())) ) {
 						if ( debug)	System.out.println( "           as treeline");
 						allTreelines.add(tl);
 						allLayers.add( tl.getFirstLayer());
 					}
 				} else if ( tl.getClass().equals( Connector.class)) {
-					if ( debug)	System.out.println( "           as conector");
+					if ( debug)	System.out.println( "           as connector");
 
 					Connector conn = (Connector)tl;
 					allConnectors.add(conn);
@@ -273,25 +274,37 @@ public class RhizoStatistics {
 		HashMap<Integer,ImagePlusCalibrationInfo> myAllCalibInfos  = new HashMap<Integer,ImagePlusCalibrationInfo>();
 		boolean haveAllPatches = true;
 
+		if ( debug ) {
+			System.out.println( "getCalibrationInfo, allLayers = " + allLayers);
+
+			for ( Layer layer : allLayers) {
+				System.out.println( "layer = " + layer);
+//				System.out.println( "layerIndex " + (layer.getParent().indexOf(layer) + 1));
+			}
+		}
+
 		for ( Layer layer : allLayers) {
+			if ( layer == null ) continue;
+			
+			int layerIndex = layer.getParent().indexOf(layer) + 1;
 			LayerSet layerSet = layer.getParent();
 			List<Patch> patches = layerSet.getAll(Patch.class);
 
 			boolean found = false;
 			for(Patch patch: patches) 	{
-				if(patch.getLayer().getZ() == layer.getZ()) {
+				if(patch.getLayer() == layer) {
 					ImagePlus ip = patch.getImagePlus();
 					if (  ip != null  ) {
-						myAllCalibInfos.put( (int)layer.getZ()+1, new ImagePlusCalibrationInfo(ip));
-						if ( debug ) System.out.println( "found layer " + (int)layer.getZ()+1);
+						if ( debug ) System.out.println( "found layer " + layerIndex);
+						myAllCalibInfos.put( layerIndex, new ImagePlusCalibrationInfo(ip));
 						found = true;
 						break;
 					} 
 				}
 			}
 			if ( ! found) {
-				myAllCalibInfos.put( (int)layer.getZ()+1, new ImagePlusCalibrationInfo());
-				if ( debug ) System.out.println( "found layer " + (int)layer.getZ()+1 + " without patch");
+				myAllCalibInfos.put( layerIndex, new ImagePlusCalibrationInfo());
+				if ( debug ) System.out.println( "found layer " + layerIndex + " without patch");
 
 				haveAllPatches = false;
 			}
@@ -515,14 +528,15 @@ public class RhizoStatistics {
 			this.child = child;
 			this.parent = parent;
 			this.layer = child.getLayer();
-			this.layerIndex = (int) layer.getZ() + 1;
+//			this.layerIndex = (int) layer.getZ() + 1;
+			this.layerIndex = layer.getParent().indexOf(layer) + 1;
 
-			ImagePlusCalibrationInfo calibInfo;
+			ImagePlusCalibrationInfo calibInfo = null;
 			if ( allCalibInfos == null ||
 					(calibInfo = allCalibInfos.get( this.layerIndex)) == null ) {
 				// ERROR: this should never happen
-				System.err.println( "output Unit " + outputUnit + " but allCalibInfo == null");
-				throw new ExceptionInInitializerError( "output Unit " + outputUnit + " but allCalibInfo == null");
+				System.err.println( "instantiate Segment, but allCalibInfos == " + allCalibInfos + " and calibInfo = " + calibInfo);
+				throw new ExceptionInInitializerError( "instantiate Segment, but allCalibInfos == " + allCalibInfos + " and calibInfo = " + calibInfo);
 			}
 
 			if(outputUnit.equals("pixel"))  {
