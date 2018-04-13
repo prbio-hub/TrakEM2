@@ -70,14 +70,14 @@ public class RhizoStatusLabel{
 	private int alpha = 255;
 	boolean selectable = true;
 	
-	RhizoStatusLabel( RhizoProjectConfig projectConfig, String name, String abbrev, Color color) {
+	public RhizoStatusLabel( RhizoProjectConfig projectConfig, String name, String abbrev, Color color) {
 		this.projectConfig = projectConfig;
 		this.name = name;
 		this.abbrev = abbrev;
 		this.color = color;
 	}
 
-	RhizoStatusLabel( RhizoProjectConfig projectConfig, String name, String abbrev, Color color, int alpha, boolean selectable) {
+	public RhizoStatusLabel( RhizoProjectConfig projectConfig, String name, String abbrev, Color color, int alpha, boolean selectable) {
 		this.projectConfig = projectConfig;
 		this.name = name;
 		this.abbrev = abbrev;

@@ -51,9 +51,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.display.Node;
+import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
-import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 /**
  * some helper methods
@@ -192,5 +193,46 @@ public class RhizoUtils {
 			}
 		}
 		
+		public static boolean segmentsExist(Project project, int i)
+		{
+			HashSet<ProjectThing> rootStackThings = RhizoUtils.getRootstacks(project);
+			if(null != rootStackThings)
+			{
+				for(ProjectThing rootStackThing: rootStackThings) 
+				{
+					for(ProjectThing pt: rootStackThing.findChildrenOfTypeR(Treeline.class)) 
+					{
+						Treeline tl = (Treeline) pt.getObject();
+
+						for(Node<Float> n: tl.getRoot().getSubtreeNodes())
+						{
+							if(n.getConfidence() ==(byte) i) return true;
+						}
+					}
+				}
+			}
+
+			return false;
+		}
+		
+		public static void setSegmentsStatus(Project project, int i, byte confidence)
+		{
+			HashSet<ProjectThing> rootStackThings = RhizoUtils.getRootstacks(project);
+			if(null != rootStackThings)
+			{
+				for(ProjectThing rootStackThing: rootStackThings) 
+				{
+					for(ProjectThing pt: rootStackThing.findChildrenOfTypeR(Treeline.class)) 
+					{
+						Treeline tl = (Treeline) pt.getObject();
+
+						for(Node<Float> n: tl.getRoot().getSubtreeNodes())
+						{
+							if(n.getConfidence() ==(byte) i) n.setConfidence(confidence);
+						}
+					}
+				}
+			}
+		}
 
 }

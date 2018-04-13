@@ -6420,8 +6420,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("Load images")){
 			Display.getFront().getProject().getRhizoMain().getRhizoImages().createImageLoaderFrame();
 		}
-		else if(command.equals("colVis")){
-			Display.getFront().getProject().getRhizoMain().getRhizoColVis().createColVisFrame();;
+		else if(command.equals("preferences")){
+			Display.getFront().getProject().getRhizoMain().getRhizoColVis().createPreferencesFrame();;
 		}
 		else if(command.equals("testtest")){
 			Display.getFront().getProject().getRhizoMain().getRhizoAddons().test();
@@ -7309,11 +7309,11 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	loadImagesButton.addActionListener(this);
     	panel.add(loadImagesButton);
     	
-    	JButton visbilityButton = new JButton("Color & Visibility");
-    	visbilityButton.setToolTipText("Adjust the color and opacity of treelines of a certain type.");
-    	visbilityButton.setActionCommand("colVis");
-    	visbilityButton.addActionListener(this);
-    	panel.add(visbilityButton);
+    	JButton preferencesButton = new JButton("Preferences");
+    	preferencesButton.setToolTipText("Adjust the color and opacity of treelines of a certain type.");
+    	preferencesButton.setActionCommand("preferences");
+    	preferencesButton.addActionListener(this);
+    	panel.add(preferencesButton);
 
     	JButton conflicManagerButton = new JButton("Conflict Manager");
     	conflicManagerButton.setToolTipText("Manage conflicts related to connectors.");

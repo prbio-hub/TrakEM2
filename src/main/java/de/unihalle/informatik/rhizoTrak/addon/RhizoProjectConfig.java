@@ -112,8 +112,8 @@ public class RhizoProjectConfig {
 	public static final Color DEFAULT_STATUS_COLOR = new Color( 255, 255, 0);
 	public static final Color DEFAULT_FIXED_STATUS_COLOR = new Color( 0, 255, 255);
 
-	private static final int DEFAULT_ALPHA = 255;
-	private static final boolean DEFAULT_SELECTABLE = true;
+	public static final int DEFAULT_ALPHA = 255;
+	public static final boolean DEFAULT_SELECTABLE = true;
 	/**
 	 * map fixed status integer values used for internal purpose to their names
 	 */
@@ -355,6 +355,7 @@ public class RhizoProjectConfig {
 	public Collection<RhizoStatusLabel> getAllUserDefinedStatusLabel() {
 		LinkedList<RhizoStatusLabel> sll = new LinkedList<RhizoStatusLabel>();
 		for ( RhizoStatusLabel sl : statusLabelSet.values()) {
+			Utils.log(sl.getName());
 			if ( ! this.fixedStatusLabelMap.containsValue(sl.getName()))
 				sll.add( sl);
 		}
