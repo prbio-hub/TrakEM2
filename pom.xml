@@ -280,6 +280,7 @@
 		  <url>https://raw.githubusercontent.com/RootSystemML/RSMLValidator/master/rsml.xsd</url>
 		</schema>
 	      </schemas>
+	      <generateDirectory>${project.build.directory}/generated-sources/xjc/rsml</generateDirectory>
 	      <generatePackage>de.unihalle.informatik.rhizoTrak.xsd.rsml</generatePackage>
 	      <writeCode>true</writeCode>
 	      <noFileHeader>false</noFileHeader>
@@ -287,34 +288,36 @@
 	      <enableIntrospection>true</enableIntrospection>
             </configuration>
           </execution>
+          <execution>
+            <id>xjc-config</id>
+            <phase>process-resources</phase>
+	    <goals>
+	      <goal>generate</goal>
+	    </goals>
+            <configuration>
+	      <schemas>
+                <schema>
+		  <fileset>
+			<!-- Defaults to schemaDirectory. -->
+			<directory>src/main/resources/schemas</directory>
+                        <!-- Defaults to schemaIncludes. -->
+			<includes>
+				<include>*.xsd</include>
+			</includes>
+		  </fileset>
+		</schema>
+	      </schemas>
+	      <generateDirectory>${project.build.directory}/generated-sources/xjc/config</generateDirectory>
+	      <generatePackage>de.unihalle.informatik.rhizoTrak.xsd.config</generatePackage>
+	      <writeCode>true</writeCode>
+	      <noFileHeader>false</noFileHeader>
+	      <removeOldOutput>false</removeOldOutput>
+	      <enableIntrospection>true</enableIntrospection>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
-      
-      	    <!-- config.xsd -->
-	<plugin>
-		<groupId>org.codehaus.mojo</groupId>
-		<artifactId>jaxb2-maven-plugin</artifactId>
-		<version>2.3.1</version>
-		<executions>
-			<execution>
-				<id>xjc-configXSD</id>
-				<goals>
-					<goal>xjc</goal>
-				</goals>
-			</execution>
-		</executions>
-		<configuration>
-			<outputDirectory>${project.basedir}/src/main/java</outputDirectory>
-			<sources>
-				<source>src/main/resources/schemas/config.xsd</source>
-				<source>src/main/resources/schemas/settings.xsd</source>
-				<source>src/main/resources/schemas/RhizoTrakProjectConfig.xsd</source>
-			</sources>
-			<clearOutputDir>false</clearOutputDir>
-			<packageName>de.unihalle.informatik.rhizoTrak.xsd.config</packageName>
-		</configuration>
-	</plugin>
-
+    
       <plugin>
 	<groupId>org.apache.maven.plugins</groupId>
 	<artifactId>maven-compiler-plugin</artifactId>
