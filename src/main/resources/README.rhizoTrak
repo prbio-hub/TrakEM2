@@ -16,7 +16,18 @@
 # TrakEM2 as well as rhizoTrak are both released under the General Public License version
 # 3.0 or later, please find the License file included in this jar.
 #
-# For more information please visit 
+# The rhizoTrak distribution includes the RSML XML schema definition file "rsml.xsd".
+# The file is released under the Apache License, Version 2.0,
+# for details on the license take a look in the included LICENSE file or visit
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# More detailed information on RSML can be found here:
+#
+#   https://rootsystemml.github.io/
+#
+#
+# For more information on rhizoTrak please visit 
 # https://github.com/prbio-hub/rhizoTrak/wiki
 # 
 # Please send questions and suggestions to
