@@ -284,7 +284,7 @@
 	      <generatePackage>de.unihalle.informatik.rhizoTrak.xsd.rsml</generatePackage>
 	      <writeCode>true</writeCode>
 	      <noFileHeader>false</noFileHeader>
-	      <removeOldOutput>true</removeOldOutput>
+	      <removeOldOutput>false</removeOldOutput>
 	      <enableIntrospection>true</enableIntrospection>
             </configuration>
           </execution>
@@ -298,12 +298,12 @@
 	      <schemas>
                 <schema>
 		  <fileset>
-			<!-- Defaults to schemaDirectory. -->
-			<directory>src/main/resources/schemas</directory>
-                        <!-- Defaults to schemaIncludes. -->
-			<includes>
-				<include>*.xsd</include>
-			</includes>
+		    <!-- Defaults to schemaDirectory. -->
+		    <directory>src/main/resources/schemas</directory>
+                    <!-- Defaults to schemaIncludes. -->
+		    <includes>
+		      <include>*.xsd</include>
+		    </includes>
 		  </fileset>
 		</schema>
 	      </schemas>
@@ -317,7 +317,28 @@
           </execution>
         </executions>
       </plugin>
-    
+
+      <plugin>
+	<groupId>org.codehaus.mojo</groupId>
+	<artifactId>build-helper-maven-plugin</artifactId>
+	<version>3.0.0</version>
+	<executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/xjc/rsml</source>
+                <source>${project.build.directory}/generated-sources/xjc/config</source>
+              </sources>
+            </configuration>
+          </execution>
+	</executions>
+      </plugin>
+      
       <plugin>
 	<groupId>org.apache.maven.plugins</groupId>
 	<artifactId>maven-compiler-plugin</artifactId>
@@ -332,6 +353,43 @@
       </plugin>
       
     </plugins>
+
+    <pluginManagement>
+    <plugins>
+        <plugin>
+            <groupId>org.eclipse.m2e</groupId>
+            <artifactId>lifecycle-mapping</artifactId>
+            <version>1.0.0</version>
+            <configuration>
+                <lifecycleMappingMetadata>
+                      <pluginExecutions>
+                        <pluginExecution>
+                          <pluginExecutionFilter>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>build-helper-maven-plugin</artifactId>
+                            <versionRange>[1.0,)</versionRange>
+                            <goals>
+                              <goal>parse-version</goal>
+                              <goal>add-source</goal>
+                              <goal>maven-version</goal>
+                              <goal>add-resource</goal>
+                              <goal>add-test-resource</goal>
+                              <goal>add-test-source</goal>
+                            </goals>
+                          </pluginExecutionFilter>
+                          <action>
+                            <execute>
+                              <runOnConfiguration>true</runOnConfiguration>
+                              <runOnIncremental>true</runOnIncremental>
+                            </execute>
+                          </action>
+                        </pluginExecution>
+                    </pluginExecutions>
+                </lifecycleMappingMetadata>
+            </configuration>
+        </plugin>
+    </plugins>
+</pluginManagement>
   </build>
 
   <repositories>
