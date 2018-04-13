@@ -716,149 +716,127 @@ public class RhizoAddons
 	 * @return Thread created by clicking overlapping nodes
 	 * @author Axel
 	 */
-	protected Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final boolean shift_down, final Class<?> c, Display currentDisplay)
-	{
-		// Utils.log("Display.choose: x,y " + x_p + "," + y_p);
-		Thread t = new Thread()
-		{
+	protected Thread choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, 
+			final boolean shift_down, final Class<?> c, Display currentDisplay) {
+		
+		Utils.log("RhizoAddons.choose: x,y " + x_p + "," + y_p);
+		Thread t = new Thread() {
 			{
 				setPriority(Thread.NORM_PRIORITY);
 			}
 
 			@Override
-			public void run()
-			{
+			public void run() {
 			};
 		};
+		
 		Layer layer = Display.getFrontLayer();
 
 		RhizoAddons rhizoAddons = layer.getProject().getRhizoMain().getRhizoAddons();
 		ConflictManager conflictManager = rhizoAddons.getConflictManager();                
 
-		final ArrayList<Displayable> al = new ArrayList<Displayable>(layer.find(x_p, y_p, true));
-		al.addAll(layer.getParent().findZDisplayables(layer, x_p, y_p, true)); // only visible ones
+		final ArrayList<Displayable> alDisplayables = new ArrayList<Displayable>(layer.find(x_p, y_p, true));
+		alDisplayables.addAll(layer.getParent().findZDisplayables(layer, x_p, y_p, true)); // only visible ones
 
 		if ( debug ) {
-			System.out.println( "choose: al");
-			for ( Displayable d : al ) {
+			System.out.println( "choose: alDisplayables");
+			for ( Displayable d : alDisplayables ) {
 				System.out.println( "    id" + d.getId() + "  " + d.getClass());
 			}
 		}
 		
-		// actyc: remove those trees that contain a non clickable node at xp und yp
-		ArrayList<Displayable> alternatedList = new ArrayList<Displayable>();
-		for (Displayable displayable : al)
-		{
-			if (displayable.getClass() == Treeline.class || displayable.getClass() == Connector.class)
-			{
+		// actyc: remove those trees that contain a non selectable node at xp und yp
+		// or connectors (if not selectable, or patches if locked
+		ArrayList<Displayable> displayablesToRemove = new ArrayList<Displayable>();
+		for (Displayable displayable : alDisplayables) {
+			if (displayable.getClass() == Treeline.class ) 	{
 				Treeline currentTreeline = (Treeline) displayable;
 				double transX = x_p - currentTreeline.getAffineTransform().getTranslateX();
 				double transY = y_p - currentTreeline.getAffineTransform().getTranslateY();
 				Node<Float> nearestNode = currentTreeline.findNearestNode((float) transX, (float) transY, layer);
-				if(nearestNode == null)
-				{
-					alternatedList.add(displayable);
+				if(nearestNode == null) {
+					displayablesToRemove.add(displayable);
 					continue;
 				}
-				if(nearestNode.getConfidence() >= 0 && !rhizoMain.getProjectConfig().getStatusLabel((int) nearestNode.getConfidence()).isSelectable())
-				{
-					alternatedList.add(displayable);
+				if(nearestNode.getConfidence() >= 0 && 
+						!rhizoMain.getProjectConfig().getStatusLabel((int) nearestNode.getConfidence()).isSelectable()) {
+					displayablesToRemove.add(displayable);
 				}
-			}
-			if(displayable.getClass()== Patch.class)
-			{
+			} else if (displayable.getClass() == Connector.class) {
+				if ( !rhizoMain.getProjectConfig().getStatusLabel( RhizoProjectConfig.STATUS_CONNECTOR).isSelectable() ) {
+					displayablesToRemove.add(displayable);
+				}
+			} else if ( displayable.getClass()== Patch.class) {
 				if(displayable.isLocked2()==true){
-					alternatedList.add(displayable);
+					displayablesToRemove.add(displayable);
 				}
 			}
 		}
-		al.removeAll(alternatedList);
+		alDisplayables.removeAll(displayablesToRemove);
 
 		if ( debug ) {
-			System.out.println( "choose: al after remove");
-			for ( Displayable d : al ) {
+			System.out.println( "choose: alDisplayables after remove");
+			for ( Displayable d : alDisplayables ) {
 				System.out.println( "    id" + d.getId() + "  " + d.getClass());
 			}
 		}
-		
 
-		if (al.isEmpty())
-		{
+		if (alDisplayables.isEmpty()) {
 			final Displayable act = currentDisplay.getActive();
-			currentDisplay.clearSelection();
+			Display.clearSelection();
 			currentDisplay.getCanvas().setUpdateGraphics(true);
 			// Utils.log("choose: set active to null");
 			// fixing lack of repainting for unknown reasons, of the active one
 			// TODO this is a temporary solution
 			if (null != act) Display.repaint(layer, act, 5);
-		}
-		else if (1 == al.size())
-		{
-			final Displayable d = (Displayable) al.get(0);
-			if (null != c && d.getClass() != c)
-			{
-				currentDisplay.clearSelection();
+		} else if (1 == alDisplayables.size()) {
+			final Displayable d = (Displayable) alDisplayables.get(0);
+			if (null != c && d.getClass() != c) {
+				Display.clearSelection();
 				return t;
 			}
 			
-			if(conflictManager.isSolving()){
-				if(conflictManager.isPartOfSolution(d))
-				{
+			if(conflictManager.isSolving()) {
+				if(conflictManager.isPartOfSolution(d)) {
 					currentDisplay.select(d, shift_down);
-				}
-				else
-				{
-					if(conflictManager.userAbort())
-					{
+				} else {
+					if(conflictManager.userAbort()) {
 						conflictManager.abortCurrentSolving();
 						currentDisplay.select(d, shift_down);
-					}
-					else
-					{
+					} else {
 						return t;
 					}
 				}
-			}
-			else
-			{
+			} else {
 				currentDisplay.select(d, shift_down);
 			}
 			
 			// Utils.log("choose 1: set active to " + active);
-		} 
-		else
-		{
-			if (al.contains(currentDisplay.getActive()) && !shift_down)
-			{
+		} else {
+			if (alDisplayables.contains(currentDisplay.getActive()) && !shift_down) {
 				// do nothing
-			}
-			else
-			{
-				if (null != c)
-				{
+			} else {
+				if (null != c) {
 					// check if at least one of them is of class c
 					// if only one is of class c, set as selected
 					// else show menu
-					for (final Iterator<?> it = al.iterator(); it.hasNext();)
-					{
+					for (final Iterator<?> it = alDisplayables.iterator(); it.hasNext();) {
 						final Object ob = it.next();
 						if (ob.getClass() != c)
 							it.remove();
 					}
-					if (0 == al.size())
-					{
+					
+					if (0 == alDisplayables.size()) {
 						// deselect
-						currentDisplay.clearSelection();
+						Display.clearSelection();
 						return t;
-					}
-					if (1 == al.size())
-					{
-						currentDisplay.select((Displayable) al.get(0), shift_down);
+					} else if (1 == alDisplayables.size()) {
+						currentDisplay.select((Displayable) alDisplayables.get(0), shift_down);
 						return t;
 					}
 					// else, choose among the many
 				}
-				return choose(screen_x_p, screen_y_p, al, shift_down, x_p, y_p, currentDisplay);
+				return choose(screen_x_p, screen_y_p, alDisplayables, shift_down, x_p, y_p, currentDisplay);
 			}
 			// Utils.log("choose many: set active to " + active);
 		}
