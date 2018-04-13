@@ -12,6 +12,18 @@ rhizoTrak extends TrakEM2 towards root-specific functionality, e.g., adds suppor
 
 rhizoTrak is released under the General Public License in its latest version, please find the License file included.
 
+Note that the rhizoTrak distribution re-distributes the RSML XML schema definition file "rsml.xsd".
+The original file can be found here: https://github.com/RootSystemML/RSMLValidator/blob/master/rsml.xsd
+The file is released under the Apache License, Version 2.0, 
+for details on the license take a look in the included LICENSE.rsml_xsd file or visit
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+More detailed information on RSML can be found here:
+
+   https://rootsystemml.github.io/
+
+
 Contact: rhizoTrak@informatik.uni-halle.de
 
 More information about rhizoTrak can be found on its webpage: https://github.com/prbio-hub/rhizoTrak/wiki
