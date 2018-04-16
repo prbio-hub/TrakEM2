@@ -79,6 +79,8 @@ import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
@@ -437,20 +439,34 @@ public class PreferencesTabbedPane extends JTabbedPane
 		
 		JTextField tf = new JTextField(sl.getAbbrev());
 		tf.setEnabled(false);
-		tf.addActionListener(new ActionListener() 
+		tf.getDocument().addDocumentListener(new DocumentListener() // fires on text change
 		{
 			@Override
-			public void actionPerformed(ActionEvent e) 
+			public void removeUpdate(DocumentEvent e)
 			{
-				RhizoStatusLabel sl = config.getStatusLabel(textFieldList.indexOf(tf));
-				config.replaceStatusLabelList(textFieldList.indexOf(tf), new RhizoStatusLabel(config, sl.getName(), tf.getText(), sl.getColor(), sl.getAlpha(), sl.isSelectable()));
+				updateTF();
 			}
 			
+			@Override
+			public void insertUpdate(DocumentEvent e)
+			{
+				updateTF();
+			}
+			
+			@Override
+			public void changedUpdate(DocumentEvent e)
+			{
+				updateTF();
+			}
+			
+			public void updateTF()
+			{
+				String name = labelList.get(textFieldList.indexOf(tf)).getText();
+				config.addStatusLabelToSet(name, tf.getText());
+			}
 		});
 
 		panel.add(tf);
-
-		// workaround TODO: find max dimensions
 
 		JSlider slider = new JSlider();
 		slider.setMinimum(0);
