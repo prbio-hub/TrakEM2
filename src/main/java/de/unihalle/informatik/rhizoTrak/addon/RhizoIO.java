@@ -167,7 +167,18 @@ public class RhizoIO
 			GlobalSettings gs = (GlobalSettings) um.unmarshal(userSettingsFile);
 			for ( GlobalStatus status : gs.getGlobalStatusList().getGlobalStatus() ) {
 				// we have no abbreviation in user settings, however only status labels in project.cfg will be used
-				rhizoMain.getProjectConfig().addStatusLabelToSet( status.getFullName(),
+				String abbrev;
+				if ( status.getAbbreviation() != null) {
+					abbrev = status.getAbbreviation();
+				} else {
+					if ( status.getFullName().length() > 0) {
+						abbrev = status.getFullName().substring( 0, 1); 
+					} else {
+						abbrev = "";
+					}
+				}
+				
+				rhizoMain.getProjectConfig().addStatusLabelToSet( status.getFullName(), abbrev,
 						new Color( status.getRed().intValue(), status.getGreen().intValue(), status.getBlue().intValue()),
 								status.getAlpha().intValue(), status.isSelectable());
 			}
@@ -467,7 +478,7 @@ public class RhizoIO
 	        for ( RhizoStatusLabel sl : rhizoMain.getProjectConfig().getAllStatusLabel() ) {
 	        	GlobalStatus gStatus = new GlobalStatus();
 				gStatus.setFullName( sl.getName());
-
+				gStatus.setAbbreviation( sl.getAbbrev());
 				gStatus.setRed( BigInteger.valueOf(sl.getColor().getRed()));
 				gStatus.setGreen( BigInteger.valueOf( sl.getColor().getGreen()));
 				gStatus.setBlue( BigInteger.valueOf(sl.getColor().getBlue()));
@@ -488,7 +499,7 @@ public class RhizoIO
 	        receiverColor.setGreen(BigInteger.valueOf( rhizoMain.getProjectConfig().getReceiverNodeColor().getGreen()));
 	        receiverColor.setBlue(BigInteger.valueOf( rhizoMain.getProjectConfig().getReceiverNodeColor().getBlue()));
 
-	        
+	        // compile the parts of global settings
 	        GlobalSettings gs = new GlobalSettings();
 	        gs.setGlobalStatusList(gsl);
 	        gs.setHighlightcolorList(hlc);
