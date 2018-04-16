@@ -125,7 +125,10 @@ public class RhizoStatusLabel{
 	 * @param abbrev the abbrev to set
 	 */
 	void setAbbrev(String abbrev) {
-		this.abbrev = abbrev;
+		if ( ! this.abbrev.equals(abbrev)) {
+			this.abbrev = abbrev;
+			this.projectConfig.setUserSettingsChanged();
+		}
 	}
 
 /**
@@ -139,8 +142,12 @@ public class RhizoStatusLabel{
 	 * @param color the color to set
 	 */
 	public void setColor(Color color) {
-		this.color = color;
-		this.projectConfig.setUserSettingsChanged();
+		if ( this.color.getRed() != color.getRed() ||
+				this.color.getGreen() != color.getGreen() ||
+				this.color.getBlue() != color.getBlue()) {
+			this.color = color;
+			this.projectConfig.setUserSettingsChanged();
+		}
 	}
 
 	/**
@@ -154,8 +161,10 @@ public class RhizoStatusLabel{
 	 * @param alpha the alpha to set
 	 */
 	 public void setAlpha(int alpha) {
-		this.alpha = alpha;
-		this.projectConfig.setUserSettingsChanged();
+		 if ( this.alpha != alpha) {
+			 this.alpha = alpha;
+			 this.projectConfig.setUserSettingsChanged();
+		 }
 	}
 
 	/**
@@ -168,9 +177,11 @@ public class RhizoStatusLabel{
 	/**
 	 * @param selectable the selectable to set
 	 */
-	 public void setSelectable(boolean selectable) {
-		this.selectable = selectable;
-		this.projectConfig.setUserSettingsChanged();
+	public void setSelectable(boolean selectable) {
+		if ( this.selectable != selectable) {
+			this.selectable = selectable;
+			this.projectConfig.setUserSettingsChanged();
+		}
 	}
 
 }
