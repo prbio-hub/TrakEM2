@@ -165,54 +165,65 @@ public class RhizoAddons
 		Display display = Display.getFront();
 		// Layer frontLayer = Display.getFrontLayer();
 		Layer currentLayer = display.getLayer();
+		if ( currentLayer == null ) {
+			Utils.showMessage("rhizoTrak", "Copy treelines failed: internal error, can not find currentLayer.");
+			return;
+		}
 		LayerSet currentLayerSet = currentLayer.getParent();
-		
-		
-		
-//		Utils.log(currentLayer);
-//		Utils.log(currentLayerSet.next(currentLayer));
 		
 		// determine next layer
 		Layer nextLayer = currentLayerSet.next(currentLayer);
-		//copytreelineconnector
 		if (nextLayer == null || nextLayer.getZ()==currentLayer.getZ()) {
 			Utils.showMessage("rhizoTrak", "Copy treelines failed: Can not copy from the last layer.");
 			return;
 		}
-		// get treelines of current layerset
-		ArrayList<Displayable> trees = currentLayerSet.get(Treeline.class);
-		for (Displayable cObj : trees) {
-			Treeline ctree = (Treeline) cObj;
-			// Utils.log2("current Tree first Layer: " + ctree.getFirstLayer());
-			if (ctree.getFirstLayer() == currentLayer) {
-				try {
-					// copy current tree
-					Treeline copy = Tree.copyAs(ctree, Treeline.class, Treeline.RadiusNode.class);
-					copy.setLayer(nextLayer, true);
-					for (Node<Float> cnode : copy.getRoot().getSubtreeNodes()) {
-						cnode.setLayer(nextLayer);
-						Color col = rhizoMain.getProjectConfig().getColorForStatus((cnode.getConfidence()));
-						cnode.setColor(col);
+		
+		// find all rootstacks
+		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
+		if ( rootstackThings == null) {
+			Utils.showMessage( "rhizoTrak", "Copy treelines failed: no rootstack found");
+			return;
+		}
+
+		// and now find all treelines
+		for ( ProjectThing rootstackThing :rootstackThings ) {
+			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
+				// we also find connectors!
+				Treeline ctree = (Treeline)pt.getObject();
+
+				if ( ctree.getClass().equals( Treeline.class)) {
+					if ( ctree.getFirstLayer() != null && currentLayer.equals( ctree.getFirstLayer()) ) {
+						try {
+							// copy current tree
+							Treeline copy = Tree.copyAs(ctree, Treeline.class, Treeline.RadiusNode.class);
+							copy.setLayer(nextLayer, true);
+							for (Node<Float> cnode : copy.getRoot().getSubtreeNodes()) {
+								cnode.setLayer(nextLayer);
+								Color col = rhizoMain.getProjectConfig().getColorForStatus((cnode.getConfidence()));
+								cnode.setColor(col);
+							}
+							copy.setTitle("treeline");
+							copy.clearState();
+							copy.updateCache();
+							currentLayerSet.add(copy);
+							ctree.getProject().getProjectTree().addSibling(ctree, copy);
+							
+							// get the parent connector; if non exists a new will be create
+							//copytreelineconnector
+							if(!RhizoAddons.getRightPC(ctree, copy)){
+								Utils.showMessage("rhizoTrak", "Copy treelines can not create connector automatically between #" +
+										ctree.getId() + " and #" + copy.getId());
+							}
+							Display.update(currentLayerSet);
+						} catch (Exception e) {
+							e.printStackTrace();
+							Utils.showMessage("rhizoTrak", "Copy treelines failed for treeline #"  + ctree.getId());
+						}
 					}
-					copy.setTitle("treeline");
-					copy.clearState();
-					copy.updateCache();
-					currentLayerSet.add(copy);
-					ctree.getProject().getProjectTree().addSibling(ctree, copy);
-					// get the parent connector; if non exists a new will be create
-					//copytreelineconnector
-					if(!RhizoAddons.getRightPC(ctree, copy)){
-						Utils.showMessage("rhizoTrak", "Copy treelines can not connector automatically between #" +
-								ctree.getId() + " and #" + copy.getId());
-					}
-					Display.update(currentLayerSet);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					Utils.showMessage("rhizoTrak", "Copy treelines failed for treeline #"  + ctree.getId());
 				}
 			}
 		}
+
 	}
 
 	/**
