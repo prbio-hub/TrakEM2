@@ -548,7 +548,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 		public void stateChanged(ChangeEvent e)
 		{
 			JSlider currentSlider = (JSlider) e.getSource();
-			int index = Integer.parseInt(currentSlider.getName()); // name will always be an integer
+//			int index = Integer.parseInt(currentSlider.getName()); // name will always be an integer
 			
 			RhizoStatusLabel sl = config.getStatusLabel(currentSlider.getName());
 			sl.setAlpha( currentSlider.getValue());
@@ -561,7 +561,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 	// clickablity change action
 	Action clickablityAction = new AbstractAction("clickablityAction") {
 		public void actionPerformed(ActionEvent e) {
-			int index = Integer.parseInt(e.getActionCommand());
+//			int index = Integer.parseInt(e.getActionCommand());
 			JCheckBox source = (JCheckBox) e.getSource();
 
 			RhizoStatusLabel sl = config.getStatusLabel(e.getActionCommand());
