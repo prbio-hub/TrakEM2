@@ -349,7 +349,10 @@ public class RhizoProjectConfig {
 	 */
 	public boolean removeStatusLabelFromSet(String name)
 	{
-		if(null != statusLabelSet.remove(name)) return true;
+		if(null != statusLabelSet.remove(name)) {
+			this.userSettingsChanged = true;
+			return true;
+		}
 		
 		return false;
 	}
