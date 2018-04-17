@@ -55,12 +55,15 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.Box.Filler;
 import javax.swing.BoxLayout;
@@ -76,6 +79,7 @@ import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -86,6 +90,7 @@ import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
+import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 @SuppressWarnings("serial")
@@ -95,13 +100,24 @@ public class PreferencesTabbedPane extends JTabbedPane
 	private JPanel statusPanel;
 	private JPanel dynamicPanel;
 	private JPanel fixedPanel;
-	private Stack<JPanel> panelStack = new Stack<JPanel>();
+	
+	// list of JPanels contained in dynamicPanel
+	private List<JPanel> panelList = new ArrayList<JPanel>();
+	private List<JPanel> selectedPanels = new ArrayList<JPanel>();
+	
+	private final Color selectColor = Color.LIGHT_GRAY;
+	
+	// list of JTextFields and JLabels that corresponds to the list of JPanels
 	private List<JTextField> textFieldList = new ArrayList<JTextField>();
 	private List<JLabel> labelList = new ArrayList<JLabel>();
 	
+	private Border emptyBorder = BorderFactory.createEmptyBorder(1, 1, 1, 1);
+	private Border selectBorder = BorderFactory.createLineBorder(selectColor);
+	
 	// second tab
 	private JPanel assignmentPanel;
-	private List<String> choices = new ArrayList<String>();
+	// alternative to using a ComboBoxModel because we can't use the same model for every ComboBox
+	private List<String> choices = new ArrayList<String>(); 
 	private Stack<JComboBox<String>> comboStack = new Stack<JComboBox<String>>();
 	private Stack<Component> comboGlueStack = new Stack<Component>();
        
@@ -132,6 +148,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 		addConfigureTab();
 	}
 	
+       
 	private void addComboBoxTab()
 	{
 		// set up tab
@@ -162,7 +179,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 			@Override
 			public void actionPerformed(ActionEvent e) 
 			{
-				// default selected item = status that added last
+				// default selected item = status that was added last
 				addComboBox(choices.size() - 1, comboBoxPanel);
 				config.appendStatusLabelToList(config.getStatusLabel(choices.get(choices.size() - 1)));
 				assignmentPanel.revalidate();
@@ -201,6 +218,8 @@ public class PreferencesTabbedPane extends JTabbedPane
 								config.popStatusLabelFromList();
 								assignmentPanel.revalidate();
 								assignmentPanel.repaint();
+								
+								Display.getFront(rhizoMain.getProject()).repaintAll();
 							}
 						}	
 					}
@@ -331,42 +350,79 @@ public class PreferencesTabbedPane extends JTabbedPane
 			}
 			
 		});
-		JButton removeButton = new JButton("Remove Status");
+		JButton removeButton = new JButton("Remove Selected Status");
 		removeButton.addActionListener(new ActionListener()
 		{
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				if(!panelStack.isEmpty())
+				if(!panelList.isEmpty() && !selectedPanels.isEmpty())
 				{
-					int option = JOptionPane.showConfirmDialog(null, "This will delete the last status in the list. Are you sure?", "Confirm", JOptionPane.OK_CANCEL_OPTION);
+					int option = JOptionPane.showConfirmDialog(null, "This will delete the selected status. Are you sure?", "Confirm", JOptionPane.OK_CANCEL_OPTION);
 					if(option == JOptionPane.OK_OPTION)
 					{
-						String stringToBeRemoved = labelList.get(labelList.size() - 1).getText();
+						// temp lists for safe removal after iteration
+						List<JPanel> panelsToBeRemoved = new ArrayList<JPanel>();
+						List<JTextField> textFieldsToBeRemoved = new ArrayList<JTextField>();
+						List<JLabel> labelsToBeRemoved = new ArrayList<JLabel>();
+						List<String> choicesToBeRemoved = new ArrayList<String>();
 						
-						// check if status is currently assigned
+						String notRemoved = "";
+											
+						// currently used status in the label assignment tab
+						List<String> assignedStatus = new ArrayList<String>();
 						for(JComboBox<String> c: comboStack)
 						{
 							String selectedString = (String) c.getSelectedItem();
-							if(selectedString.equals(stringToBeRemoved))
+							assignedStatus.add(selectedString);
+						}
+						
+						for(JPanel selectedPanel: selectedPanels)
+						{
+							int i = panelList.indexOf(selectedPanel);
+							
+							if(i != -1)
 							{
-								Utils.showMessage("Status was not removed. The label is currently assigned to an integer. Check the 'Label Assignment' tab.");
-								return;
+								String stringToBeRemoved = labelList.get(i).getText();
+								
+								if(!assignedStatus.contains(stringToBeRemoved))
+								{
+									panelsToBeRemoved.add(panelList.get(i));
+									textFieldsToBeRemoved.add(textFieldList.get(i));
+									labelsToBeRemoved.add(labelList.get(i));
+									choicesToBeRemoved.add(stringToBeRemoved);
+								}
+								else notRemoved += stringToBeRemoved + "\n";
+							}
+						}
+		
+						// update lists
+						panelList.removeAll(panelsToBeRemoved);
+						textFieldList.removeAll(textFieldsToBeRemoved);
+						labelList.removeAll(labelsToBeRemoved);
+						choices.removeAll(choicesToBeRemoved);
+						
+						// update comboStack choices
+						for(JComboBox<String> c: comboStack)
+						{
+							for(String s: choicesToBeRemoved)
+							{
+								c.removeItem(s);
 							}
 						}
 						
-						// update choices
-						choices.remove(stringToBeRemoved);
-						for(JComboBox<String> c: comboStack) c.removeItem(stringToBeRemoved);
-	
-						textFieldList.remove(textFieldList.size() - 1);
-						labelList.remove(labelList.size() - 1);
-						
-						// remove from status tab
-						dynamicPanel.remove(panelStack.pop());
-						
+						// update dynamicPanel
+						for(JPanel panel: panelsToBeRemoved)
+						{
+							dynamicPanel.remove(panel);
+						}
+
 						dynamicPanel.revalidate();
 						dynamicPanel.repaint();
+						
+						Display.getFront(rhizoMain.getProject()).repaintAll();
+						
+						if(!notRemoved.equals("")) Utils.showMessage("The following status were not removed because they are currently assigned to an integer:\n" + notRemoved);
 					}
 				}
 			}
@@ -442,6 +498,8 @@ public class PreferencesTabbedPane extends JTabbedPane
 			{
 				String selected = (String) combo.getSelectedItem();
 				config.replaceStatusLabelList(comboStack.indexOf(e.getSource()), config.getStatusLabel(selected));
+				
+				Display.getFront(rhizoMain.getProject()).repaintAll();
 			}
 		});
 		
@@ -500,6 +558,8 @@ public class PreferencesTabbedPane extends JTabbedPane
 			{
 				String name = labelList.get(textFieldList.indexOf(tf)).getText();
 				config.addStatusLabelToSet(name, tf.getText());
+				
+				Display.getFront(rhizoMain.getProject()).repaintAll();
 			}
 		});
 
@@ -529,10 +589,39 @@ public class PreferencesTabbedPane extends JTabbedPane
 		button.setOpaque(true);
 		button.setBackground(sl.getColor());
 		panel.add(button);
+		
+		panel.setBorder(emptyBorder);
 
 		if(parentPanel.equals(dynamicPanel))
 		{
-			panelStack.push(panel);
+			panel.addMouseListener(new MouseAdapter()
+			{
+				public void mouseClicked(MouseEvent e)
+				{
+					if(!selectedPanels.contains(panel))
+					{
+						panel.setBackground(selectColor);
+						selectedPanels.add(panel);
+					}
+					else
+					{
+						panel.setBackground(UIManager.getColor("Panel.background"));
+						selectedPanels.remove(panel);
+					}
+				}
+
+				public void mouseEntered(MouseEvent e)
+				{
+					panel.setBorder(selectBorder);
+				}
+
+				public void mouseExited(MouseEvent e)
+				{
+					panel.setBorder(emptyBorder);
+				}
+			});
+
+			panelList.add(panel);
 			labelList.add(lab);
 			textFieldList.add(tf);
 		}
