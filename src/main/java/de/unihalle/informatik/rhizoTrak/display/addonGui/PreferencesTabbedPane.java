@@ -88,6 +88,7 @@ import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
+@SuppressWarnings("serial")
 public class PreferencesTabbedPane extends JTabbedPane 
 {
 	// first tab
@@ -104,7 +105,15 @@ public class PreferencesTabbedPane extends JTabbedPane
 	private Stack<JComboBox<String>> comboStack = new Stack<JComboBox<String>>();
 	private Stack<Component> comboGlueStack = new Stack<Component>();
        
+	// third tab
+	private JPanel configurePanel;
+	private JPanel configChoicesPanel;
+	private String CONFIRM_MERGETREELINES = "Confirm merge treelines";
+	private String CONFIRM_SPLITREELINE = "Confirm split treeline";
+	private String SHOW_CALIBRATION_INFO = "Show calibration info";
+
 	
+	// general members
 	private RhizoMain rhizoMain = null;
 	private RhizoProjectConfig config = null;
 	
@@ -120,9 +129,9 @@ public class PreferencesTabbedPane extends JTabbedPane
 		this.config = rhizoMain.getProjectConfig();
 		addStatusTab();
 		addComboBoxTab();
+		addConfigureTab();
 	}
 	
-       
 	private void addComboBoxTab()
 	{
 		// set up tab
@@ -393,6 +402,34 @@ public class PreferencesTabbedPane extends JTabbedPane
 		this.addTab("Color & Visibility", statusPanel);
 	}
 	
+	/**
+	 * Panel for project configurations
+	 */
+	private void addConfigureTab() {
+		configurePanel = new JPanel();
+		configurePanel.setLayout(new BoxLayout(configurePanel, BoxLayout.Y_AXIS));
+		configurePanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+		
+		configChoicesPanel = new JPanel();
+		configChoicesPanel.setLayout(new BoxLayout(configChoicesPanel, BoxLayout.Y_AXIS));
+		configChoicesPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
+		
+		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isAskMergeTreelines(), CONFIRM_MERGETREELINES));
+		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isAskSplitTreeline(), CONFIRM_SPLITREELINE));
+		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isShowCalibrationInfo(), SHOW_CALIBRATION_INFO));
+
+		configurePanel.add( configChoicesPanel);
+		this.addTab("Configuration", configurePanel);
+	}
+	
+	private JCheckBox addChoice( boolean choice, String name) {
+		JCheckBox checkBox = new JCheckBox( name, choice);
+		checkBox.setActionCommand( name);
+		checkBox.addActionListener( configCheckAction);
+		return checkBox;
+
+	}
+
 	private void addComboBox(int selectedIndex, JPanel parentPanel)
 	{
 
@@ -530,7 +567,6 @@ public class PreferencesTabbedPane extends JTabbedPane
 	}
 	
 	// Color change button action
-	@SuppressWarnings("serial")
 	Action colorChangeButton = new AbstractAction("colorChangeButton") {
 		public void actionPerformed(ActionEvent e) {
 			JButton source = (JButton) e.getSource();
@@ -564,7 +600,6 @@ public class PreferencesTabbedPane extends JTabbedPane
 		public void stateChanged(ChangeEvent e)
 		{
 			JSlider currentSlider = (JSlider) e.getSource();
-//			int index = Integer.parseInt(currentSlider.getName()); // name will always be an integer
 			
 			RhizoStatusLabel sl = config.getStatusLabel(currentSlider.getName());
 			sl.setAlpha( currentSlider.getValue());
@@ -575,14 +610,38 @@ public class PreferencesTabbedPane extends JTabbedPane
 	};
 
 	// clickablity change action
+	/**
+	 * This action takes care of selectable state of status labels
+	 */
 	Action clickablityAction = new AbstractAction("clickablityAction") {
 		public void actionPerformed(ActionEvent e) {
-//			int index = Integer.parseInt(e.getActionCommand());
 			JCheckBox source = (JCheckBox) e.getSource();
 
 			RhizoStatusLabel sl = config.getStatusLabel(e.getActionCommand());
 			sl.setSelectable( source.isSelected());
 		}
 	};
+
+	/**
+	 * This action takes care of all events to change boolean states of the project configuration
+	 */
+	Action configCheckAction = new AbstractAction( "configCheckAction") {
+
+		public void actionPerformed(ActionEvent e) {
+			JCheckBox source = (JCheckBox) e.getSource();
+			String actionCommand = e.getActionCommand();
+
+			if ( actionCommand.equals(  CONFIRM_MERGETREELINES)) {
+				rhizoMain.getProjectConfig().setAskMergeTreelines( source.isSelected());
+			} else if ( actionCommand.equals( CONFIRM_SPLITREELINE)) {
+				rhizoMain.getProjectConfig().setAskSplitTreeline( source.isSelected() );
+			} else if ( actionCommand.equals( SHOW_CALIBRATION_INFO)) {
+				rhizoMain.getProjectConfig().setShowCalibrationInfo( source.isSelected() );
+			} else {
+				Utils.showMessage( "rhizoTrak", "PrefrencesTabbedPane.configCheckAction: internal error, unkonwn actionCommand " + actionCommand);
+			}
+		}
+	};
+
 
 }

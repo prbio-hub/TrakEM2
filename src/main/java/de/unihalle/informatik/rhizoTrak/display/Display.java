@@ -7302,25 +7302,19 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	copyButton.setActionCommand("Copy treelines");
     	copyButton.addActionListener(this);
     	panel.add(copyButton);
-    	
-    	JButton loadImagesButton = new JButton("Load Images");
-    	loadImagesButton.setToolTipText("Import one or more images as a stack.");
-    	loadImagesButton.setActionCommand("Load images");
-    	loadImagesButton.addActionListener(this);
-    	panel.add(loadImagesButton);
-    	
-    	JButton preferencesButton = new JButton("Preferences");
-    	preferencesButton.setToolTipText("Adjust the color and opacity of treelines of a certain type.");
-    	preferencesButton.setActionCommand("preferences");
-    	preferencesButton.addActionListener(this);
-    	panel.add(preferencesButton);
-
+    	    	
     	JButton conflicManagerButton = new JButton("Conflict Manager");
     	conflicManagerButton.setToolTipText("Manage conflicts related to connectors.");
     	conflicManagerButton.setActionCommand("conflictPanel");
     	conflicManagerButton.addActionListener(this);
     	conflicManagerButton.setEnabled(true);
     	panel.add(conflicManagerButton);
+    	
+    	JButton loadImagesButton = new JButton("Load Images");
+    	loadImagesButton.setToolTipText("Import one or more images as a stack.");
+    	loadImagesButton.setActionCommand("Load images");
+    	loadImagesButton.addActionListener(this);
+    	panel.add(loadImagesButton);
     	
     	JButton readXMLButton = new JButton("Read MTBXML");
     	readXMLButton.setToolTipText("Reads a MTBXML file that corresponds to the images already loaded.");
@@ -7344,6 +7338,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	statButton.setEnabled(true);
     	panel.add(statButton);
     	
+    	JButton preferencesButton = new JButton("Preferences");
+    	preferencesButton.setToolTipText("Adjust the color and opacity of treelines of a certain type.");
+    	preferencesButton.setActionCommand("preferences");
+    	preferencesButton.addActionListener(this);
+    	panel.add(preferencesButton);
+
     	JButton aboutButton = new JButton("About rhizoTrak");
     	aboutButton.setToolTipText("");
     	aboutButton.setActionCommand("aboutRhizo");
