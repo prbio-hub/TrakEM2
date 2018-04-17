@@ -342,6 +342,17 @@ public class RhizoProjectConfig {
 		}
 		return sl;
 	}
+	
+	/**
+	 * Removes the given key from statusLabelSet
+	 * @param name
+	 */
+	public boolean removeStatusLabelFromSet(String name)
+	{
+		if(null != statusLabelSet.remove(name)) return true;
+		
+		return false;
+	}
 
 	/** Return names of all defined status labels, i.e. fixed and user defined ones.
 	 * @return

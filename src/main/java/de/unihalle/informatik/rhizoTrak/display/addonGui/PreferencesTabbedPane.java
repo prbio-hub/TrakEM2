@@ -391,6 +391,8 @@ public class PreferencesTabbedPane extends JTabbedPane
 									textFieldsToBeRemoved.add(textFieldList.get(i));
 									labelsToBeRemoved.add(labelList.get(i));
 									choicesToBeRemoved.add(stringToBeRemoved);
+									
+									config.removeStatusLabelFromSet(stringToBeRemoved);
 								}
 								else notRemoved += stringToBeRemoved + "\n";
 							}
