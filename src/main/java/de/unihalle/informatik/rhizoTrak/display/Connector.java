@@ -591,30 +591,25 @@ public class Connector extends Treeline  implements TreeEventListener{
 				for(Treeline tree: conTreelines){
 					Node<Float> treeRoot = tree.getRoot();
 					if(treeRoot==null) 
-						// TODO: why should we return and not check the remaining treelines
-						return false;
+						continue;
 					
 					Layer treeRootLayer = tree.getRoot().getLayer();
 					if(treeRootLayer==null) 
-						// TODO: why should we return and not check the remaining treelines
-						return false;
+						continue;
 					
 					Point2D result = RhizoAddons.changeSpace(treeRoot.getX(),treeRoot.getY(),tree.getAffineTransform(),this.getAffineTransform());
 					if(result==null) 
-						// TODO: why should we return and not check the remaining treelines
-						return false;
+						continue;
 
 					//make sure all the connected treelines still exists
 					// TODO: this is a test if it is a Treeline object maybe one should test ith the treeline is still
 					// a member of the project tree
 					if(!tree.getClass().equals(Treeline.class)) {
 						if(!conTreelines.remove(tree)) 
-							// TODO: why should we return and not check the remaining treelines
-							return false;
+							continue;
 					}
 					
 					//make sure all the connected treelines have a target node at there root
-					// TODO: what if there are more than one connected treelines with their root node at the same position?
 					boolean found = false;
 					//Utils.log("active treeline: "+ tree.getId());
 					for (final Node<Float> nd : targets) {
@@ -656,8 +651,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 					Node<Float> newTarget = newNode((float) result.getX(),(float) result.getY(), treeRoot.getLayer(), root);
 					((ConnectorNode)newTarget).setData(last_radius);
 					if(!addNode(root, newTarget, (byte)RhizoProjectConfig.STATUS_CONNECTOR)) 
-						// TODO why should we return and not check the remaining treelines
-						return false;
+						continue;
 				}
 				
 				//set the root of the connector to the appropriate position
@@ -668,7 +662,6 @@ public class Connector extends Treeline  implements TreeEventListener{
 			}
 		} else {
 			// if this connector as no treelines, then remove all nodes
-			// TODO: should we also remove the root node?
 			if(root!=null && root.hasChildren()){
 				for(Node<Float> nd: root.children){
 					this.removeNode(nd);
