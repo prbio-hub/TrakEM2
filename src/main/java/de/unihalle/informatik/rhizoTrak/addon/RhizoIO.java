@@ -56,12 +56,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+
+import org.scijava.jython.shaded.jnr.posix.MsgHdr;
 
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.xsd.config.Config;
@@ -74,10 +78,12 @@ import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.ReceiverNodeCo
 import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
+import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
+import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 public class RhizoIO
@@ -120,7 +126,9 @@ public class RhizoIO
 				Utils.log2("done");
 
 				Utils.log2("loading connector data...");
-				loadConnector( filenameWoExtension);
+//				loadConnector( filenameWoExtension);
+				loadConnectorHeadless( filenameWoExtension);
+
 				Utils.log2("done");
 				
 				Utils.log2("restoring conflicts...");
@@ -322,8 +330,13 @@ public class RhizoIO
      * @author Axel, posch
      */
     public boolean loadConnector(String path) {
+
         // read the save file
-    	
+    	if (rhizoMain.getRhizoAddons().getProject() == null) {
+    		Utils.showMessage( "rhizoTrak", "Warning: can not load connector file, project not found");
+    		return false;
+    	}
+
         File conFile;
         if ( path.endsWith( ".con"))
         	conFile = new File( path);
@@ -350,7 +363,6 @@ public class RhizoIO
                     line = br.readLine();
                     break;
                 }
-
                 if (rhizoMain.getRhizoAddons().getProject() != null) {
                     LayerSet layerSet = rhizoMain.getRhizoAddons().getProject().getRootLayerSet();
                     List<Displayable> trees = layerSet.get(Treeline.class);
@@ -392,6 +404,127 @@ public class RhizoIO
             return false;
         }
         
+        return true;
+    }
+	
+    /**
+     * Loads the connector file without display
+     *
+     * @param path Filename for the connector filename. if it does not end with <code>.con</code> this extension is appended
+     * @return success
+     * 
+     * @author posch
+     */
+    public boolean loadConnectorHeadless(String path) {
+        // read the save file
+    	
+    	if (rhizoMain.getRhizoAddons().getProject() == null) {
+    		Utils.showMessage( "rhizoTrak", "Warning: can not load connector file, project not found");
+    		return false;
+    	}
+    	
+        File conFile;
+        if ( path.endsWith( ".con"))
+        	conFile = new File( path);
+        else
+        	conFile = new File(path + ".con");
+
+        FileReader fr;
+
+        try {
+        	fr = new FileReader(conFile);
+        } catch (FileNotFoundException e) {
+        	e.printStackTrace();
+
+        	Utils.showMessage( "rhizoTrak", "Warning: connector file " + conFile.getAbsolutePath() + " not found");
+        	return false;
+        }
+
+		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( rhizoMain.getRhizoAddons().getProject());
+		if ( rootstackThings == null) {
+			Utils.showMessage( "rhizoTrak", "RhizoIO.loadConnectorHeadless warning: no rootstack found");
+			try {
+				fr.close();
+			} catch (IOException e) {
+				// ignore
+			}
+			return false;
+		}
+
+		// and collect treelines and connectors below all rootstacks
+		// all treelines below a rootstack
+		HashMap<Long,Treeline> allTreelines = new HashMap<Long,Treeline>();
+		// all connectors below a rootstack
+				HashMap<Long,Connector> allConnectors = new HashMap<Long,Connector>();
+		
+		for ( ProjectThing rootstackThing :rootstackThings ) {
+			if ( debug)	System.out.println("rootstack " + rootstackThing.getId());
+			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
+				// we also find connectors!
+				Treeline tl = (Treeline)pt.getObject();
+				if ( debug)	System.out.println( "    treeline " + tl.getId());
+				
+				if ( tl.getClass().equals( Treeline.class)) {
+					allTreelines.put( tl.getId(), (Treeline)tl);
+				} else if ( tl.getClass().equals(Connector.class) ) {
+					allConnectors.put( tl.getId(), (Connector)tl);
+				}
+			}
+		}
+
+        try {
+            StringBuilder msg = new StringBuilder();
+
+            BufferedReader br = new BufferedReader(fr);
+
+            String line = br.readLine();
+            while (line != null) {
+                if (line.equals("###")) {
+                    line = br.readLine();
+                    break;
+                }
+                
+                // load the line
+                String[] content = line.split(";");
+                if (content.length > 1) {
+                	long currentConID = Long.parseLong(content[0]);
+
+                	Connector conn = allConnectors.get( currentConID);
+                	if ( conn == null ) {
+                		msg.append( "connector " + currentConID + " in .con file not found in project");
+                		continue;
+                	}
+                   	for (int i = 1; i < content.length; i++) {
+                		long currentTreelineID = Long.parseLong(content[i]);
+                		Treeline tl = allTreelines.get(currentTreelineID);
+                		
+                		if ( tl == null ) {
+                			msg.append( "treeline " + currentTreelineID + " not found in project for connector " + currentConID);
+                		}
+                		
+                		if ( ! conn.addConTreelineHeadless( tl) ) {
+                			msg.append( "Error adding treeline " + currentTreelineID + " to connector " + currentConID);
+                		}
+                	}
+                }
+
+                // read the next line
+                line = br.readLine();
+            }
+            br.close();
+            
+            if ( msg.length() > 1 ) {
+            	msg.insert(0, "RhizoIO.loadConnectorHeadless: Errors");
+            	Utils.showMessage( "rhizoTrak", new String( msg));
+            }
+        } catch (IOException e) {
+        	Utils.showMessage( "rhizoTrak", "Warning: can not parse connector file " + conFile.getAbsolutePath());
+
+            e.printStackTrace();
+            return false;
+        }
+        
+       
         return true;
     }
 	

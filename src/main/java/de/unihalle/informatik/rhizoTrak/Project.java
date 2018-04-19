@@ -746,6 +746,18 @@ public class Project extends DBObject {
 		} catch (Exception e) {
 			IJError.print(e);
 		}
+		
+		//actyc: ready to load
+		try {
+			Utils.log(loader.getProjectXMLPath()); 
+			Utils.log2("start addon loader ...");
+			project.getRhizoMain().getRhizoIO().addonLoader(new File(loader.getProjectXMLPath()),project).join();
+			Utils.log2("started");
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		// open any stored displays
 		if (open_displays) {
 			final Bureaucrat burro = Display.openLater();
@@ -786,17 +798,6 @@ public class Project extends DBObject {
 				// help the helpless users
 				Display.createDisplay(project, project.layer_set.getLayer(0));
 			}
-		}
-		
-		//actyc: ready to load
-		try {
-			Utils.log(loader.getProjectXMLPath()); 
-			Utils.log2("start addon loader ...");
-			project.getRhizoMain().getRhizoIO().addonLoader(new File(loader.getProjectXMLPath()),project).join();
-			Utils.log2("started");
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		
 		project.restartAutosaving();

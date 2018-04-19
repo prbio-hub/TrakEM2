@@ -71,6 +71,7 @@ import org.scijava.vecmath.Point3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.SplitDialog;
 import de.unihalle.informatik.rhizoTrak.utils.M;
@@ -487,7 +488,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 					// Add new target point to root:
 					found = newNode(x_pl, y_pl, layer, root);
 					((ConnectorNode)found).setData(last_radius);
-					addNode(root, found, (byte) -3); // aeekz
+					addNode(root, found, (byte) RhizoProjectConfig.STATUS_CONNECTOR); // aeekz
 					setActive(found);
 					repaint(true, layer);
 				}
@@ -564,8 +565,19 @@ public class Connector extends Treeline  implements TreeEventListener{
 		return super.crop(range);
 	}
 	
-	/*actyc: sanity check for the connector*/
+
 	
+	/** sanity check for the connector
+	 * 
+	 * ensure that
+	 * <ul>
+	 * <li> we have one node for each treeline  which is located at the position of the root node of the treeline</li>
+	 * <li> the are no other nodes in the connector</li>
+	 * <ul>
+	 * @return
+	 * 
+	 * @author actyc
+	 */
 	public boolean sanityCheck(){
 		if(!conTreelines.isEmpty()){
 			if(root!=null && root.hasChildren()){
@@ -578,20 +590,31 @@ public class Connector extends Treeline  implements TreeEventListener{
 				
 				for(Treeline tree: conTreelines){
 					Node<Float> treeRoot = tree.getRoot();
-					if(treeRoot==null) return false;
+					if(treeRoot==null) 
+						// TODO: why should we return and not check the remaining treelines
+						return false;
+					
 					Layer treeRootLayer = tree.getRoot().getLayer();
-					if(treeRootLayer==null) return false;
+					if(treeRootLayer==null) 
+						// TODO: why should we return and not check the remaining treelines
+						return false;
+					
 					Point2D result = RhizoAddons.changeSpace(treeRoot.getX(),treeRoot.getY(),tree.getAffineTransform(),this.getAffineTransform());
-					if(result==null) return false;
+					if(result==null) 
+						// TODO: why should we return and not check the remaining treelines
+						return false;
 
 					//make sure all the connected treelines still exists
+					// TODO: this is a test if it is a Treeline object maybe one should test ith the treeline is still
+					// a member of the project tree
 					if(!tree.getClass().equals(Treeline.class)) {
-						if(!conTreelines.remove(tree)) return false;
+						if(!conTreelines.remove(tree)) 
+							// TODO: why should we return and not check the remaining treelines
+							return false;
 					}
 					
-					
-					
 					//make sure all the connected treelines have a target node at there root
+					// TODO: what if there are more than one connected treelines with their root node at the same position?
 					boolean found = false;
 					//Utils.log("active treeline: "+ tree.getId());
 					for (final Node<Float> nd : targets) {
@@ -607,21 +630,22 @@ public class Connector extends Treeline  implements TreeEventListener{
 					if(!found){
 						Node<Float> newTarget = newNode((float) result.getX(),(float) result.getY(), treeRoot.getLayer(), root);
 						found = ((ConnectorNode)newTarget).setData(last_radius);
-						found = addNode(root, newTarget,(byte)-3);					
+						found = addNode(root, newTarget, (byte)RhizoProjectConfig.STATUS_CONNECTOR);					
 					}
 				}
+				
 				//delete all unused nodes
 				for(Node<Float> nd: deleteList){
 					this.removeNode(nd);
 				}
+				
 				//set the root of the connector to the appropriate position
-				float[] posi = RhizoAddons.findConnectorRootPosition(this);
-				if(posi!=null)
-				{
+				float[] posi = findConnectorRootPosition();
+				if(posi!=null) {
 					this.getRoot().setPosition(posi);
 				}
 			} else {
-				//conTreelines is not empty but the connector have no children
+				//conTreelines is not empty but the root node of the connector has no children
 				for(Treeline tree: conTreelines){
 					//take tree root
 					Node<Float> treeRoot = tree.getRoot();
@@ -631,16 +655,20 @@ public class Connector extends Treeline  implements TreeEventListener{
 					//make a connector leaf and put it on the calculate position
 					Node<Float> newTarget = newNode((float) result.getX(),(float) result.getY(), treeRoot.getLayer(), root);
 					((ConnectorNode)newTarget).setData(last_radius);
-					if(!addNode(root, newTarget, (byte)-3)) return false;
+					if(!addNode(root, newTarget, (byte)RhizoProjectConfig.STATUS_CONNECTOR)) 
+						// TODO why should we return and not check the remaining treelines
+						return false;
 				}
+				
 				//set the root of the connector to the appropriate position
-				float[] posi = RhizoAddons.findConnectorRootPosition(this);
-				if(posi!=null)
-				{
+				float[] posi = findConnectorRootPosition();
+				if(posi!=null) {
 					this.getRoot().setPosition(posi);
 				}
 			}
 		} else {
+			// if this connector as no treelines, then remove all nodes
+			// TODO: should we also remove the root node?
 			if(root!=null && root.hasChildren()){
 				for(Node<Float> nd: root.children){
 					this.removeNode(nd);
@@ -683,6 +711,20 @@ public class Connector extends Treeline  implements TreeEventListener{
 		boolean added = conTreelines.add(newTreeline);
 		newTreeline.addTreeEventListener(this);
 		sanityCheck();
+        RhizoMain rhizoMain = this.getProject().getRhizoMain();
+        ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
+		conflictManager.processChange(newTreeline, this);
+		return added;
+	}
+	
+	public boolean addConTreelineHeadless(Treeline newTreeline) {
+		System.out.println( "addConTreeline add " + newTreeline.getId() + " to " + this.getId());
+
+		if(conTreelines.contains(newTreeline)) 
+			return false;
+		boolean added = conTreelines.add(newTreeline);
+		newTreeline.addTreeEventListener(this);
+//		sanityCheck();
         RhizoMain rhizoMain = this.getProject().getRhizoMain();
         ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
 		conflictManager.processChange(newTreeline, this);
@@ -747,6 +789,29 @@ public class Connector extends Treeline  implements TreeEventListener{
                     //this.removeConTreeline(currentTree);
                 }
             }
+	}
+
+	//function to find the the treeline that is on the same layer as the connector root: if there is non or more than one return null
+	public float[] findConnectorRootPosition()
+	{
+		float[] result=null;
+		ArrayList<Treeline> treelinesOnTheLayer = new ArrayList<Treeline>();
+		for(Treeline treeline : this.getConTreelines())
+		{
+			if(treeline.getFirstLayer()!=null && treeline.getFirstLayer().equals( this.getRoot().getLayer()))
+			{
+				treelinesOnTheLayer.add(treeline);
+			}			
+		}
+		if(treelinesOnTheLayer.size()<1 ||treelinesOnTheLayer.size()>1)
+		{
+			return result;
+		}
+		Treeline tree = treelinesOnTheLayer.get(0);
+		Node<Float> treeRoot = tree.getRoot();
+		Point2D posi = RhizoAddons.changeSpace(treeRoot.getX(),treeRoot.getY(),tree.getAffineTransform(), this.getAffineTransform());
+		result = new float[]{(float) posi.getX(),(float) posi.getY()};
+		return result;
 	}
 	
 	
