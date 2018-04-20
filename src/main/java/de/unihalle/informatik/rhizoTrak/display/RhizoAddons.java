@@ -616,12 +616,11 @@ public class RhizoAddons
 	{
 		Point2D result = new Point2D.Float(x, y);
 		result = start.transform(result, null);
-		try
-		{
+		try {
 			result = end.inverseTransform(result, null);
-		} catch (NoninvertibleTransformException e)
-		{
+		} catch (NoninvertibleTransformException e) {
 			// TODO Auto-generated catch block
+			Utils.showMessage( "rhizoTrak", "RhizoAddons.changeSpace: internal ERROR cannot inverse transformation");
 			e.printStackTrace();
 			result = null;
 		}

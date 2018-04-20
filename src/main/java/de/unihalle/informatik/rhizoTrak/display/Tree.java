@@ -1277,6 +1277,10 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 
 	/** Will call calculateBoundingBox and repaint. */
 	public boolean addNode(final Node<T> parent, final Node<T> child, final byte confidence) {
+		return  addNode( parent, child, confidence, false);
+	}
+	// if headless is true do not repaint 
+	public boolean addNode(final Node<T> parent, final Node<T> child, final byte confidence, boolean headless) {
 
 		boolean added = false;
 		Collection<Node<T>> subtree = null;
@@ -1309,8 +1313,10 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 			}
 		}
 		if (added) {
-			repaint(true, child.la);
-			updateView();
+			if ( ! headless ) {
+				repaint(true, child.la);
+				updateView();
+			}
 			Utils.log("@addNode2: " + child);
 			if (null != subtree) {
 				synchronized (tolink) {
