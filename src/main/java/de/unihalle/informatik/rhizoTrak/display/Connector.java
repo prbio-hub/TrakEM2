@@ -578,7 +578,15 @@ public class Connector extends Treeline  implements TreeEventListener{
 	 * 
 	 * @author actyc
 	 */
-	public boolean sanityCheck(){
+	public boolean sanityCheck() {
+		return sanityCheck( false);
+	}
+
+	/**
+	 * @param headless if true do not use a display, e.g., to repaint
+	 * @return
+	 */
+	public boolean sanityCheck( boolean headless){
 		if(!conTreelines.isEmpty()){
 			if(root!=null && root.hasChildren()){
 				ArrayList<Node<Float>> targets = new ArrayList<Node<Float>>();
@@ -602,8 +610,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 						continue;
 
 					//make sure all the connected treelines still exists
-					// TODO: this is a test if it is a Treeline object maybe one should test ith the treeline is still
-					// a member of the project tree
+					// TODO: this is a test if it is a Treeline object maybe one should test if the treeline is still a member of the project tree
 					if(!tree.getClass().equals(Treeline.class)) {
 						if(!conTreelines.remove(tree)) 
 							continue;
@@ -717,7 +724,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 			return false;
 		boolean added = conTreelines.add(newTreeline);
 		newTreeline.addTreeEventListener(this);
-//		sanityCheck();
+		sanityCheck( true);
         RhizoMain rhizoMain = this.getProject().getRhizoMain();
         ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
 		conflictManager.processChange(newTreeline, this);
