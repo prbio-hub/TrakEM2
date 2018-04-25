@@ -65,8 +65,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
-import org.scijava.jython.shaded.jnr.posix.MsgHdr;
-
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.xsd.config.Config;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings;
@@ -75,10 +73,11 @@ import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.GlobalStatusLi
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.GlobalStatusList.GlobalStatus;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.HighlightcolorList;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.ReceiverNodeColor;
+import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProject;
+import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProject.*;
 import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
-import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
@@ -453,24 +452,24 @@ public class RhizoIO
 
 		// and collect treelines and connectors below all rootstacks
 		// all treelines below a rootstack
-		HashMap<Long,Treeline> allTreelines = new HashMap<Long,Treeline>();
+		HashMap<Long,Treeline> allTreelines = RhizoUtils.getTreelinesBelowRootstacks(rootstackThings);
 		// all connectors below a rootstack
-				HashMap<Long,Connector> allConnectors = new HashMap<Long,Connector>();
+		HashMap<Long,Connector> allConnectors = RhizoUtils.getConnectorsBelowRootstacks(rootstackThings);
 		
-		for ( ProjectThing rootstackThing :rootstackThings ) {
-			if ( debug)	System.out.println("rootstack " + rootstackThing.getId());
-			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
-				// we also find connectors!
-				Treeline tl = (Treeline)pt.getObject();
-				if ( debug)	System.out.println( "    treeline " + tl.getId());
-				
-				if ( tl.getClass().equals( Treeline.class)) {
-					allTreelines.put( tl.getId(), (Treeline)tl);
-				} else if ( tl.getClass().equals(Connector.class) ) {
-					allConnectors.put( tl.getId(), (Connector)tl);
-				}
-			}
-		}
+//		for ( ProjectThing rootstackThing :rootstackThings ) {
+//			if ( debug)	System.out.println("rootstack " + rootstackThing.getId());
+//			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
+//				// we also find connectors!
+//				Treeline tl = (Treeline)pt.getObject();
+//				if ( debug)	System.out.println( "    treeline " + tl.getId());
+//				
+//				if ( tl.getClass().equals( Treeline.class)) {
+//					allTreelines.put( tl.getId(), (Treeline)tl);
+//				} else if ( tl.getClass().equals(Connector.class) ) {
+//					allConnectors.put( tl.getId(), (Connector)tl);
+//				}
+//			}
+//		}
 
         try {
             StringBuilder msg = new StringBuilder();
@@ -544,7 +543,7 @@ public class RhizoIO
 		//save connector data
 		saveConnectorData(filenameWoExtension + ".con");
 		saveConfigFile(filenameWoExtension + ".cfg");
-		
+		saveProject(filenameWoExtension + ".rtk");
 		return;		
 	}
 	
@@ -668,12 +667,11 @@ public class RhizoIO
     /**
      * Saves the connector data
      *
-     * @param filename - The project save file without extension 
-     * @author Axel
-     */
-    /**
      * @param filename
      * @return sucess
+     * 
+     * @author Axel, Posch
+
      */
     public boolean saveConnectorData(String filename) {
         LayerSet layerSet = rhizoMain.getRhizoAddons().getProject().getRootLayerSet();
@@ -701,10 +699,6 @@ public class RhizoIO
         if (conFile.exists()) {
         	conFile.renameTo( tempconFile);
         	savedOldVersion = true;
-//            String old = readFileToString(conFile); // read current file
-//            if ( old != null ) {
-//            	savedOldVersion = writeStringToFile(tempconFile, old); // and save to temp
-//            }
         }
 
 		if (!writeStringToFile(conFile, saveText) ) {
@@ -721,32 +715,81 @@ public class RhizoIO
 		}
 	}
 	
-//	/**
-//	 * 
-//	 * @param file - File to be read
-//	 * @return The contents of the file as string or null if an error occurred
-//	 * @author Axel
-//	 */
-//	public static String readFileToString(File file)
-//	{
-//		String result = "";
-//		StringBuilder sb = new StringBuilder();
-//		
-//		try (FileReader fr = new FileReader(file)) {
-//			int c = fr.read();
-//			while (c != -1)
-//			{
-//				sb.append((char) c);
-//				c = fr.read();
-//			}
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			return null;
-//		}
-//		
-//		result = sb.toString();
-//		return result;
-//	}
+    /** Save rhizoTrak specific data of a project:
+     * <ul>
+     * <li> mapping of status labels
+     * <li> image search directory
+     * <li> connector data
+     * </ul>
+     * 
+     * @param filename
+     * @return
+     */
+    public boolean saveProject( String filename) {
+    	boolean success = true;
+    	
+    	RhizoTrakProject xmlProject = new RhizoTrakProject();
+
+    	// collect mapping of status labels        
+    	StatusList jaxbStatusList =  new StatusList();
+    	for( int i = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabelList() ; i++ ) {
+    		StatusList.Status newStatus = new StatusList.Status();
+    		RhizoStatusLabel statusLabel = rhizoMain.getProjectConfig().getStatusLabel( i);
+
+    		newStatus.setFullName( statusLabel.getName());
+    		newStatus.setAbbreviation( statusLabel.getAbbrev());
+    		jaxbStatusList.getStatus().add( newStatus);
+    	}
+    	xmlProject.setStatusList(jaxbStatusList);
+
+    	// image search dir and so forth
+    	if ( rhizoMain.getProjectConfig().getImageSearchDir() != null ) {
+    		xmlProject.setImageSeachDir(  rhizoMain.getProjectConfig().getImageSearchDir().getAbsolutePath());
+    	} else if ( rhizoMain.getStorageFolder() != null) {
+    		xmlProject.setImageSeachDir( rhizoMain.getStorageFolder());
+    	} else {
+    		xmlProject.setImageSeachDir( System.getProperty("user.home"));
+    	}
+
+    	// connector data
+    	
+    	// first find rootstacks
+    	HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( rhizoMain.getRhizoAddons().getProject());
+    	if ( rootstackThings == null) {
+    		Utils.showMessage( "rhizoTrak", "RhizoIO.loadConnectorHeadless warning: no rootstack found");
+    		success = false;
+    	} else {
+    		ConnectorLinksList xmlConnectors = new ConnectorLinksList();
+    		// all connectors below a rootstack
+    		HashMap<Long,Connector> allConnectors = RhizoUtils.getConnectorsBelowRootstacks(rootstackThings);
+
+    		for ( Connector con : allConnectors.values()) {
+    			ConnectorLinksList.ConnectorLink connectorLink = new ConnectorLinksList.ConnectorLink();
+    			connectorLink.setConnectorId( con.getId());
+    			for (Treeline treeline : con.getConTreelines() ) {
+    				connectorLink.getTreelineIds().add( treeline.getId());
+    			}
+
+    			xmlConnectors.getConnectorLink().add( connectorLink);
+    		}
+    		xmlProject.setConnectorLinksList(xmlConnectors);
+    	}
+    	
+    	File configFile = new File(filename);
+    	try {
+    		JAXBContext context = JAXBContext.newInstance(RhizoTrakProject.class);
+    		Marshaller m = context.createMarshaller();
+    		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+    		
+    		m.marshal(xmlProject, configFile);
+    	} catch (Exception e) {
+    		Utils.showMessage( "rhizoTrak", "cannot write rhizotrak specific project data to " + configFile.getPath());
+    		e.printStackTrace();
+    		return false;
+    	}
+
+    	return success;
+    }
 	
 	/**
 	 * 

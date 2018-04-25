@@ -47,10 +47,12 @@
 
 package de.unihalle.informatik.rhizoTrak.addon;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
@@ -101,7 +103,56 @@ public class RhizoUtils {
 
 	}
 	
-	/**
+	/** get all Connectors below any of the  rootstacks hashed by its Id
+	 * 
+	 * @param project
+	 * @return hashmap of Id,connector
+	 */
+	public static HashMap<Long,Connector>  getConnectorsBelowRootstacks( HashSet<ProjectThing> rootstackThings) {
+		
+		// all connectors below a rootstack
+		HashMap<Long,Connector> allConnectors = new HashMap<Long,Connector>();
+
+		for ( ProjectThing rootstackThing :rootstackThings ) {
+			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
+				Object obj = pt.getObject();
+
+				if ( obj.getClass().equals(Connector.class) ) {
+					Connector con = (Connector) obj;
+					allConnectors.put( con.getId(), con);
+				}
+			}
+		}
+		
+		return allConnectors;
+	}
+	
+	/** get all Treelines below any of the  rootstacks hashed by its Id
+	 * 
+	 * @param project
+	 * @return hashmap of Id,connector
+	 */
+	public static HashMap<Long,Treeline>  getTreelinesBelowRootstacks( HashSet<ProjectThing> rootstackThings) {
+		
+		// all connectors below a rootstack
+		HashMap<Long,Treeline> allTreelines = new HashMap<Long,Treeline>();
+
+		for ( ProjectThing rootstackThing :rootstackThings ) {
+			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
+				Object obj = pt.getObject();
+
+				if ( obj .getClass().equals(Treeline.class) ) {
+					Treeline tl = (Treeline) obj;
+					allTreelines.put( tl.getId(), tl);
+				}
+			}
+		}
+		
+		return allTreelines;
+	}
+	
+	/** get all Connectors below any of the  rootstack hashed by its Id
+	 * 
 	 * @param project
 	 * @return an arbitrary of all  rootstacks in the project tree of <code>project</code> which can hold treelines and connectors or
 	 * null if non are found
