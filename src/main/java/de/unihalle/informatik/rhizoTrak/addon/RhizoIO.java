@@ -75,6 +75,7 @@ import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.Highlightcolor
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.ReceiverNodeColor;
 import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProject;
 import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProject.*;
+import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProject.ConnectorLinksList.ConnectorLink;
 import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
@@ -85,8 +86,9 @@ import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
-public class RhizoIO
-{
+public class RhizoIO {
+	public static final String RHIZOTRAK_PROJECTFILE_EXTENSION = "rtk";
+	
 	private RhizoMain rhizoMain;
 	
 	public static final File userSettingsFile = new File(System.getProperty("user.home") + File.separator + ".rhizoTrakSettings" + File.separator + "settings.xml");
@@ -99,62 +101,60 @@ public class RhizoIO
 	}
 
 
-	/**
-	 * Calls load methods when opening a project
-	 * @param file - saved project file
-	 * @author Axel
+	/** Load the rhizotrak specific data. requires the trakEM project already setup.
+	 * <p>
+	 * If the file wiht extenions <code>RHIZOTRAK_PROJECTFILE_EXTENSION</code> it is used.
+	 * Otherwise the previous version with separate files for the configuration and the connector data is tried.
+	 * <p>
+	 * In both cases the conflict manager is restored.
+	 * 
+	 * @param file File with the trakEM project .xml file
+	 * @param project the project
 	 */
-	public Thread addonLoader(File file, Project project)
-	{
-		Thread loader = new Thread()
-		{
-			{
-				setPriority(Thread.NORM_PRIORITY);
-			}
-			@Override
-			public void run() 	{	
-				
-			    // the project filename without extension .xml or .xml.gz
-				String filenameWoExtension = removeProjectfileExtension( file.getAbsolutePath());
+	
+	public void addonLoader( File file, Project project) {
+			String filenameWoExtension = removeProjectfileExtension( file.getAbsolutePath());
 
-				// load user settings 
-				Utils.log2("loading user settings...");
-				loadUserSettings();
-				// reset changed in project config
-				project.getRhizoMain().getProjectConfig().resetChanged();
+			// load user settings 
+			Utils.log2("loading user settings...");
+			loadUserSettings();
+			// reset changed in project config
+			project.getRhizoMain().getProjectConfig().resetChanged();
+			Utils.log2("done");
+
+			File f = new File(filenameWoExtension + "." + RHIZOTRAK_PROJECTFILE_EXTENSION);
+			if(f.exists() && !f.isDirectory()) { 
+				Utils.log2("loading rhizotrak project data...");
+				loadProject(filenameWoExtension + "." + RHIZOTRAK_PROJECTFILE_EXTENSION , false);
 				Utils.log2("done");
+
+				Utils.log2("restoring conflicts...");
+				rhizoMain.getRhizoAddons().getConflictManager().restorConflicts(project);
+				Utils.log2("done");
+
+			} else {
+				// old version with .cfg and .con files
 
 				Utils.log2("loading connector data...");
-//				loadConnector( filenameWoExtension);
-				loadConnectorHeadless( filenameWoExtension);
-
+				loadConnectorHeadless( filenameWoExtension + ".con");
 				Utils.log2("done");
-				
+
+
 				Utils.log2("restoring conflicts...");
-                
 				//TODO: have to be restored for every Project
 				rhizoMain.getRhizoAddons().getConflictManager().restorConflicts(project);
 				Utils.log2("done");
-				
+
 				Utils.log2("restoring status conventions...");
 				loadConfigFile( filenameWoExtension + ".cfg");
 				Utils.log2("done");
-                                
-				//lock all images
-				RhizoAddons.lockAllImagesInAllProjects();
-					
-				return;
 			}
-
-		};
-		
-		// start the thread
-		loader.start();
-		Utils.log2("return loader");
-		return loader;
-	}
+                         
+			//lock all images
+			RhizoAddons.lockAllImagesInAllProjects();
+	    	
+	    }
 	
-
 	/**
 	 * Loads the user settings (color, visibility etc.)
 	 * @author Axel, Tino
@@ -231,31 +231,40 @@ public class RhizoIO
 		Color color = new Color( colorSettings.getRed().intValue(), colorSettings.getGreen().intValue(), colorSettings.getBlue().intValue());
 		return color;
 	}
-
+	
+	/** Initialize the status label mapping from a rhizotrak project file or an old config file.
+	 * If no path  is given or can not be parsed  then use default settings
+	 * @param path
+	 */
+	public void initStatusLabelMapping( String path) {
+		if(null == path){
+			rhizoMain.getProjectConfig().setDefaultUserStatusLabel();
+		} else if ( path.endsWith(RHIZOTRAK_PROJECTFILE_EXTENSION)) {
+			loadProject( path, true);
+		} else {
+			loadConfigFile(path);
+		}
+	}
+	
 	/**
 	 * Loads the project config file. If <code>path</code> is null or the file cannot be parse the default configuration is
 	 * used.
 	 * <p>
 	 * Also the first xml-version is supported.
 	 * 
-	 * @param path Filename for the config file. If it does not end with  <code>.cfg</code> this extension is appended
+	 * @param path Filename for the config file. 
 	 * 
 	 * if <code>null</code> the default settings will be set
 	 * 
 	 * @author Tino, Posch
 	 */
 	public void loadConfigFile(String path) {
-		// New project..
 		if(null == path){
 			rhizoMain.getProjectConfig().setDefaultUserStatusLabel();
 			return;
 		}
 		
-		File configFile;
-		if ( ! path.endsWith( ".cfg"))
-			configFile = new File( path + ".cfg");
-		else 
-			configFile = new File( path);
+		File configFile = new File( path);
 		
 		if(!configFile.exists()) {
 			Utils.showMessage( "config file " + configFile.getPath() + " not found: using default settings");
@@ -328,6 +337,7 @@ public class RhizoIO
      * 
      * @author Axel, posch
      */
+	@Deprecated
     public boolean loadConnector(String path) {
 
         // read the save file
@@ -451,25 +461,8 @@ public class RhizoIO
 		}
 
 		// and collect treelines and connectors below all rootstacks
-		// all treelines below a rootstack
 		HashMap<Long,Treeline> allTreelines = RhizoUtils.getTreelinesBelowRootstacks(rootstackThings);
-		// all connectors below a rootstack
 		HashMap<Long,Connector> allConnectors = RhizoUtils.getConnectorsBelowRootstacks(rootstackThings);
-		
-//		for ( ProjectThing rootstackThing :rootstackThings ) {
-//			if ( debug)	System.out.println("rootstack " + rootstackThing.getId());
-//			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
-//				// we also find connectors!
-//				Treeline tl = (Treeline)pt.getObject();
-//				if ( debug)	System.out.println( "    treeline " + tl.getId());
-//				
-//				if ( tl.getClass().equals( Treeline.class)) {
-//					allTreelines.put( tl.getId(), (Treeline)tl);
-//				} else if ( tl.getClass().equals(Connector.class) ) {
-//					allConnectors.put( tl.getId(), (Connector)tl);
-//				}
-//			}
-//		}
 
         try {
             StringBuilder msg = new StringBuilder();
@@ -499,9 +492,7 @@ public class RhizoIO
                 		
                 		if ( tl == null ) {
                 			msg.append( "treeline " + currentTreelineID + " not found in project for connector " + currentConID);
-                		}
-                		
-                		if ( ! conn.addConTreelineHeadless( tl) ) {
+                		} else  if ( ! conn.addConTreelineHeadless( tl) ) {
                 			msg.append( "Error adding treeline " + currentTreelineID + " to connector " + currentConID);
                 		}
                 	}
@@ -522,11 +513,119 @@ public class RhizoIO
             e.printStackTrace();
             return false;
         }
-        
-       
+           
         return true;
     }
 	
+    /**
+	 * Loads the rhizotrak project data file. If <code>filenameWoExtension</code> is null or the file 
+	 * with appended extension cannot be parse the default configuration is used.
+	 * 
+	 * @param path Filename for the rhizotrak project data file
+	 * @param onlyMapping if true, read and restore only the mapping of status labels
+     * 
+     * @author Tino, Posch
+	 */
+
+	private void loadProject( String path, boolean onlyMapping) {
+		// New project..
+		if(null == path){
+			rhizoMain.getProjectConfig().setDefaultUserStatusLabel();
+			return;
+		}
+
+		File projectFile = new File( path);
+		if(!projectFile.exists()) {
+			Utils.showMessage( "config file " + projectFile.getPath() + " not found: using default settings");
+			rhizoMain.getProjectConfig().setDefaultUserStatusLabel();
+			return;
+		}
+
+		// parse the xml-file
+		RhizoTrakProject xmlProject = null;
+		try {	
+			// try RhizoTrakProject.xsd, i.e. current version
+			JAXBContext context = JAXBContext.newInstance(RhizoTrakProject.class);
+			Unmarshaller um = context.createUnmarshaller();
+			xmlProject = (RhizoTrakProject) um.unmarshal(projectFile);
+		} catch (JAXBException e) {    
+			Utils.showMessage( "cannot parse config file " + projectFile.getPath() + ": using default settings");
+
+			rhizoMain.getProjectConfig().setDefaultUserStatusLabel();	
+			return;
+		}
+		
+		// restore mapping of status labels
+		List<StatusList.Status> sl = xmlProject.getStatusList().getStatus();
+
+		for(int i = 0; i < sl.size(); i++) {
+			StatusList.Status newStatus = sl.get(i);
+
+			this.rhizoMain.getProjectConfig().appendStatusLabelToList(
+					this.rhizoMain.getProjectConfig().addStatusLabelToSet( newStatus.getFullName(), newStatus.getAbbreviation()));
+		}
+
+		if ( onlyMapping )
+			return;
+		
+		// ... and image search directory
+		if ( xmlProject.getImageSeachDir() != null ) {
+			this.rhizoMain.getProjectConfig().setImageSearchDir( new File( xmlProject.getImageSeachDir()));
+		} else if ( rhizoMain.getStorageFolder() != null ) {
+			this.rhizoMain.getProjectConfig().setImageSearchDir( new File( rhizoMain.getStorageFolder()));
+		} else {
+			this.rhizoMain.getProjectConfig().setImageSearchDir(  new File( System.getProperty("user.home")));
+		}			
+
+		// restore connector data
+		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( rhizoMain.getRhizoAddons().getProject());
+		if ( rootstackThings == null) {
+			Utils.showMessage( "rhizoTrak", "RhizoIO.loadConnectorHeadless warning: no rootstack found");
+
+			return;
+		}
+
+		// and collect treelines and connectors below all rootstacks
+		HashMap<Long,Treeline> allTreelines = RhizoUtils.getTreelinesBelowRootstacks(rootstackThings);
+		HashMap<Long,Connector> allConnectors = RhizoUtils.getConnectorsBelowRootstacks(rootstackThings);
+
+		if ( xmlProject.getConnectorLinksList() != null && xmlProject.getConnectorLinksList().getConnectorLink() != null ) {
+			StringBuilder msg = new StringBuilder();
+			for ( ConnectorLink cl : xmlProject.getConnectorLinksList().getConnectorLink()) {
+				if ( cl.getTreelineIds() == null)
+					continue;
+				
+				long currentConID = cl.getConnectorId();
+
+				Connector conn = allConnectors.get( currentConID);
+				if ( conn == null ) {
+					msg.append( "connector " + currentConID + " in ." + RHIZOTRAK_PROJECTFILE_EXTENSION + " file not found in project");
+					continue;
+				}
+				for ( Long currentTreelineID : cl.getTreelineIds()) {
+					Treeline tl = allTreelines.get(currentTreelineID);
+
+					if ( tl == null ) {
+						msg.append( "treeline " + currentTreelineID + " not found in project for connector " + currentConID);
+					} else 	if ( ! conn.addConTreelineHeadless( tl) ) {
+						msg.append( "Error adding treeline " + currentTreelineID + " to connector " + currentConID);
+					}
+				}
+			}
+
+			if ( msg.length() > 1 ) {
+				msg.insert(0, "RhizoIO.loadConnectorHeadless: Errors\n");
+				Utils.showMessage( "rhizoTrak", new String( msg));
+			}
+		}
+		
+		if ( debug) {
+			rhizoMain.getProjectConfig().printStatusLabelList();
+			rhizoMain.getProjectConfig().printStatusLabelSet();
+			rhizoMain.getProjectConfig().printFixStatusLabels();
+		}
+	}
+
 	/**
 	 * Main method project configuration and connector data
 	 * 
@@ -539,11 +638,7 @@ public class RhizoIO
 	
 	    // the project filename without extension .xml or .xml.gz
 		String filenameWoExtension = removeProjectfileExtension( file.getAbsolutePath());
-		
-		//save connector data
-		saveConnectorData(filenameWoExtension + ".con");
-		saveConfigFile(filenameWoExtension + ".cfg");
-		saveProject(filenameWoExtension + ".rtk");
+		saveProject(filenameWoExtension + "." + RHIZOTRAK_PROJECTFILE_EXTENSION);
 		return;		
 	}
 	

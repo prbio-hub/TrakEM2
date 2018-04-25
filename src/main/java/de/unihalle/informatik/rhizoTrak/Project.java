@@ -630,8 +630,8 @@ public class Project extends DBObject {
 			}
 
 			// aeekz
-			final OpenDialog od = new OpenDialog("Select status file (abort yields default status labels)", dir_project, null);
-			project.getRhizoMain().getRhizoIO().loadConfigFile(od.getPath());
+			final OpenDialog od = new OpenDialog("Select status label file (abort yields default status labels)", dir_project, null);
+			project.getRhizoMain().getRhizoIO().initStatusLabelMapping( od.getPath());
 
 			project.getRhizoMain().getProjectConfig().setImageSearchDir( new File( dir_project));
 			
@@ -747,16 +747,9 @@ public class Project extends DBObject {
 			IJError.print(e);
 		}
 		
-		//actyc: ready to load
-		try {
-			Utils.log(loader.getProjectXMLPath()); 
-			Utils.log2("start addon loader ...");
-			project.getRhizoMain().getRhizoIO().addonLoader(new File(loader.getProjectXMLPath()),project).join();
-			Utils.log2("started");
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		// ready to load rhizotrak additiona project data
+		Utils.log2("start addon loader ...");
+		project.getRhizoMain().getRhizoIO().addonLoader(new File(loader.getProjectXMLPath()), project);
 
 		// open any stored displays
 		if (open_displays) {
