@@ -284,7 +284,7 @@ public class RhizoIO {
 			for(int i = 0; i < sl.size(); i++) {
 				de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status newStatus = sl.get(i);
 				
-				this.rhizoMain.getProjectConfig().appendStatusLabelToList(
+				this.rhizoMain.getProjectConfig().appendStatusLabelMapping(
 						this.rhizoMain.getProjectConfig().addStatusLabelToSet( newStatus.getFullName(), newStatus.getAbbreviation()));
 			}
 			
@@ -306,7 +306,7 @@ public class RhizoIO {
 				List<Status> sl = config.getStatusList().getStatus();
 
 				for(int i = 0; i < sl.size(); i++) {
-					this.rhizoMain.getProjectConfig().appendStatusLabelToList( 
+					this.rhizoMain.getProjectConfig().appendStatusLabelMapping( 
 							this.rhizoMain.getProjectConfig().addStatusLabelToSet( sl.get(i).getFullName(), sl.get(i).getAbbreviation()));
 				}
 
@@ -323,7 +323,7 @@ public class RhizoIO {
 		}
 		
 		if ( debug) {
-			rhizoMain.getProjectConfig().printStatusLabelList();
+			rhizoMain.getProjectConfig().printStatusLabelMapping();
 			rhizoMain.getProjectConfig().printStatusLabelSet();
 			rhizoMain.getProjectConfig().printFixStatusLabels();
 		}
@@ -658,7 +658,7 @@ public class RhizoIO {
 	        
             de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList jaxbStatusList = 
                         		new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList();
-	        for( int i = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabelList() ; i++ ) {
+	        for( int i = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabelMapping() ; i++ ) {
 	        	de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status
 	        	newStatus = new de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig.StatusList.Status();
 	        	RhizoStatusLabel statusLabel = rhizoMain.getProjectConfig().getStatusLabel( i);
