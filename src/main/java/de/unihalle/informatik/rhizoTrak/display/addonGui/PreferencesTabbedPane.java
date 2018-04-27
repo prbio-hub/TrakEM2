@@ -115,7 +115,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 	private Border selectBorder = BorderFactory.createLineBorder(selectColor);
 	
 	// second tab
-	private JPanel assignmentPanel;
+	private JPanel mappingPanel;
 	// alternative to using a ComboBoxModel because we can't use the same model for every ComboBox
 	private List<String> choices = new ArrayList<String>(); 
 	private Stack<JComboBox<String>> comboStack = new Stack<JComboBox<String>>();
@@ -152,20 +152,23 @@ public class PreferencesTabbedPane extends JTabbedPane
 	private void addComboBoxTab()
 	{
 		// set up tab
-		assignmentPanel = new JPanel();
-		assignmentPanel.setLayout(new BoxLayout(assignmentPanel, BoxLayout.Y_AXIS));
-		assignmentPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+		mappingPanel = new JPanel();
+		mappingPanel.setLayout(new BoxLayout(mappingPanel, BoxLayout.Y_AXIS));
+		mappingPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 		
 		JPanel comboBoxPanel = new JPanel();
 		comboBoxPanel.setLayout(new BoxLayout(comboBoxPanel, BoxLayout.Y_AXIS));	
 		
 		// getAllUserDefinedStatusLabel() order does not correspond to statusLabelList order
-		for(int i = 0; i < config.sizeStatusLabelList(); i++)
-		{
-			choices.add(config.getStatusLabel(i).getName());
+		// but these are the ones we need! (sp)
+//		for(int i = 0; i < config.sizeStatusLabelMapping(); i++)	
+//		{
+		for ( RhizoStatusLabel sl : config.getAllUserDefinedStatusLabel() ) {
+			choices.add( sl.getName());
 		}
+		choices.sort( String.CASE_INSENSITIVE_ORDER);
 
-		for(int i = 0; i < config.sizeStatusLabelList(); i++)
+		for(int i = 0; i < config.sizeStatusLabelMapping(); i++)
 		{
 			addComboBox(i, comboBoxPanel);
 		}
@@ -173,7 +176,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
 		
-		JButton addButton = new JButton("Add Assignment");
+		JButton addButton = new JButton("Add mapping");
 		addButton.addActionListener(new ActionListener() 
 		{
 			@Override
@@ -181,13 +184,13 @@ public class PreferencesTabbedPane extends JTabbedPane
 			{
 				// default selected item = status that was added last
 				addComboBox(choices.size() - 1, comboBoxPanel);
-				config.appendStatusLabelToList(config.getStatusLabel(choices.get(choices.size() - 1)));
-				assignmentPanel.revalidate();
-				assignmentPanel.repaint();
+				config.appendStatusLabelMapping(config.getStatusLabel(choices.get(choices.size() - 1)));
+				mappingPanel.revalidate();
+				mappingPanel.repaint();
 			}
 			
 		});
-		JButton removeButton = new JButton("Remove Assignment");
+		JButton removeButton = new JButton("Remove mapping");
 		removeButton.addActionListener(new ActionListener()
 		{
 			@Override
@@ -195,29 +198,29 @@ public class PreferencesTabbedPane extends JTabbedPane
 			{
 				if(!comboStack.isEmpty())
 				{
-					int option = JOptionPane.showConfirmDialog(null, "This will delete the last assignment in the list. Are you sure?", "Confirm", JOptionPane.OK_CANCEL_OPTION);
+					int option = JOptionPane.showConfirmDialog(null, "This will delete the last mapping in the list. Are you sure?", "Confirm", JOptionPane.OK_CANCEL_OPTION);
 					if(option == JOptionPane.OK_OPTION)
 					{
 						if(!RhizoUtils.segmentsExist(rhizoMain.getProject(), comboStack.size() - 1))
 						{
 							comboBoxPanel.remove(comboStack.pop());
 							comboBoxPanel.remove(comboGlueStack.pop());
-							config.popStatusLabelFromList();
-							assignmentPanel.revalidate();
-							assignmentPanel.repaint();
+							config.popStatusLabelMapping();
+							mappingPanel.revalidate();
+							mappingPanel.repaint();
 						}
 						else 
 						{
-							int option2 = JOptionPane.showConfirmDialog(null, "You are about to remove a status label that is currently assigned to at least one segment.\n"
+							int option2 = JOptionPane.showConfirmDialog(null, "You are about to remove a status label that is currently mapped to at least one segment.\n"
 									+ "If you continue, the corresponding segments will be set to "+RhizoProjectConfig.NAME_UNDEFINED, "Confirm", JOptionPane.OK_CANCEL_OPTION);
 							if(option2 == JOptionPane.OK_OPTION)
 							{
 								RhizoUtils.setSegmentsStatus(rhizoMain.getProject(), comboStack.size()-1, (byte) RhizoProjectConfig.STATUS_UNDEFINED);
 								comboBoxPanel.remove(comboGlueStack.pop());
 								comboBoxPanel.remove(comboStack.pop());
-								config.popStatusLabelFromList();
-								assignmentPanel.revalidate();
-								assignmentPanel.repaint();
+								config.popStatusLabelMapping();
+								mappingPanel.revalidate();
+								mappingPanel.repaint();
 								
 								Display.getFront(rhizoMain.getProject()).repaintAll();
 							}
@@ -231,10 +234,10 @@ public class PreferencesTabbedPane extends JTabbedPane
 		buttonPanel.add(addButton);
 		buttonPanel.add(removeButton);
 		
-		assignmentPanel.add(comboBoxPanel);
-		assignmentPanel.add(buttonPanel);
+		mappingPanel.add(comboBoxPanel);
+		mappingPanel.add(buttonPanel);
 		
-		this.addTab("Label Assignment", assignmentPanel);
+		this.addTab("Label Mappings", mappingPanel);
 	}
 
 	private void addStatusTab()
@@ -336,7 +339,14 @@ public class PreferencesTabbedPane extends JTabbedPane
 							
 							// update choices
 							choices.add(fullNameTF.getText());
-							for(JComboBox<String> c: comboStack) c.addItem(fullNameTF.getText());
+							choices.sort( String.CASE_INSENSITIVE_ORDER);
+//							for(JComboBox<String> c: comboStack) c.addItem(fullNameTF.getText());
+							for(JComboBox<String> c: comboStack) {
+								c.removeAllItems();
+								for ( String n : choices) {
+									c.addItem(n);
+								}
+							}
 							
 							// add to status tab
 							addStatus(sl, dynamicPanel);
@@ -369,12 +379,12 @@ public class PreferencesTabbedPane extends JTabbedPane
 						
 						String notRemoved = "";
 											
-						// currently used status in the label assignment tab
-						List<String> assignedStatus = new ArrayList<String>();
+						// currently used status in the label mapping tab
+						List<String> mappedStatus = new ArrayList<String>();
 						for(JComboBox<String> c: comboStack)
 						{
 							String selectedString = (String) c.getSelectedItem();
-							assignedStatus.add(selectedString);
+							mappedStatus.add(selectedString);
 						}
 						
 						for(JPanel selectedPanel: selectedPanels)
@@ -385,7 +395,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 							{
 								String stringToBeRemoved = labelList.get(i).getText();
 								
-								if(!assignedStatus.contains(stringToBeRemoved))
+								if(!mappedStatus.contains(stringToBeRemoved))
 								{
 									panelsToBeRemoved.add(panelList.get(i));
 									textFieldsToBeRemoved.add(textFieldList.get(i));
@@ -424,7 +434,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 						
 						Display.getFront(rhizoMain.getProject()).repaintAll();
 						
-						if(!notRemoved.equals("")) Utils.showMessage("The following status were not removed because they are currently assigned to an integer:\n" + notRemoved);
+						if(!notRemoved.equals("")) Utils.showMessage("The following status were not removed because they are currently mapped to an integer:\n" + notRemoved);
 					}
 				}
 			}
@@ -499,7 +509,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 			public void actionPerformed(ActionEvent e) 
 			{
 				String selected = (String) combo.getSelectedItem();
-				config.replaceStatusLabelList(comboStack.indexOf(e.getSource()), config.getStatusLabel(selected));
+				config.replaceStatusLabelMapping(comboStack.indexOf(e.getSource()), config.getStatusLabel(selected));
 				
 				Display.getFront(rhizoMain.getProject()).repaintAll();
 			}

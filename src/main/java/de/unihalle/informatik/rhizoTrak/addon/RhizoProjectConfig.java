@@ -77,7 +77,7 @@ public class RhizoProjectConfig {
 	
 	/**
 	 * to represent a non-negative integer status value with has (currently) no label name
-	 * associated in the <code>statusLabelList</code>
+	 * associated in the <code>statusLabelMapping</code>
 	 */
 	public static final int STATUS_UNDEFINED = -1;
 	
@@ -119,10 +119,10 @@ public class RhizoProjectConfig {
 	 */
 	private final HashMap<Integer,String> fixedStatusLabelMap = new HashMap<Integer, String>();
 
-	/** definitions of user defines status labels
-	 * does only hold the names, a status label may be contained multiple times, order cares
+	/** Mapping of status integer to status labels names.
+	  * Different status integers may be mapped to the same status label name.
 	 */
-	private ArrayList<RhizoStatusLabel> statusLabelList = new ArrayList<RhizoStatusLabel>();
+	private ArrayList<RhizoStatusLabel> statusLabelMapping = new ArrayList<RhizoStatusLabel>();
 	
 	/**
 	 * Holds all fixed and user defined status labels.
@@ -181,25 +181,23 @@ public class RhizoProjectConfig {
 		setReceiverNodeColor( Node.getReceiverColor());	
 	}
 	
-	/** Append status label as the last label to the list.
+	/** Append status label as the last label to the mapping of status labels.
 	 * If a corresponding status label does not exist yet if will be created with the default color.
 	 * If it already did exist the abbreviation will be replace which has effect also
 	 * to potential further occurrences of this status label 
 	 * 
 	 * @param sl
 	 */
-	public void appendStatusLabelToList( RhizoStatusLabel statusLabel) {
-		// mind: abbreviations are not part of user settings, so do not set hasChanged
-		
-		statusLabelList.add( statusLabel);
+	public void appendStatusLabelMapping( RhizoStatusLabel statusLabel) {		
+		statusLabelMapping.add( statusLabel);
 	}
 
 	/**
-	 * remove the last label from the list
+	 * remove the last label from the mapping of status labels
 	 */
-	public void popStatusLabelFromList() {
-		if ( statusLabelList.size() > 0) {
-			statusLabelList.remove( statusLabelList.size()-1);
+	public void popStatusLabelMapping() {
+		if ( statusLabelMapping.size() > 0) {
+			statusLabelMapping.remove( statusLabelMapping.size()-1);
 		}
 	}
 	
@@ -208,12 +206,12 @@ public class RhizoProjectConfig {
 	 * @param statusLabel
 	 * @return true on success, false if index out of range
 	 */
-	public boolean replaceStatusLabelList( int i, RhizoStatusLabel statusLabel) {
-		if ( i >= 0 && i < statusLabelList.size() ) {
-			statusLabelList.set( i, statusLabel);
+	public boolean replaceStatusLabelMapping( int i, RhizoStatusLabel statusLabel) {
+		if ( i >= 0 && i < statusLabelMapping.size() ) {
+			statusLabelMapping.set( i, statusLabel);
 			return true;
 		} else {
-			Utils.log( "rhizotrak", "PRhizoProjectConfig.replaceStatusLabelList index " + i + " out of bounds");
+			Utils.log( "rhizotrak", "PRhizoProjectConfig.replaceStatusLabelMapping index " + i + " out of bounds");
 			return false;
 		}
 	}
@@ -384,19 +382,19 @@ public class RhizoProjectConfig {
 	}
 	
 	/**
-	 * @return The number of user defined status labels in the list, i.e. the number of currently valid
+	 * @return The number of user defined status labels in the mapping of status labels, i.e. the number of currently valid
 	 * mappings from integer to label names. Otherwise stated: the number returned miuns one is
 	 * the largest mapped integer.
 	 */
-	public int sizeStatusLabelList() {
-		return statusLabelList.size();
+	public int sizeStatusLabelMapping() {
+		return statusLabelMapping.size();
 	}
 	
-	/** This is a convenience function for compaittility with former rhizoTrak/trakEM version.
+	/** This is a convenience function for copatibility with former rhizoTrak/trakEM version.
 	 * @return largest user status integer value currently existing
 	 */
 	public int getMaxEdgeConfidence () {
-		return sizeStatusLabelList()-1;
+		return sizeStatusLabelMapping()-1;
 	}
 	
 	/**
@@ -417,8 +415,8 @@ public class RhizoProjectConfig {
 	 */
 	public RhizoStatusLabel getStatusLabel( int i) {
 		if ( i >= 0 ) {
-			if ( i < sizeStatusLabelList() )
-				return statusLabelList.get(i);
+			if ( i < sizeStatusLabelMapping() )
+				return statusLabelMapping.get(i);
 			else {
 				return statusLabelSet.get(  fixedStatusLabelMap.get( STATUS_UNDEFINED));
 			}
@@ -457,8 +455,8 @@ public class RhizoProjectConfig {
 	 */
 	public Color getColorForStatus( int i) {
 		if ( i >= 0 ) {
-			if ( i < sizeStatusLabelList() )
-				return makeColor( statusLabelList.get(i));
+			if ( i < sizeStatusLabelMapping() )
+				return makeColor( statusLabelMapping.get(i));
 			else {
 				return makeColor( statusLabelSet.get(  fixedStatusLabelMap.get( STATUS_UNDEFINED)));
 			}
@@ -482,7 +480,7 @@ public class RhizoProjectConfig {
 
 	/**
 	 * 
-	 * Set the default user defined status label
+	 * Set the default mapping of status label
 	 * <ul>
 	 * <li> LIVING
 	 * <li>DEAD
@@ -490,24 +488,24 @@ public class RhizoProjectConfig {
 	 * <li>GAP
 	 * </ul>.
 	 * 
-	 * The List defining the mapping will be clear in advance.
+	 * The mapping of status labels will be clear in advance.
 	 * If corresponding status label names are not define yet they will me created.
 	 */
 	public void setDefaultUserStatusLabel() {
-		statusLabelList.clear();
+		statusLabelMapping.clear();
 	
-		appendStatusLabelToList( addStatusLabelToSet( "LIVING", "L"));
-		appendStatusLabelToList( addStatusLabelToSet( "DEAD", "D"));
-		appendStatusLabelToList( addStatusLabelToSet( "DECAYED", "Y"));
-		appendStatusLabelToList( addStatusLabelToSet( "GAP", "G"));
+		appendStatusLabelMapping( addStatusLabelToSet( "LIVING", "L"));
+		appendStatusLabelMapping( addStatusLabelToSet( "DEAD", "D"));
+		appendStatusLabelMapping( addStatusLabelToSet( "DECAYED", "Y"));
+		appendStatusLabelMapping( addStatusLabelToSet( "GAP", "G"));
 		
 	}
 	
 	/**
-	 * clear the list of user define status labels
+	 * clear the mapping of status labels
 	 */
-	public void clearStatusLabels() {
-		statusLabelList.clear();
+	public void clearStatusLabelMapping() {
+		statusLabelMapping.clear();
 	}
 
 	/**
@@ -644,9 +642,9 @@ public class RhizoProjectConfig {
 
 	}
 
-	public void printStatusLabelList() {
-		System.out.println( "StatusLabelList");
-		for ( RhizoStatusLabel sl : this.statusLabelList ) {
+	public void printStatusLabelMapping() {
+		System.out.println( "StatusLabelMapping");
+		for ( RhizoStatusLabel sl : this.statusLabelMapping ) {
 			System.out.println("\t" + sl.getName());
 		}
 	}

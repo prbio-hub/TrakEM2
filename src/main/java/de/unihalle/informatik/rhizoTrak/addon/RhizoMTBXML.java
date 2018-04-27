@@ -444,7 +444,7 @@ public class RhizoMTBXML
     					// assuming that default status are defined
 	    				byte s = (byte) RhizoProjectConfig.STATUS_UNDEFINED;
 	    				
-	    				for(int index = 0 ; index < rhizoMain.getProjectConfig().sizeStatusLabelList() ; index++) 
+	    				for(int index = 0 ; index < rhizoMain.getProjectConfig().sizeStatusLabelMapping() ; index++) 
 	    				{
 	    					String statusName = rhizoMain.getProjectConfig().getStatusLabel(index).getName();
 	    					
