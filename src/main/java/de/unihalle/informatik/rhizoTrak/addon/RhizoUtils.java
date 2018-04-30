@@ -47,16 +47,19 @@
 
 package de.unihalle.informatik.rhizoTrak.addon;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import javax.swing.tree.DefaultMutableTreeNode;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
+import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 /**
  * some helper methods
@@ -81,23 +84,26 @@ public class RhizoUtils {
 			ProjectTree projectTree = project.getProjectTree();
 		
 			ProjectThing projectTreeRoot = (ProjectThing)projectTree.getRoot().getUserObject();
+			System.out.println( "GETROOTSTACKS projectTreeRoot hash " + projectTreeRoot.hashCode());
 			HashSet<ProjectThing> rootstackProjectThings = projectTreeRoot.findChildrenOfTypeR( "rootstack");
-			if ( rootstackProjectThings.size() == 0) {
-//				Utils.log( "RhizoUtils:getRootstacks Error can not find a rootstack in project tree");
-				return null;
+			
+			Iterator<ProjectThing> itr = rootstackProjectThings.iterator();
+			while ( itr.hasNext()) {
+				ProjectThing rootstackProjectThing = itr.next();
+				System.out.println( "GETROOTSTACKS rootstackProjectThing hash " + rootstackProjectThing.hashCode());
+				if ( ! ( rootstackProjectThing.canHaveAsChild( "treeline") && rootstackProjectThing.canHaveAsChild( "connector") ) ) {
+					rootstackProjectThings.remove(rootstackProjectThing);
+				}
 			}
 			
-			// just take the first node capable to hold treelines
-			Iterator<ProjectThing> itr = rootstackProjectThings.iterator();
-			ProjectThing rootstackProjectThing = itr.next();
-			if ( ! ( rootstackProjectThing.canHaveAsChild( "treeline") && rootstackProjectThing.canHaveAsChild( "connector") ) ) {
-//				Utils.log( "RhizoUtils:getRootstacks Error rootstack cannot hold treelies and connectors");
+			if ( rootstackProjectThings.size() == 0) {
+				Utils.log( "RhizoUtils:getRootstacks Error can not find a rootstack in project tree");
 				return null;
 			}
 				
 			return rootstackProjectThings;
 		} catch ( Exception ex ) {
-//			Utils.log( "RhizoUtils:getRootstacks Error can get root of project things");
+			Utils.log( "RhizoUtils:getRootstacks Error can get root of project things");
 			return null;
 		}
 
@@ -286,4 +292,39 @@ public class RhizoUtils {
 			}
 		}
 
+		/** Print the project tree to stdout
+		 * @param project
+		 */
+		public static void printProjecttree( Project project) {
+			printDefaultMutableTreeNode( project.getProjectTree().getRoot(), "");
+		}
+
+		/** Recursively prints the <code>DefaultMutableTreeNode node</code> and its content to stdout.
+		 *  The indentation <code>indent</code> is incremented as we recurse into the tree
+		 * @param node
+		 * @param indent
+		 */
+		private static void printDefaultMutableTreeNode( DefaultMutableTreeNode node, String indent) {
+			System.out.println( indent + node + " class "  + node.getClass() + " hash " + node.hashCode());
+			printProjectThing( (ProjectThing)node.getUserObject(), indent+" +");
+			Enumeration<?> enum_nodes = node.children();
+			while (enum_nodes.hasMoreElements()) {
+				DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) enum_nodes.nextElement();
+				printDefaultMutableTreeNode( currentNode, indent+"    ");
+			}
+		}
+		
+		/** Print the content pf the PorjectThing to stdout
+		 * @param pt
+		 * @param indent
+		 */
+		private static void printProjectThing( ProjectThing pt, String indent) {
+			ProjectThing parent =  (ProjectThing) pt.getParent();
+			System.out.println( indent + pt.getId() + " hash " + pt.hashCode() + " object " + pt.getObject() + 
+					" hash " + pt.getObject().hashCode() + 
+					" (" + pt.getObject().getClass() + ")" +
+					", parent " + (parent != null ? parent.getId() : "null" ));
+		
+		}
+		
 }
