@@ -84,13 +84,11 @@ public class RhizoUtils {
 			ProjectTree projectTree = project.getProjectTree();
 		
 			ProjectThing projectTreeRoot = (ProjectThing)projectTree.getRoot().getUserObject();
-			System.out.println( "GETROOTSTACKS projectTreeRoot hash " + projectTreeRoot.hashCode());
 			HashSet<ProjectThing> rootstackProjectThings = projectTreeRoot.findChildrenOfTypeR( "rootstack");
 			
 			Iterator<ProjectThing> itr = rootstackProjectThings.iterator();
 			while ( itr.hasNext()) {
 				ProjectThing rootstackProjectThing = itr.next();
-				System.out.println( "GETROOTSTACKS rootstackProjectThing hash " + rootstackProjectThing.hashCode());
 				if ( ! ( rootstackProjectThing.canHaveAsChild( "treeline") && rootstackProjectThing.canHaveAsChild( "connector") ) ) {
 					rootstackProjectThings.remove(rootstackProjectThing);
 				}

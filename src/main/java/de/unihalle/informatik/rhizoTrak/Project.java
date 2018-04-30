@@ -1174,7 +1174,7 @@ public class Project extends DBObject {
 			ptcache.remove(ob);
 		}
 	}
-
+	
 	public ProjectThing getRootProjectThing() {
 		return root_pt;
 	}
@@ -1884,7 +1884,8 @@ public class Project extends DBObject {
 	public void resetRootProjectThing(final ProjectThing pt, final HashMap<Thing,Boolean> ptree_exp) {
 		this.root_pt = pt;
 		project_tree.reset(ptree_exp);
-	}
+		this.ptcache.clear();
+	}	
 	/** For undo purposes. */
 	public void resetRootTemplateThing(final TemplateThing tt, final HashMap<Thing,Boolean> ttree_exp) {
 		this.root_tt = tt;
