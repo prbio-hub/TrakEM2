@@ -363,7 +363,7 @@ public class RhizoAddons
 				// let the user choose the child treeline
 				Displayable oldActive = display.getActive(); // do not know why we can not use parentTl instead? sp
 
-				Thread t = choose(me.getX(), me.getY(), x_p, y_p, Treeline.class, display);
+				Thread t = choose(me.getX(), me.getY(), x_p, y_p, true, Treeline.class, display);
 				t.start();
 				try {
 					t.join();
