@@ -363,7 +363,7 @@ public class RhizoAddons
 				// let the user choose the child treeline
 				Displayable oldActive = display.getActive(); // do not know why we can not use parentTl instead? sp
 
-				Thread t = choose(me.getX(), me.getY(), x_p, y_p, true, Treeline.class, display);
+				Thread t = choose(me.getX(), me.getY(), x_p, y_p, false, Treeline.class, display);
 				t.start();
 				try {
 					t.join();
@@ -493,7 +493,7 @@ public class RhizoAddons
 				final Point po = dc.getCursorLoc();
 				// Utils.log(display.getActive());
 				Displayable oldActive = display.getActive();
-				Thread t = choose(me.getX(), me.getY(), x_p, y_p,true, Treeline.class, display);
+				Thread t = choose(me.getX(), me.getY(), x_p, y_p,false, Treeline.class, display);
 				t.start();
 				try
 				{
@@ -734,6 +734,26 @@ public class RhizoAddons
 			}
 		}
 		
+		//remove all displayables that don't match the given class if a class is given
+		if (null != c) {
+			// check if at least one of them is of class c
+			// if only one is of class c, set as selected
+			// else show menu
+			for (final Iterator<?> it = alDisplayables.iterator(); it.hasNext();) {
+				final Object ob = it.next();
+				if (ob.getClass() != c)
+					it.remove();
+			}
+		}
+
+		if ( debug ) {
+			System.out.println( "choose: alDisplayables after removing unmatching classes");
+			for ( Displayable d : alDisplayables ) {
+				System.out.println( "    id" + d.getId() + "  " + d.getClass());
+			}
+		}
+
+		
 		// actyc: remove those trees that contain a non selectable node at xp und yp
 		// or connectors (if not selectable, or patches if locked
 		ArrayList<Displayable> displayablesToRemove = new ArrayList<Displayable>();
@@ -764,7 +784,7 @@ public class RhizoAddons
 		alDisplayables.removeAll(displayablesToRemove);
 
 		if ( debug ) {
-			System.out.println( "choose: alDisplayables after remove");
+			System.out.println( "choose: alDisplayables after filtering based on selectability and locked patches");
 			for ( Displayable d : alDisplayables ) {
 				System.out.println( "    id" + d.getId() + "  " + d.getClass());
 			}
@@ -802,34 +822,9 @@ public class RhizoAddons
 			
 			// Utils.log("choose 1: set active to " + active);
 		} else {
-			if (alDisplayables.contains(currentDisplay.getActive()) && !shift_down) {
-				// do nothing
-			} else {
-				if (null != c) {
-					// check if at least one of them is of class c
-					// if only one is of class c, set as selected
-					// else show menu
-					for (final Iterator<?> it = alDisplayables.iterator(); it.hasNext();) {
-						final Object ob = it.next();
-						if (ob.getClass() != c)
-							it.remove();
-					}
-					
-					if (0 == alDisplayables.size()) {
-						// deselect
-						Display.clearSelection();
-						return t;
-					} else if (1 == alDisplayables.size()) {
-						currentDisplay.select((Displayable) alDisplayables.get(0), shift_down);
-						return t;
-					}
-					// else, choose among the many
-				}
-				return choose(screen_x_p, screen_y_p, alDisplayables, shift_down, x_p, y_p, currentDisplay);
-			}
-			// Utils.log("choose many: set active to " + active);
+			// else, choose among the many
+			return choose(screen_x_p, screen_y_p, alDisplayables, shift_down, x_p, y_p, currentDisplay);
 		}
-		
 		return t;
 	}
 	
