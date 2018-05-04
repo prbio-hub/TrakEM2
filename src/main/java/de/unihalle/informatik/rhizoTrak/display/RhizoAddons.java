@@ -493,7 +493,7 @@ public class RhizoAddons
 				final Point po = dc.getCursorLoc();
 				// Utils.log(display.getActive());
 				Displayable oldActive = display.getActive();
-				Thread t = choose(me.getX(), me.getY(), x_p, y_p, Treeline.class, display);
+				Thread t = choose(me.getX(), me.getY(), x_p, y_p,true, Treeline.class, display);
 				t.start();
 				try
 				{
