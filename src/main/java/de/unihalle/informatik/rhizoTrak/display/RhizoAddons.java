@@ -818,6 +818,7 @@ public class RhizoAddons
 				}
 			} else {
 				currentDisplay.select(d, shift_down);
+				chooseAction(d, x_p, y_p, currentDisplay);
 			}
 			
 			// Utils.log("choose 1: set active to " + active);
@@ -828,7 +829,7 @@ public class RhizoAddons
 		return t;
 	}
 	
-	private static Thread choose(final int screen_x_p, final int screen_y_p, final Collection<Displayable> al, final boolean shift_down, final int x_p, final int y_p, Display currentDisplay)
+	private Thread choose(final int screen_x_p, final int screen_y_p, final Collection<Displayable> al, final boolean shift_down, final int x_p, final int y_p, Display currentDisplay)
 	{
 		// show a popup on the canvas to choose
 		Thread t = new Thread()
@@ -942,6 +943,7 @@ public class RhizoAddons
 				else
 				{
 					currentDisplay.select(d, shift_down);
+					chooseAction(d, x_p, y_p, currentDisplay);
 				}
 				
 				
@@ -958,6 +960,12 @@ public class RhizoAddons
 			}
 		};
 		return t;
+	}
+	
+	private void chooseAction(Displayable d, float wx,float wy , Display currentDisplay) {
+		if(d instanceof Treeline) {
+			((Treeline) d).toClosestPaintedNode(currentDisplay.getLayer(), wx, wy, currentDisplay.getCanvas().getMagnification());
+		}
 	}
 
     
