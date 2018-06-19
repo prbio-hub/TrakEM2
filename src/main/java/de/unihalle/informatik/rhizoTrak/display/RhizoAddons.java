@@ -250,7 +250,7 @@ public class RhizoAddons
 	 * @return Success
 	 * @author Axel
 	 */
-	private static boolean getRightPC(Treeline ptree, Treeline ctree)
+	public static boolean getRightPC(Treeline ptree, Treeline ctree)
 	{
 		//copytreelineconnector - two possibilities: a) ptree has no connector, so a new one needs to be created b) ptree has a connector so we can call copyEvent
 		if (ptree.getTreeEventListener().size() < 1)

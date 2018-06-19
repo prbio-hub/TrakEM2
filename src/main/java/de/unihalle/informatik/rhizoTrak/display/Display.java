@@ -2832,6 +2832,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				item = new JMenuItem("Part subtree"); item.addActionListener(this); popup.add(item);
 				item = new JMenuItem("Join"); item.addActionListener(this); popup.add(item);
 				item = new JMenuItem("Show tabular view"); item.addActionListener(this); popup.add(item);
+				item = new JMenuItem("Copy to next layer"); item.addActionListener(this); popup.add(item); // aeekz
 				final Collection<Tree> trees = selection.get(Tree.class);
 
 				//
@@ -5599,6 +5600,55 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		} else if (command.equals("Show tabular view")) {
 			if (!(active instanceof Tree<?>)) return;
 			((Tree<?>)active).createMultiTableView();
+		} else if(command.equals("Copy to next layer")) {
+			// aeekz
+			if (!(active instanceof Treeline)) return;
+			
+			Display display = Display.getFront();
+			LayerSet currentLayerSet = display.getLayerSet();
+			Layer nextLayer = currentLayerSet.next(display.getLayer());			
+			
+			if (nextLayer == null || nextLayer.getZ() == display.getLayer().getZ()) 
+			{
+				Utils.showMessage("rhizoTrak", "Copying treeline failed: no layer to copy to.");
+				return;
+			}
+			
+			Treeline treeline = (Treeline) active;
+			try
+			{
+				Treeline treelineCopy = Tree.copyAs(treeline, Treeline.class, Treeline.RadiusNode.class);
+				treelineCopy.setLayer(nextLayer, true);
+				
+				for (Node<Float> node: treelineCopy.getRoot().getSubtreeNodes()) 
+				{
+					node.setLayer(nextLayer);
+					Color col = Display.getFront().getProject().getRhizoMain().getProjectConfig().getColorForStatus((node.getConfidence()));
+					node.setColor(col);
+				}
+				
+				treelineCopy.setTitle("treeline");
+				treelineCopy.clearState();
+				treelineCopy.updateCache();
+				
+				currentLayerSet.add(treelineCopy);
+				
+				treelineCopy.getProject().getProjectTree().addSibling(treeline, treelineCopy);
+				
+				if(!RhizoAddons.getRightPC(treeline, treelineCopy))
+				{
+					Utils.showMessage("rhizoTrak", "Copy treelines can not create connector automatically between #" +
+							treeline.getId() + " and #" + treelineCopy.getId());
+				}
+				Display.update(currentLayerSet);
+			} 
+			catch (Exception e)
+			{
+				e.printStackTrace();
+				Utils.showMessage("rhizoTrak", "Copying treeline failed for treeline #"  + treeline.getId());
+			}
+			
+			
 		} else if (command.equals("Mark")) {
 			if (!(active instanceof Tree<?>)) return;
 			final Point p = canvas.consumeLastPopupPoint();
