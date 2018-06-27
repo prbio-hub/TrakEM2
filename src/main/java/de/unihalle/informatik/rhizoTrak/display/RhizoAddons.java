@@ -204,6 +204,45 @@ public class RhizoAddons
 		}
 
 	}
+	
+	/**
+	 * Deletes all treelines from the currently active layer
+	 * @author Tino 
+	 */
+	public void deleteAllTreelinesFromCurrentLayer()
+	{
+		Display display = Display.getFront();
+		
+		Layer currentLayer = display.getLayer();
+		if(currentLayer == null) 
+		{
+			Utils.showMessage("rhizoTrak", "Deleting treelines failed: internal error, can not find current layer.");
+			return;
+		}
+
+		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
+		if(rootstackThings == null) 
+		{
+			Utils.showMessage( "rhizoTrak", "Deleting treelines failed: no rootstack found.");
+			return;
+		}
+
+		for(ProjectThing rootstackThing :rootstackThings) 
+		{
+			for(ProjectThing pt: rootstackThing.findChildrenOfTypeR(Treeline.class)) 
+			{
+				Treeline ctree = (Treeline) pt.getObject();
+
+				if(ctree.getClass().equals(Treeline.class)) 
+				{
+					if(ctree.getFirstLayer() != null && currentLayer.equals(ctree.getFirstLayer()))
+					{
+						if(!ctree.remove2(false)) Utils.log("@deleteAll: failed to delete treeline " + ctree.getId());
+					}
+				}
+			}
+		}
+	}
 
 	/**
 	 * Creates a shortcut for drawing treelines. Currently: Strg+T

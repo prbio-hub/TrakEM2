@@ -79,7 +79,6 @@ import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Event;
-import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -150,6 +149,8 @@ import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -163,11 +164,15 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JViewport;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.MatteBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -231,7 +236,6 @@ import legacy.lenscorrection.DistortionCorrectionTask;
 import legacy.lenscorrection.NonLinearTransform;
 import legacy.mpicbg.trakem2.align.AlignLayersTask;
 import legacy.mpicbg.trakem2.align.AlignTask;
-import legacy.mpicbg.trakem2.align.Util;
 import legacy.org.janelia.intensity.MatchIntensities;
 import mpicbg.ij.clahe.Flat;
 import mpicbg.models.PointMatch;
@@ -934,7 +938,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 
 		// Tabbed pane on the left
 		this.tabs = new JTabbedPane();
-		this.tabs.setMinimumSize(new Dimension(250, 300));
+		this.tabs.setMinimumSize(new Dimension(300, 300));
 		this.tabs.setBackground(Color.white);
 		this.tabs.addChangeListener(tabs_listener);
 
@@ -1413,8 +1417,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		jsp.getVerticalScrollBar().setBlockIncrement(DisplayablePanel.HEIGHT); // clicking within the track
 		jsp.getVerticalScrollBar().setUnitIncrement(DisplayablePanel.HEIGHT); // clicking on an arrow
 		jsp.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		jsp.setPreferredSize(new Dimension(250, 300));
-		jsp.setMinimumSize(new Dimension(250, 300));
+		jsp.setPreferredSize(new Dimension(300, 300));
+		jsp.setMinimumSize(new Dimension(300, 300));
 		return jsp;
 	}
 
@@ -6467,6 +6471,11 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 														"", JOptionPane.YES_NO_OPTION);
 			if(answer == JOptionPane.YES_OPTION) Display.getFront().getProject().getRhizoMain().getRhizoAddons().copyTreeLine();
 		}
+		else if(command.equals("Delete treelines")){
+			int answer = JOptionPane.showConfirmDialog(null, "This will delete every treeline from the current layer and may not be undone.\nAre you sure?", 
+					"", JOptionPane.YES_NO_OPTION);
+			if(answer == JOptionPane.YES_OPTION) Display.getFront().getProject().getRhizoMain().getRhizoAddons().deleteAllTreelinesFromCurrentLayer();
+		}
 		else if(command.equals("Load images")){
 			Display.getFront().getProject().getRhizoMain().getRhizoImages().createImageLoaderFrame();
 		}
@@ -7342,70 +7351,113 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	RhizoAddons.shortyForTreeLine(this.getTabbedPane());
     	//RhizoAddons.shortyForMergeTool(this.getTabbedPane()); //deprecated
     	
-    	
+    	// Main panelbutton
     	JPanel panel = new JPanel();
-    	panel.setLayout(new GridLayout(0, 1)); // n rows 1 columns
-//    	panel.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+//    	panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+    	
+    	// Sub panels
+    	JPanel group1 = new JPanel(new GridLayout(0, 2, 5, 3)); // Treeline related operations
+    	JPanel group2 = new JPanel(new GridLayout(0, 2, 5, 3)); // Read and write operations
+    	JPanel group3 = new JPanel(new GridLayout(0, 2, 5, 3)); // Connector related operations
+    	JPanel group4 = new JPanel(new GridLayout(0, 2, 5, 3)); // Image related operations
+    	JPanel group5 = new JPanel(new GridLayout(0, 2, 5, 3)); // RhizoTrak miscellaneous
+    	group1.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	group2.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	group3.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	group4.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	group5.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	
     	
     	JButton copyButton = new JButton("Copy Treelines");
     	copyButton.setToolTipText("Copys treelines from the current layer to the next layer.");
     	copyButton.setActionCommand("Copy treelines");
     	copyButton.addActionListener(this);
-    	panel.add(copyButton);
-    	    	
-    	JButton conflicManagerButton = new JButton("Conflict Manager");
-    	conflicManagerButton.setToolTipText("Manage conflicts related to connectors.");
-    	conflicManagerButton.setActionCommand("conflictPanel");
-    	conflicManagerButton.addActionListener(this);
-    	conflicManagerButton.setEnabled(true);
-    	panel.add(conflicManagerButton);
+    	group1.add(copyButton);
     	
-    	JButton loadImagesButton = new JButton("Load Images");
-    	loadImagesButton.setToolTipText("Import one or more images as a stack.");
-    	loadImagesButton.setActionCommand("Load images");
-    	loadImagesButton.addActionListener(this);
-    	panel.add(loadImagesButton);
+    	JButton deleteButton = new JButton("Delete Treelines");
+    	deleteButton.setToolTipText("Deletes all treelines from the current layer.");
+    	deleteButton.setActionCommand("Delete treelines");
+    	deleteButton.addActionListener(this);
+    	group1.add(deleteButton);
     	
     	JButton readXMLButton = new JButton("Read MTBXML");
     	readXMLButton.setToolTipText("Reads a MTBXML file that corresponds to the images already loaded.");
     	readXMLButton.setActionCommand("readXML");
     	readXMLButton.addActionListener(this);
     	readXMLButton.setEnabled(true);
-    	panel.add(readXMLButton);
+    	group2.add(readXMLButton);    	
     	
     	JButton writeXMLButton = new JButton("Write MTBXML");
     	writeXMLButton.setToolTipText("Writes the current TrakEM project to MTBXML format.");
     	writeXMLButton.setActionCommand("writeXML");
     	writeXMLButton.setEnabled(true);
     	writeXMLButton.addActionListener(this);
-    	panel.add(writeXMLButton);
-    	
-    	
+    	group2.add(writeXMLButton);
+
     	JButton statButton = new JButton("Write Statistics");
     	statButton.setToolTipText("");
     	statButton.setActionCommand("stat");
     	statButton.addActionListener(this);
     	statButton.setEnabled(true);
-    	panel.add(statButton);
+    	group2.add(statButton);
+    		
+    	JButton conflicManagerButton = new JButton("Conflict Manager");
+    	conflicManagerButton.setToolTipText("Manage conflicts related to connectors.");
+    	conflicManagerButton.setActionCommand("conflictPanel");
+    	conflicManagerButton.addActionListener(this);
+    	conflicManagerButton.setEnabled(true);
+    	group3.add(conflicManagerButton);
+    	
+    	JButton loadImagesButton = new JButton("Load Images");
+    	loadImagesButton.setToolTipText("Import one or more images as a stack.");
+    	loadImagesButton.setActionCommand("Load images");
+    	loadImagesButton.addActionListener(this);
+    	group4.add(loadImagesButton);
     	
     	JButton preferencesButton = new JButton("Preferences");
     	preferencesButton.setToolTipText("Adjust the color and opacity of treelines of a certain type.");
     	preferencesButton.setActionCommand("preferences");
     	preferencesButton.addActionListener(this);
-    	panel.add(preferencesButton);
+    	group5.add(preferencesButton);
 
     	JButton aboutButton = new JButton("About rhizoTrak");
     	aboutButton.setToolTipText("");
     	aboutButton.setActionCommand("aboutRhizo");
     	aboutButton.addActionListener(this);
     	aboutButton.setEnabled(true);
-    	panel.add(aboutButton);
+    	group5.add(aboutButton);
 
     	JButton devTest = new JButton("Test");
     	devTest.setToolTipText("");
     	devTest.setActionCommand("testtest");
     	devTest.addActionListener(this);
-//    	panel.add(devTest); 
+//    	group5.add(devTest); 
+    	
+    	MatteBorder mb = new MatteBorder(1, 0, 0, 0, Color.BLACK);
+    	TitledBorder tb = new TitledBorder(mb, "rhizoTrak Operations", TitledBorder.CENTER, TitledBorder.DEFAULT_POSITION);
+    	
+    	final int VGAP = 8;
+    	panel.setBorder(tb);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(group1);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(group2);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(group3);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(group4);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(group5);
     	
     	return panel;
     }

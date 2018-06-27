@@ -102,7 +102,7 @@ public final class DisplayNavigator extends JPanel implements MouseListener, Mou
 	private Display display;
 	private Layer layer;
 	private Set<Displayable> hs_painted = Collections.synchronizedSet(new HashSet<Displayable>());
-	static private final int SIDE = 250;
+	static private final int SIDE = 300;
 	private BufferedImage image = null;
 	private boolean redraw_displayables = true;
 	private double scale;
