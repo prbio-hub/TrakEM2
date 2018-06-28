@@ -1169,6 +1169,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 			}
 		}
 		return min_dist < d ? nd : null;
+
 	}
 
 	/** Find the spatially closest node, in calibrated coords; expects local coords. */
@@ -1698,9 +1699,20 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				}
 
 				Node<T> found = findNode(x_pl, y_pl, layer, mag);
+				
+				//actyc: check for selectability if node is selected via pen-tool
+				if(found!=null) {
+					if(found.getConfidence() >= 0 && 
+							!this.getLayerSet().getProject().getRhizoMain().getProjectConfig().getStatusLabel((int) found.getConfidence()).isSelectable()){
+							found=null;						
+					}
+				}
+				//	
+				
 				setActive(found);
 				
 				if (null != found) {
+					
 					if (2 == me.getClickCount()) {
 						setLastMarked(found);
 						setActive(null);
@@ -2095,18 +2107,19 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 					display.animateBrowsingTo(findNearAndGetPrevious(po.x, po.y, layer, dc));
 					ke.consume();
 					return;
-				case KeyEvent.VK_G:
-					nd = findClosestNodeW(getNodesToPaint(layer), po.x, po.y, dc.getMagnification());
-					if (null != nd) {
-						display.toLayer(nd.la);
-						if (nd != last_visited) {
-							setLastVisited(nd);
-							display.getCanvas().repaint(false);
-						}
-						ke.consume();
-						return;
-					}
-					break;
+					//actyc:removed this case because g-shortcut should be handled in DisplayCanvas via browseToNodeLayer
+//				case KeyEvent.VK_G:
+//					nd = findClosestNodeW(getNodesToPaint(layer), po.x, po.y, dc.getMagnification());
+//					if (null != nd) {
+//						display.toLayer(nd.la);
+//						if (nd != last_visited) {
+//							setLastVisited(nd);
+//							display.getCanvas().repaint(false);
+//						}
+//						ke.consume();
+//						return;
+//					}
+//					break;
 			}
 		}
 		if (ProjectToolbar.PEN == ProjectToolbar.getToolId() && 0 == (modifiers ^ Event.SHIFT_MASK) && KeyEvent.VK_C == keyCode) {
