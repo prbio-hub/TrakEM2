@@ -7348,8 +7348,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     //actyc: new Panel to add more functionality
     private JPanel createExtendedOptionPanel() 
     {
-    	RhizoAddons.shortyForTreeLine(this.getTabbedPane());
-    	//RhizoAddons.shortyForMergeTool(this.getTabbedPane()); //deprecated
     	
     	// Main panelbutton
     	JPanel panel = new JPanel();

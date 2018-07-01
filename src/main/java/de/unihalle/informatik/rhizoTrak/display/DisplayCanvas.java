@@ -2042,6 +2042,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				// else, let ImageJ grab the ROI into the Manager, if any
 				break;
 			case KeyEvent.VK_A:
+				
 				if (0 == (ke.getModifiers() ^ Utils.getControlModifier())) {
 					final Roi roi = getFakeImagePlus().getRoi();
 					if (null != roi) display.getSelection().selectAll(roi, true);
@@ -2049,6 +2050,8 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 					Display.repaint(display.getLayer(), display.getSelection().getBox(), 0);
 					ke.consume();
 					break; // INSIDE the 'if' block, so that it can bleed to the default block which forwards to active!
+				} else if((active != null && active instanceof Tree) || active == null ) { //actyc short-cut to add new treline
+						RhizoAddons.newTreelineShortcut();
 				} else if (null != active) {
 					active.keyPressed(ke);
 					if (ke.isConsumed()) break;

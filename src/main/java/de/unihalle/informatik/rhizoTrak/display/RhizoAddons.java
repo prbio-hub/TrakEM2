@@ -244,42 +244,33 @@ public class RhizoAddons
 		}
 	}
 
+	
 	/**
-	 * Creates a shortcut for drawing treelines. Currently: Strg+T
-	 * @param obj - Component where the shortcut works
+	 * shortcut method for creating new treelines. Currently: "a"
 	 * @author Axel
 	 */
-	public static void shortyForTreeLine(JComponent obj)
+	public static void newTreelineShortcut()
 	{
-		@SuppressWarnings("serial")
-		Action blaAction = new AbstractAction("bla")
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				// get the relevant stuff
-				Display display = Display.getFront();
-				Display.clearSelection();
-				Project project = display.getProject();
-				ProjectTree currentTree = project.getProjectTree();
-								
-				// find one rootstack
-				ProjectThing rootstackProjectThing = RhizoUtils.getOneRootstack(project);
-				if ( rootstackProjectThing == null ) {
-					Utils.showMessage( "Create treeline: WARNING  can not find a rootstack in project tree");
-					return;	
-				}
-						
-				// make new treeline
-				ProjectThing pt = rootstackProjectThing.createChild("treeline");
-				pt.setTitle(pt.getUniqueIdentifier());
-				// add new treeline to the project tree
-				DefaultMutableTreeNode parentNode = DNDTree.findNode(rootstackProjectThing, currentTree);
-				DefaultMutableTreeNode node = new DefaultMutableTreeNode(pt);
-				((DefaultTreeModel) currentTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
-			}
-		};
-		obj.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK, true), "bla");
-		obj.getActionMap().put("bla", blaAction);
+		// get the relevant stuff
+		Display display = Display.getFront();
+		Display.clearSelection();
+		Project project = display.getProject();
+		ProjectTree currentTree = project.getProjectTree();
+
+		// find one rootstack
+		ProjectThing rootstackProjectThing = RhizoUtils.getOneRootstack(project);
+		if ( rootstackProjectThing == null ) {
+			Utils.showMessage( "Create treeline: WARNING  can not find a rootstack in project tree");
+			return;	
+		}
+
+		// make new treeline
+		ProjectThing pt = rootstackProjectThing.createChild("treeline");
+		pt.setTitle(pt.getUniqueIdentifier());
+		// add new treeline to the project tree
+		DefaultMutableTreeNode parentNode = DNDTree.findNode(rootstackProjectThing, currentTree);
+		DefaultMutableTreeNode node = new DefaultMutableTreeNode(pt);
+		((DefaultTreeModel) currentTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
 	}
 
 	/**
