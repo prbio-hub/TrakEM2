@@ -51,9 +51,12 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+
+import org.apache.commons.math3.analysis.differentiation.FiniteDifferencesDifferentiator;
 
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Display;
@@ -62,6 +65,7 @@ import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.ImageImport;
 import de.unihalle.informatik.rhizoTrak.persistence.Loader;
+import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 public class RhizoImages
 {
@@ -118,85 +122,84 @@ public class RhizoImages
 
 	}
 	
+	public static void addLayerAndImage(File[] files) {
+		List<Double> final_targets = new ArrayList<Double>();
+		int number_of_images_to_import = files.length;
+		List<Double> existing_but_empty = findTargetLayers(true,number_of_images_to_import);
+		
+		//check if we have empty layers and if so ask the user if we should use them
+		if(existing_but_empty.size()>0) {
+			if(Utils.checkYN("Found empty layers. Should these be filled first?")) {
+				final_targets.addAll(existing_but_empty);
+			}
+		}
+		
+		//check if we have a sufficient number of empty layers
+		if(!(existing_but_empty.size()>=number_of_images_to_import)) {
+			//no, so we need more targets
+			int missing = number_of_images_to_import-final_targets.size();
+			List<Double> new_empty_layer_targets = findTargetLayers(false,missing);
+			//as the target z's are non existing layer position we have to create the layers
+			addLayerIfNeeded(new_empty_layer_targets);
+			//now we can add them to our final target list
+			final_targets.addAll(new_empty_layer_targets);
+		}
+		//if nothing went terribly wrong we should have enough targets and layers by now
+		//lets fill them
+		LayerSet parent = Display.getFrontLayer().getParent();
+		Project project = parent.getProject();
+		Loader loader = project.getLoader();
+		for (File file : files)
+		{
+			Layer currentLayer =parent.getLayer(final_targets.get(0)); 
+			loader.importImage(currentLayer, 0, 0, file.getPath(), true);
+			final_targets.remove(0);
+		}
+		
+	}
+	
 	/**
-	 * Adds images from the load images dialogue and creates new layers
-	 * @param files - Array of image files
+	 * create a layer at the target-z-level if its not already exists
+	 * @param targets - List of layer-z position as targets
 	 * @author Axel
 	 */
-	public static void addLayerAndImage(File[] files)
-	{
-		if (files.length > 0)
-		{
-			LayerSet parent = Display.getFrontLayer().getParent();
-			ArrayList<Layer> layerlist = parent.getLayers();
-			
-			double firstEmptyAtBack=-1;
-			double realLast=-1;
-			int emptys = 0;
-			boolean lastBack=false;
-			for (Layer layer : layerlist)
-			{
-				//check if layer have no patch
-				if(layer.getDisplayables(Patch.class).size()<1)
-				{
-					if(!lastBack)
-					{
-						firstEmptyAtBack=layer.getZ();
-						lastBack=true;
-						emptys++;
-					}
-					else
-					{
-						emptys++;
-					}
-					
-				}
-				else
-				{
-					lastBack=false;
-					firstEmptyAtBack=-1;
-					emptys=0;
-				}
-				realLast = layer.getZ();
-			}
-			//so firstEmptyAtBack is z of first empty at the end of the stack and emptys is the number of emptyLayers
-			
-			int numberToAdd = files.length-emptys;
-			if(numberToAdd<0)
-			{
-				numberToAdd =0;
-			}
-			//so numberToAdd additionally layers are needed
-			
-			Project project = parent.getProject();
-			
-			if(firstEmptyAtBack==-1)
-			{
-				final Layer layer = new Layer(project, realLast+1, 1, parent);
-				parent.add(layer);
-				layer.recreateBuckets();
-				layer.updateLayerTree();
-				firstEmptyAtBack=realLast+1;
-				numberToAdd--;
-			}
-			for(int i=0;i<numberToAdd;i++){
-				final Layer layer = new Layer(project, firstEmptyAtBack+1+i, 1, parent);
+	private static void addLayerIfNeeded(List<Double> targets) {
+		LayerSet parent = Display.getFrontLayer().getParent();
+		Project project = parent.getProject();
+		for (Double target : targets) {
+			if(parent.getLayer(target)==null) {
+				final Layer layer = new Layer(project, target, 1, parent);
 				parent.add(layer);
 				layer.recreateBuckets();
 				layer.updateLayerTree();
 			}
-			//now we have enough empty layers starting from z=firstEmptyAtBack
-			
-			Loader loader = project.getLoader();
-			for (File file : files)
-			{
-				Layer currentLayer =parent.getLayer(firstEmptyAtBack); 
-				loader.importImage(currentLayer, 0, 0, file.getPath(), true);
-				firstEmptyAtBack++;
-			}
-			
+		}	
+	}
+	
+	/**
+	 * give List of layer-z position as targets to image import
+	 * @param give_existing_layers - indicates if already existing but empty layers should be returned
+	 * @param number_of_images_to_import - indicates the number of targets that should be created
+	 * @author Axel
+	 */
+	private static List<Double> findTargetLayers(boolean give_existing_layers,int number_of_images_to_import) {
+		List<Double> target = new ArrayList<Double>();
+		LayerSet parent = Display.getFrontLayer().getParent();
+		ArrayList<Layer> layerlist = parent.getLayers();
+		if(give_existing_layers) {
 
-		}
+			for (Layer layer : layerlist) {
+				if(layer.getDisplayables(Patch.class).size()<1) {
+					target.add(layer.getZ());
+				}
+			}
+		} else {
+			double lastZ = layerlist.get(layerlist.size()-1).getZ();
+			for(double i=lastZ+1;i<lastZ+1+number_of_images_to_import;i=i+1) {
+				target.add(i);
+			}
+		}		
+		return target;
 	}
 	
 	/**
