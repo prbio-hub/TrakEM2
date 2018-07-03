@@ -69,6 +69,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
@@ -156,6 +157,7 @@ public class RhizoAddons
 			Utils.showMessage("rhizoTrak", "Copy treelines failed: Can not copy from the last layer.");
 			return;
 		}
+	
 		
 		// find all rootstacks
 		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
@@ -164,6 +166,15 @@ public class RhizoAddons
 			return;
 		}
 
+		// check if there are any treelines in the next layer
+		if(areTreelinesInLayer(rootstackThings, nextLayer))
+		{
+			// ask the user if he wants to delete the treelines before copying
+			int answer = JOptionPane.showConfirmDialog(null, "There are treelines on the layer you are about to copy to.\nDo you want to delete them before copying?", 
+					"", JOptionPane.YES_NO_OPTION);
+			if(answer == JOptionPane.YES_OPTION) deleteAllTreelinesFromLayer(nextLayer);
+		}
+		
 		// and now find all treelines
 		for ( ProjectThing rootstackThing :rootstackThings ) {
 			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
@@ -206,17 +217,35 @@ public class RhizoAddons
 	}
 	
 	/**
-	 * Deletes all treelines from the currently active layer
+	 * Checks if there is at least on treeline in the specified layer.
+	 * @param rootstackThings Set of rootstacks
+	 * @param layer Layer to be checked
+	 * @author Tino
+	 */
+	private boolean areTreelinesInLayer(HashSet<ProjectThing> rootstacks, Layer layer)
+	{
+		for(ProjectThing rootstackThing: rootstacks) 
+		{
+			for(ProjectThing pt: rootstackThing.findChildrenOfTypeR(Treeline.class)) 
+			{
+				Treeline ctree = (Treeline) pt.getObject();
+				if(ctree.getFirstLayer() != null && layer.equals(ctree.getFirstLayer())) return true;
+			}
+		}
+				// we also find connectors!
+		return false;
+	}
+
+	/**
+	 * Deletes all treelines from the specified layer
+	 * @param layer Layer from which all treelines should be deleted
 	 * @author Tino 
 	 */
-	public void deleteAllTreelinesFromCurrentLayer()
+	public void deleteAllTreelinesFromLayer(Layer layer)
 	{
-		Display display = Display.getFront();
-		
-		Layer currentLayer = display.getLayer();
-		if(currentLayer == null) 
+		if(layer == null) 
 		{
-			Utils.showMessage("rhizoTrak", "Deleting treelines failed: internal error, can not find current layer.");
+			Utils.showMessage("rhizoTrak", "Deleting treelines failed: internal error, can not find layer.");
 			return;
 		}
 
@@ -235,7 +264,7 @@ public class RhizoAddons
 
 				if(ctree.getClass().equals(Treeline.class)) 
 				{
-					if(ctree.getFirstLayer() != null && currentLayer.equals(ctree.getFirstLayer()))
+					if(ctree.getFirstLayer() != null && layer.equals(ctree.getFirstLayer()))
 					{
 						if(!ctree.remove2(false)) Utils.log("@deleteAll: failed to delete treeline " + ctree.getId());
 					}

@@ -6474,7 +6474,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("Delete treelines")){
 			int answer = JOptionPane.showConfirmDialog(null, "This will delete every treeline from the current layer and may not be undone.\nAre you sure?", 
 					"", JOptionPane.YES_NO_OPTION);
-			if(answer == JOptionPane.YES_OPTION) Display.getFront().getProject().getRhizoMain().getRhizoAddons().deleteAllTreelinesFromCurrentLayer();
+			if(answer == JOptionPane.YES_OPTION) Display.getFront().getProject().getRhizoMain().getRhizoAddons().deleteAllTreelinesFromLayer(Display.getFrontLayer());
 		}
 		else if(command.equals("Load images")){
 			Display.getFront().getProject().getRhizoMain().getRhizoImages().createImageLoaderFrame();
