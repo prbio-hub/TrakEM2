@@ -8,6 +8,9 @@ import java.awt.image.IndexColorModel;
 import java.awt.image.PixelGrabber;
 import java.util.List;
 
+import de.unihalle.informatik.rhizoTrak.display.Patch;
+import de.unihalle.informatik.rhizoTrak.persistence.Loader;
+import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.ImagePlus;
 import ij.plugin.filter.GaussianBlur;
 import ij.process.ByteProcessor;
@@ -15,9 +18,6 @@ import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
-import ini.trakem2.display.Patch;
-import ini.trakem2.persistence.Loader;
-import ini.trakem2.utils.Utils;
 import mpicbg.trakem2.util.Pair;
 
 public class ExportBestFlatImage

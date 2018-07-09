@@ -7,12 +7,12 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
 
+import de.unihalle.informatik.rhizoTrak.display.MipMapImage;
+import de.unihalle.informatik.rhizoTrak.display.Patch;
 import ij.plugin.filter.GaussianBlur;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
-import ini.trakem2.display.MipMapImage;
-import ini.trakem2.display.Patch;
 import mpicbg.models.CoordinateTransformMesh;
 import mpicbg.trakem2.util.Pair;
 

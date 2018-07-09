@@ -18,12 +18,6 @@ package mpicbg.trakem2.align;
 
 
 import ij.IJ;
-import ini.trakem2.display.Layer;
-import ini.trakem2.display.Patch;
-import ini.trakem2.parallel.ExecutorProvider;
-import ini.trakem2.utils.Filter;
-import ini.trakem2.utils.IJError;
-import ini.trakem2.utils.Utils;
 
 import java.awt.Rectangle;
 import java.io.Serializable;
@@ -36,6 +30,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import de.unihalle.informatik.rhizoTrak.display.Layer;
+import de.unihalle.informatik.rhizoTrak.display.Patch;
+import de.unihalle.informatik.rhizoTrak.parallel.ExecutorProvider;
+import de.unihalle.informatik.rhizoTrak.utils.Filter;
+import de.unihalle.informatik.rhizoTrak.utils.IJError;
+import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import mpicbg.ij.SIFT;
 import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.FloatArray2DSIFT;

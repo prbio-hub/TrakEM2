@@ -1,9 +1,7 @@
 package mpicbg.trakem2.align.concurrent;
 
 import ij.process.FloatProcessor;
-import ini.trakem2.display.Layer;
-import ini.trakem2.display.Patch;
-import ini.trakem2.utils.Filter;
+
 import java.awt.Rectangle;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -11,6 +9,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import de.unihalle.informatik.rhizoTrak.display.Layer;
+import de.unihalle.informatik.rhizoTrak.display.Patch;
+import de.unihalle.informatik.rhizoTrak.utils.Filter;
 import mpicbg.ij.blockmatching.BlockMatching;
 import mpicbg.models.AbstractModel;
 import mpicbg.models.ErrorStatistic;

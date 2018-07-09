@@ -3,10 +3,9 @@
  */
 package mpicbg.trakem2.align;
 
-import ini.trakem2.display.Patch;
-
 import java.awt.geom.AffineTransform;
 
+import de.unihalle.informatik.rhizoTrak.display.Patch;
 import mpicbg.models.SimilarityModel2D;
 
 public class SimilarityTile2D extends AbstractAffineTile2D< SimilarityModel2D >
