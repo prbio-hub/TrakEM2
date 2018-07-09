@@ -51,7 +51,6 @@ package de.unihalle.informatik.rhizoTrak.persistence;
 
 import ij.ImagePlus;
 import ij.io.FileSaver;
-import legacy.mpicbg.trakem2.transform.ExportUnsignedShort;
 
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -78,6 +77,7 @@ import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.TemplateThing;
 import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
+import mpicbg.trakem2.transform.ExportUnsignedShort;
 import mpicbg.trakem2.transform.ExportedTile;
 
 public class ProjectTiler {

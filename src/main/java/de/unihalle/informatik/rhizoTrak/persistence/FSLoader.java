@@ -86,7 +86,6 @@ import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
-import legacy.org.janelia.intensity.LinearIntensityMap;
 
 import java.awt.Image;
 import java.awt.event.ActionEvent;
@@ -134,6 +133,7 @@ import net.imglib2.img.imageplus.FloatImagePlus;
 import net.imglib2.img.imageplus.ImagePlusImgs;
 import net.imglib2.type.numeric.real.FloatType;
 
+import org.janelia.intensity.LinearIntensityMap;
 import org.jfree.chart.plot.CategoryCrosshairState;
 import org.xml.sax.InputSource;
 

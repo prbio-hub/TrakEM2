@@ -72,8 +72,6 @@ Institute of Neuroinformatics, University of Zurich / ETH, Switzerland.
 package de.unihalle.informatik.rhizoTrak.display;
 
 import ij.gui.GenericDialog;
-import legacy.mpicbg.trakem2.align.Align;
-import legacy.mpicbg.trakem2.align.AlignTask;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -107,6 +105,8 @@ import mpicbg.models.PointMatch;
 import mpicbg.models.RigidModel2D;
 import mpicbg.models.SimilarityModel2D;
 import mpicbg.models.TranslationModel2D;
+import mpicbg.trakem2.align.Align;
+import mpicbg.trakem2.align.AlignTask;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;

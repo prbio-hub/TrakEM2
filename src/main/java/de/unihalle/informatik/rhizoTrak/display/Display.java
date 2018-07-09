@@ -179,6 +179,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
+import org.janelia.intensity.MatchIntensities;
+
 import de.unihalle.informatik.rhizoTrak.ControlWindow;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
@@ -232,13 +234,12 @@ import ij.io.SaveDialog;
 import ij.measure.Calibration;
 import ij.measure.ResultsTable;
 import ij.process.ImageProcessor;
-import legacy.lenscorrection.DistortionCorrectionTask;
-import legacy.lenscorrection.NonLinearTransform;
-import legacy.mpicbg.trakem2.align.AlignLayersTask;
-import legacy.mpicbg.trakem2.align.AlignTask;
-import legacy.org.janelia.intensity.MatchIntensities;
+import lenscorrection.DistortionCorrectionTask;
+import lenscorrection.NonLinearTransform;
 import mpicbg.ij.clahe.Flat;
 import mpicbg.models.PointMatch;
+import mpicbg.trakem2.align.AlignLayersTask;
+import mpicbg.trakem2.align.AlignTask;
 import mpicbg.trakem2.transform.AffineModel3D;
 import mpicbg.trakem2.transform.CoordinateTransform;
 import mpicbg.trakem2.transform.CoordinateTransformList;

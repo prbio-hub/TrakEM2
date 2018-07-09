@@ -85,7 +85,7 @@ import ij.ImageStack;
 import ij.io.FileInfo;
 import ij.io.OpenDialog;
 import ij.process.ImageProcessor;
-import legacy.mpi.fruitfly.general.MultiThreading;
+import mpi.fruitfly.general.MultiThreading;
 
 import java.awt.Color;
 import java.awt.Rectangle;

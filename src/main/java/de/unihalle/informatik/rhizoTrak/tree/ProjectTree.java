@@ -73,7 +73,7 @@ package de.unihalle.informatik.rhizoTrak.tree;
 
 
 import ij.gui.GenericDialog;
-import legacy.mpicbg.trakem2.align.AlignTask;
+import mpicbg.trakem2.align.AlignTask;
 
 import java.awt.Choice;
 import java.awt.Color;
