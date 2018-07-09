@@ -77,14 +77,23 @@ import java.util.TreeSet;
 import org.scijava.vecmath.Point3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.M;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 /** Can only have one parent, so there aren't cyclic graphs. */
 public abstract class Node<T> implements Taggable {
-	/** Maximum possible confidence in an edge (ranges from 0 to 5, inclusive).*/
-	static public final byte MAX_EDGE_CONFIDENCE = 5;
+
+	// aeekz: is changed when a status file exists
+//	static public byte MAX_EDGE_CONFIDENCE = 0;
+	
+	static public byte DEFAULT_EDGE_CONFIDENCE = 0;
+	
+	//actyc: added a indicator showing whether the node is highlighted
+	private boolean[] high = {false,false};
 
 	protected Node<T> parent = null;
 	public Node<T> getParent() { return parent; }
@@ -105,12 +114,23 @@ public abstract class Node<T> implements Taggable {
 		this.x = p[0];
 		this.y = p[1];
 	}
-
-	/** The confidence value of the edge towards the parent;
+	public RhizoMain rhizoMain = null;
+	
+	/* The confidence value of the edge towards the parent;
 	 *  in other words, how much this node can be trusted to continue from its parent node.
 	 *  Defaults to MAX_EDGE_CONFIDENCE for full trust, and 0 for none. */
-	protected byte confidence = MAX_EDGE_CONFIDENCE;
-	public byte getConfidence() { return confidence; }
+	
+	/** confidence interpreted as a status */
+	protected byte confidence = DEFAULT_EDGE_CONFIDENCE;
+	
+	// aeekz: removed lower bounds check
+	public byte getConfidence() 
+	{
+		if(!rhizoAddonsExists()){
+			return confidence;
+		}
+		return confidence;
+	}
 
 	protected Layer la;
 	public Layer getLayer() { return la; }
@@ -167,6 +187,7 @@ public abstract class Node<T> implements Taggable {
 	}
 	public void setLayer(final Layer la) {
 		this.la = la;
+		this.rhizoMain = la.getProject().getRhizoMain();
 	}
 	/** Returns -1 when not added (e.g. if child is null). */
 	synchronized public final int add(final Node<T> child, final byte conf) {
@@ -246,6 +267,11 @@ public abstract class Node<T> implements Taggable {
 		final double actZ = active_layer.getZ();
 		final double thisZ = this.la.getZ();
 		final Color node_color;
+		
+		//actyc: get the color corrected for highlighting
+		this.color = getCorrectedColor();
+		//end
+		
 		if (null == this.color) {
 			// this node doesn't have its color set, so use tree color and given above/below colors
 			node_color = tree.color;
@@ -395,7 +421,13 @@ public abstract class Node<T> implements Taggable {
 			}
 			if (null != parent && active && with_confidence_boxes && (active_layer == this.la || active_layer == parent.la || (thisZ < actZ && actZ < parent.la.getZ()))) {
 				// Draw confidence half-way through the edge
-				final String s = Integer.toString(confidence);
+				
+				// aeekz actyc
+				
+				int i = (int) this.getConfidence();
+				
+				String s = rhizoMain.getProjectConfig().getStatusLabel(i).getAbbrev();
+				
 				final Dimension dim = Utils.getDimensions(s, g.getFont());
 				g.setColor(Color.white);
 				final int xc = (int)(parent_x + (x - parent_x)/2),
@@ -408,7 +440,15 @@ public abstract class Node<T> implements Taggable {
 		return tagsTask;
 	}
 
-	static private final Color receiver_color = Color.green.brighter();
+	static private  Color receiver_color = Color.green.brighter();
+	
+	public static void setReceiverColor( Color color) {
+		receiver_color = color;
+	}
+	
+	public static Color getReceiverColor() {
+		return receiver_color;
+	}
 
 	protected void paintHandle(final Graphics2D g, final Rectangle srcRect, final double magnification, final Tree<T> t) {
 		paintHandle(g, srcRect, magnification, t, false);
@@ -547,20 +587,25 @@ public abstract class Node<T> implements Taggable {
 
 	/** Check if this point or the edges to its children are closer to xx,yy than radius, in the 2D plane only. */
 	final boolean isNear(final float xx, final float yy, final float sqradius) {
-		if (null == children) return sqradius > (Math.pow(xx - x, 2) + Math.pow(yy - y, 2));
-		// Else, check children:
-		for (int i=0; i<children.length; i++) {
-			if (sqradius > M.distancePointToSegmentSq(xx, yy, 0, // point
-								  x, y, 0,  // origin of edge
-								  (children[i].x - x)/2, (children[i].y - y)/2, 0)) // end of half-edge to child
-			{
-				return true;
+		 
+		if (  sqradius > (Math.pow(xx - x, 2) + Math.pow(yy - y, 2)) )
+			return true;
+							
+		// check children:
+		if (null != children)
+			for (int i=0; i<children.length; i++) {
+				if (sqradius > M.distancePointToSegmentSq(xx, yy, 0, // point
+						x, y, 0,  // origin of edge
+						(children[i].x + x)/2, (children[i].y + y)/2, 0)) // end of half-edge to child
+				{
+					return true;
+				}
 			}
-		}
+		
 		// Check to parent's half segment
 		return null != parent && sqradius > M.distancePointToSegmentSq(xx, yy, 0, // point
 									       x, y, 0, // origin of edge
-									       (x - parent.x)/2, (y - parent.y)/2, 0); // end of half-edge to parent
+									       (x + parent.x)/2, (y + parent.y)/2, 0); // end of half-edge to parent
 	}
 	public final boolean hasChildren() {
 		return null != children && children.length > 0;
@@ -653,7 +698,7 @@ public abstract class Node<T> implements Taggable {
 		for (final Node<T> nd : path) {
 			// Made nd the parent of newchild (was the opposite)
 			// 1 - Find out the confidence of the edge to the child node:
-			byte conf = MAX_EDGE_CONFIDENCE;
+			byte conf = DEFAULT_EDGE_CONFIDENCE;
 			for (int i=0; i<newchild.children.length; i++) {
 				if (nd == newchild.children[i]) {
 					conf = newchild.children[i].confidence;
@@ -703,14 +748,14 @@ public abstract class Node<T> implements Taggable {
 	}
 	/** Set the confidence value of this node with its parent. */
 	synchronized public final boolean setConfidence(final byte conf) {
-		if (conf < 0 || conf > MAX_EDGE_CONFIDENCE) return false;
-		confidence = conf;
+		if (conf < 0 || (rhizoMain != null && conf > rhizoMain.getProjectConfig().getMaxEdgeConfidence() ) ) return false;
+	confidence = conf;
 		return true;
 	}
 	/** Adjust the confidence value of this node with its parent. */
 	final public boolean adjustConfidence(final int inc) {
 		final byte conf = (byte)((confidence&0xff) + inc);
-		if (conf < 0 || conf > MAX_EDGE_CONFIDENCE) return false;
+		if (conf < 0 || (rhizoMain != null &&  conf > rhizoMain.getProjectConfig().getMaxEdgeConfidence())) return false;
 		confidence = conf;
 		return true;
 	}
@@ -874,13 +919,13 @@ public abstract class Node<T> implements Taggable {
 			return false;
 		}
 	}
-
-	protected final void copyProperties(final Node<?> nd) {
+	//actyc: removed final 
+	protected void copyProperties(final Node<?> nd) {
 		this.confidence = nd.confidence;
 		this.tags = nd.getTagsCopy();
 	}
-
-	synchronized private final Object getTagsCopy() {
+	//actyc: made visible to package
+	synchronized final Object getTagsCopy() {
 		if (null == this.tags) return null;
 		if (this.tags instanceof Tag) return this.tags;
 		final Tag[] t1 = (Tag[])this.tags;
@@ -1210,5 +1255,65 @@ public abstract class Node<T> implements Taggable {
 		if (null == t1 || null == t2) return false; // at least one is not null
 		t1.removeAll(t2);
 		return t1.isEmpty();
+	}
+	
+	//actyc: getter and setter for highlight variable
+	
+	public boolean[] high()
+	{
+		return high;
+	}
+	
+	public void high(boolean[] high)
+	{
+		for(int i=0;i<high.length;i++) {
+			this.high[i]= high[i];
+		}
+	}
+	
+	// set normal and choose highlight
+	public void highlight(){
+		this.high[0]=true;
+	}
+	
+	public void chooseHighlight(){
+		this.high[1]=true;
+	}
+	
+	public void removeHighlight(){
+		this.high[0]=false;
+	}
+	
+	public void removeChooseHighlight(){
+		this.high[1]=false;
+	}
+	
+	//actyc: get the righ color aka wheter non, first or seconded highlight
+	private Color getCorrectedColor(){
+		if(!rhizoAddonsExists()){
+			return Color.LIGHT_GRAY;     
+		}
+                
+		if(high[0]) {
+		    return rhizoMain.getProjectConfig().getHighlightColor1(); 
+		} else if(high[1]) {
+		    return rhizoMain.getProjectConfig().getHighlightColor2(); 
+		} else {
+		    return this.rhizoMain.getProjectConfig().getColorForStatus( getConfidence());
+		}
+	}
+        
+	//actyc: helper to verify that rhizoAddons is set when possible
+	private boolean rhizoAddonsExists(){
+		if(this.rhizoMain!=null)
+		{
+			return true;
+		}
+		if(this.getLayer()!=null)
+		{
+			this.rhizoMain = this.getLayer().getProject().getRhizoMain();
+			return true;
+		}
+		return false;
 	}
 }

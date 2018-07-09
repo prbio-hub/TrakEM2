@@ -296,7 +296,7 @@ public class ControlWindow {
 					});
 					hooked = true;
 				}
-				frame = createJFrame("TrakEM2");
+				frame = createJFrame("rhizoTrak");
 				frame.setBackground(Color.white);
 				frame.getContentPane().setBackground(Color.white);
 				frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -306,6 +306,12 @@ public class ControlWindow {
 							if (!Utils.check("Close " + (1 == ht_projects.size() ? "the project?" : "all projects?"))) {
 								return;
 							}
+//							if(RhizoAddons.getColorVisibilityFrame() != null)
+//							{
+//								RhizoAddons.getColorVisibilityFrame().dispose(); // Tino
+//								RhizoAddons.clearColorVisibilityLists();
+//							}
+//							if(RhizoAddons.getImageLoaderFrame() != null) RhizoAddons.getImageLoaderFrame().dispose(); // Tino
 							destroy();
 						}
 					}

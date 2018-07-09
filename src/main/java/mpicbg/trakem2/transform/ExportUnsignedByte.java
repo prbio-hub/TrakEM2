@@ -56,12 +56,13 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.List;
 
-import de.unihalle.informatik.rhizoTrak.display.MipMapImage;
-import de.unihalle.informatik.rhizoTrak.display.Patch;
 import ij.plugin.filter.GaussianBlur;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
+import de.unihalle.informatik.rhizoTrak.display.MipMapImage;
+import de.unihalle.informatik.rhizoTrak.display.Patch;
+import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import mpicbg.models.CoordinateTransformMesh;
 import mpicbg.trakem2.util.Pair;
 

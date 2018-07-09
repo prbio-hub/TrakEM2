@@ -78,6 +78,7 @@ import java.util.concurrent.Future;
 
 import mpicbg.ij.integral.BlockStatistics;
 import mpicbg.ij.plugin.RemoveOutliers;
+import mpicbg.trakem2.util.Downsampler;
 import mpicbg.util.Util;
 
 /**

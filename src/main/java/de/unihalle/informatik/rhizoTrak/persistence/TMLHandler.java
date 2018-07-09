@@ -801,6 +801,8 @@ public class TMLHandler extends DefaultHandler {
 					throw new NullPointerException("Can't create a node for null last_tree!");
 				}
 				final Node<?> node = last_tree.newNode(ht_attributes);
+				//actyc: set the rhizoAddons object
+				node.rhizoMain=project.getRhizoMain();
 				taggables.add(node);
 				// Put node into the list of nodes with that layer id, to update to proper Layer pointer later
 				final long ndlid = Long.parseLong(ht_attributes.get("lid"));
@@ -815,7 +817,7 @@ public class TMLHandler extends DefaultHandler {
 					last_root_node = node;
 				} else {
 					final String sconf = ht_attributes.get("c");
-					nodes.getLast().add((Node)node, null == sconf ? Node.MAX_EDGE_CONFIDENCE : Byte.parseByte(sconf));
+					nodes.getLast().add((Node)node, null == sconf ? Node.DEFAULT_EDGE_CONFIDENCE : Byte.parseByte(sconf));
 				}
 				// color?
 				final String scolor = ht_attributes.get("color");
@@ -1149,7 +1151,7 @@ public class TMLHandler extends DefaultHandler {
 			//
 			if (null == prev) prev = nd;
 			else {
-				prev.add(nd, Node.MAX_EDGE_CONFIDENCE);
+				prev.add(nd, Node.DEFAULT_EDGE_CONFIDENCE);
 				prev = nd; // new parent
 			}
 		}
@@ -1171,7 +1173,7 @@ public class TMLHandler extends DefaultHandler {
 				// Add the root node of the new branch to the node at branch index
 				int openbranch = s.indexOf('{', open+1);
 				int branchindex = Integer.parseInt(s.substring(open+1, openbranch-1));
-				nodes.get(branchindex).add(parseBranch(s.substring(open, end)), Node.MAX_EDGE_CONFIDENCE);
+				nodes.get(branchindex).add(parseBranch(s.substring(open, end)), Node.DEFAULT_EDGE_CONFIDENCE);
 				open = s.indexOf('{', end+1);
 			}
 		}

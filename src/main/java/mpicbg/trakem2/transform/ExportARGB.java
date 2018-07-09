@@ -58,13 +58,13 @@ import java.awt.image.PixelGrabber;
 import java.util.Arrays;
 import java.util.List;
 
-import de.unihalle.informatik.rhizoTrak.display.MipMapImage;
-import de.unihalle.informatik.rhizoTrak.display.Patch;
-import de.unihalle.informatik.rhizoTrak.persistence.Loader;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
+import de.unihalle.informatik.rhizoTrak.display.MipMapImage;
+import de.unihalle.informatik.rhizoTrak.display.Patch;
+import de.unihalle.informatik.rhizoTrak.persistence.Loader;
 import mpicbg.models.CoordinateTransformMesh;
 import mpicbg.trakem2.transform.TransformMeshMappingWithMasks.ImageProcessorWithMasks;
 import mpicbg.trakem2.util.Pair;

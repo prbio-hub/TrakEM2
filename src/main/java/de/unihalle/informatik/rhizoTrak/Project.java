@@ -74,7 +74,7 @@ package de.unihalle.informatik.rhizoTrak;
 
 import ij.IJ;
 import ij.gui.GenericDialog;
-import ij.io.DirectoryChooser;
+import ij.io.OpenDialog;
 
 import java.awt.Rectangle;
 import java.io.BufferedReader;
@@ -98,11 +98,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import javax.swing.JFileChooser;
 import javax.swing.JTree;
 import javax.swing.UIManager;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
+import de.unihalle.informatik.rhizoTrak.addon.RhizoIO;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.display.AreaList;
 import de.unihalle.informatik.rhizoTrak.display.AreaTree;
 import de.unihalle.informatik.rhizoTrak.display.Ball;
@@ -154,6 +159,7 @@ public class Project extends DBObject {
 				if (null != IJ.getInstance()) javax.swing.SwingUtilities.updateComponentTreeUI(IJ.getInstance());
 				//if ("albert".equals(System.getProperty("user.name"))) UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
 			}
+			else UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
 			Utils.log("Failed to set System Look and Feel");
 		}
@@ -313,6 +319,14 @@ public class Project extends DBObject {
 	private final HashMap<String,String> ht_props = new HashMap<String,String>();
 	
 	private int mipmaps_mode = Loader.DEFAULT_MIPMAPS_MODE;
+        
+	//actyc: refrence to the addon class of the project
+	private RhizoMain rhizoMain;
+
+	public RhizoMain getRhizoMain() 
+	{
+		return rhizoMain;
+	}
 
 	/** The constructor used by the static methods present in this class. */
 	private Project(Loader loader) {
@@ -321,6 +335,8 @@ public class Project extends DBObject {
 		this.loader = loader;
 		this.project = this; // for the superclass DBObject
 		loader.addToDatabase(this);
+                //actyc: ini the rhizoAddons
+                this.rhizoMain= new RhizoMain(project);
 	}
 
 	/** Constructor used by the Loader to find projects. These projects contain no loader. */
@@ -329,6 +345,8 @@ public class Project extends DBObject {
 		ControlWindow.getInstance(); // init
 		this.title = title;
 		this.project = this;
+                //actyc: ini the rhizoAddons
+                this.rhizoMain= new RhizoMain(project);
 	}
 
 	private ScheduledFuture<?> autosaving = null;
@@ -545,20 +563,79 @@ public class Project extends DBObject {
 		FSLoader loader = null;
 		try {
 			String dir_project = storage_folder;
+			String xmlpath = null;
 			if (null == dir_project || !new File(dir_project).isDirectory()) {
-				DirectoryChooser dc = new DirectoryChooser("Select storage folder");
-				dir_project = dc.getDirectory();
-				if (null == dir_project) return null; // user cancelled dialog
+				// trakem version selecting the storage folder
+				//				DirectoryChooser dc = new DirectoryChooser("Select storage folder");
+				//				dir_project = dc.getDirectory();
+				//				if (null == dir_project) return null; // user cancelled dialog
+				
+				JFileChooser fileChooser = new JFileChooser();
+				FileNameExtensionFilter filter = new FileNameExtensionFilter( "Project file", "xml"); 
+				fileChooser.setFileFilter(filter);
+				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				fileChooser.setDialogTitle( "Select a project file");
+				int returnVal = fileChooser.showOpenDialog(null);
+
+				if (returnVal != JFileChooser.APPROVE_OPTION)
+					return null; // user cancelled dialog
+
+				File file = fileChooser.getSelectedFile();
+				xmlpath = file.getAbsolutePath();
+				if ( ! xmlpath.endsWith( ".xml")) {
+					xmlpath = xmlpath + ".xml";
+					final YesNoDialog yn = ControlWindow.makeYesNoDialog("rhizoTrak", "Appended .xml to project file, yielding: " +
+							xmlpath + " Proceed?");
+					if (! yn.yesPressed()) {
+						return null;
+					}
+				}
+				dir_project = file.getParent();
+				
+				if ( new File( xmlpath).exists()) {
+					final YesNoDialog yn = ControlWindow.makeYesNoDialog("rhizoTrak", "The file " + file.getAbsolutePath() + 
+							" already exists and will be overriden on save. Proceed?");
+					if (! yn.yesPressed()) {
+						return null;
+					}				
+				}
+
 				if (!Loader.canReadAndWriteTo(dir_project)) {
 					Utils.showMessage("Can't read/write to the selected storage folder.\nPlease check folder permissions.");
 					return null;
 				}
 				if (IJ.isWindows()) dir_project = dir_project.replace('\\', '/');
 			}
-			loader = new FSLoader(dir_project);
+			
+			loader = new FSLoader(dir_project, xmlpath);
+	
+			Project project;
+			if ( arg.equals( "default")) {
+				template_root = new TemplateThing( "rootstack");
+				template_root.addChild( new TemplateThing( "treeline"));
+				template_root.addChild( new TemplateThing( "connector"));
 
-			Project project = createNewProject(loader, !("blank".equals(arg) || "amira".equals(arg)), template_root);
+				project = createNewProject(loader, false, template_root);
+				
+			} else {
+				project = createNewProject(loader, !("blank".equals(arg) || "amira".equals(arg)), template_root);
+			}
 
+			// first load user settings
+			if(RhizoIO.userSettingsFile.exists())
+			{
+				Utils.log("@Project: called loadUserSettings(");
+				project.getRhizoMain().getRhizoIO().loadUserSettings();
+				project.getRhizoMain().getProjectConfig().resetChanged();
+			}
+
+			// aeekz
+			final OpenDialog od = new OpenDialog("Select status label file (abort yields default status labels)", dir_project, null);
+			project.getRhizoMain().getRhizoIO().initStatusLabelMapping( od.getPath());
+
+			project.getRhizoMain().getProjectConfig().setImageSearchDir( new File( dir_project));
+			
+	
 			// help the helpless users:
 			if (autocreate_one_layer && null != project && ControlWindow.isGUIEnabled()) {
 				Utils.log2("Creating automatic Display.");
@@ -567,6 +644,21 @@ public class Project extends DBObject {
 				project.layer_set.add(layer);
 				project.layer_tree.addLayer(project.layer_set, layer);
 				layer.recreateBuckets();
+				
+				if ( arg.equals( "default") ) {
+					ProjectTree projectTree = project.getProjectTree();
+					ProjectThing rootNode = null;
+					rootNode = (ProjectThing) projectTree.getRoot().getUserObject();
+					if ( rootNode != null ) {
+						ProjectThing rootstackThing = rootNode.createChild("rootstack");
+						DefaultMutableTreeNode node = new DefaultMutableTreeNode(rootstackThing);
+						DefaultMutableTreeNode parentNode = DNDTree.findNode(rootNode, projectTree);
+						((DefaultTreeModel) projectTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
+					} else {
+						Utils.log( "@Project: can not add rootstack");
+					}
+				}
+
 				Display.createDisplay(project, layer);
 			}
 			try {
@@ -654,6 +746,11 @@ public class Project extends DBObject {
 		} catch (Exception e) {
 			IJError.print(e);
 		}
+		
+		// ready to load rhizotrak additiona project data
+		Utils.log2("start addon loader ...");
+		project.getRhizoMain().getRhizoIO().addonLoader(new File(loader.getProjectXMLPath()), project);
+
 		// open any stored displays
 		if (open_displays) {
 			final Bureaucrat burro = Display.openLater();
@@ -819,14 +916,25 @@ public class Project extends DBObject {
 		}
 		if (loader.hasChanges() && !getBooleanProperty("no_shutdown_hook")) { // DBLoader always returns false
 			if (ControlWindow.isGUIEnabled()) {
-				final YesNoDialog yn = ControlWindow.makeYesNoDialog("TrakEM2", "There are unsaved changes in project " + title + ". Save them?");
+				final YesNoDialog yn = ControlWindow.makeYesNoDialog("rhizoTrak", "There are unsaved changes in project " + title + ". Save them?");
 				if (yn.yesPressed()) {
-					save();
+					String path = save();
+					this.getRhizoMain().getRhizoIO().addonSaver(new File(path));
 				}
 			} else {
 				Utils.log2("WARNING: closing project '" + title  + "' with unsaved changes.");
 			}
 		}
+		
+		if ( this.getRhizoMain().getProjectConfig().userSettingsChanged()) {
+			final YesNoDialog yn2 = ControlWindow.makeYesNoDialog("rhizoTrak", "Save user settings?");
+			if (yn2.yesPressed()) {
+				if ( this.getRhizoMain().getRhizoIO().saveUserSettings() ) {
+					this.getRhizoMain().getProjectConfig().resetChanged();
+				}
+			}
+		}
+
 		try {
 			if (null != autosaving) autosaving.cancel(true);
 		} catch (Throwable t) {}
@@ -847,6 +955,8 @@ public class Project extends DBObject {
 		Display.close(this);
 		Search.removeTabs(this);
 		synchronized (ptcache) { ptcache.clear(); }
+                //actyc: dispose frames
+                this.getRhizoMain().disposeGUIs();
 		return true;
 	}
 
@@ -1205,6 +1315,7 @@ public class Project extends DBObject {
 			if (!ht_unique_tt.containsKey("ball")) ht_unique_tt.put("ball", new TemplateThing("ball"));
 			if (!ht_unique_tt.containsKey("area_list")) ht_unique_tt.put("area_list", new TemplateThing("area_list"));
 			if (!ht_unique_tt.containsKey("dissector")) ht_unique_tt.put("dissector", new TemplateThing("dissector"));
+			//actyc: explo. possible injection point to add new Items to the TemplateList
 			// this should be done automagically by querying the classes in the package ... but java can't do that without peeking into the .jar .class files. Buh.
 
 			TemplateThing project_tt = ht_unique_tt.remove("project");
@@ -1773,7 +1884,8 @@ public class Project extends DBObject {
 	public void resetRootProjectThing(final ProjectThing pt, final HashMap<Thing,Boolean> ptree_exp) {
 		this.root_pt = pt;
 		project_tree.reset(ptree_exp);
-	}
+		this.ptcache.clear();
+	}	
 	/** For undo purposes. */
 	public void resetRootTemplateThing(final TemplateThing tt, final HashMap<Thing,Boolean> ttree_exp) {
 		this.root_tt = tt;

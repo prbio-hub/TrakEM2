@@ -50,17 +50,17 @@
 package de.unihalle.informatik.rhizoTrak.persistence;
 
 
-import de.unihalle.informatik.rhizoTrak.display.Patch;
-import de.unihalle.informatik.rhizoTrak.imaging.FastIntegralImage;
-import de.unihalle.informatik.rhizoTrak.imaging.P;
-import de.unihalle.informatik.rhizoTrak.utils.CachingThread;
-import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.ImagePlus;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
+import de.unihalle.informatik.rhizoTrak.display.Patch;
+import de.unihalle.informatik.rhizoTrak.imaging.FastIntegralImage;
+import de.unihalle.informatik.rhizoTrak.imaging.P;
+import de.unihalle.informatik.rhizoTrak.utils.CachingThread;
+import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import mpicbg.trakem2.util.Downsampler;
 import mpicbg.trakem2.util.Downsampler.Pair;
 

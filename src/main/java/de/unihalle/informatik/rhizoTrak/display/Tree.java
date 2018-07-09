@@ -139,8 +139,11 @@ import org.scijava.vecmath.Color3f;
 import org.scijava.vecmath.Point3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.analysis.Centrality;
 import de.unihalle.informatik.rhizoTrak.analysis.Vertex;
+import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
+import de.unihalle.informatik.rhizoTrak.conflictManagement.TreelineConflict;
 import de.unihalle.informatik.rhizoTrak.parallel.Process;
 import de.unihalle.informatik.rhizoTrak.parallel.TaskFactory;
 import de.unihalle.informatik.rhizoTrak.persistence.XMLOptions;
@@ -222,7 +225,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				return nodes;
 			}
 			// Else, just the active layer, if any
-			final Set<Node<T>> nodeSet = node_layer_map.get(active_layer);
+			final Set<Node<T>> nodeSet = node_layer_map.get(active_layer);			
 			return null == nodeSet? null : new HashSet<Node<T>>(nodeSet);
 		}
 	}
@@ -371,6 +374,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		return b;
 	}
 
+	// aeekz - added workaround for reading mtbxml
 	@Override
 	public boolean calculateBoundingBox(final Layer la) {
 		try {
@@ -391,11 +395,15 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				return false;
 			}
 
+			// TODO: this is a workaround for the repainting issues that occur when creating a new nodes out of a mtbxml file
+			if(la!=null && la.mtbxml) return false;
+			
 			synchronized (node_layer_map) {
 				// now adjust points to make min_x,min_y be the x,y
 				for (final Collection<Node<T>> nodes : node_layer_map.values()) {
 					for (final Node<T> nd : nodes) {
-						nd.translate(-box.x, -box.y); }}
+						nd.translate(-box.x, -box.y);
+						Utils.log("@calculateBoundingBox2" + nd);}}
 			}
 			this.at.translate(box.x, box.y); // not using super.translate(...) because a preConcatenation is not needed; here we deal with the data.
 
@@ -504,6 +512,10 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		final Node<T> nd = newNode(lx, ly, layer, modelNode);
 		if (null == modelNode) return nd;
 		nd.setColor(modelNode.getColor());
+		if ( layer != null ) {
+			nd.rhizoMain = getProject().getRhizoMain();
+		}
+		
 		return nd;
 	}
 
@@ -599,7 +611,9 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		;
 		if (null != node.parent) {
 			final byte conf = node.getConfidence();
-			if (Node.MAX_EDGE_CONFIDENCE != conf) sb.append(" c=\"").append(conf).append('\"');
+			// aeekz - for some reason MAX_EDGE_CONFIDENCE is not explicitly saved in the xml file
+//			if (Node.MAX_EDGE_CONFIDENCE != conf) sb.append(" c=\"").append(conf).append('\"');
+			sb.append(" c=\"").append(conf).append('\"');
 		}
 		if (null != node.color) {
 			sb.append(" color=\"");
@@ -865,7 +879,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				a.add(this);
 				a.add(t);
 			}
-			this.calculateBoundingBox(null); // outside synch
+			this.calculateBoundingBox(null); // outside synch			
 			return a;
 		} catch (final Exception e) {
 			IJError.print(e);
@@ -1001,6 +1015,11 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	public Coordinate<Node<T>> getLastAdded() {
 		return createCoordinate(last_added);
 	}
+	
+	// aeekz
+	public Node<T> getLastAddedNode() {
+		return last_added;
+	}
 
 	/** Find an edge near the world coords x,y,layer with precision depending upon magnification,
 	 *  and adjust its confidence to @param confidence.
@@ -1087,9 +1106,50 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	/** Also sets the last visited and the receiver node. This is a GUI method. */
 	protected Layer toClosestPaintedNode(final Layer active_layer, final float wx, final float wy, final double magnification) {
 		final Node<T> nd = findClosestNodeW(getNodesToPaint(active_layer), wx, wy, magnification);
-		if (null != nd) {
-			setLastVisited(nd);
-			return nd.la;
+                RhizoMain rhizoMain = Display.getFront().getProject().getRhizoMain();
+                ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
+                if (null != nd) {
+			
+			//actyc: check if your in a solving situation and the tree is helpful
+			if(!conflictManager.isSolving()){
+				setLastVisited(nd);
+				return nd.la;
+			}
+			else
+			{
+				boolean rightConflictTyp = conflictManager.currentConflictIsTreelineConflict();
+				boolean rightInstance = false;
+				boolean rightTree = false;		
+				if(this instanceof Treeline)
+				{
+					rightInstance=true;
+				}
+                                
+				if(rightConflictTyp && rightInstance)
+				{
+					TreelineConflict currentConflict = (TreelineConflict) conflictManager.getCurrentSolvingConflict();
+					rightTree = currentConflict.getTreelineOne().contains(this);
+                                        Utils.log(this.equals(currentConflict.getTreelineOne().get(0)));
+				}
+				
+				if(rightConflictTyp && rightInstance && rightTree){
+					setLastVisited(nd);
+					return nd.la;
+				}
+				else
+				{
+					if (Utils.check("currently solving ... abort?"))
+					{
+						conflictManager.abortCurrentSolving();
+						setLastVisited(nd);
+						return nd.la;
+					}
+					return null;
+				}
+			}
+			
+//			setLastVisited(nd);
+//			return nd.la;
 		}
 		return null;
 	}
@@ -1217,6 +1277,10 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 
 	/** Will call calculateBoundingBox and repaint. */
 	public boolean addNode(final Node<T> parent, final Node<T> child, final byte confidence) {
+		return  addNode( parent, child, confidence, false);
+	}
+	// if headless is true do not repaint 
+	public boolean addNode(final Node<T> parent, final Node<T> child, final byte confidence, boolean headless) {
 
 		boolean added = false;
 		Collection<Node<T>> subtree = null;
@@ -1240,6 +1304,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				cacheSubtree(subtree);
 
 				setLastAdded(child);
+				Utils.log("@addNode1: " + child);
 
 				added = true;
 
@@ -1248,9 +1313,11 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 			}
 		}
 		if (added) {
-			repaint(true, child.la);
-			updateView();
-
+			if ( ! headless ) {
+				repaint(true, child.la);
+				updateView();
+			}
+			Utils.log("@addNode2: " + child);
 			if (null != subtree) {
 				synchronized (tolink) {
 					tolink.addAll(subtree);
@@ -1275,7 +1342,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 					// Make its child the new root
 					root = node.children[0];
 					root.parent = null;
-					root.confidence = Node.MAX_EDGE_CONFIDENCE; // with its now non-existent parent
+					root.confidence = Node.DEFAULT_EDGE_CONFIDENCE; // with its now non-existent parent
 					if (node == last_visited) setLastVisited(root);
 				} else {
 					node.parent.children[node.parent.indexOf(node)] = node.children[0];
@@ -1399,7 +1466,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				// Remove review stack if any
 				removeReview(nd);
 			}
-			addNode(this.marked, tl.marked, Node.MAX_EDGE_CONFIDENCE); // will calculateBoundingBox, hence at_inv has to be recomputed every time
+			addNode(this.marked, tl.marked, Node.DEFAULT_EDGE_CONFIDENCE); // will calculateBoundingBox, hence at_inv has to be recomputed every time
 			// Remove from tl pointers
 			tl.root = null; // stolen!
 			tl.setLastMarked(null);
@@ -1413,7 +1480,20 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		// Don't clear this.marked
 
 		updateView();
-
+		
+		//actyc: inform the connectors
+		boolean sane=true;
+		for (Tree<T> tree : ts) {
+			if(!tree.getClass().equals(Treeline.class)) sane=false;
+		}
+		if(sane){
+			ArrayList<Treeline> interestingTrees = new ArrayList<Treeline>();
+			for (Tree<T> tree : ts) {
+				interestingTrees.add((Treeline) tree);
+			}
+			TreeEvent te = new TreeEvent((Treeline) this,"join",null,interestingTrees);
+			treeAction(te);
+		}
 		return true;
 	}
 
@@ -1519,6 +1599,17 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	/** The node currently being dragged or edited in some way. */
 	protected Node<T> getActive() { return active; }
 
+	// Tino - aeekz
+	protected void setLastActive(final Node<T> nd)
+	{
+		this.last_active = nd;
+	}
+	
+	protected Node<T> getLastActive()
+	{
+		return this.last_active;
+	}
+	
 	protected void setLastEdited(final Node<T> nd) {
 		this.last_edited = nd;
 		setLastVisited(nd);
@@ -1578,6 +1669,8 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	/** The last visited node, either navigating or editing.
 	 *  It's the only node that can receive new children by clicking*/
 	private Node<T> last_visited = null;
+	
+	private Node<T> last_active = null;
 
 	// TODO: last_visited and receiver overlap TOTALLY
 
@@ -1592,83 +1685,131 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 
 	@Override
 	public void mousePressed(final MouseEvent me, final Layer layer, final int x_p, final int y_p, final double mag) {
-		if (ProjectToolbar.PEN != ProjectToolbar.getToolId()) {
-			return;
-		}
-
-		if (null != root) {
-			// transform the x_p, y_p to the local coordinates
-			int x_pl = x_p;
-			int y_pl = y_p;
-			if (!this.at.isIdentity()) {
-				final Point2D.Double po = inverseTransformPoint(x_p, y_p);
-				x_pl = (int)po.x;
-				y_pl = (int)po.y;
-			}
-
-			Node<T> found = findNode(x_pl, y_pl, layer, mag);
-			setActive(found);
-
-			if (null != found) {
-				if (2 == me.getClickCount()) {
-					setLastMarked(found);
-					setActive(null);
-					return;
+		//actyc changed from !=PEN > return to ==PEN > {} to be able to use more than just PEN
+		if (ProjectToolbar.PEN == ProjectToolbar.getToolId()) {
+			if (null != root) {
+				// transform the x_p, y_p to the local coordinates
+				int x_pl = x_p;
+				int y_pl = y_p;
+				if (!this.at.isIdentity()) {
+					final Point2D.Double po = inverseTransformPoint(x_p, y_p);
+					x_pl = (int)po.x;
+					y_pl = (int)po.y;
 				}
-				if (me.isShiftDown() && Utils.isControlDown(me)) {
+
+				Node<T> found = findNode(x_pl, y_pl, layer, mag);
+				
+				//actyc: check for selectability if node is selected via pen-tool
+				if(found!=null) {
+					if(found.getConfidence() >= 0 && 
+							!this.getLayerSet().getProject().getRhizoMain().getProjectConfig().getStatusLabel((int) found.getConfidence()).isSelectable()){
+							found=null;						
+					}
+				}
+				//	
+				
+				setActive(found);
+				
+				if (null != found) {
+					
+					if (2 == me.getClickCount()) {
+						setLastMarked(found);
+						setActive(null);
+
+						return;
+					}
+					if (me.isShiftDown() && Utils.isControlDown(me)) {
+						if (me.isAltDown()) {
+							// Remove point and its subtree
+							removeNode(found);
+						} else {
+							// Just remove the slab point, joining parent with child
+							if (!popNode(found)) {
+								Utils.log("Can't pop out branch point!\nUse shift+control+alt+click to remove a branch point and its subtree.");
+								setActive(null);
+								return;
+							}
+						}
+						repaint(false, layer); // keep larger size for repainting, will call calculateBoundingBox on mouseRelesed
+						setActive(null);
+						return;
+					}
+				} else {
+					if (2 == me.getClickCount()) {
+						setLastMarked(null);
+						return;
+					}
 					if (me.isAltDown()) {
-						// Remove point and its subtree
-						removeNode(found);
+						return;
+					}
+					// Add new point
+					if (me.isShiftDown()) {
+						final Node<T>[] ns = findNearestEdge(x_pl, y_pl, layer, mag);
+						if (null != ns) {
+							found = createNewNode(x_pl, y_pl, layer, ns[0]);
+							
+							//actyc: new node inherits highlight status
+							found.high(ns[0].high());
+							//RhizoAddons.applyCorrespondingColorToDisplayable(this);
+							
+							insertNode(ns[0], ns[1], found, ns[0].getConfidence(ns[1]));
+							setActive(found);
+						}
 					} else {
-						// Just remove the slab point, joining parent with child
-						if (!popNode(found)) {
-							Utils.log("Can't pop out branch point!\nUse shift+control+alt+click to remove a branch point and its subtree.");
-							setActive(null);
+						final Node<T> nearest = last_visited;
+						if (null == nearest) {
+							Utils.showMessage("Before adding a new node, please activate an existing node\nby clicking on it, or pushing 'g' on it.");
 							return;
 						}
-					}
-					repaint(false, layer); // keep larger size for repainting, will call calculateBoundingBox on mouseRelesed
-					setActive(null);
+						// Find the point closest to any other starting or ending point in all branches
+						//Node<T> nearest = findNearestEndNode(x_pl, y_pl, layer); // at least the root exists, so it has to find a node, any node
+						// append new child; inherits radius from parent
+						found = createNewNode(x_pl, y_pl, layer, nearest);
+						//actyc: new node get confidence of parent node
+						//addNode(nearest, found, Node.MAX_EDGE_CONFIDENCE);
+						addNode(nearest, found, nearest.getConfidence());
+						
+						project.getRhizoMain().getRhizoAddons().lastEditedOrActiveNode = found; // Tino - aeekz
+						project.getRhizoMain().getRhizoColVis().applyCorrespondingColor();
+						
+						//actyc: new node inherits highlight status
+						found.high(nearest.high());
+						//RhizoAddons.applyCorrespondingColorToDisplayable(this);
+						
+						setActive(found);		
+						repaint(true, layer);
+					}		
 					return;
 				}
 			} else {
-				if (2 == me.getClickCount()) {
-					setLastMarked(null);
-					return;
+				// First point
+				root = createNewNode(x_p, y_p, layer, null); // world coords, so calculateBoundingBox will do the right thing
+				addNode(null, root, (byte)0);
+				
+				if(project.getRhizoMain().getRhizoAddons().lastEditedOrActiveNode != null)// Tino - aeekz 
+				{
+					@SuppressWarnings("unchecked")
+					Node<T> temp = (Node<T>) project.getRhizoMain().getRhizoAddons().lastEditedOrActiveNode;
+					root.setConfidence(temp.getConfidence());
+					root.setData(temp.getData());
 				}
-				if (me.isAltDown()) {
-					return;
-				}
-				// Add new point
-				if (me.isShiftDown()) {
-					final Node<T>[] ns = findNearestEdge(x_pl, y_pl, layer, mag);
-					if (null != ns) {
-						found = createNewNode(x_pl, y_pl, layer, ns[0]);
-						insertNode(ns[0], ns[1], found, ns[0].getConfidence(ns[1]));
-						setActive(found);
-					}
-				} else {
-					final Node<T> nearest = last_visited;
-					if (null == nearest) {
-						Utils.showMessage("Before adding a new node, please activate an existing node\nby clicking on it, or pushing 'g' on it.");
-						return;
-					}
-					// Find the point closest to any other starting or ending point in all branches
-					//Node<T> nearest = findNearestEndNode(x_pl, y_pl, layer); // at least the root exists, so it has to find a node, any node
-					// append new child; inherits radius from parent
-					found = createNewNode(x_pl, y_pl, layer, nearest);
-					addNode(nearest, found, Node.MAX_EDGE_CONFIDENCE);
-					setActive(found);
-					repaint(true, layer);
-				}
-				return;
+				
+				setActive(root);
 			}
-		} else {
-			// First point
-			root = createNewNode(x_p, y_p, layer, null); // world coords, so calculateBoundingBox will do the right thing
-			addNode(null, root, (byte)0);
-			setActive(root);
 		}
+		if(ProjectToolbar.CON == ProjectToolbar.getToolId()){
+			if(null != root){
+				//actyc: hook for mergTool of RhizoAddons
+				if(this.getClass().equals(Treeline.class)){
+					Utils.log("active node in the parent tree: "+ this.last_visited);
+					this.marked = this.last_visited;
+					project.getRhizoMain().getRhizoAddons().mergeTool(layer, x_p, y_p,mag, (Treeline.RadiusNode) this.last_visited, (Treeline) this,me);
+					//RhizoAddons.mergeActive=false; //deprecated
+					return;
+				}
+			}
+		}
+		return;
 	}
 
 	@Override
@@ -1709,6 +1850,9 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		active.translate(x_d - x_d_old, y_d - y_d_old);
 		repaint(false, la);
 		setLastEdited(active);
+                //actyc: drag event to stimulate a sanity check
+		TreeEvent te = new TreeEvent((Treeline) this,"drag",null,null);
+		treeAction(te);
 	}
 
 	static private Node<?> to_tag = null;
@@ -1877,7 +2021,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		final Point po = dc.getCursorLoc(); // as offscreen coords
 
 		// Set confidence of the receiver node
-		if (keyCode >= KeyEvent.VK_0 && keyCode <= (KeyEvent.VK_0 + Node.MAX_EDGE_CONFIDENCE)) {
+		if (keyCode >= KeyEvent.VK_0 && keyCode <= (KeyEvent.VK_0 + Node.DEFAULT_EDGE_CONFIDENCE)) {
 			if (null != setEdgeConfidence((byte)(keyCode - KeyEvent.VK_0))) {
 				Display.repaint(layer_set);
 				ke.consume();
@@ -1903,6 +2047,21 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				ke.consume();
 				return;
 		}
+                //actyc: new shortcut for finding connector
+                if((modifiers ^ KeyEvent.CTRL_MASK)==0){
+                    switch(keyCode){
+                        case KeyEvent.VK_G:
+                            //Utils.log2("Listsize() = "+ RhizoAddons.statusList.size());
+                            List<TreeEventListener> treeEL = this.getTreeEventListener();
+                            if(treeEL.size()>0)
+                            {
+                                Connector currentCon = treeEL.get(0).getConnector();
+                                Display.getFront().select(currentCon);
+                            }
+                            ke.consume();
+                            return;
+                    }
+                }
 
 		if (0 == modifiers) {
 			switch (keyCode) {
@@ -1947,18 +2106,19 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 					display.animateBrowsingTo(findNearAndGetPrevious(po.x, po.y, layer, dc));
 					ke.consume();
 					return;
-				case KeyEvent.VK_G:
-					nd = findClosestNodeW(getNodesToPaint(layer), po.x, po.y, dc.getMagnification());
-					if (null != nd) {
-						display.toLayer(nd.la);
-						if (nd != last_visited) {
-							setLastVisited(nd);
-							display.getCanvas().repaint(false);
-						}
-						ke.consume();
-						return;
-					}
-					break;
+					//actyc:removed this case because g-shortcut should be handled in DisplayCanvas via browseToNodeLayer
+//				case KeyEvent.VK_G:
+//					nd = findClosestNodeW(getNodesToPaint(layer), po.x, po.y, dc.getMagnification());
+//					if (null != nd) {
+//						display.toLayer(nd.la);
+//						if (nd != last_visited) {
+//							setLastVisited(nd);
+//							display.getCanvas().repaint(false);
+//						}
+//						ke.consume();
+//						return;
+//					}
+//					break;
 			}
 		}
 		if (ProjectToolbar.PEN == ProjectToolbar.getToolId() && 0 == (modifiers ^ Event.SHIFT_MASK) && KeyEvent.VK_C == keyCode) {
@@ -2037,6 +2197,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	@Override
 	public void mouseWheelMoved(final MouseWheelEvent mwe) {
 		final int modifiers = mwe.getModifiers();
+		
 		if (0 == (MouseWheelEvent.SHIFT_MASK ^ modifiers)) {
 			final Object source = mwe.getSource();
 			if (! (source instanceof DisplayCanvas)) return;
@@ -2048,10 +2209,34 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 			final float x = (float)((mwe.getX() / magnification) + srcRect.x);
 			final float y = (float)((mwe.getY() / magnification) + srcRect.y);
 
-			adjustEdgeConfidence(rotation > 0 ? 1 : -1, x, y, la, dc);
+			Node<T> n = adjustEdgeConfidence(rotation > 0 ? 1 : -1, x, y, la, dc);
+
+			project.getRhizoMain().getRhizoColVis().applyCorrespondingColor(); // Tino - aeekz
+		
+			if(n != null)
+			{
+				project.getRhizoMain().getRhizoAddons().lastEditedOrActiveNode = n;
+			}
+			
 			Display.repaint(this);
 			mwe.consume();
 		}
+	}
+	
+	// aeekz
+	protected Node<T> adjustSubtreeStatus(final float inc, final float x, final float y, final Layer layer, final DisplayCanvas dc) {
+		final Node<T> nearest = findNodeNear(x, y, layer, dc);
+		if (null == nearest) {
+			Utils.log("Can't adjust status: found more than 1 node within visible area!");
+			return null;
+		}
+		
+		for(final Node<T> node: new Node.NodeCollection<T>(nearest, Node.BreadthFirstSubtreeIterator.class)) {
+			node.setConfidence((byte) (node.getConfidence() +  inc));
+		}
+		
+		project.getRhizoMain().getRhizoColVis().applyCorrespondingColor();
+		return nearest;
 	}
 
 	/** Used when reconstructing from XML. */
@@ -2272,6 +2457,18 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 
 	@Override
 	public boolean remove2(final boolean check) {
+		//actyc: fire remove event or if tree is a connector remove all references
+		if(this instanceof Treeline)
+		{
+			TreeEvent te = new TreeEvent((Treeline) this,"remove",null,null);
+			treeAction(te);
+		}
+		if(this instanceof Connector)
+		{
+			Connector thisConnector = (Connector) this;
+			thisConnector.removeAllTreelines();
+		}
+		
 		if (super.remove2(check)) {
 			synchronized (this) {
 				if (null != tndv) {
@@ -2279,6 +2476,8 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 					tndv = null;
 				}
 			}
+                        //actyc: manualy call paint since the Connectors are not removed correctly
+                        Display.repaint(this.layer);
 			return true;
 		}
 		return false;
@@ -3874,4 +4073,70 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 			nd.removeAllTags();
 		}
 	}
+	
+	//actyc: removeeventTrigger
+	public void deleteTrigger(){
+		Utils.log("remove something");
+		//actyct: fire remove event or if tree is a connector remove all references
+		if(this instanceof Treeline)
+		{
+			TreeEvent te = new TreeEvent((Treeline) this,"remove",null,null);
+			treeAction(te);
+		}
+		if(this instanceof Connector)
+		{
+			Connector thisConnector = (Connector) this;
+			thisConnector.removeAllTreelines();
+		}
+	}
+	
+	/* actyc: listener interaction with connector type */
+	private List<TreeEventListener> treeEventListener = new ArrayList<TreeEventListener>();
+	
+	public void addTreeEventListener(TreeEventListener newListener){
+		treeEventListener.add(newListener);
+	}
+	
+	public void removeTreeEventListener(TreeEventListener toBeRemove){
+		treeEventListener.remove(toBeRemove);
+	}
+	
+	public void treeAction(TreeEvent te){
+                List<TreeEventListener> currentList = new ArrayList<TreeEventListener>();
+                currentList.addAll(treeEventListener);
+		for(TreeEventListener tEL: currentList){
+			tEL.eventAppeared(te);
+		}
+	}
+	
+	public void treeSingleAction(TreeEvent te){
+		if(treeEventListener.size()>0)
+		{
+			treeEventListener.get(0).eventAppeared(te);
+		}
+	}
+	
+	//copytreelineconnector
+	/* actyc: further methodes */
+	public void copyEvent(Treeline copy){
+		ArrayList<Treeline> treesOfInterest = new ArrayList<Treeline>();
+		treesOfInterest.add(copy);
+		treeAction(new TreeEvent((Treeline) this, "copy", null, treesOfInterest));
+	}
+	
+	public void mergeEvent(Treeline toBeMerged){
+		//call of the conflict check
+		//conflict(toBeMerged);
+		
+	}
+	
+	public List<TreeEventListener> getTreeEventListener() {
+		return treeEventListener;
+	}
+        
+        public void dragged(){
+                //actyc: drag event to stimulate a sanity check
+		TreeEvent te = new TreeEvent((Treeline) this,"drag",null,null);
+		treeAction(te);
+        }
 }

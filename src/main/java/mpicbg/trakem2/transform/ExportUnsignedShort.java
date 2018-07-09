@@ -69,6 +69,9 @@ import mpicbg.models.CoordinateTransform;
 import mpicbg.models.CoordinateTransformList;
 import mpicbg.models.CoordinateTransformMesh;
 import mpicbg.models.TranslationModel2D;
+import mpicbg.trakem2.transform.AffineModel2D;
+import mpicbg.trakem2.transform.ExportedTile;
+import mpicbg.trakem2.transform.TransformMeshMappingWithMasks;
 import mpicbg.trakem2.util.Pair;
 import mpicbg.trakem2.util.Triple;
 

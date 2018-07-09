@@ -158,7 +158,7 @@ public class Compare {
 		final int[] s = new int[]{-1, -1, -1};
 		int next = 0;
 		for (final ZDisplayable zd : pipes) {
-			pipe_names[next] = zd.getProject().getShortMeaningfulTitle(zd);
+			pipe_names[next] = zd.getProject().getShortMeaningfulTitle(zd); 
 			if (-1 != s[0] && -1 != s[1] && -1 != s[2]) {
 				 // Already all found, just filling names
 				next++;
@@ -1386,7 +1386,7 @@ public class Compare {
 
 		// write chain titles, with project prefix
 		if (cp.format.equals(cp.formats[0])) {
-			// as csv:
+			// as  :
 			try {
 				final StringBuffer[] titles = new StringBuffer[n_chains];
 				int next = 0;

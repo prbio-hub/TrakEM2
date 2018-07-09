@@ -73,6 +73,7 @@ package de.unihalle.informatik.rhizoTrak.tree;
 
 
 import ij.gui.GenericDialog;
+import mpicbg.trakem2.align.AlignTask;
 
 import java.awt.Choice;
 import java.awt.Color;
@@ -120,6 +121,7 @@ import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.Pipe;
 import de.unihalle.informatik.rhizoTrak.display.Polyline;
 import de.unihalle.informatik.rhizoTrak.display.Profile;
+import de.unihalle.informatik.rhizoTrak.display.TestConnector;
 import de.unihalle.informatik.rhizoTrak.display.Tree;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.display.VectorData;
@@ -129,7 +131,6 @@ import de.unihalle.informatik.rhizoTrak.utils.Bureaucrat;
 import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import de.unihalle.informatik.rhizoTrak.utils.Worker;
-import mpicbg.trakem2.align.AlignTask;
 
 /** A class to hold a tree of Thing nodes */
 public final class ProjectTree extends DNDTree implements MouseListener, ActionListener {

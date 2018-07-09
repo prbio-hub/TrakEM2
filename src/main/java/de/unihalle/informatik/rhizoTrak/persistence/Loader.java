@@ -140,6 +140,7 @@ import de.unihalle.informatik.rhizoTrak.display.MipMapImage;
 import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.display.Polyline;
 import de.unihalle.informatik.rhizoTrak.display.Region;
+import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Selection;
 import de.unihalle.informatik.rhizoTrak.display.Stack;
 import de.unihalle.informatik.rhizoTrak.display.YesNoDialog;
@@ -3084,6 +3085,8 @@ while (it.hasNext()) {
 					if (null != p) {
 						synchronized (layer) {
 							layer.add(p);
+							//actyc: lock all new imported images
+							p.setLocked(true);
 						}
 						layer.getParent().enlargeToFit(p, LayerSet.NORTHWEST);
 					}
@@ -3454,9 +3457,13 @@ while (it.hasNext()) {
 
 	/** Exports the project and its images (optional); if export_images is true, it will be asked for confirmation anyway -beware: for FSLoader, images are not exported since it doesn't own them; only their path.*/
 	protected String export(final Project project, final File fxml, final XMLOptions options) {
+		
 		String path = null;
 		if (null == project || null == fxml) return null;
 
+                //actyc: if the main project saves, save the addon stuff
+		project.getRhizoMain().getRhizoIO().addonSaver(fxml);
+                
 		releaseToFit(estimateXMLFileSize(fxml));
 
 		try {
@@ -3639,6 +3646,10 @@ while (it.hasNext()) {
 			restorePaths(copy, mipmaps_dir, storage_dir);
 		}
 		//
+		
+		// aeekz - only makes sense if xml file is saved in the storage folder
+		Utils.log(fxml.getAbsolutePath());
+		
 		return path;
 	}
 
@@ -3669,7 +3680,11 @@ while (it.hasNext()) {
 
 	protected String makePatchesDir(final File fxml) {
 		// Create a directory to store the images
+		//actyc: replace extractRelativFolderPath with a method in RhizoAddons
 		String patches_dir = extractRelativeFolderPath(fxml); // WITHOUT ending backslash
+		//new:
+		//String patches_dir = RhizoAddons.PatchFolderPath();
+		//end new
 		if (null == patches_dir) return null;
 		File dir = new File(patches_dir);
 		String patches_dir2 = null;

@@ -79,6 +79,7 @@ import java.util.Set;
 import org.scijava.java3d.Transform3D;
 import org.scijava.vecmath.AxisAngle4f;
 import org.scijava.vecmath.Color3f;
+import org.scijava.vecmath.Point2d;
 import org.scijava.vecmath.Point3f;
 import org.scijava.vecmath.Vector3f;
 
@@ -140,7 +141,7 @@ public class Treeline extends Tree<Float> {
 		if (-1 == last_radius) {
 			last_radius = 10 / (float)mag;
 		}
-
+		
 		if (me.isShiftDown() && me.isAltDown() && !Utils.isControlDown(me)) {
 			final Display front = Display.getFront(this.project);
 			final Layer layer = front.getLayer();
@@ -164,7 +165,6 @@ public class Treeline extends Tree<Float> {
 			nd.setData((float)Math.sqrt(Math.pow(xp - nd.x, 2) + Math.pow(yp - nd.y, 2)));
 			repaint(true, la);
 			setLastEdited(nd);
-
 			return;
 		}
 
@@ -174,7 +174,7 @@ public class Treeline extends Tree<Float> {
 	protected boolean requireAltDownToEditRadius() {
 		return true;
 	}
-
+	
 	@Override
 	public void mouseDragged(final MouseEvent me, final Layer la, final int x_p, final int y_p, final int x_d, final int y_d, final int x_d_old, final int y_d_old) {
 		if (null == getActive()) return;
@@ -217,7 +217,13 @@ public class Treeline extends Tree<Float> {
 	@Override
 	public void mouseWheelMoved(final MouseWheelEvent mwe) {
 		final int modifiers = mwe.getModifiers();
-		if (0 == ( (MouseWheelEvent.SHIFT_MASK | MouseWheelEvent.ALT_MASK) ^ modifiers)) {
+		Utils.log(modifiers);
+		
+		/**
+		 * aeekz
+		 * Shift + Alt = 9
+		 */
+		if (modifiers == 9) {
 			final Object source = mwe.getSource();
 			if (! (source instanceof DisplayCanvas)) return;
 			final DisplayCanvas dc = (DisplayCanvas)source;
@@ -235,8 +241,47 @@ public class Treeline extends Tree<Float> {
 				return;
 			}
 		}
-		super.mouseWheelMoved(mwe);
+		/**
+		 * aeekz
+		 * AltGr + Shift = Ctrl + Alt + Shift = 11 for some reason
+		 */
+		if(modifiers == 11)
+		{
+			final Object source = mwe.getSource();
+			if (! (source instanceof DisplayCanvas)) return;
+			final DisplayCanvas dc = (DisplayCanvas)source;
+			final Layer la = dc.getDisplay().getLayer();
+			final int rotation = mwe.getWheelRotation();
+			final float magnification = (float)dc.getMagnification();
+			final Rectangle srcRect = dc.getSrcRect();
+			final float x = ((mwe.getX() / magnification) + srcRect.x);
+			final float y = ((mwe.getY() / magnification) + srcRect.y);
+			final float inc = (rotation > 0 ? 1 : -1);
+			if (null != adjustSubtreeStatus(inc, x, y, la, dc)) {
+				Display.repaint(this);
+				mwe.consume();
+				return;
+			}
+		}
+		super.mouseWheelMoved(mwe); 
 	}
+	
+	// aeekz
+	protected Node<Float> adjustSubtreeStatus(final float inc, final float x, final float y, final Layer layer, final DisplayCanvas dc) {
+		final Node<Float> nearest = findNodeNear(x, y, layer, dc);
+		if (null == nearest) {
+			Utils.log("Can't adjust status: found more than 1 node within visible area!");
+			return null;
+		}
+		
+		for(final Node<Float> node: new Node.NodeCollection<Float>(nearest, Node.BreadthFirstSubtreeIterator.class)) {
+			node.setConfidence((byte) (node.getConfidence() +  inc));
+		}
+		
+		project.getRhizoMain().getRhizoColVis().applyCorrespondingColor();
+		return nearest;
+	}
+
 
 	protected Node<Float> adjustNodeRadius(final float inc, final float x, final float y, final Layer layer, final DisplayCanvas dc) {
 		final Node<Float> nearest = findNodeNear(x, y, layer, dc);
@@ -256,13 +301,13 @@ public class Treeline extends Tree<Float> {
 		}
 		public RadiusNode(final float lx, final float ly, final Layer la, final float radius) {
 			super(lx, ly, la);
-			this.r = radius;
+			this.r = radius; 
 		}
 		/** To reconstruct from XML, without a layer. */
 		public RadiusNode(final HashMap<String,String> attr) {
 			super(attr);
 			final String sr = (String)attr.get("r");
-			this.r = null == sr ? 0 : Float.parseFloat(sr);
+			this.r = null == sr ? 0 : Float.parseFloat(sr); 
 		}
 
 		@Override
@@ -325,6 +370,48 @@ public class Treeline extends Tree<Float> {
 					   new int[]{(int)(parent.y + vy90 * parent.r), (int)(parent.y + vy270 * parent.r), (int)(this.y + vy270 * this.r), (int)(this.y + vy90 * this.r)},
 					   4);
 		}
+		
+		//actyc: modified version of getSegment to fix a rendering issue causing treelines to have a visual radius of 0  
+		private final Polygon getSegment(AffineTransform to_screen) {
+			
+			final RadiusNode parent = (RadiusNode) this.parent;
+			float vx = parent.x - this.x;
+			float vy = parent.y - this.y;
+			final float len = (float) Math.sqrt(vx*vx + vy*vy);
+			if (0 == len) {
+				// Points are on top of each other
+				return new Polygon(new int[]{(int)this.x, (int)Math.ceil(parent.x)},
+								   new int[]{(int)this.y, (int)Math.ceil(parent.y)}, 2);
+			}
+			
+			vx /= len;
+			vy /= len;
+			// perpendicular vector
+			final float vx90 = -vy;
+			final float vy90 = vx;
+			final float vx270 = vy;
+			final float vy270 = -vx;
+			
+			Point2D p1 = new Point2D.Float(parent.getX()+vx90*parent.getData(),parent.getY()+vy90*parent.getData());
+			Point2D p2 = new Point2D.Float(parent.getX()+vx270*parent.getData(),parent.getY()+vy270*parent.getData());
+			
+			Point2D p3 = new Point2D.Float(this.getX()+vx270*this.getData(),this.getY()+vy270*this.getData());
+			Point2D p4 = new Point2D.Float(this.getX()+vx90*this.getData(),this.getY()+vy90*this.getData());
+			
+			to_screen.transform(p1,p1);
+			to_screen.transform(p2,p2);
+			
+			to_screen.transform(p3,p3);
+			to_screen.transform(p4,p4);
+
+			
+			return new Polygon(new int[]{(int) p1.getX(), (int)p2.getX(), (int)p3.getX(), (int)p4.getX()},
+			new int[]{(int)p1.getY(), (int)p2.getY(), (int)p3.getY(), (int)p4.getY()},
+			4);
+			
+
+		}
+		//ende
 
 		// The human compiler at work!
 		/** Detect intersection between localRect and the bounds of getSegment() */
@@ -378,20 +465,26 @@ public class Treeline extends Tree<Float> {
 			//	|| localRect.contains((int)(parent.x + vx270 * parent.r), (int)(parent.y + vy270 * parent.r))
 			//	|| localRect.contains((int)(this.x + vx270 * this.r), (int)(this.y + vy270 * this.r))
 			//	|| localRect.contains((int)(this.x + vx90 * this.r), (int)(this.y + vy90 * this.r));
-		}
-
+		}  
+		
 		@Override
 		public void paintData(final Graphics2D g, final Rectangle srcRect,
 				final Tree<Float> tree, final AffineTransform to_screen, final Color cc,
 				final Layer active_layer) {
+
 			if (null == this.parent) return; // doing it here for less total cost
+
 			if (0 == this.r && 0 == parent.getData()) return;
 
 			// Two transformations, but it's only 4 points each and it's necessary
 			//final Polygon segment = getSegment();
 			//if (!tree.at.createTransformedShape(segment).intersects(srcRect)) return Node.FALSE;
-			//final Shape shape = to_screen.createTransformedShape(segment);
-			final Shape shape = to_screen.createTransformedShape(getSegment());
+
+			//actyc: switched to a fixed version of getSegment()
+			//final Shape shape = to_screen.createTransformedShape(getSegment();
+			final Shape shape = getSegment(to_screen);
+
+			//final Shape shape = to_screen.createTransformedShape(getSegment());
 			final Composite c = g.getComposite();
 			final float alpha = tree.getAlpha();
 			g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha > 0.4f ? 0.4f : alpha));
@@ -461,6 +554,14 @@ public class Treeline extends Tree<Float> {
 					aff.transform(fp, 0, fp, 0, 2);
 					r = (float)Math.sqrt(Math.pow(fp[2] - fp[0], 2) + Math.pow(fp[3] - fp[1], 2));
 			}
+		}
+		
+		//actyc: also copy radius when copy node
+		@Override
+		protected final void copyProperties(final Node<?> nd) {
+			this.confidence = nd.confidence;
+			this.tags = nd.getTagsCopy();
+			this.setData((Float) nd.getData());
 		}
 	}
 
@@ -848,7 +949,9 @@ public class Treeline extends Tree<Float> {
 
 		return askAdjustRadius(nd);
 	}
-
+	
+	//actyc: maybe here is a position to implement the status change downstream
+	
 	protected boolean askAdjustRadius(final Node<Float> nd) {
 
 		final GenericDialog gd = new GenericDialog("Adjust radius");

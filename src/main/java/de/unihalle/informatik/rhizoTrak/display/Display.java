@@ -84,6 +84,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
@@ -118,14 +119,19 @@ import java.awt.geom.Line2D;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -143,21 +149,31 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
+import javax.imageio.ImageIO;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultBoundedRangeModel;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JViewport;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.MatteBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -168,7 +184,11 @@ import org.janelia.intensity.MatchIntensities;
 
 import de.unihalle.informatik.rhizoTrak.ControlWindow;
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.analysis.Graph;
+import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
+import de.unihalle.informatik.rhizoTrak.display.addonGui.SplitDialog;
 import de.unihalle.informatik.rhizoTrak.display.inspect.InspectPatchTrianglesMode;
 import de.unihalle.informatik.rhizoTrak.imaging.Blending;
 import de.unihalle.informatik.rhizoTrak.imaging.LayerStack;
@@ -921,7 +941,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 
 		// Tabbed pane on the left
 		this.tabs = new JTabbedPane();
-		this.tabs.setMinimumSize(new Dimension(250, 300));
+		this.tabs.setMinimumSize(new Dimension(300, 300));
 		this.tabs.setBackground(Color.white);
 		this.tabs.addChangeListener(tabs_listener);
 
@@ -981,6 +1001,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		this.scroll_filter_options = makeScrollPane(this.filter_options);
 		this.scroll_filter_options.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		this.addTab("Live filter", this.scroll_filter_options);
+		
+		//actyc: Test tab 10
+//		this.filter_options = createExtendedOptionPanel();
+		this.scroll_filter_options = makeScrollPane(createExtendedOptionPanel());
+//		this.scroll_filter_options.setHorizontalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		this.addTab("Extended Options", this.scroll_filter_options);
 
 		this.ht_tabs = new Hashtable<Class<?>,RollingPanel>();
 		this.ht_tabs.put(Patch.class, panel_patches);
@@ -1270,7 +1296,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				final AffineTransform aff = new AffineTransform();
 				aff.translate(-size*Toolbar.TEXT, size-1);
 				((Graphics2D)g).setTransform(aff);
-				for (; i<18; i++) {
+				//actyc i<18 to i<19 to add the new tool to the trakkem toolbar
+				for (; i<19; i++) {
 					drawButton.invoke(toolbar, g, i);
 				}
 				gr.drawImage(bi, 0, 0, null);
@@ -1293,17 +1320,47 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			}
 		}
 		*/
+		//actyc: should be the right place to get a mouse interaction in trackem's toolbar
 		@Override
         public void mousePressed(final MouseEvent me) {
 			int x = me.getX();
 			int y = me.getY();
-			if (y > size) {
-				if (x > size * 7) return; // off limits
-				x += size * 9;
-				y -= size;
-			} else {
-				if (x > size * 9) return; // off limits
+			//Utils.log("size is: "+size+" |x is: "+x+" |y is: "+y);
+			//actyc: rewrite the following for a more general approach
+			int[] toolsPerLine = {9,8};
+			int numberOfLines = 2;
+			//check if y value is valid
+			int yTool = y/size;
+			if(yTool>numberOfLines){
+				Utils.log("Y not fine "+yTool);
+				return;
 			}
+			//so we are in a valid line
+			//check if x value is valid
+			int xTool = (x/size)+1;
+			if(xTool>toolsPerLine[yTool]){
+				Utils.log("X not fine "+xTool);
+				return;
+			}
+			//so x and y is valid
+			//ijToolbar is in a single row so we have to reorganize these cords
+			//Utils.log("xTool is: "+xTool+" |yTool is: "+yTool);
+
+			//fix for the gap
+			if(yTool>0 && xTool>3) xTool= (x-(3*size)-(size/3))/size+4;
+			
+			x= xTool*size-(size/2)+(size*9*yTool);
+			y= (size/2);
+
+			
+			//Utils.log("Finalx is: "+x+" Finaly is: "+y);
+//			if (y > size) {
+//				if (x > size * 7) return; // off limits
+//				x += size * 9;
+//				y -= size;
+//			} else {
+//				if (x > size * 9) return; // off limits
+//			}
 			/*
 			if (Utils.isPopupTrigger(me)) {
 				if (x >= size && x <= size * 2 && y >= 0 && y <= size) {
@@ -1363,8 +1420,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		jsp.getVerticalScrollBar().setBlockIncrement(DisplayablePanel.HEIGHT); // clicking within the track
 		jsp.getVerticalScrollBar().setUnitIncrement(DisplayablePanel.HEIGHT); // clicking on an arrow
 		jsp.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		jsp.setPreferredSize(new Dimension(250, 300));
-		jsp.setMinimumSize(new Dimension(250, 300));
+		jsp.setPreferredSize(new Dimension(300, 300));
+		jsp.setMinimumSize(new Dimension(300, 300));
 		return jsp;
 	}
 
@@ -1945,6 +2002,10 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	}
 
 	static public void remove(final ZDisplayable zdispl) {
+		if(zdispl instanceof Tree)
+		{
+			((Tree) zdispl).deleteTrigger();
+		}
 		for (final Display d : al_displays) {
 			if (zdispl.getLayerSet() == d.layer.getParent()) {
 				d.remove((Displayable)zdispl);
@@ -2227,10 +2288,14 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	}
 
 	protected void choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p, final Class<?> c) {
-		choose(screen_x_p, screen_y_p, x_p, y_p, false, c);
+            //atyc: change to the modified RhizoTrak version of choose
+            //choose(screen_x_p, screen_y_p, x_p, y_p, false, c);
+            this.getProject().getRhizoMain().getRhizoAddons().choose(screen_x_p, screen_y_p, x_p, y_p, false, c,this);
 	}
 	protected void choose(final int screen_x_p, final int screen_y_p, final int x_p, final int y_p) {
-		choose(screen_x_p, screen_y_p, x_p, y_p, false, null);
+            //atyc: change to the modified RhizoTrak version of choose
+            //choose(screen_x_p, screen_y_p, x_p, y_p, false, null);
+            this.getProject().getRhizoMain().getRhizoAddons().choose(screen_x_p, screen_y_p, x_p, y_p, false, null,this);
 	}
 
 	/** Find a Displayable to add to the selection under the given point (which is in offscreen coords); will use a popup menu to give the user a range of Displayable objects to select from. */
@@ -2238,6 +2303,26 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		//Utils.log("Display.choose: x,y " + x_p + "," + y_p);
 		final ArrayList<Displayable> al = new ArrayList<Displayable>(layer.find(x_p, y_p, true));
 		al.addAll(layer.getParent().findZDisplayables(layer, x_p, y_p, true)); // only visible ones
+		
+		//actyc: remove those trees that contain a non clickable node at xp und yp
+		ArrayList<Displayable> alternatedList = new ArrayList<Displayable>();
+		for (Displayable displayable : al) {
+			if(displayable.getClass()==Treeline.class){
+				Treeline currentTreeline = (Treeline) displayable;
+				double transX = x_p -currentTreeline.getAffineTransform().getTranslateX();
+				double transY = y_p -currentTreeline.getAffineTransform().getTranslateY();
+				Node<Float> nearestNode = currentTreeline.findNearestNode((float)transX,(float) transY, layer);
+				//Utils.log(nearestNode);
+				//check if treeline is clickable if not add it to the remove list
+
+				if(nearestNode.getConfidence() >= 0 && !this.getProject().getRhizoMain().getProjectConfig().getStatusLabel((int) nearestNode.getConfidence()).isSelectable()) {
+					alternatedList.add(displayable);
+				}
+			}
+		}
+		al.removeAll(alternatedList);
+		//
+		
 		if (al.isEmpty()) {
 			final Displayable act = this.active;
 			selection.clear();
@@ -2350,6 +2435,11 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					}
 					if (remove_doc) annot_docs.remove(prev_active);
 				}
+				//actyc: remove highlight of connected treelines
+				if(prev_active instanceof Connector){
+					RhizoColVis.removeHighlight(new ArrayList<Displayable>(((Connector)prev_active).getConTreelines()),false);
+				}
+				//end
 			}
 			// activate the new active
 			if (null != displ) {
@@ -2384,7 +2474,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					annot_editor.setDocument(doc);
 					if (null != displ.getAnnotation()) annot_editor.setText(displ.getAnnotation());
 				}
-				annot_editor.setEnabled(true);
+				annot_editor.setEnabled(true);		
+				//actyc: highlight  connected treelines
+				if(displ instanceof Connector){
+					RhizoColVis.highlight(new ArrayList<Displayable>(((Connector)displ).getConTreelines()),false);
+				}
+				//end
 			} else {
 				//ensure decorations are removed from the panels, for Displayables in a selection besides the active one
 				Utils.updateComponent(tabs.getSelectedComponent());
@@ -2744,6 +2839,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				item = new JMenuItem("Part subtree"); item.addActionListener(this); popup.add(item);
 				item = new JMenuItem("Join"); item.addActionListener(this); popup.add(item);
 				item = new JMenuItem("Show tabular view"); item.addActionListener(this); popup.add(item);
+				item = new JMenuItem("Copy to next layer"); item.addActionListener(this); popup.add(item); // aeekz
 				final Collection<Tree> trees = selection.get(Tree.class);
 
 				//
@@ -3422,6 +3518,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F10, 0, true));
 		item = new JMenuItem("Pen"); item.addActionListener(new SetToolListener(ProjectToolbar.PEN)); menu.add(item);
 		item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F11, 0, true));
+		//actyc: add CON Tool
+		item = new JMenuItem("Con"); item.addActionListener(new SetToolListener(ProjectToolbar.CON)); menu.add(item);
+		item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0, true));
 
 		popup.add(menu);
 
@@ -4483,16 +4582,26 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		final Calibration cal = ls.getCalibration();
 		final Layer last = ls.getLayer(ls.size()-1);
 		final double depth = (last.getZ() - ls.getLayer(0).getZ() + last.getThickness()) * cal.pixelWidth;
-		final String title = new StringBuilder(100)
-			.append(layer.getParent().indexOf(layer) + 1).append('/').append(layer.getParent().size())
-			.append("  z:").append(layer.getZ() * cal.pixelWidth).append(' ').append(cal.getUnits()).append(' ') // Not pixelDepth
-			.append(' ').append(layer.getLayerThingTitle())
-			.append(scale)
-			.append(" -- ").append(getProject().toString())
-			.append(' ').append(' ').append(Utils.cutNumber(layer.getParent().getLayerWidth() * cal.pixelWidth, 2, true))
-			.append('x').append(Utils.cutNumber(layer.getParent().getLayerHeight() * cal.pixelHeight, 2, true))
-			.append('x').append(Utils.cutNumber(depth, 2, true))
-			.append(' ').append(cal.getUnit()).toString();
+		final String title = 
+				this.getProject().getRhizoMain().getTitleWithZcoord() ?
+						new StringBuilder(100)
+						.append(layer.getParent().indexOf(layer) + 1).append('/').append(layer.getParent().size())
+						.append("  z:").append(layer.getZ() * cal.pixelWidth).append(' ').append(cal.getUnits()).append(' ') // Not pixelDepth
+						.append(' ').append(layer.getLayerThingTitle())
+						.append(scale)
+						.append(" -- ").append(getProject().toString())
+						.append(' ').append(' ').append(Utils.cutNumber(layer.getParent().getLayerWidth() * cal.pixelWidth, 2, true))
+						.append('x').append(Utils.cutNumber(layer.getParent().getLayerHeight() * cal.pixelHeight, 2, true))
+						.append('x').append(Utils.cutNumber(depth, 2, true))
+						.append(' ').append(cal.getUnit()).toString()
+			:
+				new StringBuilder(100)
+				.append(layer.getParent().indexOf(layer) + 1).append('/').append(layer.getParent().size())
+				.append(" -- ").append(getProject().toString())
+				.append(' ').append(' ').append(Utils.cutNumber(layer.getParent().getLayerWidth() * cal.pixelWidth, 2, true))
+				.append('x').append(Utils.cutNumber(layer.getParent().getLayerHeight() * cal.pixelHeight, 2, true))
+				.append('x').append(Utils.cutNumber(depth, 2, true))
+				.append(' ').append(cal.getUnit()).toString();
 		Utils.invokeLater(new Runnable() { @Override
         public void run() {
 			frame.setTitle(title);
@@ -4709,7 +4818,10 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     public void actionPerformed(final ActionEvent ae) {
 		dispatcher.exec(new Runnable() { @Override
         public void run() {
-
+		
+		// actyc aeekz
+			
+			
 		final String command = ae.getActionCommand();
 		if (command.startsWith("Job")) {
 			if (Utils.checkYN("Really cancel job?")) {
@@ -5483,7 +5595,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			}
 		} else if (command.equals("Part subtree")) {
 			if (!(active instanceof Tree<?>)) return;
-			if (!Utils.check("Really part the subtree?")) return;
+			// ask user whether to proceed unless we find the rhizoTrak project connfig and there
+			// askSplitTree is false
+			if ( front == null ||  front.getProject() == null || front.getProject().getRhizoMain() == null 
+					|| front.getProject().getRhizoMain().getProjectConfig().isAskSplitTreeline() ) {
+				if (!Utils.check("Really part the subtree?")) return;
+			}
 			final LayerSet.DoChangeTrees step = getLayerSet().addChangeTreesStep();
 			final Set<DoStep> deps = new HashSet<DoStep>();
 			deps.add(new Displayable.DoEdit(active).init(active, new String[]{"data"})); // I hate java
@@ -5507,9 +5624,60 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			final LayerSet.DoChangeTrees step2 = getLayerSet().addChangeTreesStep();
 			step2.addDependents(deps2);
 			Display.repaint(getLayerSet());
+			//actyc: call split dialog if needed
+			SplitDialog.splitDialog(ts);
 		} else if (command.equals("Show tabular view")) {
 			if (!(active instanceof Tree<?>)) return;
 			((Tree<?>)active).createMultiTableView();
+		} else if(command.equals("Copy to next layer")) {
+			// aeekz
+			if (!(active instanceof Treeline)) return;
+			
+			Display display = Display.getFront();
+			LayerSet currentLayerSet = display.getLayerSet();
+			Layer nextLayer = currentLayerSet.next(display.getLayer());			
+			
+			if (nextLayer == null || nextLayer.getZ() == display.getLayer().getZ()) 
+			{
+				Utils.showMessage("rhizoTrak", "Copying treeline failed: no layer to copy to.");
+				return;
+			}
+			
+			Treeline treeline = (Treeline) active;
+			try
+			{
+				Treeline treelineCopy = Tree.copyAs(treeline, Treeline.class, Treeline.RadiusNode.class);
+				treelineCopy.setLayer(nextLayer, true);
+				
+				for (Node<Float> node: treelineCopy.getRoot().getSubtreeNodes()) 
+				{
+					node.setLayer(nextLayer);
+					Color col = Display.getFront().getProject().getRhizoMain().getProjectConfig().getColorForStatus((node.getConfidence()));
+					node.setColor(col);
+				}
+				
+				treelineCopy.setTitle("treeline");
+				treelineCopy.clearState();
+				treelineCopy.updateCache();
+				
+				currentLayerSet.add(treelineCopy);
+				
+				treelineCopy.getProject().getProjectTree().addSibling(treeline, treelineCopy);
+				
+				if(!RhizoAddons.getRightPC(treeline, treelineCopy))
+				{
+					Utils.showMessage("rhizoTrak", "Copy treelines can not create connector automatically between #" +
+							treeline.getId() + " and #" + treelineCopy.getId());
+				}
+				Display.update(currentLayerSet);
+			} 
+			catch (Exception e)
+			{
+				e.printStackTrace();
+				Utils.showMessage("rhizoTrak", "Copying treeline failed for treeline #"  + treeline.getId());
+			}
+			
+			
 		} else if (command.equals("Mark")) {
 			if (!(active instanceof Tree<?>)) return;
 			final Point p = canvas.consumeLastPopupPoint();
@@ -6321,10 +6489,161 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			gd.showDialog();
 			if (gd.wasCanceled()) return;
 			project.setProperty(AreaUtils.always_interpolate_areas_with_distance_map, gd.getNextBoolean() ? "true" : null);
-		} else {
+		} 
+		// rhizo commands start
+		else if(command.equals("Copy treelines")){
+			int answer = JOptionPane.showConfirmDialog(null, "This will copy every treeline from the current layer to the next layer and may not be undone.\nAre you sure?", 
+														"", JOptionPane.YES_NO_OPTION);
+			if(answer == JOptionPane.YES_OPTION) Display.getFront().getProject().getRhizoMain().getRhizoAddons().copyTreeLine();
+		}
+		else if(command.equals("Delete treelines")){
+			int answer = JOptionPane.showConfirmDialog(null, "This will delete every treeline from the current layer and may not be undone.\nAre you sure?", 
+					"", JOptionPane.YES_NO_OPTION);
+			if(answer == JOptionPane.YES_OPTION) Display.getFront().getProject().getRhizoMain().getRhizoAddons().deleteAllTreelinesFromLayer(Display.getFrontLayer());
+		}
+		else if(command.equals("Load images")){
+			Display.getFront().getProject().getRhizoMain().getRhizoImages().createImageLoaderFrame();
+		}
+		else if(command.equals("preferences")){
+			Display.getFront().getProject().getRhizoMain().getRhizoColVis().createPreferencesFrame();;
+		}
+		else if(command.equals("testtest")){
+			Display.getFront().getProject().getRhizoMain().getRhizoAddons().test();
+		}
+		else if(command.equals("readXML")){
+			Display.getFront().getProject().getRhizoMain().getRhizoMTBXML().readMTBXML();
+		}
+		else if(command.equals("writeXML")){
+			Display.getFront().getProject().getRhizoMain().getRhizoMTBXML().writeMTBXML();
+		}
+		else if(command.equals("conflictPanel")){
+                        RhizoMain rhizoMain = Display.getFront().getProject().getRhizoMain();
+                        ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
+			conflictManager.showConflicts();
+		}
+		else if(command.equals("stat")){
+			Display.getFront().getProject().getRhizoMain().getRhizoStatistics().writeStatistics();
+		}
+		else if(command.equals("aboutRhizo")){
+			// initialize the icon
+			String iconDataName = "/share/logo/rhizoTrak_logo.png";
+			Image img = null;
+			BufferedImage bi = null;
+			Graphics g = null;
+			InputStream is = null;
+			ImageIcon rhizoTrakIcon = null;
+			try {
+				ImageIcon icon;
+				File iconDataFile = new File("./" + iconDataName);
+				if(iconDataFile.exists()) {
+					icon = new ImageIcon("./" + iconDataName);
+					img = icon.getImage();
+				}
+				// try to find it inside a jar archive....
+				else {
+					is = Display.class.getResourceAsStream(iconDataName);
+					if (is == null) {
+						System.err.println("Warning - cannot find icons...");
+						img = new BufferedImage(20,20,BufferedImage.TYPE_INT_ARGB);
+					}
+					else {
+						img = ImageIO.read(is);
+					}
+					bi= new BufferedImage(20,20,BufferedImage.TYPE_INT_ARGB);
+					g = bi.createGraphics();
+					g.drawImage(img, 0, 0, 20, 20, null);
+				}
+			} catch (IOException ex) {
+				System.err.println("ALDChooseOpNameFrame - problems loading icons...!");
+				img = new BufferedImage(20,20,BufferedImage.TYPE_INT_ARGB);
+				bi= new BufferedImage(20,20,BufferedImage.TYPE_INT_ARGB);
+				g = bi.createGraphics();
+				g.drawImage(img, 0, 0, 20, 20, null);
+			}
+			rhizoTrakIcon = new ImageIcon(img);
+				
+			Object[] options = { "OK" };
+			String year = Integer.toString(Calendar.getInstance().get(Calendar.YEAR));
+			String[] releaseInfos = Display.getReleaseInfosFromJar();
+			String rev = releaseInfos[0];
+			String branch = releaseInfos[1];
+			String commit = releaseInfos[2];
+			String msg = "<html>rhizoTrak - Annotation of Minirhizotron Time-Series Images<p><p>"
+		    + rev + ", " + branch + "<p>" + commit + "   "
+		    + "<p><p>" + "\u00a9 2018 - " + year + "   "
+		    + "Martin Luther University Halle-Wittenberg<p>"
+		    + "Institute of Computer Science, Faculty of Natural Sciences III<p><p>"
+		    + "Email: rhizoTrak@informatik.uni-halle.de<p>"
+		    + "Internet: <i>https://github.com/prbio-hub/rhizoTrak/wiki</i><p>"
+		    + "License: GPL 3.0, <i>http://www.gnu.org/licenses/gpl.html</i></html>";
+
+			JOptionPane.showOptionDialog(null, new JLabel(msg),
+				"Information about rhizoTrak", JOptionPane.DEFAULT_OPTION,
+			  	JOptionPane.INFORMATION_MESSAGE, rhizoTrakIcon, 
+			  		options, options[0]);
+		}
+		// rhizo commands end
+		else {
 			Utils.log2("Display: don't know what to do with command " + command);
 		}
 		}});
+	}
+
+	private static String[] getReleaseInfosFromJar() {
+
+		InputStream is= null;
+		BufferedReader br= null;
+		String vLine= null;
+
+		String release = "Unknown_Release";
+		String branch = "Unknown_Branch";
+		String commit = "Unknown_Commit";
+		
+		// initialize file reader 
+		try { 
+			is= Display.class.getResourceAsStream("/revision_rhizo.txt");
+			br= new BufferedReader(new InputStreamReader(is));
+			vLine= br.readLine();
+			if (vLine == null) {
+				br.close();
+				return new String[]{release, branch, commit};
+			}	
+			// read release
+			release=vLine;
+			vLine= br.readLine();
+			if (vLine == null) {
+				br.close();
+				return new String[]{release, branch, commit};
+			}	
+			// read branch 
+			branch = vLine;
+			vLine = br.readLine();
+			if (vLine == null) {
+				br.close();
+				return new String[]{release, branch, commit};
+			}	
+			// read commit 
+			commit = vLine;
+			br.close();
+			return new String[]{release, branch, commit};
+		}
+		catch (Exception e) {
+			System.err.println("[rhizoTrak::about()] Warning - " + 
+							"something went wrong on reading the version file...");
+			e.printStackTrace();
+			try {
+				if (br != null)
+					br.close();
+				if (is != null)
+					is.close();
+			} catch (IOException ee) {
+				System.err.println(
+						"[rhizoTrak::about()] "
+							+ "problems on closing the file handles...");
+				ee.printStackTrace();
+			}
+			return new String[]{release, branch, commit};
+		}
 	}
 
 	public void adjustMinAndMaxGUI() {
@@ -7050,6 +7369,121 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		fop.addNumericField("max slope:", filter_clahe_max_slope, 2, new OptionPanel.FloatSetter(this, "filter_clahe_max_slope", reaction, 0, Integer.MAX_VALUE));
 		return fop;
 	}
+	
+    //actyc: new Panel to add more functionality
+    private JPanel createExtendedOptionPanel() 
+    {
+    	
+    	// Main panelbutton
+    	JPanel panel = new JPanel();
+    	panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+//    	panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+    	
+    	// Sub panels
+    	JPanel group1 = new JPanel(new GridLayout(0, 2, 5, 3)); // Treeline related operations
+    	JPanel group2 = new JPanel(new GridLayout(0, 2, 5, 3)); // Read and write operations
+    	JPanel group3 = new JPanel(new GridLayout(0, 2, 5, 3)); // Connector related operations
+    	JPanel group4 = new JPanel(new GridLayout(0, 2, 5, 3)); // Image related operations
+    	JPanel group5 = new JPanel(new GridLayout(0, 2, 5, 3)); // RhizoTrak miscellaneous
+    	group1.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	group2.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	group3.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	group4.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	group5.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	
+    	
+    	JButton copyButton = new JButton("Copy Treelines");
+    	copyButton.setToolTipText("Copys treelines from the current layer to the next layer.");
+    	copyButton.setActionCommand("Copy treelines");
+    	copyButton.addActionListener(this);
+    	group1.add(copyButton);
+    	
+    	JButton deleteButton = new JButton("Delete Treelines");
+    	deleteButton.setToolTipText("Deletes all treelines from the current layer.");
+    	deleteButton.setActionCommand("Delete treelines");
+    	deleteButton.addActionListener(this);
+    	group1.add(deleteButton);
+    	
+    	JButton readXMLButton = new JButton("Read MTBXML");
+    	readXMLButton.setToolTipText("Reads a MTBXML file that corresponds to the images already loaded.");
+    	readXMLButton.setActionCommand("readXML");
+    	readXMLButton.addActionListener(this);
+    	readXMLButton.setEnabled(true);
+    	group2.add(readXMLButton);    	
+    	
+    	JButton writeXMLButton = new JButton("Write MTBXML");
+    	writeXMLButton.setToolTipText("Writes the current TrakEM project to MTBXML format.");
+    	writeXMLButton.setActionCommand("writeXML");
+    	writeXMLButton.setEnabled(true);
+    	writeXMLButton.addActionListener(this);
+    	group2.add(writeXMLButton);
+
+    	JButton statButton = new JButton("Write Statistics");
+    	statButton.setToolTipText("");
+    	statButton.setActionCommand("stat");
+    	statButton.addActionListener(this);
+    	statButton.setEnabled(true);
+    	group2.add(statButton);
+    		
+    	JButton conflicManagerButton = new JButton("Conflict Manager");
+    	conflicManagerButton.setToolTipText("Manage conflicts related to connectors.");
+    	conflicManagerButton.setActionCommand("conflictPanel");
+    	conflicManagerButton.addActionListener(this);
+    	conflicManagerButton.setEnabled(true);
+    	group3.add(conflicManagerButton);
+    	
+    	JButton loadImagesButton = new JButton("Load Images");
+    	loadImagesButton.setToolTipText("Import one or more images as a stack.");
+    	loadImagesButton.setActionCommand("Load images");
+    	loadImagesButton.addActionListener(this);
+    	group4.add(loadImagesButton);
+    	
+    	JButton preferencesButton = new JButton("Preferences");
+    	preferencesButton.setToolTipText("Adjust the color and opacity of treelines of a certain type.");
+    	preferencesButton.setActionCommand("preferences");
+    	preferencesButton.addActionListener(this);
+    	group5.add(preferencesButton);
+
+    	JButton aboutButton = new JButton("About rhizoTrak");
+    	aboutButton.setToolTipText("");
+    	aboutButton.setActionCommand("aboutRhizo");
+    	aboutButton.addActionListener(this);
+    	aboutButton.setEnabled(true);
+    	group5.add(aboutButton);
+
+    	JButton devTest = new JButton("Test");
+    	devTest.setToolTipText("");
+    	devTest.setActionCommand("testtest");
+    	devTest.addActionListener(this);
+//    	group5.add(devTest); 
+    	
+    	MatteBorder mb = new MatteBorder(1, 0, 0, 0, Color.BLACK);
+    	TitledBorder tb = new TitledBorder(mb, "rhizoTrak Operations", TitledBorder.CENTER, TitledBorder.DEFAULT_POSITION);
+    	
+    	final int VGAP = 8;
+    	panel.setBorder(tb);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(group1);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(group2);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(group3);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(group4);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(group5);
+    	
+    	return panel;
+    }
 
 	protected Image applyFilters(final Image img) {
 		if (!filter_enabled) return img;

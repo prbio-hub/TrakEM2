@@ -104,6 +104,7 @@ import java.util.Map;
 import java.util.Set;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.display.graphics.AddARGBComposite;
 import de.unihalle.informatik.rhizoTrak.display.graphics.ColorYCbCrComposite;
 import de.unihalle.informatik.rhizoTrak.display.graphics.DifferenceARGBComposite;
@@ -1410,7 +1411,9 @@ public abstract class Displayable extends DBObject implements Paintable  {
 		if (!visible) sb_body.append(in).append("visible=\"false\"\n");
 		// 'style' is taken care in subclasses
 		if (null != title && title.length() > 0) {
-			sb_body.append(in).append("title=\"").append(title.replaceAll("\"", "^#^")).append("\"\n"); // fix possible harm by '"' characters (backslash should be taken care of as well TODO)
+			// code string for html
+			sb_body.append(in).append("title=\"").append( RhizoUtils.htmlCode( title.replaceAll("\"", "^#^"))).append("\"\n"); // fix possible harm by '"' characters (backslash should be taken care of as well TODO)
+//			sb_body.append(in).append("title=\"").append(title.replaceAll("\"", "^#^")).append("\"\n"); // fix possible harm by '"' characters (backslash should be taken care of as well TODO)
 		}
 		
 		if (COMPOSITE_NORMAL != compositeMode) {
@@ -2271,4 +2274,25 @@ public abstract class Displayable extends DBObject implements Paintable  {
 	 *  If multiple displays have the same Displayable in their Selection,
 	 *  this Diplayabale is to act as if it has been deselected from all. */
 	public void deselect() {}
+        
+//    //actyc: equals implementation based on id's
+//    @Override
+//    public int hashCode() {
+//        int hash = 19;
+//        hash = 37 * hash + (int)this.getId();
+//        return hash;
+//
+//    }
+//
+//    @Override
+//    public boolean equals(Object obj) {
+//        if(this==obj){
+//            return true;
+//        }
+//        if(obj==null || this.getClass()!=obj.getClass()){
+//            return false;
+//        }
+//        Displayable d = (Displayable) obj;
+//        return d.getId() == this.getId();
+//    }
 }

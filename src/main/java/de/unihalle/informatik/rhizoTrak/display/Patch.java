@@ -114,6 +114,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.imaging.PatchStack;
 import de.unihalle.informatik.rhizoTrak.imaging.filters.FilterEditor;
 import de.unihalle.informatik.rhizoTrak.imaging.filters.IFilter;
@@ -907,6 +908,8 @@ public final class Patch extends Displayable implements ImageData {
 				rel_path = title; // at least some clue for recovery
 			} else {
 				rel_path = path2;
+				//actyc: convert path2 to relativ path; it appears the path is not relativ if the image is in another directory than the xml
+				rel_path = project.getRhizoMain().getRhizoImages().convertToRelativPath(path2);
 			}
 		}
 
@@ -920,8 +923,12 @@ public final class Patch extends Displayable implements ImageData {
 			final ImagePlus imp = project.getLoader().fetchImagePlus(this);
 			if (null != imp) type = imp.getType();
 		}
+		
+		
+		// code file path for html
 		sb_body.append(in).append("type=\"").append(type /*null == any ? ImagePlus.GRAY8 : type*/).append("\"\n")
-		       .append(in).append("file_path=\"").append(rel_path).append("\"\n")
+		       .append(in).append("file_path=\"").append( RhizoUtils.htmlCode( rel_path)).append("\"\n")
+//		       .append(in).append("file_path=\"").append(rel_path).append("\"\n")
 		       .append(in).append("style=\"fill-opacity:").append(alpha).append(";stroke:#").append(RGB[0]).append(RGB[1]).append(RGB[2]).append(";\"\n")
 		       .append(in).append("o_width=\"").append(o_width).append("\"\n")
 		       .append(in).append("o_height=\"").append(o_height).append("\"\n")

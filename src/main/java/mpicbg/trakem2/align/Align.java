@@ -1133,7 +1133,7 @@ public class Align
 		for ( final Tile< ? > t : tile.getConnectedTiles() )
 		{
 			if ( visited.contains( t ) ) continue;
-			pairwiseAlign( ( AbstractAffineTile2D< ? > )t, visited );
+			pairwiseAlign( (mpicbg.trakem2.align.AbstractAffineTile2D< ? > )t, visited );
 			// TODO Actually do it ...
 		}
 	}

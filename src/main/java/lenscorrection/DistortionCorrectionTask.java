@@ -521,7 +521,7 @@ final public class DistortionCorrectionTask
 
 		interestingTiles = new ArrayList< AbstractAffineTile2D< ? > >();
 		for ( final Tile< ? > t : largestGraph )
-			interestingTiles.add( ( AbstractAffineTile2D< ? > )t );
+			interestingTiles.add( (mpicbg.trakem2.align.AbstractAffineTile2D< ? > )t );
 
 		if ( Thread.currentThread().isInterrupted() ) return;
 

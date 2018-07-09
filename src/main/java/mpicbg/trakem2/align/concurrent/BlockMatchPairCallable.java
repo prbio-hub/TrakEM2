@@ -58,9 +58,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.utils.Filter;
+import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import mpicbg.ij.blockmatching.BlockMatching;
 import mpicbg.models.AbstractModel;
 import mpicbg.models.ErrorStatistic;

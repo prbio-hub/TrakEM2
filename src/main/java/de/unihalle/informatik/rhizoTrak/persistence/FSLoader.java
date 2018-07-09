@@ -134,6 +134,7 @@ import net.imglib2.img.imageplus.ImagePlusImgs;
 import net.imglib2.type.numeric.real.FloatType;
 
 import org.janelia.intensity.LinearIntensityMap;
+import org.jfree.chart.plot.CategoryCrosshairState;
 import org.xml.sax.InputSource;
 
 import de.unihalle.informatik.rhizoTrak.ControlWindow;
@@ -144,6 +145,7 @@ import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.MipMapImage;
 import de.unihalle.informatik.rhizoTrak.display.Patch;
+import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Stack;
 import de.unihalle.informatik.rhizoTrak.imaging.FloatProcessorT2;
 import de.unihalle.informatik.rhizoTrak.imaging.P;
@@ -211,6 +213,11 @@ public final class FSLoader extends Loader {
 			createMipMapsDir(this.dir_storage);
 			crashDetector();
 		}
+	}
+
+	public FSLoader(final String dir_project,final  String xmlpath) throws Exception {
+		this( dir_project);
+		this.project_file_path = xmlpath;
 	}
 
 	private String createUNUId(String dir_storage) {
@@ -378,6 +385,7 @@ public final class FSLoader extends Loader {
 		}
 		// else, good
 		crashDetector();
+
 		return data;
 	}
 

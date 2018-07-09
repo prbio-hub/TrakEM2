@@ -931,7 +931,7 @@ A:		for ( final Layer layer : layers )
 
 			interestingTiles = new ArrayList< AbstractAffineTile2D< ? > >();
 			for ( final Tile< ? > t : largestGraph )
-				interestingTiles.add( ( AbstractAffineTile2D< ? > )t );
+				interestingTiles.add( (mpicbg.trakem2.align.AbstractAffineTile2D< ? > )t );
 
 			if ( hideDisconnectedTilesIn )
 				for ( final AbstractAffineTile2D< ? > t : tiles )
@@ -1066,12 +1066,12 @@ A:		for ( final Layer layer : layers )
 
 		final Selection selection1 = new Selection( null );
 		for ( final Tile< ? > tile : graph1 )
-			selection1.add( ( ( AbstractAffineTile2D< ? > )tile ).getPatch() );
+			selection1.add( ( (mpicbg.trakem2.align.AbstractAffineTile2D< ? > )tile ).getPatch() );
 		final Rectangle graph1Box = selection1.getBox();
 
 		final Selection selection2 = new Selection( null );
 		for ( final Tile< ? > tile : graph2 )
-			selection2.add( ( ( AbstractAffineTile2D< ? > )tile ).getPatch() );
+			selection2.add( ( (mpicbg.trakem2.align.AbstractAffineTile2D< ? > )tile ).getPatch() );
 		final Rectangle graph2Box = selection2.getBox();
 
 		final int maxLength = Math.max( Math.max( Math.max( graph1Box.width, graph1Box.height ), graph2Box.width ), graph2Box.height );
@@ -1181,7 +1181,7 @@ A:		for ( final Layer layer : layers )
 
 				/* assign patch affine transformation to the tile model */
 				for ( final Tile< ? > t : graph1 )
-					( ( AbstractAffineTile2D< ? > )t ).initModel();
+					( (mpicbg.trakem2.align.AbstractAffineTile2D< ? > )t ).initModel();
 
 				Display.repaint( layer1 );
 			}
@@ -1396,7 +1396,7 @@ A:		for ( final Layer layer : layers )
 			final Set<AbstractAffineTile2D<?>> tiles_to_keep = new HashSet<AbstractAffineTile2D<?>>();
 
 			for ( final Tile< ? > t : largestGraph )
-				tiles_to_keep.add( ( AbstractAffineTile2D< ? > )t );
+				tiles_to_keep.add( (mpicbg.trakem2.align.AbstractAffineTile2D< ? > )t );
 
 			if ( hideDisconnectedTilesIn )
 				for ( final AbstractAffineTile2D< ? > t : allTiles )

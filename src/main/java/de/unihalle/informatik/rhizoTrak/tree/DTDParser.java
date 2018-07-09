@@ -296,7 +296,7 @@ public class DTDParser {
 		) return false;
 		*/
 		if (0 == type.indexOf("t2_")
-		 || type.equals("trakem2")
+		 || type.equals("trakem2") 
 		 || type.equals("project")
 		 || 0 == type.indexOf("ict_transform")
 		) return false;

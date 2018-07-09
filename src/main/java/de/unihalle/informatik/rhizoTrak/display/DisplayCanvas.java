@@ -99,6 +99,7 @@ import java.awt.event.MouseWheelListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.PixelGrabber;
 import java.awt.image.VolatileImage;
@@ -730,6 +731,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				if (null == active || !active.contains(x_p, y_p)) {
 					// find a Displayable to activate, if any
 					display.choose(me.getX(), me.getY(), x_p, y_p, DLabel.class);
+
 					active = display.getActive();
 				}
 				if (null != active && active.isVisible() && active instanceof DLabel) {
@@ -759,7 +761,13 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 		}
 		// select or deselect another active Displayable, or add it to the selection group:
 		if (ProjectToolbar.SELECT == tool) {
-			display.choose(me.getX(), me.getY(), x_p, y_p, me.isShiftDown(), null);
+			//actyc: change to the modified version to centralize changes
+			//old:
+//			display.choose(me.getX(), me.getY(), x_p, y_p, me.isShiftDown(), null);
+			//new:
+			Thread t = Display.getFront().getProject().getRhizoMain().getRhizoAddons().choose(me.getX(), me.getY(), x_p, y_p, me.isShiftDown(), null,Display.getFront());
+			t.start();
+			//end
 		}
 		active = display.getActive();
 		selection = display.getSelection();
@@ -910,6 +918,12 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				Rectangle box2;
 				switch (tool) {
 				case ProjectToolbar.SELECT:
+                    if(active instanceof Tree)
+                    {
+                           Tree tree = (Tree) active;
+                           tree.dragged();
+                    }
+                                                
 					display.getMode().mouseDragged(me, x_p, y_p, x_d, y_d, x_d_old, y_d_old);
 					box2 = display.getMode().getRepaintBounds();
 					box.add(box2);
@@ -2028,6 +2042,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				// else, let ImageJ grab the ROI into the Manager, if any
 				break;
 			case KeyEvent.VK_A:
+				
 				if (0 == (ke.getModifiers() ^ Utils.getControlModifier())) {
 					final Roi roi = getFakeImagePlus().getRoi();
 					if (null != roi) display.getSelection().selectAll(roi, true);
@@ -2035,6 +2050,8 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 					Display.repaint(display.getLayer(), display.getSelection().getBox(), 0);
 					ke.consume();
 					break; // INSIDE the 'if' block, so that it can bleed to the default block which forwards to active!
+				} else if((active != null && active instanceof Tree) || active == null ) { //actyc short-cut to add new treline
+						RhizoAddons.newTreelineShortcut();
 				} else if (null != active) {
 					active.keyPressed(ke);
 					if (ke.isConsumed()) break;
@@ -2325,7 +2342,8 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 		final int modifiers = mwe.getModifiers();
 		final int rotation = mwe.getWheelRotation();
 		final int tool = ProjectToolbar.getToolId();
-		if (0 != (modifiers & Utils.getControlModifier())) {
+		if (0 != (modifiers & Utils.getControlModifier()) && modifiers != 11) {
+			Utils.log(MouseWheelEvent.getModifiersExText(mwe.getModifiersEx()) + " " + modifiers + " " + MouseWheelEvent.ALT_GRAPH_DOWN_MASK + " " + MouseWheelEvent.ALT_GRAPH_MASK);
 			if (!zoom_and_pan) return;
 			// scroll zoom under pointer
 			int x = mwe.getX();
@@ -2392,7 +2410,6 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 			this.setMagnification(newMag);
 			this.setSrcRect(r.x, r.y, w, h);
 			display.repaintAll2();
-
 		} else if (0 == (modifiers ^ InputEvent.SHIFT_MASK) && null != display.getActive() && ProjectToolbar.PEN != tool && AreaContainer.class.isInstance(display.getActive())) {
 			final int sign = rotation > 0 ? 1 : -1;
 			if (ProjectToolbar.BRUSH == tool) {
@@ -3086,21 +3103,103 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 		}
 	}
 
+	//old version of this methode changed it to make the node selection depending on the distanz
+//	private boolean browseToNodeLayer(final boolean is_shift_down) {
+//		// find visible instances of Tree that are currently painting in the canvas
+//		try {
+//			final Layer active_layer = display.getLayer();
+//			final Point po = getCursorLoc(); // in offscreen coords
+//			for (final ZDisplayable zd : display.getLayerSet().getDisplayableList()) {
+//				if (!zd.isVisible()) continue;
+//				if (!(zd instanceof Tree<?>)) continue;
+//				final Tree<?> t = (Tree<?>)zd;
+//				final Layer la = t.toClosestPaintedNode(active_layer, po.x, po.y, magnification);
+//				if (null == la) continue;
+//				// Else:
+//				display.toLayer(la);
+//				if (!is_shift_down) display.getSelection().clear();
+//				display.getSelection().add(t);
+//				switch (ProjectToolbar.getToolId()) {
+//					case ProjectToolbar.PEN:
+//					case ProjectToolbar.BRUSH:
+//						break;
+//					default:
+//						ProjectToolbar.setTool(ProjectToolbar.PEN);
+//						break;
+//				}
+//				
+//				//actyc: if a connector is selected switch to the con-tool
+//				if(t.getClass().equals(Connector.class)){
+//					ProjectToolbar.setTool(ProjectToolbar.CON);
+//				}
+//				
+//				return true;
+//			}
+//		} catch (final Exception e) {
+//			Utils.log2("Oops: " + e);
+//		}
+//		return false;
+//	}
+	
 	private boolean browseToNodeLayer(final boolean is_shift_down) {
 		// find visible instances of Tree that are currently painting in the canvas
 		try {
 			final Layer active_layer = display.getLayer();
 			final Point po = getCursorLoc(); // in offscreen coords
+			Node targetNode = null;
+			double currentMinDist = 0;
+			Tree<?> bestTree = null;
 			for (final ZDisplayable zd : display.getLayerSet().getDisplayableList()) {
 				if (!zd.isVisible()) continue;
 				if (!(zd instanceof Tree<?>)) continue;
 				final Tree<?> t = (Tree<?>)zd;
-				final Layer la = t.toClosestPaintedNode(active_layer, po.x, po.y, magnification);
-				if (null == la) continue;
+				Node<?> currentFound = t.findClosestNodeW(po.x, po.y, active_layer, 1);
+
+				
+				//if you found a new node check if it is closer to the courser				
+				if(currentFound!=null) {
+					if(currentFound.getConfidence() >= 0 && 
+							!t.getLayerSet().getProject().getRhizoMain().getProjectConfig().getStatusLabel((int) currentFound.getConfidence()).isSelectable()){
+						continue;							
+					}
+					//get the calibration
+					Calibration cal = zd.getLayerSet().getCalibration();
+					float pixelWidth = (float) cal.pixelWidth;
+					float pixelHeight = (float) cal.pixelHeight;
+					//transform mouse coords
+					final Point2D.Double poT = t.inverseTransformPoint(po.x, po.y);
+					float lx = (float)poT.x;
+					float ly = (float)poT.y;
+					
+					double currentDist= Math.pow((pixelWidth*(currentFound.getX()-0.5-lx)), 2)+Math.pow((pixelHeight*(currentFound.getY()-0.5-ly)), 2);
+//					Utils.log("Treeline:");
+//					Utils.log(t.getId());
+//					Utils.log("found Dist:");
+//					Utils.log(currentDist);
+					//check if it is the first found node
+					if(targetNode==null) {
+						currentFound.getConfidence();
+						targetNode=currentFound;
+						bestTree= t;
+						currentMinDist = currentDist;
+					} 
+					else {
+						if(currentDist<currentMinDist) {
+							currentMinDist = currentDist;
+							targetNode=currentFound;
+							bestTree= t;
+						}					
+					}
+				}
+			}
+			bestTree.setLastVisited(targetNode);
+			Layer la =targetNode.getLayer();
+			
+				if (null == la) return false;
 				// Else:
 				display.toLayer(la);
 				if (!is_shift_down) display.getSelection().clear();
-				display.getSelection().add(t);
+				display.getSelection().add(bestTree);
 				switch (ProjectToolbar.getToolId()) {
 					case ProjectToolbar.PEN:
 					case ProjectToolbar.BRUSH:
@@ -3109,8 +3208,14 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 						ProjectToolbar.setTool(ProjectToolbar.PEN);
 						break;
 				}
+				
+				//actyc: if a connector is selected switch to the con-tool
+				if(bestTree.getClass().equals(Connector.class)){
+					ProjectToolbar.setTool(ProjectToolbar.CON);
+				}
+				
 				return true;
-			}
+			//}
 		} catch (final Exception e) {
 			Utils.log2("Oops: " + e);
 		}
