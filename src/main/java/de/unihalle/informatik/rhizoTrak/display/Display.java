@@ -1314,13 +1314,13 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				e.printStackTrace();
 			}
 			
-			buttons.add(lineButton);
 			buttons.add(textButton);
 			buttons.add(zoomButton);
 			buttons.add(handButton);
+			buttons.add(lineButton);
+			buttons.add(conButton);
 			buttons.add(selectButton);
 			buttons.add(penButton);
-			buttons.add(conButton);
 
 			this.setLayout(new GridLayout(1, 7));
 

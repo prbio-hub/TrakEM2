@@ -313,6 +313,7 @@ public class ProjectToolbar implements MouseListener {
 				setTool(Toolbar.HAND);
 				break;
 			case KeyEvent.VK_F7:
+				setTool(Toolbar.LINE);
 				break;
 			case KeyEvent.VK_F8:
 				//actyc
