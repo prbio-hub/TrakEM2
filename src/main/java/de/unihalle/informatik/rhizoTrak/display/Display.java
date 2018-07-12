@@ -986,7 +986,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		this.scroll_layers = makeScrollPane(panel_layers);
 		recreateLayerPanels(layer);
 		this.scroll_layers.addMouseWheelListener(canvas);
-		if(!rm.isLeanGUI()) this.addTab("Layers", scroll_layers);
+		this.addTab("Layers", scroll_layers);
 
 		// Tab 7: tool options
 		this.tool_options = new OptionPanel(); // empty
@@ -1259,13 +1259,14 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	{
 		private static final long serialVersionUID = 1L;
 		
-		private JButton lineButton;
-		private JButton textButton;
-		private JButton zoomButton;
-		private JButton handButton;
-		private JButton selectButton;
-		private JButton penButton;
-		private JButton conButton;
+		private JButton textButton; // F4
+		private JButton zoomButton; // F5
+		private JButton handButton; // F6
+		private JButton lineButton; // F7
+		private JButton conButton; // F8
+		private JButton selectButton; // F9
+		private JButton pencilButton; // F10
+		private JButton penButton; // F11
 		
 		private Border emptyBorder = new EmptyBorder(2, 2, 2, 2);
 		private Border activeBorder = BorderFactory.createLoweredSoftBevelBorder();
@@ -1274,39 +1275,43 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		
 		public RhizoTrakToolbar()
 		{
-			lineButton = new JButton();
 			textButton = new JButton();
 			zoomButton = new JButton();
 			handButton = new JButton();
-			selectButton = new JButton();
-			penButton = new JButton();
+			lineButton = new JButton();
 			conButton = new JButton();
+			selectButton = new JButton();
+			pencilButton = new JButton();
+			penButton = new JButton();
 
-			lineButton.setActionCommand("line");
 			textButton.setActionCommand("text");
 			zoomButton.setActionCommand("zoom");
 			handButton.setActionCommand("hand");
-			selectButton.setActionCommand("select");
-			penButton.setActionCommand("pen");
+			lineButton.setActionCommand("line");
 			conButton.setActionCommand("con");
+			selectButton.setActionCommand("select");
+			pencilButton.setActionCommand("pencil");
+			penButton.setActionCommand("pen");
 			
 			try 
 			{
-				final Image lineIcon = ImageIO.read(getClass().getResource("/rhizoTrak/tool icons/line.png"));
 				final Image textIcon = ImageIO.read(getClass().getResource("/rhizoTrak/tool icons/text.png"));
 				final Image zoomIcon = ImageIO.read(getClass().getResource("/rhizoTrak/tool icons/zoom.png"));
 				final Image handIcon = ImageIO.read(getClass().getResource("/rhizoTrak/tool icons/hand.png"));
-				final Image selectIcon = ImageIO.read(getClass().getResource("/rhizoTrak/tool icons/select.png"));
-				final Image penIcon = ImageIO.read(getClass().getResource("/rhizoTrak/tool icons/pen.png"));
+				final Image lineIcon = ImageIO.read(getClass().getResource("/rhizoTrak/tool icons/line.png"));
 				final Image conIcon = ImageIO.read(getClass().getResource("/rhizoTrak/tool icons/contool.png"));
+				final Image selectIcon = ImageIO.read(getClass().getResource("/rhizoTrak/tool icons/select.png"));
+				final Image pencilIcon = ImageIO.read(getClass().getResource("/rhizoTrak/tool icons/pencil.png"));
+				final Image penIcon = ImageIO.read(getClass().getResource("/rhizoTrak/tool icons/pen.png"));
 				
-				lineButton.setIcon(new ImageIcon(lineIcon));
 				textButton.setIcon(new ImageIcon(textIcon));
 				zoomButton.setIcon(new ImageIcon(zoomIcon));
 				handButton.setIcon(new ImageIcon(handIcon));
-				selectButton.setIcon(new ImageIcon(selectIcon));
-				penButton.setIcon(new ImageIcon(penIcon));
+				lineButton.setIcon(new ImageIcon(lineIcon));
 				conButton.setIcon(new ImageIcon(conIcon));
+				selectButton.setIcon(new ImageIcon(selectIcon));
+				pencilButton.setIcon(new ImageIcon(pencilIcon));
+				penButton.setIcon(new ImageIcon(penIcon));
 				
 			} 
 			catch(Exception e) 
@@ -1320,9 +1325,10 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			buttons.add(lineButton);
 			buttons.add(conButton);
 			buttons.add(selectButton);
+			buttons.add(pencilButton);
 			buttons.add(penButton);
 
-			this.setLayout(new GridLayout(1, 7, 3, 0));
+			this.setLayout(new GridLayout(1, 8, 2, 0));
 
 			for(JButton b: buttons)
 			{
@@ -1339,9 +1345,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		{
 			switch(e.getActionCommand())
 			{
-				case "line": 
-					ProjectToolbar.setTool(Toolbar.LINE);
-					break; 
 				case "text": 
 					ProjectToolbar.setTool(Toolbar.TEXT);
 					break; 
@@ -1351,14 +1354,19 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				case "hand": 
 					ProjectToolbar.setTool(Toolbar.HAND);
 					break; 
-				case "select": 
-					ProjectToolbar.setTool(ProjectToolbar.SELECT);
-					break; 
-				case "pen": 
-					ProjectToolbar.setTool(ProjectToolbar.PEN);
+				case "line": 
+					ProjectToolbar.setTool(Toolbar.LINE);
 					break; 
 				case "con": 
 					ProjectToolbar.setTool(ProjectToolbar.CON);
+					break; 
+				case "select": 
+					ProjectToolbar.setTool(ProjectToolbar.SELECT);
+					break; 
+				case "pencil":
+					ProjectToolbar.setTool(ProjectToolbar.PENCIL);
+				case "pen": 
+					ProjectToolbar.setTool(ProjectToolbar.PEN);
 					break; 
 			}
 		}
@@ -1379,11 +1387,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		{
 			switch(tool)
 			{
-				case Toolbar.LINE: 
-					lineButton.setEnabled(false);
-					lineButton.setBorder(activeBorder);
-					deactivateOtherTools(lineButton);
-					break; 
 				case Toolbar.TEXT: 
 					textButton.setEnabled(false);
 					textButton.setBorder(activeBorder);
@@ -1399,20 +1402,30 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					handButton.setBorder(activeBorder);
 					deactivateOtherTools(handButton);
 					break; 
-				case ProjectToolbar.SELECT: 
-					selectButton.setEnabled(false);
-					selectButton.setBorder(activeBorder);
-					deactivateOtherTools(selectButton);
-					break; 
-				case ProjectToolbar.PEN: 
-					penButton.setEnabled(false);
-					penButton.setBorder(activeBorder);
-					deactivateOtherTools(penButton);
+				case Toolbar.LINE: 
+					lineButton.setEnabled(false);
+					lineButton.setBorder(activeBorder);
+					deactivateOtherTools(lineButton);
 					break; 
 				case ProjectToolbar.CON: 
 					conButton.setEnabled(false);
 					conButton.setBorder(activeBorder);
 					deactivateOtherTools(conButton);
+					break; 
+				case ProjectToolbar.SELECT: 
+					selectButton.setEnabled(false);
+					selectButton.setBorder(activeBorder);
+					deactivateOtherTools(selectButton);
+					break;
+				case ProjectToolbar.PENCIL: 
+					pencilButton.setEnabled(false);
+					pencilButton.setBorder(activeBorder);
+					deactivateOtherTools(pencilButton);
+					break;
+				case ProjectToolbar.PEN: 
+					penButton.setEnabled(false);
+					penButton.setBorder(activeBorder);
+					deactivateOtherTools(penButton);
 					break; 
 			}
 		}
