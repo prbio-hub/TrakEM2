@@ -1012,7 +1012,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 //		this.filter_options = createExtendedOptionPanel();
 		this.scroll_filter_options = makeScrollPane(createExtendedOptionPanel());
 //		this.scroll_filter_options.setHorizontalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		this.addTab("Extended Options", this.scroll_filter_options);
+		this.addTab("rhizoTrak Operations", this.scroll_filter_options);
 
 		this.ht_tabs = new Hashtable<Class<?>,RollingPanel>();
 		this.ht_tabs.put(Patch.class, panel_patches);
@@ -1322,7 +1322,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			buttons.add(selectButton);
 			buttons.add(penButton);
 
-			this.setLayout(new GridLayout(1, 7));
+			this.setLayout(new GridLayout(1, 7, 3, 0));
 
 			for(JButton b: buttons)
 			{
