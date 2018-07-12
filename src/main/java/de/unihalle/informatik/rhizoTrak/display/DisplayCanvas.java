@@ -125,6 +125,7 @@ import org.scijava.vecmath.Vector2f;
 import org.scijava.vecmath.Vector3d;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.display.graphics.GraphicsSource;
 import de.unihalle.informatik.rhizoTrak.display.inspect.InspectPatchTrianglesMode;
 import de.unihalle.informatik.rhizoTrak.imaging.Segmentation;
@@ -1845,6 +1846,8 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 	public void keyPressed(final KeyEvent ke) {
 
 		final Displayable active = display.getActive();
+		
+		RhizoMain rm = this.display.getProject().getRhizoMain();
 
 		if (null != freehandProfile
 			&& ProjectToolbar.getToolId() == ProjectToolbar.PENCIL
@@ -1937,7 +1940,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 			display.getProject().getLoader().saveTask(display.getProject(), "Save");
 			ke.consume();
 			return;
-		} else if (KeyEvent.VK_F == keyCode && Utils.isControlDown(ke)) {
+		} else if (!rm.isLeanGUI() && KeyEvent.VK_F == keyCode && Utils.isControlDown(ke)) {
 			Search.showWindow();
 			ke.consume();
 			return;
@@ -2024,11 +2027,11 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				break;
 			case KeyEvent.VK_T:
 				// Enable with any tool to the left of the PENCIL
-				if (null != active && !isTransforming() && ProjectToolbar.getToolId() < ProjectToolbar.PENCIL) {
+				if (!rm.isLeanGUI() && null != active && !isTransforming() && ProjectToolbar.getToolId() < ProjectToolbar.PENCIL) {
 					ProjectToolbar.setTool(ProjectToolbar.SELECT);
 					if (0 == ke.getModifiers()) {
 						display.setMode(new AffineTransformMode(display));
-					} else if (Event.SHIFT_MASK == ke.getModifiers()) {
+					} else if (!rm.isLeanGUI() && Event.SHIFT_MASK == ke.getModifiers()) {
 						for (final Displayable d : display.getSelection().getSelected()) {
 							if (d.isLinked()) {
 								Utils.showMessage("Can't enter manual non-linear transformation mode:\nat least one image is linked.");
@@ -2043,7 +2046,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				break;
 			case KeyEvent.VK_A:
 				
-				if (0 == (ke.getModifiers() ^ Utils.getControlModifier())) {
+				if (!rm.isLeanGUI() && 0 == (ke.getModifiers() ^ Utils.getControlModifier())) {
 					final Roi roi = getFakeImagePlus().getRoi();
 					if (null != roi) display.getSelection().selectAll(roi, true);
 					else display.getSelection().selectAllVisible();
@@ -2051,6 +2054,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 					ke.consume();
 					break; // INSIDE the 'if' block, so that it can bleed to the default block which forwards to active!
 				} else if((active != null && active instanceof Tree) || active == null ) { //actyc short-cut to add new treline
+					
 						RhizoAddons.newTreelineShortcut();
 				} else if (null != active) {
 					active.keyPressed(ke);
@@ -2162,7 +2166,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				}
 				break;
 			case KeyEvent.VK_I:
-				if (ke.isAltDown()) {
+				if (!rm.isLeanGUI() && ke.isAltDown()) {
 					if (ke.isShiftDown()) display.importImage();
 					else display.importNextImage();
 					ke.consume();
@@ -2172,7 +2176,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				if (null != active) {
 					update_graphics = true;
 					layer.getParent().addUndoMoveStep(active);
-					layer.getParent().move(LayerSet.UP, active);
+					layer.getParent().move(LayerSet.UP, active);	
 					layer.getParent().addUndoMoveStep(active);
 					Display.repaint(layer, active, 5);
 					Display.updatePanelIndex(layer, active);
@@ -2243,7 +2247,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				}
 				break;
 			case KeyEvent.VK_F:
-				if (0 == (ke.getModifiers() ^ KeyEvent.SHIFT_MASK)) {
+				if (!rm.isLeanGUI() && 0 == (ke.getModifiers() ^ KeyEvent.SHIFT_MASK)) {
 					// toggle visibility of tags
 					display.getLayerSet().paint_tags = !display.getLayerSet().paint_tags;
 					Display.repaint();

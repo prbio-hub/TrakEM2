@@ -114,6 +114,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.imaging.PatchStack;
 import de.unihalle.informatik.rhizoTrak.imaging.filters.FilterEditor;
@@ -1711,6 +1712,9 @@ public final class Patch extends Displayable implements ImageData {
 
 	@Override
 	public void keyPressed(final KeyEvent ke) {
+		
+		RhizoMain rm = this.project.getRhizoMain();
+		
 		final Object source = ke.getSource();
 		if (! (source instanceof DisplayCanvas)) return;
 		final DisplayCanvas dc = (DisplayCanvas)source;
@@ -1722,11 +1726,11 @@ public final class Patch extends Displayable implements ImageData {
 			case KeyEvent.VK_C:
 				// copy into ImageJ clipboard
 				// Ignoring masks: outside is already black, and ImageJ cannot handle alpha masks.
-				if (0 == (mod ^ (Event.SHIFT_MASK | Event.ALT_MASK))) {
+				if (!rm.isLeanGUI() && 0 == (mod ^ (Event.SHIFT_MASK | Event.ALT_MASK))) {
 					// Place the source image, untransformed, into clipboard:
 					final ImagePlus imp = getImagePlus();
 					if (null != imp) imp.copy(false);
-				} else if (0 == mod || (0 == (mod ^ Event.SHIFT_MASK))) {
+				} else if (!rm.isLeanGUI() && 0 == mod || (0 == (mod ^ Event.SHIFT_MASK))) {
 					CoordinateTransformList<CoordinateTransform> list = null;
 					if (hasCoordinateTransform()) {
 						list = new CoordinateTransformList<CoordinateTransform>();

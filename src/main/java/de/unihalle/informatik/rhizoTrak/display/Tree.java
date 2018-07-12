@@ -2037,6 +2037,8 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		Coordinate<Node<T>> c = null;
 		try {
 
+		RhizoMain rm = project.getRhizoMain();
+
 		switch (keyCode) {
 			case KeyEvent.VK_T:
 				if (0 == modifiers) {
@@ -2121,7 +2123,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 //					break;
 			}
 		}
-		if (ProjectToolbar.PEN == ProjectToolbar.getToolId() && 0 == (modifiers ^ Event.SHIFT_MASK) && KeyEvent.VK_C == keyCode) {
+		if (!rm.isLeanGUI() && ProjectToolbar.PEN == ProjectToolbar.getToolId() && 0 == (modifiers ^ Event.SHIFT_MASK) && KeyEvent.VK_C == keyCode) {
 			nd = findClosestNodeW(getNodesToPaint(layer), po.x, po.y, dc.getMagnification());
 			if (null == nd) {
 				final Node<T> last = getLastVisited();

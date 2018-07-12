@@ -99,6 +99,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JTree;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -634,6 +635,11 @@ public class Project extends DBObject {
 			project.getRhizoMain().getRhizoIO().initStatusLabelMapping( od.getPath());
 
 			project.getRhizoMain().getProjectConfig().setImageSearchDir( new File( dir_project));
+			
+			int answer = JOptionPane.showConfirmDialog(null, "Do you want to start rhizoTrak with a lighter interface?\n"
+					+ "This will remove non-essential functions from the interface.", 
+					"", JOptionPane.YES_NO_OPTION);
+			if(answer == JOptionPane.YES_OPTION) project.getRhizoMain().setLeanGUI(true);
 			
 	
 			// help the helpless users:
