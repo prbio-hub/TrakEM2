@@ -930,6 +930,7 @@ public abstract class Displayable extends DBObject implements Paintable  {
 			Search.remove(this);
 			Display.flush(this);
 			project.decache(this);
+			DisplayCanvas.addTreelineEnabled.set(true);
 			return true;
 		}
 		Utils.log("Failed to remove " + this.getClass().getName() + " " + this);

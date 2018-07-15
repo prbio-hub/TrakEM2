@@ -119,6 +119,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.scijava.vecmath.Point2f;
 import org.scijava.vecmath.Vector2f;
@@ -176,6 +177,8 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 	private boolean dragging = false;
 	private boolean input_disabled = false;
 	private boolean input_disabled2 = false;
+	
+	public static final AtomicBoolean addTreelineEnabled = new AtomicBoolean(true);
 
 	/** Store a copy of whatever data as each Class may define it, one such data object per class.
 	 * Private to the package. */
@@ -2055,7 +2058,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 					break; // INSIDE the 'if' block, so that it can bleed to the default block which forwards to active!
 				} else if((active != null && active instanceof Tree) || active == null ) { //actyc short-cut to add new treline
 					
-						RhizoAddons.newTreelineShortcut();
+						if(addTreelineEnabled.compareAndSet(true, false)) RhizoAddons.newTreelineShortcut();
 				} else if (null != active) {
 					active.keyPressed(ke);
 					if (ke.isConsumed()) break;

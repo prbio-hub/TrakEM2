@@ -1307,6 +1307,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				Utils.log("@addNode1: " + child);
 
 				added = true;
+				DisplayCanvas.addTreelineEnabled.set(true);
 
 			} else if (0 == nodes.size()) {
 				node_layer_map.remove(child.la);
@@ -4082,7 +4083,8 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		//actyct: fire remove event or if tree is a connector remove all references
 		if(this instanceof Treeline)
 		{
-			TreeEvent te = new TreeEvent((Treeline) this,"remove",null,null);
+			if(null == this.root) DisplayCanvas.addTreelineEnabled.set(true);
+			TreeEvent te = new TreeEvent((Treeline) this,"remove",null,null);			
 			treeAction(te);
 		}
 		if(this instanceof Connector)
