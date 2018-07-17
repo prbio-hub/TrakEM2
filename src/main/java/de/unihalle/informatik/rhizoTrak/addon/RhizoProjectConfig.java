@@ -164,6 +164,10 @@ public class RhizoProjectConfig {
 	 */
 	private boolean askSplitTreeline = true;
 	
+	/**
+	 * If true the rhizoTrak will start with the full GUI (as opposed to a lean GUI)
+	 */
+	private boolean fullGUI = false;
 	
 	/**
 	 * If true the image calibration information is shown to the user when writing statistics with non-pixel units
@@ -595,6 +599,21 @@ public class RhizoProjectConfig {
 	public void setAskSplitTreeline(boolean askSplitTreeline) {
 		setUserSettingsChanged();
 		this.askSplitTreeline = askSplitTreeline;
+	}
+
+	/**
+	 * @return the fullGUI
+	 */
+	public boolean isFullGUI() {
+		return fullGUI;
+	}
+
+	/**
+	 * @param fullGUI the fullGUI to set
+	 */
+	public void setFullGUI(boolean fullGUI) {
+		setUserSettingsChanged();
+		this.fullGUI = fullGUI;
 	}
 
 	/**

@@ -49,6 +49,7 @@
 			<xs:element name="askMergeTreelines" type="xs:boolean" minOccurs="0"></xs:element>
 			<xs:element name="askSplitTreeline" type="xs:boolean" minOccurs="0"></xs:element>
 			<xs:element name="showCalibrationInfo" type="xs:boolean" minOccurs="0"></xs:element>
+			<xs:element name="fullGUI" type="xs:boolean" minOccurs="0"></xs:element>
 		</xs:sequence>
 	</xs:complexType>
 	</xs:element>

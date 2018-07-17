@@ -126,6 +126,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 	private JPanel configChoicesPanel;
 	private String CONFIRM_MERGETREELINES = "Confirm merge treelines";
 	private String CONFIRM_SPLITREELINE = "Confirm split treeline";
+	private String FULLGUI = "Full GUI (includes all TramEM2 features";
 	private String SHOW_CALIBRATION_INFO = "Show calibration info";
 
 	
@@ -484,6 +485,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 		
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isAskMergeTreelines(), CONFIRM_MERGETREELINES));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isAskSplitTreeline(), CONFIRM_SPLITREELINE));
+		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isFullGUI(), FULLGUI));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isShowCalibrationInfo(), SHOW_CALIBRATION_INFO));
 
 		configurePanel.add( configChoicesPanel);
@@ -736,6 +738,8 @@ public class PreferencesTabbedPane extends JTabbedPane
 				rhizoMain.getProjectConfig().setAskMergeTreelines( source.isSelected());
 			} else if ( actionCommand.equals( CONFIRM_SPLITREELINE)) {
 				rhizoMain.getProjectConfig().setAskSplitTreeline( source.isSelected() );
+			} else if ( actionCommand.equals( FULLGUI)) {
+				rhizoMain.getProjectConfig().setFullGUI( source.isSelected() );
 			} else if ( actionCommand.equals( SHOW_CALIBRATION_INFO)) {
 				rhizoMain.getProjectConfig().setShowCalibrationInfo( source.isSelected() );
 			} else {

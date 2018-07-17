@@ -211,6 +211,8 @@ public class RhizoIO {
 				rhizoMain.getProjectConfig().setAskMergeTreelines( gs.getAskMergeTreelines());
 			if ( gs.getAskSplitTreeline() != null)
 				rhizoMain.getProjectConfig().setAskSplitTreeline(  gs.getAskSplitTreeline());
+			if ( gs.getFullGUI() != null)
+				rhizoMain.getProjectConfig().setFullGUI( gs.getFullGUI());
 			if ( gs.getShowCalibrationInfo() != null)
 				rhizoMain.getProjectConfig().setShowCalibrationInfo(  gs.getShowCalibrationInfo());
 			
@@ -733,6 +735,7 @@ public class RhizoIO {
 	        gs.setReceiverNodeColor(receiverColor);
 	        gs.setAskMergeTreelines( rhizoMain.getProjectConfig().isAskMergeTreelines());
 	        gs.setAskSplitTreeline( rhizoMain.getProjectConfig().isAskSplitTreeline());
+	        gs.setFullGUI( rhizoMain.getProjectConfig().isFullGUI());
 	        gs.setShowCalibrationInfo( rhizoMain.getProjectConfig().isShowCalibrationInfo());
 			
 			m.marshal(gs, userSettingsFile);
