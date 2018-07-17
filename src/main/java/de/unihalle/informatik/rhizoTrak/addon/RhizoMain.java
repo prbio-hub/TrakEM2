@@ -65,9 +65,7 @@ public class RhizoMain
 	private RhizoMTBXML rMTBXML;
 	
 	private Project p;
-	
-	private boolean leanGUI;
-	
+
 	/**
 	 * if true the layer window displays the z coordinate in the title (as trakem does)
 	 */
@@ -81,9 +79,7 @@ public class RhizoMain
 	public RhizoMain(Project p)
 	{
 		this.p = p;
-		
-		leanGUI = false;
-		
+
 		rA = new RhizoAddons(this, p);
 		
 		rCV = new RhizoColVis(this);
@@ -230,15 +226,5 @@ public class RhizoMain
 	 */
 	public void setTitleWithZcoord(boolean titleWithZcoord) {
 		this.titleWithZcoord = titleWithZcoord;
-	}
-	
-	public void setLeanGUI(boolean leanGUI)
-	{
-		this.leanGUI = leanGUI;
-	}
-	
-	public boolean isLeanGUI()
-	{
-		return leanGUI;
 	}
 }

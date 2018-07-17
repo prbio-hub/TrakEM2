@@ -2124,7 +2124,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 //					break;
 			}
 		}
-		if (!rm.isLeanGUI() && ProjectToolbar.PEN == ProjectToolbar.getToolId() && 0 == (modifiers ^ Event.SHIFT_MASK) && KeyEvent.VK_C == keyCode) {
+		if (rm.getProjectConfig().isFullGUI() && ProjectToolbar.PEN == ProjectToolbar.getToolId() && 0 == (modifiers ^ Event.SHIFT_MASK) && KeyEvent.VK_C == keyCode) {
 			nd = findClosestNodeW(getNodesToPaint(layer), po.x, po.y, dc.getMagnification());
 			if (null == nd) {
 				final Node<T> last = getLastVisited();

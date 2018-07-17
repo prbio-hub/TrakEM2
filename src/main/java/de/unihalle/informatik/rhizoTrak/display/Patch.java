@@ -1726,11 +1726,11 @@ public final class Patch extends Displayable implements ImageData {
 			case KeyEvent.VK_C:
 				// copy into ImageJ clipboard
 				// Ignoring masks: outside is already black, and ImageJ cannot handle alpha masks.
-				if (!rm.isLeanGUI() && 0 == (mod ^ (Event.SHIFT_MASK | Event.ALT_MASK))) {
+				if (rm.getProjectConfig().isFullGUI() && 0 == (mod ^ (Event.SHIFT_MASK | Event.ALT_MASK))) {
 					// Place the source image, untransformed, into clipboard:
 					final ImagePlus imp = getImagePlus();
 					if (null != imp) imp.copy(false);
-				} else if (!rm.isLeanGUI() && 0 == mod || (0 == (mod ^ Event.SHIFT_MASK))) {
+				} else if (rm.getProjectConfig().isFullGUI() && 0 == mod || (0 == (mod ^ Event.SHIFT_MASK))) {
 					CoordinateTransformList<CoordinateTransform> list = null;
 					if (hasCoordinateTransform()) {
 						list = new CoordinateTransformList<CoordinateTransform>();

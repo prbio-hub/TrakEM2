@@ -241,7 +241,7 @@ public class ProjectToolbar implements MouseListener {
 	}
 
 	static public void setTool(final int t) {
-		if(null != Display.getFront() && Display.getFront().getProject().getRhizoMain().isLeanGUI()){
+		if(null != Display.getFront() && !Display.getFront().getProject().getRhizoMain().getProjectConfig().isFullGUI()){
 			Display.getFront().rhizoTrakToolbar.setTool(t);
 		}
 		

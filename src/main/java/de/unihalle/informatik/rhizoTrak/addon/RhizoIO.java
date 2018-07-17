@@ -213,6 +213,7 @@ public class RhizoIO {
 				rhizoMain.getProjectConfig().setAskSplitTreeline(  gs.getAskSplitTreeline());
 			if ( gs.getFullGUI() != null)
 				rhizoMain.getProjectConfig().setFullGUI( gs.getFullGUI());
+				
 			if ( gs.getShowCalibrationInfo() != null)
 				rhizoMain.getProjectConfig().setShowCalibrationInfo(  gs.getShowCalibrationInfo());
 			

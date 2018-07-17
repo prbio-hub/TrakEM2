@@ -636,11 +636,6 @@ public class Project extends DBObject {
 
 			project.getRhizoMain().getProjectConfig().setImageSearchDir( new File( dir_project));
 			
-			int answer = JOptionPane.showConfirmDialog(null, "Do you want to start rhizoTrak with a lighter interface?\n"
-					+ "This will remove non-essential functions from the interface.", 
-					"", JOptionPane.YES_NO_OPTION);
-			if(answer == JOptionPane.YES_OPTION) project.getRhizoMain().setLeanGUI(true);
-			
 	
 			// help the helpless users:
 			if (autocreate_one_layer && null != project && ControlWindow.isGUIEnabled()) {

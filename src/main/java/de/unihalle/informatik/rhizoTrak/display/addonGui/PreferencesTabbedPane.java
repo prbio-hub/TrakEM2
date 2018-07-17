@@ -126,7 +126,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 	private JPanel configChoicesPanel;
 	private String CONFIRM_MERGETREELINES = "Confirm merge treelines";
 	private String CONFIRM_SPLITREELINE = "Confirm split treeline";
-	private String FULLGUI = "Full GUI (includes all TramEM2 features";
+	private String FULLGUI = "Full GUI (includes all TrakEM2 features)";
 	private String SHOW_CALIBRATION_INFO = "Show calibration info";
 
 	
@@ -740,6 +740,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 				rhizoMain.getProjectConfig().setAskSplitTreeline( source.isSelected() );
 			} else if ( actionCommand.equals( FULLGUI)) {
 				rhizoMain.getProjectConfig().setFullGUI( source.isSelected() );
+				Utils.showMessage("Full GUI will be" + (source.isSelected() ? " enabled " : " disabled ") + "on rhizoTrak restart.");
 			} else if ( actionCommand.equals( SHOW_CALIBRATION_INFO)) {
 				rhizoMain.getProjectConfig().setShowCalibrationInfo( source.isSelected() );
 			} else {

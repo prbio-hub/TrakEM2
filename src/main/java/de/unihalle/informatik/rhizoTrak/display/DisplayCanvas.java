@@ -1943,7 +1943,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 			display.getProject().getLoader().saveTask(display.getProject(), "Save");
 			ke.consume();
 			return;
-		} else if (!rm.isLeanGUI() && KeyEvent.VK_F == keyCode && Utils.isControlDown(ke)) {
+		} else if (rm.getProjectConfig().isFullGUI() && KeyEvent.VK_F == keyCode && Utils.isControlDown(ke)) {
 			Search.showWindow();
 			ke.consume();
 			return;
@@ -2030,11 +2030,11 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				break;
 			case KeyEvent.VK_T:
 				// Enable with any tool to the left of the PENCIL
-				if (!rm.isLeanGUI() && null != active && !isTransforming() && ProjectToolbar.getToolId() < ProjectToolbar.PENCIL) {
+				if (rm.getProjectConfig().isFullGUI() && null != active && !isTransforming() && ProjectToolbar.getToolId() < ProjectToolbar.PENCIL) {
 					ProjectToolbar.setTool(ProjectToolbar.SELECT);
 					if (0 == ke.getModifiers()) {
 						display.setMode(new AffineTransformMode(display));
-					} else if (!rm.isLeanGUI() && Event.SHIFT_MASK == ke.getModifiers()) {
+					} else if (rm.getProjectConfig().isFullGUI() && Event.SHIFT_MASK == ke.getModifiers()) {
 						for (final Displayable d : display.getSelection().getSelected()) {
 							if (d.isLinked()) {
 								Utils.showMessage("Can't enter manual non-linear transformation mode:\nat least one image is linked.");
@@ -2049,7 +2049,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				break;
 			case KeyEvent.VK_A:
 				
-				if (!rm.isLeanGUI() && 0 == (ke.getModifiers() ^ Utils.getControlModifier())) {
+				if (rm.getProjectConfig().isFullGUI() && 0 == (ke.getModifiers() ^ Utils.getControlModifier())) {
 					final Roi roi = getFakeImagePlus().getRoi();
 					if (null != roi) display.getSelection().selectAll(roi, true);
 					else display.getSelection().selectAllVisible();
@@ -2169,7 +2169,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				}
 				break;
 			case KeyEvent.VK_I:
-				if (!rm.isLeanGUI() && ke.isAltDown()) {
+				if (rm.getProjectConfig().isFullGUI() && ke.isAltDown()) {
 					if (ke.isShiftDown()) display.importImage();
 					else display.importNextImage();
 					ke.consume();
@@ -2250,7 +2250,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				}
 				break;
 			case KeyEvent.VK_F:
-				if (!rm.isLeanGUI() && 0 == (ke.getModifiers() ^ KeyEvent.SHIFT_MASK)) {
+				if (rm.getProjectConfig().isFullGUI() && 0 == (ke.getModifiers() ^ KeyEvent.SHIFT_MASK)) {
 					// toggle visibility of tags
 					display.getLayerSet().paint_tags = !display.getLayerSet().paint_tags;
 					Display.repaint();

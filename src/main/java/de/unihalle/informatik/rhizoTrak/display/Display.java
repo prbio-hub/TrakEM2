@@ -957,7 +957,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 
 		// Tab 2: Profiles
 		this.panel_profiles = new RollingPanel(this, Profile.class);
-		if(!rm.isLeanGUI()) this.addTab("Profiles", panel_profiles);
+		if(rm.getProjectConfig().isFullGUI()) this.addTab("Profiles", panel_profiles);
 
 		// Tab 3: ZDisplayables
 		this.panel_zdispl = new RollingPanel(this, ZDisplayable.class);
@@ -975,11 +975,11 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		addGBRow(this.panel_channels, this.channels[1], null);
 		addGBRow(this.panel_channels, this.channels[2], this.channels[1]);
 		addGBRow(this.panel_channels, this.channels[3], this.channels[2]);
-		if(!rm.isLeanGUI()) this.addTab("Opacity", scroll_channels);
+		if(rm.getProjectConfig().isFullGUI()) this.addTab("Opacity", scroll_channels);
 
 		// Tab 5: labels
 		this.panel_labels = new RollingPanel(this, DLabel.class);
-		if(!rm.isLeanGUI()) this.addTab("Labels", panel_labels);
+		if(rm.getProjectConfig().isFullGUI()) this.addTab("Labels", panel_labels);
 
 		// Tab 6: layers
 		this.panel_layers = makeTabPanel();
@@ -992,7 +992,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		this.tool_options = new OptionPanel(); // empty
 		this.scroll_options = makeScrollPane(this.tool_options);
 		this.scroll_options.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		if(!rm.isLeanGUI()) this.addTab("Tool options", this.scroll_options);
+		if(rm.getProjectConfig().isFullGUI()) this.addTab("Tool options", this.scroll_options);
 
 		// Tab 8: annotations
 		this.annot_editor = new JEditorPane();
@@ -1006,7 +1006,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		this.filter_options = createFilterOptionPanel();
 		this.scroll_filter_options = makeScrollPane(this.filter_options);
 		this.scroll_filter_options.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		if(!rm.isLeanGUI()) this.addTab("Live filter", this.scroll_filter_options);
+		if(rm.getProjectConfig().isFullGUI()) this.addTab("Live filter", this.scroll_filter_options);
 		
 		//actyc: Test tab 10
 //		this.filter_options = createExtendedOptionPanel();
@@ -1065,7 +1065,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 
 		
 		// 1
-		if(rm.isLeanGUI())
+		if(!rm.getProjectConfig().isFullGUI())
 		{
 			rhizoTrakToolbar = new RhizoTrakToolbar();
 			layout.setConstraints(rhizoTrakToolbar, c);
@@ -2953,7 +2953,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				item = new JMenuItem("Unlink from images"); item.addActionListener(this); popup.add(item); 
 				item.setEnabled(false); // isLinked() checks if it's linked to a Patch in its own layer
 				item = new JMenuItem("Show in 3D"); item.addActionListener(this); 
-				if(!rm.isLeanGUI()) popup.add(item);
+				if(rm.getProjectConfig().isFullGUI()) popup.add(item);
 				popup.addSeparator();
 			} else if (Patch.class == aclass) {
 				final JMenu m = new JMenu("Patch");
@@ -3006,7 +3006,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			} else {
 				item = new JMenuItem("Unlink"); item.addActionListener(this); popup.add(item);
 				item = new JMenuItem("Show in 3D"); item.addActionListener(this); 
-				if(!rm.isLeanGUI()) popup.add(item);
+				if(rm.getProjectConfig().isFullGUI()) popup.add(item);
 				popup.addSeparator();
 			}
 
@@ -3245,7 +3245,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 						for (final Tree<?> t : trees) TreeConnectorsView.create(t);
 					}
 				});
-				if(!rm.isLeanGUI()) popup.add(review);
+				if(rm.getProjectConfig().isFullGUI()) popup.add(review);
 
 				final JMenu go = new JMenu("Go");
 				item = new JMenuItem("Previous branch node or start"); item.addActionListener(this); go.add(item);
@@ -3300,7 +3300,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 						}, getProject());
 					}
 				});
-				if(!rm.isLeanGUI()) popup.add(item);
+				if(rm.getProjectConfig().isFullGUI()) popup.add(item);
 				popup.addSeparator();
 			} else if (Connector.class == aclass) {
 				item = new JMenuItem("Merge"); item.addActionListener(new ActionListener() {
@@ -3398,12 +3398,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				final int i_layer = layer.getParent().indexOf(layer);
 				final int n_layers = layer.getParent().size();
 				item = new JMenuItem("Send to previous layer"); item.addActionListener(this); 
-				if(!rm.isLeanGUI()) popup.add(item);
+				if(rm.getProjectConfig().isFullGUI()) popup.add(item);
 				if (1 == n_layers || 0 == i_layer || active.isLinked()) item.setEnabled(false);
 				// check if the active is a profile and contains a link to another profile in the layer it is going to be sent to, or it is linked
 				else if (active instanceof Profile && !active.canSendTo(layer.getParent().previous(layer))) item.setEnabled(false);
 				item = new JMenuItem("Send to next layer"); item.addActionListener(this); 
-				if(!rm.isLeanGUI()) popup.add(item);
+				if(rm.getProjectConfig().isFullGUI()) popup.add(item);
 				if (1 == n_layers || n_layers -1 == i_layer || active.isLinked()) item.setEnabled(false);
 				else if (active instanceof Profile && !active.canSendTo(layer.getParent().next(layer))) item.setEnabled(false);
 
@@ -3423,7 +3423,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					menu.setEnabled(false);
 					//Utils.log("Active's linked group not within layer.");
 				}
-				if(!rm.isLeanGUI()) popup.add(menu);
+				if(rm.getProjectConfig().isFullGUI()) popup.add(menu);
 				popup.addSeparator();
 			}
 		}
@@ -3521,7 +3521,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		item = new JMenuItem("Montage selected images"); item.addActionListener(this); align_menu.add(item);
 		if (selection.getSelected(Patch.class).size() < 2) item.setEnabled(false);
 		item = new JMenuItem("Montage multiple layers"); item.addActionListener(this); align_menu.add(item);
-		if(!rm.isLeanGUI()) popup.add(align_menu);
+		if(rm.getProjectConfig().isFullGUI()) popup.add(align_menu);
 
 		final JMenuItem st = new JMenu("Transform");
 		final StartTransformMenuListener tml = new StartTransformMenuListener();
@@ -3551,14 +3551,14 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		if (null == active) item.setEnabled(false);
 		item = new JMenuItem("Set affine transform of selected image layer-wise"); item.addActionListener(tml); st.add(item);
 		if (null == active) item.setEnabled(false);
-		if(!rm.isLeanGUI()) popup.add(st);
+		if(rm.getProjectConfig().isFullGUI()) popup.add(st);
 
 		final JMenu link_menu = new JMenu("Link");
 		item = new JMenuItem("Link images..."); item.addActionListener(this); link_menu.add(item);
 		item = new JMenuItem("Unlink all selected images"); item.addActionListener(this); link_menu.add(item);
 		item.setEnabled(selection.getSelected(Patch.class).size() > 0);
 		item = new JMenuItem("Unlink all"); item.addActionListener(this); link_menu.add(item);
-		if(!rm.isLeanGUI()) popup.add(link_menu);
+		if(rm.getProjectConfig().isFullGUI()) popup.add(link_menu);
 
 		final JMenu adjust_menu = new JMenu("Adjust images");
 		item = new JMenuItem("Enhance contrast layer-wise..."); item.addActionListener(this); adjust_menu.add(item);
@@ -3586,7 +3586,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		if (selection.isEmpty()) item.setEnabled(false);
 		item = new JMenuItem("Match intensities (layer-wise)..."); item.addActionListener(this); adjust_menu.add(item);
 		item = new JMenuItem("Remove intensity maps (layer-wise)..."); item.addActionListener(this); adjust_menu.add(item);
-		if(!rm.isLeanGUI()) popup.add(adjust_menu);
+		if(rm.getProjectConfig().isFullGUI()) popup.add(adjust_menu);
 
 		final JMenu script = new JMenu("Script");
 		final MenuScriptListener msl = new MenuScriptListener();
@@ -3596,7 +3596,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		item = new JMenuItem("Remove preprocessor script layer-wise..."); item.addActionListener(msl); script.add(item);
 		item = new JMenuItem("Remove preprocessor script (selected images)..."); item.addActionListener(msl); script.add(item);
 		if (selection.isEmpty()) item.setEnabled(false);
-		if(!rm.isLeanGUI()) popup.add(script);
+		if(rm.getProjectConfig().isFullGUI()) popup.add(script);
 
 		menu = new JMenu("Import");
 		item = new JMenuItem("Import image"); item.addActionListener(this); menu.add(item);
@@ -3608,7 +3608,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		item = new JMenuItem("Import from text file..."); item.addActionListener(this); menu.add(item);
 		item = new JMenuItem("Import labels as arealists..."); item.addActionListener(this); menu.add(item);
 		item = new JMenuItem("Tags ..."); item.addActionListener(this); menu.add(item);
-		if(!rm.isLeanGUI()) popup.add(menu);
+		if(rm.getProjectConfig().isFullGUI()) popup.add(menu);
 
 		menu = new JMenu("Export");
 		final boolean has_arealists = layer.getParent().contains(AreaList.class);
@@ -3624,7 +3624,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		item = new JMenuItem("Tags..."); item.addActionListener(this); menu.add(item);
 		item = new JMenuItem("Connectivity graph..."); item.addActionListener(this); menu.add(item);
 		item = new JMenuItem("NeuroML..."); item.addActionListener(this); menu.add(item);
-		if(!rm.isLeanGUI()) popup.add(menu);
+		if(rm.getProjectConfig().isFullGUI()) popup.add(menu);
 
 		menu = new JMenu("Display");
 		item = new JMenuItem("Resize canvas/LayerSet...");   item.addActionListener(this); menu.add(item);
@@ -3640,7 +3640,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		item = new JMenuItem("Show current 2D position in 3D"); item.addActionListener(this); menu.add(item);
 		item = new JMenuItem("Show layers as orthoslices in 3D"); item.addActionListener(this); menu.add(item);
 		item = new JMenuItem("Inspect image mesh triangles"); item.addActionListener(this); menu.add(item);
-		if(!rm.isLeanGUI()) popup.add(menu);
+		if(rm.getProjectConfig().isFullGUI()) popup.add(menu);
 
 		menu = new JMenu("Project");
 		this.project.getLoader().setupMenuItems(menu, this.getProject());
@@ -3720,11 +3720,11 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		item = new JMenuItem("Con"); item.addActionListener(new SetToolListener(ProjectToolbar.CON)); menu.add(item);
 		item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0, true));
 
-		if(!rm.isLeanGUI()) popup.add(menu);
+		if(rm.getProjectConfig().isFullGUI()) popup.add(menu);
 
 		item = new JMenuItem("Search..."); item.addActionListener(this); 
 		item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, Utils.getControlModifier(), true));
-		if(!rm.isLeanGUI()) popup.add(item);
+		if(rm.getProjectConfig().isFullGUI()) popup.add(item);
 
 		//canvas.add(popup);
 		return popup;
