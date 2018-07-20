@@ -410,6 +410,18 @@
     
     <repository>
       <id>snapshots</id>
+      <name>Archiva Snapshot Repository on 'moon'</name>
+      <url>https://moon.informatik.uni-halle.de/archiva/repository/snapshots/</url>
+      <layout>default</layout>
+    </repository>
+    <repository>
+      <id>internal</id>
+      <name>Archiva Internal Repository on 'moon'</name>
+      <url>https://moon.informatik.uni-halle.de/archiva/repository/internal/</url>
+      <layout>default</layout>
+    </repository>
+    <repository>
+      <id>snapshots-pub</id>
       <name>Archiva Public Snapshot Repository on 'moon'</name>
       <url>https://moon.informatik.uni-halle.de/archiva/repository/snapshots-pub/</url>
       <layout>default</layout>
@@ -561,5 +573,33 @@
       <groupId>jitk</groupId>
       <artifactId>jitk-tps</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>de.unihalle.informatik.MiToBo</groupId>
+      <artifactId>${mitobo.dep}</artifactId>
+      <version>${mitobo.dep.version}</version>
+    </dependency>
+
   </dependencies>
+
+  <profiles>
+    <profile>
+      <id>develop</id>
+      <properties>
+        <mitobo.dep>mitobo-internal</mitobo.dep>
+        <mitobo.dep.version>2.1-SNAPSHOT</mitobo.dep.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>release</id>
+      <activation>
+	<activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <mitobo.dep>mitobo</mitobo.dep>
+        <mitobo.dep.version>1.8.10</mitobo.dep.version>
+      </properties>
+    </profile>
+  </profiles>
+
 </project>
