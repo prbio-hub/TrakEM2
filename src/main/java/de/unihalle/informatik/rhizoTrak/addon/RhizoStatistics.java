@@ -89,9 +89,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
@@ -119,7 +121,8 @@ public class RhizoStatistics {
 	  IMAGEJ_UNITS.add( "mm");
 	}
 	
-	
+	private final String AGGREGATED = "Aggregated";
+	private final String SEGMENTS = "Segments";
 	private final String ONLY_STRING = "Current layer only";
 	private final String ALL_STRING = "All layers";
 	private RhizoMain rhizoMain;
@@ -127,6 +130,10 @@ public class RhizoStatistics {
 	private boolean debug = false;
 	
 	private String outputUnit; 
+	
+	// Hash of all layers with treeline(s) to write to
+	// set in computeStatistics
+	private HashSet<Layer> allLayers = null;
 	
 	/**
 	 * Calibration info from imageplus for each layer 
@@ -147,19 +154,23 @@ public class RhizoStatistics {
 		String[] choices1_ = {"\t", ";", ",", " "};
 		String[] choices2 = {ALL_STRING, ONLY_STRING};
 		String[] choices3 = {"pixel", "inch", "mm"};
+		String[] choicesType = { SEGMENTS, AGGREGATED};
 		
 		JComboBox<String> combo1 = new JComboBox<String>(choices1);
 		JComboBox<String> combo2 = new JComboBox<String>(choices2);
 		JComboBox<String> combo3 = new JComboBox<String>(choices3);
+		JComboBox<String> comboType = new JComboBox<String>( choicesType);
 		
 		JPanel statChoicesPanel = new JPanel();
-		statChoicesPanel.setLayout(new GridLayout(3, 2, 0, 10));
-		statChoicesPanel.add(new JLabel("Separator "));
-		statChoicesPanel.add(combo1);
+		statChoicesPanel.setLayout(new GridLayout( 4, 2, 0, 10));
 		statChoicesPanel.add(new JLabel("Output type "));
-		statChoicesPanel.add(combo2);
+		statChoicesPanel.add( comboType);
+		statChoicesPanel.add(new JLabel("Layers "));
+		statChoicesPanel.add( combo2);
 		statChoicesPanel.add(new JLabel("Unit "));
 		statChoicesPanel.add(combo3);
+		statChoicesPanel.add(new JLabel("Separator "));
+		statChoicesPanel.add(combo1);
 
 		int result = JOptionPane.showConfirmDialog(null, statChoicesPanel, "Statistics Output Options", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 
@@ -168,53 +179,130 @@ public class RhizoStatistics {
 		}
 		
 		String sep = "";
-		String outputType = "";
+		String outputLayers = "";
 		this.outputUnit = "";
+		boolean aggregatedStatistics;
 
 		sep = choices1_[Arrays.asList(choices1).indexOf(combo1.getSelectedItem())];
-		outputType = (String) combo2.getSelectedItem();
+		outputLayers = (String) combo2.getSelectedItem();
 		this.outputUnit = (String) combo3.getSelectedItem();
-
-		if(sep.equals("") || outputType.equals("") || this.outputUnit.equals("")) {
+		if ( ((String) comboType.getSelectedItem()).equals( AGGREGATED)) {
+			aggregatedStatistics = true;
+		} else {
+			aggregatedStatistics = false;
+		}
+		
+		if(sep.equals("") || outputLayers.equals("") || this.outputUnit.equals("")) {
 			Utils.showMessage( "rhizoTrak", "illegal choice of options for Write Statistics");
 			return;
 		}
 		
+		// Select and open and output file
+		String basefilename = rhizoMain.getXmlName().replaceFirst(".xml\\z", "");
+
+		String folder;
+		if  ( rhizoMain.getStorageFolder() == null )
+			folder = System.getProperty("user.home");
+		else 
+			folder = rhizoMain.getStorageFolder();
+
+		JFileChooser fileChooser = new JFileChooser();
+		FileNameExtensionFilter filter = new FileNameExtensionFilter( "Statistics file", "csv"); 
+		fileChooser.setFileFilter(filter);
+		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		fileChooser.setDialogTitle("File to write statistics to");
+		fileChooser.setSelectedFile(new File( folder + basefilename + ".csv"));
+		int returnVal = fileChooser.showOpenDialog(null);
+
+		if (returnVal != JFileChooser.APPROVE_OPTION)
+			return; // user cancelled dialog
+
+		File saveFile = fileChooser.getSelectedFile();
+
+		BufferedWriter bw = null;
+		try { 
+			bw = new BufferedWriter(new FileWriter(saveFile));
+		} catch (IOException e) {
+			Utils.showMessage( "WriteStatistics can not open " + saveFile.getAbsolutePath());
+			return;
+		}	 
+
 		// compile all segments to write
-		boolean allLayers = outputType.equals( ALL_STRING);
+		boolean statForAllLayers = outputLayers.equals( ALL_STRING);
 		List<Segment> allSegments;
-		if ( allLayers ) {
+		if ( statForAllLayers ) {
 			allSegments = computeStatistics( Display.getFront().getProject(), null);
 		} else {
 			allSegments = computeStatistics( Display.getFront().getProject(), Display.getFront().getLayer());
 		}
 		
 		if ( allSegments == null) {
+			try {
+				bw.close();
+			} catch (IOException e) {
+			}
 			return;
 		}
 		
 		// write
-		File saveFile = null;
-		try {
-			String basefilename = rhizoMain.getXmlName().replaceFirst(".xml\\z", "");
-			
-			String folder;
-			if  ( rhizoMain.getStorageFolder() == null )
-				folder = System.getProperty("user.home");
-			else 
-				folder = rhizoMain.getStorageFolder();
-			
-			saveFile = Utils.chooseFile( folder, basefilename, ".csv");		
-			BufferedWriter bw = new BufferedWriter(new FileWriter(saveFile));
-
-			// write header
-			bw.write("experiment" + sep + "tube" + sep + "timepoint" + sep + "rootID" + sep + "layerID" +sep + "segmentID" +  
-					sep + "length_" + this.outputUnit + sep + "startDiameter_" + this.outputUnit + sep + "endDiameter_" + this.outputUnit +
-					sep + "surfaceArea_" + this.outputUnit + "^2" + sep + "volume_" + this.outputUnit + "^3" + sep + "children" + sep + "status" + sep + "statusName" + "\n");
-			for (Segment segment : allSegments) {
-				bw.write(segment.getStatistics(sep));
+		try {	
+			if ( aggregatedStatistics ) {
+	
+				RhizoProjectConfig config = rhizoMain.getProjectConfig(); 
+				
+				// create an array with lines for layers and columns for status labels
+				HashMap<Integer,Double[]> aggregatedStats = new HashMap<Integer, Double[]>();
+				for ( Layer layer : this.allLayers) {
+					Double[] stats = new Double[config.sizeStatusLabelMapping()];
+					for ( int i = 0 ; i < stats.length ; i++ )
+						stats[i] = 0.0;
+					
+					aggregatedStats.put( layer.getParent().indexOf(layer) + 1, stats);
+				}
+				 
+				// iterate over all segments and aggregate the segment length
+				for (Segment segment : allSegments) {
+					int layerID = segment.layerIndex;
+					int status = segment.status;
+					aggregatedStats.get( layerID)[ status] += segment.length;
+				}
+				
+				// write header and one line per layer
+				bw.write( "experiment" + sep + "tube" + sep + "timepoint" + sep + "layerID" );
+				
+				for ( int s = 0 ; s < config.sizeStatusLabelMapping() ; s++) {		
+					bw.write( sep + config.getStatusLabel( s).getName() + "_" + this.outputUnit);
+				}
 				bw.newLine();
+				
+				List<Integer> sortedLayerIDs = new LinkedList<Integer>(aggregatedStats.keySet());
+				Collections.sort( sortedLayerIDs);
+				for ( int layerID : sortedLayerIDs) {
+					ImagePlusCalibrationInfo calibInfo = allCalibInfos.get( layerID);
+					String imageName = calibInfo.imagename;
+					String tube = RhizoUtils.getICAPTube( imageName);
+					String experiment = RhizoUtils.getICAPExperiment(imageName);
+					String timepoint = RhizoUtils.getICAPTimepoint(imageName);
+
+					bw.write( experiment + sep + tube + sep + timepoint + sep + Integer.toString( layerID));
+
+					for ( int s = 0 ; s < config.sizeStatusLabelMapping(); s++ ) {
+						bw.write( sep + aggregatedStats.get(layerID)[s]);
+					}
+					bw.newLine();
+				}
+
+			} else {
+				// write header
+				bw.write("experiment" + sep + "tube" + sep + "timepoint" + sep + "rootID" + sep + "layerID" +sep + "segmentID" +  
+						sep + "length_" + this.outputUnit + sep + "startDiameter_" + this.outputUnit + sep + "endDiameter_" + this.outputUnit +
+						sep + "surfaceArea_" + this.outputUnit + "^2" + sep + "volume_" + this.outputUnit + "^3" + sep + "children" + sep + "status" + sep + "statusName" + "\n");
+				for (Segment segment : allSegments) {
+					bw.write(segment.getStatistics(sep));
+					bw.newLine();
+				}
 			}
+			
 			bw.close();
 		} catch (IOException e) {
 			Utils.showMessage( "WriteStatistics cannot write to " + saveFile.getAbsolutePath());
@@ -243,7 +331,7 @@ public class RhizoStatistics {
 		}
 
 		// and collect treelines and connectors below all rootstacks
-		HashSet<Layer> allLayers = new HashSet<Layer>(); // all layers we hat a treeline in to write
+		this.allLayers = new HashSet<Layer>(); // all layers we have a treeline in to write
 		
 		for ( ProjectThing rootstackThing :rootstackThings ) {
 			if ( debug)	System.out.println("rootstack " + rootstackThing.getId());
