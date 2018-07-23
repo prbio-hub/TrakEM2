@@ -62,8 +62,11 @@ import de.unihalle.informatik.rhizoTrak.utils.Utils;
  * Includes
  * <ul>
  * <li> mapping from status integer values to status labels (user defined and fixed)
+ * {@linkplain #getStatusLabel(int)}
+ * <li> a set of all user and fixed labels {@linkplain #getAllStatusLabel() }defined currently
  * including the definition, color etc
  * <li>highlight colors
+ * <li>user settings (flags)
  * </ul>
  * <p>
  * Status integer values for user defined status is a contiguous range of non negative  values starting with 0.
@@ -114,8 +117,9 @@ public class RhizoProjectConfig {
 
 	public static final int DEFAULT_ALPHA = 255;
 	public static final boolean DEFAULT_SELECTABLE = true;
+	
 	/**
-	 * map fixed status integer values used for internal purpose to their names
+	 * Mapping of fixed status integer values used for internal purpose to their names
 	 */
 	private final HashMap<Integer,String> fixedStatusLabelMap = new HashMap<Integer, String>();
 
@@ -220,8 +224,11 @@ public class RhizoProjectConfig {
 		}
 	}
 	
-	/** Add the status label to the set. If one with the same name already exists
+	/** Add the status label to the set of all currently defined status labels. If one with the same name already exists
 	 * the abbreviation, color, alpha, and selectable will be replaced.
+	 * <br>
+	 * Note: add a status label does not define a mapping from a status label integer to a name 
+	 *
 	 * @param sl
 	 */
 	public RhizoStatusLabel addStatusLabelToSet( RhizoStatusLabel sl) {	
@@ -239,8 +246,10 @@ public class RhizoProjectConfig {
 		}
 	}
 	
-	/**Add a status label with the given information to the set. If one with the same name already exists
+	/**Add the status label to the set of all currently defined status labels. If one with the same name already exists
 	 * the abbreviation, color, alpha, and selectable will be replaced.
+	 * <br>
+	 * Note: add a status label does not define a mapping from a status label integer to a name
 	 * 
 	 * @param name
 	 * @param abbrev
@@ -263,9 +272,11 @@ public class RhizoProjectConfig {
 		return sl;
 	}
 		
-	/**Add a status label with the given information to the set. If one with the same name already exists
+	/**Add the status label to the set of all currently defined status label. If one with the same name already exists
 	 * the color, alpha, and selectable will be replaced.
-	 * 
+	 * <br>
+	 * Note: add a status label does not define a mapping from a status label integer to a name
+	 *
 	 * @param name
 	 * @param color
 	 * @param alpha
@@ -285,8 +296,10 @@ public class RhizoProjectConfig {
 		return sl;
 	}
 		
-	/**Add a status label with the given information to the set. If one with the same name already exists
+	/**Add the status label to the set of all currently defined status label. If one with the same name already exists
 	 * the abbreviation, color and, alpha will be replaced.
+	 * <br>
+	 * Note: add a status label does not define a mapping from a status label integer to a name 
 	 * 
 	 * @param name
 	 * @param abbrev
@@ -307,8 +320,10 @@ public class RhizoProjectConfig {
 		return sl;
 	}
 	
-	/**Add a status label with the given information to the set. If one with the same name already exists
+	/**Add the status label to the set of all currently defined status label. If one with the same name already exists
 	 * the abbreviation and color  will be replaced.
+	 * <br>
+	 * Note: add a status label does not define a mapping from a status label integer to a name
 	 * 
 	 * @param name
 	 * @param abbrev
@@ -327,8 +342,10 @@ public class RhizoProjectConfig {
 		return sl;
 	}
 	
-	/**Add a status label with the given information to the set. If one with the same name already exists
+	/**Add the status label to the set of all currently defined status labels. If one with the same name already exists
 	 * the abbreviation  will be replaced.
+	 * <br>
+	 * Note: add a status label does not define a mapping from a status label integer to a name
 	 * 
 	 * @param name
 	 * @param abbrev
@@ -346,7 +363,8 @@ public class RhizoProjectConfig {
 	}
 	
 	/**
-	 * Removes the given key from statusLabelSet
+	 * Removes the given status label with name <code>name</code>the set of all currently defined status labels.
+	 * 
 	 * @param name
 	 */
 	public boolean removeStatusLabelFromSet(String name)
@@ -359,7 +377,7 @@ public class RhizoProjectConfig {
 		return false;
 	}
 
-	/** Return names of all defined status labels, i.e. fixed and user defined ones.
+	/** Return all defined status labels, i.e. fixed and user defined ones.
 	 * @return
 	 */
 	public Collection<RhizoStatusLabel> getAllStatusLabel() {
@@ -368,6 +386,9 @@ public class RhizoProjectConfig {
 		return sll;
 	}
 
+	/** Return all user defined status labels, i.e. excluding fixed ones.
+	 * @return
+	 */
 	public Collection<RhizoStatusLabel> getAllUserDefinedStatusLabel() {
 		LinkedList<RhizoStatusLabel> sll = new LinkedList<RhizoStatusLabel>();
 		for ( RhizoStatusLabel sl : statusLabelSet.values()) {
@@ -377,8 +398,9 @@ public class RhizoProjectConfig {
 		}
 		return sll;
 	}
+	
 	/**
-	 * return the number of defined status labels in the set including the fixed and user defined status label names
+	 * return the number of currently defined status labels, i.e. both the fixed and user defined status labels
 	 * @return
 	 */
 	public int sizeStatusLabelSet() {
@@ -386,16 +408,18 @@ public class RhizoProjectConfig {
 	}
 	
 	/**
-	 * @return The number of user defined status labels in the mapping of status labels, i.e. the number of currently valid
-	 * mappings from integer to label names. Otherwise stated: the number returned miuns one is
+	 * The number of currently mapped status labels, i.e. the number of currently valid
+	 * mappings from integer to label names. Otherwise stated: the number returned minus one is
 	 * the largest mapped integer.
+	 * 
+	 * 	 @return 
 	 */
 	public int sizeStatusLabelMapping() {
 		return statusLabelMapping.size();
 	}
 	
-	/** This is a convenience function for copatibility with former rhizoTrak/trakEM version.
-	 * @return largest user status integer value currently existing
+	/** This is a convenience function for compatibility with former rhizoTrak/trakEM version.
+	 * @return largest user status integer value currently mapped
 	 */
 	public int getMaxEdgeConfidence () {
 		return sizeStatusLabelMapping()-1;
@@ -408,12 +432,12 @@ public class RhizoProjectConfig {
 		return fixedStatusLabelMap.keySet();
 	}
 	
-	/** return the status label associated with <code>i</code>.
+	/** The status label currently mapped to <code>i</code>.
 	 * 
 	 * @param i
 	 * @return <ul>
-	 *         <li> the status label associated with <code>i</code>, if it exists
-	 *         <li> the status label associated with <code>STATUS_UNDEFINED</code>, if not existing and <code>i</code> is non negative
+	 *         <li> the status label mapped to <code>i</code>, if it exists
+	 *         <li> the status label mapped to  <code>STATUS_UNDEFINED</code>, if <code>i</code> is currently not mapped and is non negative
 	 *         <li> <code>INVALID_STATUS_LABEL</code>,  if not existing and <code>i</code> is negative
 	 *         </ul>
 	 */
@@ -434,7 +458,7 @@ public class RhizoProjectConfig {
 		}
 	}
 	
-	/** return the status label associated with <code>name</code>.
+	/** The status label associated with <code>name</code>.
 	 * 
 	 * @param name
 	 * @return the status label or <code>INVALID_STATUS_LABEL</code>, if non existing
@@ -449,13 +473,15 @@ public class RhizoProjectConfig {
 		}			
 	}
  
-	/**
+	/** The color of the status label currently mapped to <code>i</code>.
+	 * 
 	 * @param i
 	 * @return <ul>
-	 *         <li> the color of status label associated with <code>i</code>, if it exists
-	 *         <li> the color of status label associated with <code>STATUS_UNDEFINED</code>, if not existing and <code>i</code> is non negative
-	 *         <li> color of  <code>INVALID_STATUS_LABEL</code>,  if not existing and <code>i</code> is negative
+	 *         <li> the color of the status label mapped to <code>i</code>, if it exists
+	 *         <li> the color of the status label mapped to  <code>STATUS_UNDEFINED</code>, if <code>i</code> is currently not mapped and is non negative
+	 *         <li> the color of  <code>INVALID_STATUS_LABEL</code>,  if not existing and <code>i</code> is negative
 	 *         </ul>
+
 	 */
 	public Color getColorForStatus( int i) {
 		if ( i >= 0 ) {
@@ -474,7 +500,8 @@ public class RhizoProjectConfig {
 		}
 	}
 	
-	/** make color including alpha from status label
+	/** Make a color object of class {@link java.awt.Color} including alpha from a status label
+	 * 
 	 * @param sl
 	 * @return
 	 */
@@ -492,7 +519,7 @@ public class RhizoProjectConfig {
 	 * <li>GAP
 	 * </ul>.
 	 * 
-	 * The mapping of status labels will be clear in advance.
+	 * The mapping of status labels will be cleared in advance.
 	 * If corresponding status label names are not define yet they will me created.
 	 */
 	public void setDefaultUserStatusLabel() {
@@ -506,7 +533,7 @@ public class RhizoProjectConfig {
 	}
 	
 	/**
-	 * clear the mapping of status labels
+	 * Clear the mapping of status labels. Subsequently no status label integer is mapped.
 	 */
 	public void clearStatusLabelMapping() {
 		statusLabelMapping.clear();

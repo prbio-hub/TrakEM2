@@ -116,8 +116,9 @@ public class PreferencesTabbedPane extends JTabbedPane
 	
 	// second tab
 	private JPanel mappingPanel;
+	
 	// alternative to using a ComboBoxModel because we can't use the same model for every ComboBox
-	private List<String> choices = new ArrayList<String>(); 
+	private List<String> choicesStatusLabelNames = new ArrayList<String>(); 
 	private Stack<JComboBox<String>> comboStack = new Stack<JComboBox<String>>();
 	private Stack<Component> comboGlueStack = new Stack<Component>();
        
@@ -165,13 +166,23 @@ public class PreferencesTabbedPane extends JTabbedPane
 //		for(int i = 0; i < config.sizeStatusLabelMapping(); i++)	
 //		{
 		for ( RhizoStatusLabel sl : config.getAllUserDefinedStatusLabel() ) {
-			choices.add( sl.getName());
+			choicesStatusLabelNames.add( sl.getName());
 		}
-		choices.sort( String.CASE_INSENSITIVE_ORDER);
+		choicesStatusLabelNames.sort( String.CASE_INSENSITIVE_ORDER);
 
 		for(int i = 0; i < config.sizeStatusLabelMapping(); i++)
 		{
-			addComboBox(i, comboBoxPanel);
+			// we need to find the index of the status label mapped to i in the list choices
+			int idx = -1;
+			for ( int n = 0 ; n < choicesStatusLabelNames.size() ; n++) {
+				if ( choicesStatusLabelNames.get(n).equals( config.getStatusLabel(i).getName()) )
+					idx = n;
+			}
+			if ( idx == -1 ) {
+				Utils.log( "RhizoTrak internal error constructing the mapping tabbed pane (class PreferencesTabbedPane)");
+			}
+
+			addComboBox(idx, comboBoxPanel);
 		}
 		
 		JPanel buttonPanel = new JPanel();
@@ -184,8 +195,8 @@ public class PreferencesTabbedPane extends JTabbedPane
 			public void actionPerformed(ActionEvent e) 
 			{
 				// default selected item = status that was added last
-				addComboBox(choices.size() - 1, comboBoxPanel);
-				config.appendStatusLabelMapping(config.getStatusLabel(choices.get(choices.size() - 1)));
+				addComboBox(choicesStatusLabelNames.size() - 1, comboBoxPanel);
+				config.appendStatusLabelMapping(config.getStatusLabel(choicesStatusLabelNames.get(choicesStatusLabelNames.size() - 1)));
 				mappingPanel.revalidate();
 				mappingPanel.repaint();
 			}
@@ -330,7 +341,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 					if(fullNameTF.getText().equals("") || abbrevTF.getText().equals("")) Utils.showMessage("New status was not added. At least one field was empty.");
 					else
 					{
-						if(!choices.contains(fullNameTF.getText()))
+						if(!choicesStatusLabelNames.contains(fullNameTF.getText()))
 						{
 							// add to config
 							RhizoStatusLabel sl = new RhizoStatusLabel(config, fullNameTF.getText(), abbrevTF.getText(),
@@ -339,12 +350,12 @@ public class PreferencesTabbedPane extends JTabbedPane
 							config.addStatusLabelToSet(sl);
 							
 							// update choices
-							choices.add(fullNameTF.getText());
-							choices.sort( String.CASE_INSENSITIVE_ORDER);
+							choicesStatusLabelNames.add(fullNameTF.getText());
+							choicesStatusLabelNames.sort( String.CASE_INSENSITIVE_ORDER);
 //							for(JComboBox<String> c: comboStack) c.addItem(fullNameTF.getText());
 							for(JComboBox<String> c: comboStack) {
 								c.removeAllItems();
-								for ( String n : choices) {
+								for ( String n : choicesStatusLabelNames) {
 									c.addItem(n);
 								}
 							}
@@ -413,7 +424,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 						panelList.removeAll(panelsToBeRemoved);
 						textFieldList.removeAll(textFieldsToBeRemoved);
 						labelList.removeAll(labelsToBeRemoved);
-						choices.removeAll(choicesToBeRemoved);
+						choicesStatusLabelNames.removeAll(choicesToBeRemoved);
 						
 						// update comboStack choices
 						for(JComboBox<String> c: comboStack)
@@ -500,11 +511,12 @@ public class PreferencesTabbedPane extends JTabbedPane
 
 	}
 
-	private void addComboBox(int selectedIndex, JPanel parentPanel)
+	private void addComboBox(int i, JPanel parentPanel)
 	{
 
-		JComboBox<String> combo = new JComboBox<String>(choices.toArray(new String[choices.size()]));
-		combo.setSelectedIndex(selectedIndex);
+		JComboBox<String> combo = new JComboBox<String>(choicesStatusLabelNames.toArray(new String[choicesStatusLabelNames.size()]));
+		// we need to find the index of the statuslabel mapped to i in the list choices
+		combo.setSelectedIndex(i);
 		combo.addActionListener(new ActionListener() 
 		{
 			@Override
