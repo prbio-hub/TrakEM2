@@ -179,6 +179,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 	private boolean input_disabled2 = false;
 	
 	public static final AtomicBoolean addTreelineEnabled = new AtomicBoolean(true);
+	private boolean displayablesVisible = true;
 
 	/** Store a copy of whatever data as each Class may define it, one such data object per class.
 	 * Private to the package. */
@@ -2236,6 +2237,14 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 							ke.consume();
 						} // TODO there isn't much ImageJ integration in the pasting. Can't paste to a selected image, for example.
 					} else {
+						// aeekz
+						final Collection<Displayable> col1 = layer.getParent().setVisible("treeline", !displayablesVisible, true);
+						final Collection<Displayable> col2 = layer.getParent().setVisible("connector", !displayablesVisible, true);
+						Display.updateCheckboxes(col1, DisplayablePanel.VISIBILITY_STATE);
+						Display.updateCheckboxes(col2, DisplayablePanel.VISIBILITY_STATE);
+						
+						displayablesVisible = !displayablesVisible; // toggle
+						
 						// Each type may know how to paste data from the copy buffer into itself:
 						active.keyPressed(ke);
 						ke.consume();
