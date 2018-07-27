@@ -2223,17 +2223,6 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				break;
 			case KeyEvent.VK_V:
 				if (0 == ke.getModifiers()) {
-					
-					if(null != layer && null != layer.getParent())
-					{
-						final Collection<Displayable> col1 = layer.getParent().setVisible("treeline", !displayablesVisible, true);
-						final Collection<Displayable> col2 = layer.getParent().setVisible("connector", !displayablesVisible, true);
-						Display.updateCheckboxes(col1, DisplayablePanel.VISIBILITY_STATE);
-						Display.updateCheckboxes(col2, DisplayablePanel.VISIBILITY_STATE);
-
-						displayablesVisible = !displayablesVisible;
-					}			
-					
 					if (null == active || active.getClass() == Patch.class) {
 						// paste a new image
 						final ImagePlus clipboard = ImagePlus.getClipboard();
@@ -2254,6 +2243,19 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 						ke.consume();
 					}
 				}
+				
+				break;
+			case KeyEvent.VK_Q:
+				
+				if(null != layer && null != layer.getParent())
+				{
+					final Collection<Displayable> col1 = layer.getParent().setVisible("treeline", !displayablesVisible, true);
+					final Collection<Displayable> col2 = layer.getParent().setVisible("connector", !displayablesVisible, true);
+					Display.updateCheckboxes(col1, DisplayablePanel.VISIBILITY_STATE);
+					Display.updateCheckboxes(col2, DisplayablePanel.VISIBILITY_STATE);
+
+					displayablesVisible = !displayablesVisible;
+				}		
 				
 				break;
 			case KeyEvent.VK_P:
