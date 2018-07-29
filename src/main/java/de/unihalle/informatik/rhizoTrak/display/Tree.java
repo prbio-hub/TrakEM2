@@ -1038,7 +1038,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		Node<T> nearest;
 		synchronized (node_layer_map) {
 			nearest = findNodeConfidenceBox(x, y, layer, dc.getMagnification());
-			if (null == nearest) nearest = findNodeNear(x, y, layer, dc, true);
+			if (null == nearest) nearest = findNodeNear(x, y, layer, dc, false);
 			if (null == nearest) return null;
 			if (!nearest.adjustConfidence(inc)) {
 				return null;
@@ -1168,6 +1168,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				nd = node;
 			}
 		}
+
 		return min_dist < d ? nd : null;
 	}
 
@@ -1557,6 +1558,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				return null;
 			}
 			*/
+			Utils.log("@findeNear: " + nd);
 			return nd;
 		}
 	}

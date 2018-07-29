@@ -217,7 +217,6 @@ public class Treeline extends Tree<Float> {
 	@Override
 	public void mouseWheelMoved(final MouseWheelEvent mwe) {
 		final int modifiers = mwe.getModifiers();
-		Utils.log(modifiers);
 		
 		/**
 		 * aeekz
