@@ -129,6 +129,10 @@ public class PreferencesTabbedPane extends JTabbedPane
 	private String CONFIRM_SPLITREELINE = "Confirm split treeline";
 	private String FULLGUI = "Full GUI (includes all TrakEM2 features)";
 	private String SHOW_CALIBRATION_INFO = "Show calibration info";
+	private String NODES_AS_CIRCLE = "Nodes as circle";
+	private String NODES_DIAMETERLINES = "Show diamter lines";
+	private String SEGMENTS_AS_POLYGON = "Draw root shape";
+	private String SEGMENTS_FILL = "Fill root shape";
 
 	
 	// general members
@@ -498,6 +502,11 @@ public class PreferencesTabbedPane extends JTabbedPane
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isAskSplitTreeline(), CONFIRM_SPLITREELINE));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isFullGUI(), FULLGUI));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isShowCalibrationInfo(), SHOW_CALIBRATION_INFO));
+		
+		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isNodesAsCircle(), NODES_AS_CIRCLE));
+		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isNodesDiameterLines(), NODES_DIAMETERLINES));
+		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isSegmentsAsPolygon(), SEGMENTS_AS_POLYGON));
+		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isSegmentsFill(), SEGMENTS_FILL));
 
 		configurePanel.add( configChoicesPanel);
 		this.addTab("Configuration", configurePanel);
@@ -755,6 +764,14 @@ public class PreferencesTabbedPane extends JTabbedPane
 				Utils.showMessage("Full GUI will be" + (source.isSelected() ? " enabled " : " disabled ") + "on rhizoTrak restart.");
 			} else if ( actionCommand.equals( SHOW_CALIBRATION_INFO)) {
 				rhizoMain.getProjectConfig().setShowCalibrationInfo( source.isSelected() );
+			} else if ( actionCommand.equals( NODES_AS_CIRCLE)) {
+				rhizoMain.getProjectConfig().setNodesAsCircle( source.isSelected() );
+			} else if ( actionCommand.equals( NODES_DIAMETERLINES)) {
+				rhizoMain.getProjectConfig().setNodesDiameterLines( source.isSelected() );
+			} else if ( actionCommand.equals( SEGMENTS_AS_POLYGON)) {
+				rhizoMain.getProjectConfig().setSegmentsAsPolygon( source.isSelected() );
+			} else if ( actionCommand.equals( SEGMENTS_FILL)) {
+				rhizoMain.getProjectConfig().setSegmentsFill( source.isSelected() );
 			} else {
 				Utils.showMessage( "rhizoTrak", "PrefrencesTabbedPane.configCheckAction: internal error, unkonwn actionCommand " + actionCommand);
 			}

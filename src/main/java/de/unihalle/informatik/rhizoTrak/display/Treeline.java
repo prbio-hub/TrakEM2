@@ -68,6 +68,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -84,6 +85,7 @@ import org.scijava.vecmath.Point3f;
 import org.scijava.vecmath.Vector3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
 import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.M;
 import de.unihalle.informatik.rhizoTrak.utils.ProjectToolbar;
@@ -411,6 +413,84 @@ public class Treeline extends Tree<Float> {
 
 		}
 		//ende
+		//actyc: modified version of getSegment to return two Polygons, each a line representing the diameter (or one line in some cases)  
+		private final Polygon[] getDiameterpoints(AffineTransform to_screen) {
+			
+			final RadiusNode parent = (RadiusNode) this.parent;
+			Polygon[] result = new Polygon[2];
+			float vx = parent.x - this.x;
+			float vy = parent.y - this.y;
+			final float len = (float) Math.sqrt(vx*vx + vy*vy);
+			if (0 == len) {
+				// Points are on top of each other
+				// so in case of diameter only one line is needed
+				result[0] = new Polygon(new int[]{(int)this.x, (int)Math.ceil(parent.x)},
+						   new int[]{(int)this.y, (int)Math.ceil(parent.y)}, 2);
+				return result;
+			}
+			
+			vx /= len;
+			vy /= len;
+			// perpendicular vector
+			final float vx90 = -vy;
+			final float vy90 = vx;
+			final float vx270 = vy;
+			final float vy270 = -vx;
+			
+			Point2D p1 = new Point2D.Float(parent.getX()+vx90*parent.getData(),parent.getY()+vy90*parent.getData());
+			Point2D p2 = new Point2D.Float(parent.getX()+vx270*parent.getData(),parent.getY()+vy270*parent.getData());
+			
+			Point2D p3 = new Point2D.Float(this.getX()+vx270*this.getData(),this.getY()+vy270*this.getData());
+			Point2D p4 = new Point2D.Float(this.getX()+vx90*this.getData(),this.getY()+vy90*this.getData());
+			
+			to_screen.transform(p1,p1);
+			to_screen.transform(p2,p2);
+			
+			to_screen.transform(p3,p3);
+			to_screen.transform(p4,p4);
+			
+			result[0] = new Polygon(new int[]{(int) p1.getX(), (int)p2.getX()},
+					new int[]{(int)p1.getY(), (int)p2.getY()},
+					2);
+			
+			result[1] = new Polygon(new int[]{(int) p3.getX(), (int)p4.getX()},
+					new int[]{(int)p3.getY(), (int)p4.getY()},
+					2);
+			
+			return result;
+			
+
+		}
+		//ende
+		
+		//actyc: modified version of getSegment to return two Polygons, each a line representing the diameter (or one line in some cases)  
+		private final Shape[] getDiameterCircleInformation(AffineTransform to_screen) {		
+			final RadiusNode parent = (RadiusNode) this.parent;
+			float vx = parent.x - this.x;
+			float vy = parent.y - this.y;
+			final float len = (float) Math.sqrt(vx*vx + vy*vy);
+			if (0 == len) {
+				Ellipse2D[] result = new Ellipse2D[1];
+				Ellipse2D thisCircle = new Ellipse2D.Float(this.x-this.getData()/2, this.y-this.getData()/2,this.getData(), this.getData());
+				result[0] = thisCircle;
+				return result;
+			}
+			Point2D p1 = new Point2D.Float(parent.getX(),parent.getY());
+			Point2D p2 = new Point2D.Float(this.getX(),this.getY());
+			
+			to_screen.transform(p1,p1);
+			to_screen.transform(p2,p2);
+			float pRadius = (float) (parent.getData()*to_screen.getScaleX());
+			float tRadius = (float) (this.getData()*to_screen.getScaleX());
+			
+			Shape[] result = new Ellipse2D[2];
+			Ellipse2D parentCircle = new Ellipse2D.Float((float) p1.getX()-pRadius, (float) p1.getY()-pRadius,pRadius*2, pRadius*2);
+			Ellipse2D thisCircle = new Ellipse2D.Float((float) p2.getX()-tRadius, (float) p2.getY()-tRadius,tRadius*2, tRadius*2);
+			result[0] = parentCircle;
+			result[0] = thisCircle;
+			return result;		
+		}
+		//ende
 
 		// The human compiler at work!
 		/** Detect intersection between localRect and the bounds of getSegment() */
@@ -471,6 +551,11 @@ public class Treeline extends Tree<Float> {
 				final Tree<Float> tree, final AffineTransform to_screen, final Color cc,
 				final Layer active_layer) {
 
+			boolean showDiameterLine = this.rhizoMain.getProjectConfig().isNodesDiameterLines();
+			boolean showDiameterCircle =this.rhizoMain.getProjectConfig().isNodesAsCircle();
+			boolean showRootPolygon=this.rhizoMain.getProjectConfig().isSegmentsAsPolygon();
+			boolean fillRootPolygon =this.rhizoMain.getProjectConfig().isSegmentsFill();
+			
 			if (null == this.parent) return; // doing it here for less total cost
 
 			if (0 == this.r && 0 == parent.getData()) return;
@@ -480,17 +565,38 @@ public class Treeline extends Tree<Float> {
 			//if (!tree.at.createTransformedShape(segment).intersects(srcRect)) return Node.FALSE;
 
 			//actyc: switched to a fixed version of getSegment()
-			//final Shape shape = to_screen.createTransformedShape(getSegment();
 			final Shape shape = getSegment(to_screen);
-
-			//final Shape shape = to_screen.createTransformedShape(getSegment());
+//
 			final Composite c = g.getComposite();
 			final float alpha = tree.getAlpha();
 			g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha > 0.4f ? 0.4f : alpha));
 			g.setColor(cc);
-			g.fill(shape);
+			if(fillRootPolygon) g.fill(shape);
 			g.setComposite(c);
-			g.draw(shape); // in Tree's composite mode (such as an alpha)
+			if(showRootPolygon) g.draw(shape); // in Tree's composite mode (such as an alpha)
+			
+			//actyc: Diameter line variant looks a bit odd
+			if(!showRootPolygon && showDiameterLine) {
+				final Shape[] diameters = getDiameterpoints(to_screen);
+				if(diameters[1]==null) {
+					g.draw(diameters[0]);
+				} else {
+					g.draw(diameters[0]);
+					g.draw(diameters[1]);
+				}
+			}
+			
+			//actyc: alternatively draw a circle representing the diameter also not that nice
+			if(showDiameterCircle) {
+				final Shape[] circles = getDiameterCircleInformation(to_screen);
+				if(circles.length==1) {
+					g.draw(circles[0]);
+				} else {
+					g.draw(circles[0]);
+					g.draw(circles[0]);
+					
+				}
+			}
 		}
 
 		/** Expects @param a in local coords. */

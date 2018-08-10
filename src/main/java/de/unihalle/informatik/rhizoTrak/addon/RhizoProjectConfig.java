@@ -169,6 +169,26 @@ public class RhizoProjectConfig {
 	private boolean askSplitTreeline = true;
 	
 	/**
+	 * If true the nodes of a treeline will drawn as a circle
+	 */
+	private boolean nodesAsCircle = true;
+	
+	/**
+	 * If true the treeline-segment radius will be represented as a line at each endpoints
+	 */
+	private boolean nodesDiameterLines = true;
+	
+	/**
+	 * If true the treeline-segment will be drawn as the outer polygon 
+	 */
+	private boolean segmentsAsPolygon = true;
+	
+	/**
+	 * If true the treeline-segment will be a filled polygon
+	 */
+	private boolean segmentsFill = true;
+	
+	/**
 	 * If true the rhizoTrak will start with the full GUI (as opposed to a lean GUI)
 	 */
 	private boolean fullGUI = false;
@@ -626,6 +646,62 @@ public class RhizoProjectConfig {
 	public void setAskSplitTreeline(boolean askSplitTreeline) {
 		setUserSettingsChanged();
 		this.askSplitTreeline = askSplitTreeline;
+	}
+	
+	/**
+	 * @return the nodesAsCircle
+	 */
+	public boolean isNodesAsCircle() {
+		return nodesAsCircle;
+	}
+
+	/**
+	 * @param nodesAsCircle the nodesAsCircle to set
+	 */
+	public void setNodesAsCircle(boolean nodesAsCircle) {
+		this.nodesAsCircle = nodesAsCircle;
+	}
+	
+	/**
+	 * @return the nodesDiameterLines
+	 */
+	public boolean isNodesDiameterLines() {
+		return nodesDiameterLines;
+	}
+
+	/**
+	 * @param nodesDiameterLines the nodesDiameterLines to set
+	 */
+	public void setNodesDiameterLines(boolean nodesDiameterLines) {
+		this.nodesDiameterLines = nodesDiameterLines;
+	}
+	
+	/**
+	 * @return the segmentsAsPolygon
+	 */
+	public boolean isSegmentsAsPolygon() {
+		return segmentsAsPolygon;
+	}
+
+	/**
+	 * @param segmentsAsPolygon the segmentsAsPolygon to set
+	 */
+	public void setSegmentsAsPolygon(boolean segmentsAsPolygon) {
+		this.segmentsAsPolygon = segmentsAsPolygon;
+	}
+	
+	/**
+	 * @return the segmentsFill
+	 */
+	public boolean isSegmentsFill() {
+		return segmentsFill;
+	}
+
+	/**
+	 * @param segmentsFill the segmentsFill to set
+	 */
+	public void setSegmentsFill(boolean segmentsFill) {
+		this.segmentsFill = segmentsFill;
 	}
 
 	/**
