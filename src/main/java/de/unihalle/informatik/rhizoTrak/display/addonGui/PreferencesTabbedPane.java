@@ -130,7 +130,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 	private String FULLGUI = "Full GUI (includes all TrakEM2 features)";
 	private String SHOW_CALIBRATION_INFO = "Show calibration info";
 	private String NODES_AS_CIRCLE = "Nodes as circle";
-	private String NODES_DIAMETERLINES = "Show diamter lines";
+	private String NODES_DIAMETERLINES = "Show diameter lines";
 	private String SEGMENTS_AS_POLYGON = "Draw root shape";
 	private String SEGMENTS_FILL = "Fill root shape";
 
