@@ -125,14 +125,14 @@ public class PreferencesTabbedPane extends JTabbedPane
 	// third tab
 	private JPanel configurePanel;
 	private JPanel configChoicesPanel;
-	private String CONFIRM_MERGETREELINES = "Confirm merge treelines";
-	private String CONFIRM_SPLITREELINE = "Confirm split treeline";
-	private String FULLGUI = "Full GUI (includes all TrakEM2 features)";
-	private String SHOW_CALIBRATION_INFO = "Show calibration info";
-	private String NODES_AS_CIRCLE = "Nodes as circle";
-	private String NODES_DIAMETERLINES = "Show diameter lines";
-	private String SEGMENTS_AS_POLYGON = "Draw root shape";
-	private String SEGMENTS_FILL = "Fill root shape";
+	private final String CONFIRM_MERGETREELINES = "Confirm merge treelines";
+	private final String CONFIRM_SPLITREELINE = "Confirm split treeline";
+	private final String FULLGUI = "Full GUI (includes all TrakEM2 features)";
+	private final String SHOW_CALIBRATION_INFO = "Show calibration info";
+	private final String NODES_AS_CIRCLE = "Nodes as circle";
+	private final String NODES_DIAMETERLINES = "Show diameter lines";
+	private final String SEGMENTS_AS_POLYGON = "Draw root shape";
+	private final String SEGMENTS_FILL = "Fill root shape";
 
 	
 	// general members
@@ -766,12 +766,16 @@ public class PreferencesTabbedPane extends JTabbedPane
 				rhizoMain.getProjectConfig().setShowCalibrationInfo( source.isSelected() );
 			} else if ( actionCommand.equals( NODES_AS_CIRCLE)) {
 				rhizoMain.getProjectConfig().setNodesAsCircle( source.isSelected() );
+				Display.repaint();
 			} else if ( actionCommand.equals( NODES_DIAMETERLINES)) {
 				rhizoMain.getProjectConfig().setNodesDiameterLines( source.isSelected() );
+				Display.repaint();
 			} else if ( actionCommand.equals( SEGMENTS_AS_POLYGON)) {
 				rhizoMain.getProjectConfig().setSegmentsAsPolygon( source.isSelected() );
+				Display.repaint();
 			} else if ( actionCommand.equals( SEGMENTS_FILL)) {
-				rhizoMain.getProjectConfig().setSegmentsFill( source.isSelected() );
+				rhizoMain.getProjectConfig().setSegmentsFill( source.isSelected());
+				Display.repaint();
 			} else {
 				Utils.showMessage( "rhizoTrak", "PrefrencesTabbedPane.configCheckAction: internal error, unkonwn actionCommand " + actionCommand);
 			}
