@@ -53,6 +53,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
+
+import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
@@ -216,8 +218,9 @@ public class RhizoProjectConfig {
 	 * 
 	 * @param sl
 	 */
-	public void appendStatusLabelMapping( RhizoStatusLabel statusLabel) {		
+	public void appendStatusLabelMapping( RhizoStatusLabel statusLabel) {
 		statusLabelMapping.add( statusLabel);
+		if(null != Display.getFront()) Display.getFront().getProject().getLoader().setChanged(true);
 	}
 
 	/**
@@ -226,6 +229,7 @@ public class RhizoProjectConfig {
 	public void popStatusLabelMapping() {
 		if ( statusLabelMapping.size() > 0) {
 			statusLabelMapping.remove( statusLabelMapping.size()-1);
+			if(null != Display.getFront()) Display.getFront().getProject().getLoader().setChanged(true);
 		}
 	}
 	
@@ -237,6 +241,7 @@ public class RhizoProjectConfig {
 	public boolean replaceStatusLabelMapping( int i, RhizoStatusLabel statusLabel) {
 		if ( i >= 0 && i < statusLabelMapping.size() ) {
 			statusLabelMapping.set( i, statusLabel);
+			if(null != Display.getFront()) Display.getFront().getProject().getLoader().setChanged(true);
 			return true;
 		} else {
 			Utils.log( "rhizotrak", "PRhizoProjectConfig.replaceStatusLabelMapping index " + i + " out of bounds");
