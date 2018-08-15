@@ -953,15 +953,15 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 
 		// Tab 1: Patches
 		this.panel_patches = new RollingPanel(this, Patch.class);
-		this.addTab("Patches", panel_patches);
+		this.addTab("Patches", panel_patches, "Shows properties and a list of images that are present in the currently active layer.");
 
 		// Tab 2: Profiles
 		this.panel_profiles = new RollingPanel(this, Profile.class);
-		if(rm.getProjectConfig().isFullGUI()) this.addTab("Profiles", panel_profiles);
+		if(rm.getProjectConfig().isFullGUI()) this.addTab("Profiles", panel_profiles, "Shows a list of profiles, i.e. user-drawn outlines.");
 
 		// Tab 3: ZDisplayables
 		this.panel_zdispl = new RollingPanel(this, ZDisplayable.class);
-		this.addTab("Z space", panel_zdispl);
+		this.addTab("Z space", panel_zdispl, "Shows properties and a list of displayables, i.e. treelines and connectors, that are present in the project.");
 
 		// Tab 4: channels
 		this.panel_channels = makeTabPanel();
@@ -975,24 +975,24 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		addGBRow(this.panel_channels, this.channels[1], null);
 		addGBRow(this.panel_channels, this.channels[2], this.channels[1]);
 		addGBRow(this.panel_channels, this.channels[3], this.channels[2]);
-		if(rm.getProjectConfig().isFullGUI()) this.addTab("Opacity", scroll_channels);
+		if(rm.getProjectConfig().isFullGUI()) this.addTab("Opacity", scroll_channels, "Controls the opacity of each individual color channel.");
 
 		// Tab 5: labels
 		this.panel_labels = new RollingPanel(this, DLabel.class);
-		if(rm.getProjectConfig().isFullGUI()) this.addTab("Labels", panel_labels);
+		if(rm.getProjectConfig().isFullGUI()) this.addTab("Labels", panel_labels, "Shows a list of labels that have been created with the text tool.");
 
 		// Tab 6: layers
 		this.panel_layers = makeTabPanel();
 		this.scroll_layers = makeScrollPane(panel_layers);
 		recreateLayerPanels(layer);
 		this.scroll_layers.addMouseWheelListener(canvas);
-		this.addTab("Layers", scroll_layers);
+		this.addTab("Layers", scroll_layers, "Shows a list of all layers and controls their opacity which enables easy comparison of multiple layers at once.");
 
 		// Tab 7: tool options
 		this.tool_options = new OptionPanel(); // empty
 		this.scroll_options = makeScrollPane(this.tool_options);
 		this.scroll_options.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		if(rm.getProjectConfig().isFullGUI()) this.addTab("Tool options", this.scroll_options);
+		if(rm.getProjectConfig().isFullGUI()) this.addTab("Tool options", this.scroll_options, "Settings of TrakEM2 and Fiji tools.");
 
 		// Tab 8: annotations
 		this.annot_editor = new JEditorPane();
@@ -1000,19 +1000,19 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		this.annot_editor.setMinimumSize(new Dimension(200, 50));
 		this.annot_label = new JLabel("(No selected object)");
 		this.annot_panel = makeAnnotationsPanel(this.annot_editor, this.annot_label);
-		this.addTab("Annotations", this.annot_panel);
+		this.addTab("Annotations", this.annot_panel, "Shows the annotation of the currently active displayable.");
 
 		// Tab 9: filter options
 		this.filter_options = createFilterOptionPanel();
 		this.scroll_filter_options = makeScrollPane(this.filter_options);
 		this.scroll_filter_options.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		if(rm.getProjectConfig().isFullGUI()) this.addTab("Live filter", this.scroll_filter_options);
+		if(rm.getProjectConfig().isFullGUI()) this.addTab("Live filter", this.scroll_filter_options, "Options for live filtering.");
 		
 		//actyc: Test tab 10
 //		this.filter_options = createExtendedOptionPanel();
 		this.scroll_filter_options = makeScrollPane(createExtendedOptionPanel());
 //		this.scroll_filter_options.setHorizontalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		this.addTab("rhizoTrak Operations", this.scroll_filter_options);
+		this.addTab("rhizoTrak Operations", this.scroll_filter_options, "Settings, tools and functions related to rhizoTrak.");
 
 		this.ht_tabs = new Hashtable<Class<?>,RollingPanel>();
 		this.ht_tabs.put(Patch.class, panel_patches);
@@ -1292,7 +1292,16 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			selectButton.setActionCommand("select");
 			pencilButton.setActionCommand("pencil");
 			penButton.setActionCommand("pen");
-			
+
+			textButton.setToolTipText("Text tool (F4)\nThis is a test.");
+			zoomButton.setToolTipText("Zoom tool (F5)");
+			handButton.setToolTipText("Hand tool (F6)");
+			lineButton.setToolTipText("Line tool (F7)");
+			conButton.setToolTipText("Connector tool (F8)");
+			selectButton.setToolTipText("Select tool (F9)");
+			pencilButton.setToolTipText("Pencil tool (F10)");
+			penButton.setToolTipText("Pen tool (F11)");
+
 			try 
 			{
 				final Image textIcon = ImageIO.read(getClass().getResource("/rhizoTrak/tool icons/text.png"));
@@ -2417,8 +2426,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	}
 
 	/** Returns the tab index in this Display's JTabbedPane. */
-	public int addTab(final String title, final Component comp) {
-		this.tabs.add(title, comp);
+	public int addTab(final String title, final Component comp, String toolTip) {
+		this.tabs.addTab(title, null, comp, toolTip);
 		return this.tabs.getTabCount() -1;
 	}
 
@@ -8302,7 +8311,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		try
 		{
 			Treeline treelineCopy = Tree.copyAs(t, Treeline.class, Treeline.RadiusNode.class);
-			treelineCopy.setLayer(l, true);
+			treelineCopy.setLayer(l, true
+			);
 
 			for (Node<Float> node: treelineCopy.getRoot().getSubtreeNodes())
 			{
