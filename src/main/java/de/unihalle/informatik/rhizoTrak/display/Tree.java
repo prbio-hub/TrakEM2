@@ -874,36 +874,22 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				RadiusNode parentRadiusNode = (RadiusNode) nd.parent;
 				final float MINRADIUS = 35;
 
-				/**
-				 * Finding the intersection of the circle and the segment
-				 * Equation of the circle: (x-h)^2 + (y-k)^2 = r^2 with (h, k) center
-				 * Points between start and end point: x(t) = (x1 - x0)t + x0 and y(t) = (y1 - y0)t + y0 with 0 < t < 1
-				 * Substitute x, y with parametric form: ((x1 - x0)t + x0 - h)^2 + ((y1 - y0)t + y0 - k)^2 = r^2
-				 * Quadratic form: at^2 + bt + c = 0 with a = (x1 - x0)^2 + (y1 - y0)^2, b = 2(x1 - x0)(x0 - h) + 2(y1 - y0)(y0 - k) and c = (x0 - h)^2 + (y0 - k)^2 - r^2
-				 * With exactly two roots t1, t2 the intersection corresponds to the max(t1, t2)
-				 */
-
 				float x0 = nd.parent.x;
 				float y0 = nd.parent.y;
 				float x1 = nd.x;
 				float y1 = nd.y;
 				float r = parentRadiusNode.getData() > MINRADIUS ? parentRadiusNode.getData() : MINRADIUS;
 
-				// b and c simplify because of h = x0, k = y0
-				double a = (x1 - x0)*(x1 - x0) + (y1 - y0)*(y1 - y0);
-				double b = 0;
-				double c = -r*r;
+				double dist = Math.sqrt((x1 - x0)*(x1 - x0) + (y1 - y0)*(y1 - y0));
 
-				double root = Math.max((-b - Math.sqrt(b*b - 4*a*c)) / (2*a), (-b + Math.sqrt(b*b - 4*a*c)) / (2*a));
-
-				float newX = (x1 - x0)*((float) root) + x0;
-				float newY = (y1 - y0)*((float) root) + y0;
+				float newX = x0 + ((float) (r / dist) * (x1 - x0));
+				float newY = y0 + ((float) (r / dist) * (y1 - y0));
 
 				RadiusNode rn = new RadiusNode(newX, newY, nd.getLayer(), parentRadiusNode.getData());
 
 				// Remove all children nodes of found node 'nd' from the Tree cache arrays:
 				removeNode(nd, subtree_nodes);
-				// Set the found node 'nd' as a new root: (was done by removeNode/Node.remove anyway)
+
 				nd.parent = (Node<T>) rn;
 
 				// With the found nd, now a root, create a new Tree
