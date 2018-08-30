@@ -253,7 +253,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 		mappingPanel.add(comboBoxPanel);
 		mappingPanel.add(buttonPanel);
 		
-		this.addTab("Label Mappings", mappingPanel);
+		this.addTab("Label Mappings", null, mappingPanel, "Edit the mapping of integer values to status labels.");
 	}
 
 	private void addStatusTab()
@@ -483,7 +483,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 
 		statusPanel.add(new JSeparator());
 
-		this.addTab("Color & Visibility", statusPanel);
+		this.addTab("Color & Visibility", null, statusPanel, "Add, remove or edit root segment status labels and their appearance.");
 	}
 	
 	/**
@@ -509,7 +509,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isSegmentsFill(), SEGMENTS_FILL));
 
 		configurePanel.add( configChoicesPanel);
-		this.addTab("Configuration", configurePanel);
+		this.addTab("Configuration", null, configurePanel, "Edit user-specific settings.");
 	}
 	
 	private JCheckBox addChoice( boolean choice, String name) {

@@ -147,6 +147,7 @@ import de.unihalle.informatik.rhizoTrak.conflictManagement.TreelineConflict;
 import de.unihalle.informatik.rhizoTrak.parallel.Process;
 import de.unihalle.informatik.rhizoTrak.parallel.TaskFactory;
 import de.unihalle.informatik.rhizoTrak.persistence.XMLOptions;
+import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
 import de.unihalle.informatik.rhizoTrak.utils.Bureaucrat;
 import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.M;
@@ -849,38 +850,64 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 
 	/** @param nd A node of this Tree. */
 	public List<Tree<T>> splitAt(final Node<T> nd) {
+		if (null == nd.parent) {
+			Utils.showMessage("Splitting cancelled.\nRoot node was selected.");
+			return null;
+		}
+
 		if (null == nd) return null;
 		try {
-			ArrayList<Tree<T>> a;
+			ArrayList<Tree<T>> treeList;
 			synchronized (node_layer_map) {
 				// Sanity check:
+
 				final Set<Node<T>> nodes = node_layer_map.get(nd.la);
 				if (null == nodes || !nodes.contains(nd)) return null;
 				// Cache the children of 'nd'
-				final Collection<Node<T>> subtree_nodes = new ArrayList<Node<T>>(nd.getSubtreeNodes());
+				Collection<Node<T>> subtree_nodes = new ArrayList<Node<T>>(nd.getSubtreeNodes());
 				// Remove any review stacks for the nodes in the subtree
 				for (final Node<T> node : subtree_nodes) {
 					removeReview(node);
 				}
+
+				// aeekz
+				RadiusNode parentRadiusNode = (RadiusNode) nd.parent;
+				final float MINRADIUS = 35;
+
+				float x0 = nd.parent.x;
+				float y0 = nd.parent.y;
+				float x1 = nd.x;
+				float y1 = nd.y;
+				float r = parentRadiusNode.getData() > MINRADIUS ? parentRadiusNode.getData() : MINRADIUS;
+
+				double dist = Math.sqrt((x1 - x0)*(x1 - x0) + (y1 - y0)*(y1 - y0));
+
+				float newX = x0 + ((float) (r / dist) * (x1 - x0));
+				float newY = y0 + ((float) (r / dist) * (y1 - y0));
+
+				RadiusNode rn = new RadiusNode(newX, newY, nd.getLayer(), parentRadiusNode.getData());
+
 				// Remove all children nodes of found node 'nd' from the Tree cache arrays:
 				removeNode(nd, subtree_nodes);
-				// Set the found node 'nd' as a new root: (was done by removeNode/Node.remove anyway)
-				nd.parent = null;
+
+				nd.parent = (Node<T>) rn;
+
 				// With the found nd, now a root, create a new Tree
 				final Tree<T> t = newInstance();
 				t.addToDatabase();
 				t.root = nd;
 				// ... and fill its cache arrays
 				t.cacheSubtree(subtree_nodes); // includes nd itself
+				t.addNode(null, (Node<T>) rn, parentRadiusNode.getConfidence());
 				// Recompute bounds -- TODO: must translate the second properly, or apply the transforms and then recalculate bounding boxes and transforms.
 				t.calculateBoundingBox(null);
 				// Done!
-				a = new ArrayList<Tree<T>>();
-				a.add(this);
-				a.add(t);
+				treeList = new ArrayList<Tree<T>>();
+				treeList.add(this);
+				treeList.add(t);
 			}
-			this.calculateBoundingBox(null); // outside synch			
-			return a;
+			this.calculateBoundingBox(null); // outside synch
+			return treeList;
 		} catch (final Exception e) {
 			IJError.print(e);
 		}
