@@ -139,6 +139,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -159,6 +160,7 @@ import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -171,10 +173,10 @@ import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JViewport;
 import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -183,11 +185,21 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.intensity.MatchIntensities;
 
+import de.unihalle.informatik.Alida.exceptions.ALDOperatorException;
+import de.unihalle.informatik.Alida.operator.ALDOperatorCollection;
+import de.unihalle.informatik.Alida.operator.ALDOperatorCollectionElement;
+import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent;
+import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEventListener;
+import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent.ALDOperatorCollectionEventType;
+import de.unihalle.informatik.MiToBo.apps.ridgeDetection.RidgeDetectionOperator;
+import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage;
 import de.unihalle.informatik.rhizoTrak.ControlWindow;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoLineMapToTreeline;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.analysis.Graph;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
@@ -250,7 +262,7 @@ import mpicbg.trakem2.transform.CoordinateTransformList;
 
 /** A Display is a class to show a Layer and enable mouse and keyboard manipulation of all its components. */
 public final class Display extends DBObject implements ActionListener, IJEventListener {
-
+	
 	/** coordinate transform transfer modes */
 	final static public int CT_REPLACE = 0;
 	final static public int CT_APPEND = 1;
@@ -314,6 +326,15 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	private int scroll_step = 1;
 
 	static private final Object DISPLAY_LOCK = new Object();
+	
+	/**
+	 * Variables for choosing, configuring and running operators
+	 */
+	private JList<String> list;
+	
+	private ALDOperatorCollection<ALDOperatorCollectionElement> operatorCollection;
+	
+	private ALDOperatorCollectionElement operator;
 
 	/** Keep track of all existing Display objects. */
 	static private Set<Display> al_displays = new HashSet<Display>();
@@ -6704,6 +6725,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("Load images")){
 			Display.getFront().getProject().getRhizoMain().getRhizoImages().createImageLoaderFrame();
 		}
+		else if(command.equals("configureOperator")){
+			configureOperator();
+		}
+		else if(command.equals("runOperator")) {
+			runOperator();
+		}
 		else if(command.equals("preferences")){
 			Display.getFront().getProject().getRhizoMain().getRhizoColVis().createPreferencesFrame();;
 		}
@@ -6789,6 +6816,59 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		}});
 	}
 
+	// Opens the configuration window of the selected operator 
+	private void configureOperator() {
+		String selectedOperatorName = list.getSelectedValue();
+		if ( selectedOperatorName != null )
+		{
+			// Checks if the window is already open
+			boolean isConfigFrameOpen = false;
+			for ( Display display : Display.getDisplays() )
+			{
+				JFrame frame = display.getFrame();
+				if ( StringUtils.contains(frame.getTitle(), "ALDOperatorConfigurationFrame:") && frame.isShowing() )
+				{
+					isConfigFrameOpen = true;
+				}
+			}
+			if ( !isConfigFrameOpen )
+			{
+				operatorCollection.openOperatorConfigWindow(selectedOperatorName);
+			} 
+		}
+		else
+		{
+			JOptionPane.showMessageDialog(null, "Please choose an operator to configure.", 
+						"Choose operator", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+	
+	// Runs the selected operator
+	private void runOperator()
+	{
+		ImagePlus img = null;
+		
+		// Gets the current image
+		List<Layer> layerList = Display.getFront().getLayerSet().getLayers();
+		for ( Layer l : layerList )
+		{
+			img = l.getPatches(true).get(0).getImagePlus();
+		}
+		
+		// Set the image if the operator is a RidgeDetection
+		operator = operatorCollection.getOperator(list.getSelectedValue());	
+		if ( operator instanceof RidgeDetectionOperator )
+		{
+			RidgeDetectionOperator rd = (RidgeDetectionOperator) operator;
+			rd.setImage(img);
+		}
+			
+		LinkedList<String> operatorList = new LinkedList<String>();
+		// only one operator can be selected
+		operatorList.add(list.getSelectedValue());
+		operatorCollection.runOperators(operatorList);
+	}
+	
 	private static String[] getReleaseInfosFromJar() {
 
 		InputStream is= null;
@@ -7578,19 +7658,21 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	JPanel panel = new JPanel();
     	panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 //    	panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
     	
     	// Sub panels
     	JPanel group1 = new JPanel(new GridLayout(0, 2, 5, 3)); // Treeline related operations
     	JPanel group2 = new JPanel(new GridLayout(0, 2, 5, 3)); // Read and write operations
     	JPanel group3 = new JPanel(new GridLayout(0, 2, 5, 3)); // Connector related operations
     	JPanel group4 = new JPanel(new GridLayout(0, 2, 5, 3)); // Image related operations
-    	JPanel group5 = new JPanel(new GridLayout(0, 2, 5, 3)); // RhizoTrak miscellaneous
+    	JPanel group5 = new JPanel(new GridLayout(0, 1, 5, 3)); // Choose operator from list
+    	JPanel group51 = new JPanel(new GridLayout(0, 2, 5, 3)); // Configure and run chosen operator
+    	JPanel group6 = new JPanel(new GridLayout(0, 2, 5, 3)); // RhizoTrak miscellaneous
     	group1.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group2.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group3.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group4.setBorder(new EmptyBorder(5, 5, 5, 5));
-    	group5.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	group51.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	group6.setBorder(new EmptyBorder(5, 5, 5, 5));
     	
     	
     	JButton copyButton = new JButton("Copy Treelines");
@@ -7639,24 +7721,48 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	loadImagesButton.addActionListener(this);
     	group4.add(loadImagesButton);
     	
+    	// Get avilable operators
+    	JScrollPane scrollPane = getScrollableOperatorList();
+    	boolean isOperatorAvailable = false;
+    	if ( list.getModel().getSize() > 0 )
+    	{
+    		isOperatorAvailable = true;
+    	}
+    	
+    	JLabel label = new JLabel("Available Operators:", JLabel.LEFT);
+    	group5.add(label);
+    	group5.add(scrollPane);
+    	
+    	JButton runButton = new JButton("Run");
+    	runButton.setToolTipText("Runs the selected operator.");
+    	runButton.setActionCommand("runOperator");
+    	runButton.addActionListener(this);
+    	group51.add(runButton);
+		
+    	JButton configureButton = new JButton("Configure");
+    	configureButton.setToolTipText("Opens a new window to configure the selected operator.");
+    	configureButton.setActionCommand("configureOperator");
+    	configureButton.addActionListener(this);
+    	group51.add(configureButton);
+    	
     	JButton preferencesButton = new JButton("Preferences");
     	preferencesButton.setToolTipText("Adjust the color and opacity of treelines of a certain type.");
     	preferencesButton.setActionCommand("preferences");
     	preferencesButton.addActionListener(this);
-    	group5.add(preferencesButton);
+    	group6.add(preferencesButton);
 
     	JButton aboutButton = new JButton("About rhizoTrak");
     	aboutButton.setToolTipText("");
     	aboutButton.setActionCommand("aboutRhizo");
     	aboutButton.addActionListener(this);
     	aboutButton.setEnabled(true);
-    	group5.add(aboutButton);
+    	group6.add(aboutButton);
 
     	JButton devTest = new JButton("Test");
     	devTest.setToolTipText("");
     	devTest.setActionCommand("testtest");
     	devTest.addActionListener(this);
-//    	group5.add(devTest); 
+//    	group6.add(devTest); 
     	
     	MatteBorder mb = new MatteBorder(1, 0, 0, 0, Color.BLACK);
     	TitledBorder tb = new TitledBorder(mb, "rhizoTrak Operations", TitledBorder.CENTER, TitledBorder.DEFAULT_POSITION);
@@ -7679,11 +7785,110 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	panel.add(group4);
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     	panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	// Only display panel if there is at least one available operator
+    	if ( isOperatorAvailable )
+    	{
+    		panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    		panel.add(group5);
+    		panel.add(group51);
+    		panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    		panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	}
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
-    	panel.add(group5);
+    	panel.add(group6);
     	
     	return panel;
     }
+    
+    // Gets all available operators in a scrollable list
+	protected JScrollPane getScrollableOperatorList()
+	{	
+		Vector<String> detectorList = new Vector<String>();
+			
+		try 
+		{
+			operatorCollection = new ALDOperatorCollection<ALDOperatorCollectionElement>(ALDOperatorCollectionElement.class);
+			operatorCollection.addALDOperatorCollectionEventListener(new ALDOperatorCollectionEventListener() 
+			{	
+				// Event Listener for operator
+				@Override
+				public void handleALDOperatorCollectionEvent(ALDOperatorCollectionEvent event) 
+				{
+					if ( event.getEventType() == ALDOperatorCollectionEventType.RESULTS_AVAILABLE )
+					{
+						JOptionPane.showMessageDialog(null, 
+								"Operator done. Results are available.", 
+								"Results available", JOptionPane.OK_OPTION);
+						
+						// Get results from operator
+						try 
+						{
+							MTBImage image = (MTBImage) operator.getParameter("resultImage");
+							image.show();
+						} 
+						catch (ALDOperatorException e) 
+						{
+							IJError.print(e);
+						}
+						
+						Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.core.datatypes.Point>> resultLineMap = null;
+						try 
+						{
+							resultLineMap = (Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.core.datatypes.Point>>) 
+									operator.getParameter("resultLineMap");
+						} 
+						catch (ALDOperatorException e) 
+						{
+							IJError.print(e);
+						}
+						RhizoLineMapToTreeline lineMapToTree = new RhizoLineMapToTreeline();
+						lineMapToTree.convertLineMapToTreeLine(resultLineMap);
+						
+						//getImageParameterAndShow("makeBinary", "binaryImage");
+						//getImageParameterAndShow("plotEigenvalues", "eigenvaluesImage");
+					}
+					else if ( event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED )
+					{
+						JOptionPane.showMessageDialog(null, 
+								"Configure operator completely.", 
+								"Configure operator", JOptionPane.ERROR_MESSAGE);
+					}
+					else if ( event.getEventType() == ALDOperatorCollectionEventType.RUN_FAILURE )
+					{
+						JOptionPane.showMessageDialog(null, 
+								"Something went wrong during execution of the operator.", 
+								"Run failure", JOptionPane.ERROR_MESSAGE);
+					}
+					else if ( event.getEventType() == ALDOperatorCollectionEventType.INIT_FAILURE )
+					{
+						JOptionPane.showMessageDialog(null, 
+								"Operator is not well initialized.", 
+								"Initialization failure", JOptionPane.ERROR_MESSAGE);
+					}
+					else // ALDOperatorCollectionEventType.UNKNOWN
+					{
+						// do nothing
+					}
+				}
+			});
+			Collection<String> uniqueClassIDs = operatorCollection.getUniqueClassIDs();
+			detectorList.addAll(uniqueClassIDs);
+		} 
+		catch (Exception e) 
+		{
+			IJError.print(e);
+		}
+		
+		Collections.sort(detectorList);
+		list = new JList<String>(detectorList);
+		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		JScrollPane scroll = new JScrollPane(list);
+        scroll.setVerticalScrollBarPolicy(
+                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		
+		return scroll;
+	}
 
 	protected Image applyFilters(final Image img) {
 		if (!filter_enabled) return img;
