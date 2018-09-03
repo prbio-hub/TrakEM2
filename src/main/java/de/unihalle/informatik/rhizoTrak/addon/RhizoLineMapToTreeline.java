@@ -47,6 +47,7 @@
 
 package de.unihalle.informatik.rhizoTrak.addon;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +58,7 @@ import javax.swing.tree.DefaultTreeModel;
 
 import de.unihalle.informatik.MiToBo.core.datatypes.Point;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootImageAnnotationType;
+import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentStatusType;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
@@ -73,9 +75,11 @@ import ij.ImagePlus;
 
 public class RhizoLineMapToTreeline
 {
-	public RhizoLineMapToTreeline()
+	private RhizoMain rhizoMain;
+	
+	public RhizoLineMapToTreeline(RhizoMain rhizoMain)
 	{
-		super();
+		this.rhizoMain = rhizoMain;
 	}
 	
 	/**
@@ -113,77 +117,85 @@ public class RhizoLineMapToTreeline
 			imageNames = imagePlus.getImageStack().getSliceLabels();
 		}
 		
-		for(int i = 0; i < layers.size(); i++)
-		{
-			Layer currentLayer = layers.get(i); // order of rootsets has to correspond to the layer if we don't care about image names
+		
+		Layer currentLayer = display.getLayer(); // order of rootsets has to correspond to the layer if we don't care about image names
 			
-			for ( int id : lineMap.keySet() )
+		int index = 0;
+		for ( Layer layer : layers )
+		{
+			if ( layer.equals(currentLayer) )
 			{
-				ProjectThing possibleParent = RhizoAddons.findParentAllowing("treeline", project);
-
-				MTBXMLRootImageAnnotationType rootSet = MTBXMLRootImageAnnotationType.Factory.newInstance();
-				
-				rootSet.setImagename(imageNames[i]);
-				rootSet.setRootSetID(i);
-				
-				// create treeline
-				ProjectThing treelineThing = possibleParent.createChild("treeline");
-				Utils.log("possibleParent: " + possibleParent);
-				
-				// create project tree
-				DefaultMutableTreeNode parentNode = DNDTree.findNode(possibleParent, projectTree);
-				DefaultMutableTreeNode node = new DefaultMutableTreeNode(treelineThing);
-				((DefaultTreeModel) projectTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
-				
-				// get treeline (now existing)
-				Treeline treeline = (Treeline) treelineThing.getObject();
-				treeline.setLayer(currentLayer);
-				
-				// TODO: this is a workaround for the repainting issues that occur when creating new nodes out of a mtbxml file
-				currentLayer.mtbxml = true;
-				
-				Map<Integer, Point> line = lineMap.get(id);
-    			// create node -> ID map to later assign parents and children according to segment IDs and parent IDs
-    			HashMap<Integer, RadiusNode> nodeIDmap = new HashMap<Integer, RadiusNode>();
-				
-    			// Create a nodeIDmap of all points
-				for ( int pointId : line.keySet() )
-				{
-					Point p = line.get(pointId);
-
-					if(p.getPredecessor() == -1)
-    				{
-    					RadiusNode root = new RadiusNode((float) p.getX(), (float) p.getY(), currentLayer, (float) p.getRadius());
-    					nodeIDmap.put(-1, root);
-    				}
-    				RadiusNode currentNode = new RadiusNode((float) p.getX(), (float) p.getY(), currentLayer, (float) p.getRadius());
-    				nodeIDmap.put(pointId, currentNode);
-				}
-				
-				// Add all points to treeline
-				for ( int pointId : line.keySet() )
-				{
-					Point p = line.get(pointId);
-					
-					// assuming that default status is defined
-    				byte s = (byte) RhizoProjectConfig.STATUS_UNDEFINED; // change to status LIVING
-    				
-    				if(p.getPredecessor() == -1)
-    				{
-    					treeline.addNode(null, nodeIDmap.get(p.getPredecessor()), s);
-    					treeline.addNode(nodeIDmap.get(p.getPredecessor()), nodeIDmap.get(pointId), s);
-    					treeline.setRoot(nodeIDmap.get(p.getPredecessor()));
-    			
-    				}
-    				else
-    				{
-    					treeline.addNode(nodeIDmap.get(p.getPredecessor()), nodeIDmap.get(pointId), s);
-    				}
-    			}
-				
-				// Display treeline
-				treeline.updateCache();
+				break;
 			}
+			index++;
+		}	
+		Utils.log("Layer index: " + index);
+		
+		for ( int id : lineMap.keySet() )
+		{
+			ProjectThing possibleParent = RhizoAddons.findParentAllowing("treeline", project);
+
+			MTBXMLRootImageAnnotationType rootSet = MTBXMLRootImageAnnotationType.Factory.newInstance();
+				
+			rootSet.setImagename(imageNames[index]);
+			rootSet.setRootSetID(index);
+				
+			// create treeline
+			ProjectThing treelineThing = possibleParent.createChild("treeline");
+				
+			// create project tree
+			DefaultMutableTreeNode parentNode = DNDTree.findNode(possibleParent, projectTree);
+			DefaultMutableTreeNode node = new DefaultMutableTreeNode(treelineThing);
+			((DefaultTreeModel) projectTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
+				
+			// get treeline (now existing)
+			Treeline treeline = (Treeline) treelineThing.getObject();
+			treeline.setLayer(currentLayer);
+				
+			// TODO: this is a workaround for the repainting issues that occur when creating new nodes out of a mtbxml file
+			currentLayer.mtbxml = true;
+				
+			Map<Integer, Point> line = lineMap.get(id);
+    		// create node -> ID map to later assign parents and children according to segment IDs and parent IDs
+    		HashMap<Integer, RadiusNode> nodeIDmap = new HashMap<Integer, RadiusNode>();
+				
+    		// Create a nodeIDmap of all points
+			for ( int pointId : line.keySet() )
+			{
+				Point p = line.get(pointId);
+
+				if(p.getPredecessor() == -1)
+    			{
+    				RadiusNode root = new RadiusNode((float) p.getX(), (float) p.getY(), currentLayer, (float) p.getRadius());
+    				nodeIDmap.put(-1, root);
+    			}
+    			RadiusNode currentNode = new RadiusNode((float) p.getX(), (float) p.getY(), currentLayer, (float) p.getRadius());
+    			nodeIDmap.put(pointId, currentNode);
+			}
+
+			// Add all points to treeline
+			for ( int pointId : line.keySet() )
+			{
+				Point p = line.get(pointId);
+					
+				// assuming that default status is defined
+    			byte s = (byte) 0;
+    			//byte s = (byte) RhizoProjectConfig.STATUS_UNDEFINED;
+    				
+    			if(p.getPredecessor() == -1)
+    			{
+    				treeline.addNode(null, nodeIDmap.get(p.getPredecessor()), s);
+    				treeline.addNode(nodeIDmap.get(p.getPredecessor()), nodeIDmap.get(pointId), s);
+    				treeline.setRoot(nodeIDmap.get(p.getPredecessor()));
+    			}
+    			else
+    			{
+    				treeline.addNode(nodeIDmap.get(p.getPredecessor()), nodeIDmap.get(pointId), s);
+    			}
+    		}
+				
+			// Display treeline
+			treeline.updateCache();
 		}
 		Utils.log(" ----- DONE!! ------ ");
 	}

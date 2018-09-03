@@ -7852,7 +7852,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 						{
 							IJError.print(e);
 						}
-						RhizoLineMapToTreeline lineMapToTree = new RhizoLineMapToTreeline();
+						RhizoLineMapToTreeline lineMapToTree = new RhizoLineMapToTreeline(new RhizoMain(Display.getFront().getProject()));
 						lineMapToTree.convertLineMapToTreeLine(resultLineMap);
 						
 						//getImageParameterAndShow("makeBinary", "binaryImage");
