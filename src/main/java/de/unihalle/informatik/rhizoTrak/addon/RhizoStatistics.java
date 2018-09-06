@@ -250,32 +250,46 @@ public class RhizoStatistics {
 	
 				RhizoProjectConfig config = rhizoMain.getProjectConfig(); 
 				
-				// create an array with lines for layers and columns for status labels
-				HashMap<Integer,Double[]> aggregatedStats = new HashMap<Integer, Double[]>();
+				// create arrays with lines for layers and columns for status labels
+				HashMap<Integer,Double[]> aggregatedLength = new HashMap<Integer, Double[]>();
+				HashMap<Integer,Double[]> aggregatedSurface = new HashMap<Integer, Double[]>();
+				HashMap<Integer,Double[]> aggregatedVolume = new HashMap<Integer, Double[]>();
+				
 				for ( Layer layer : this.allLayers) {
 					Double[] stats = new Double[config.sizeStatusLabelMapping()];
 					for ( int i = 0 ; i < stats.length ; i++ )
 						stats[i] = 0.0;
+					aggregatedLength.put( layer.getParent().indexOf(layer) + 1, stats);
 					
-					aggregatedStats.put( layer.getParent().indexOf(layer) + 1, stats);
+					stats = new Double[config.sizeStatusLabelMapping()];
+					for ( int i = 0 ; i < stats.length ; i++ )
+						stats[i] = 0.0;
+					aggregatedSurface.put( layer.getParent().indexOf(layer) + 1, stats);
+
+					stats = new Double[config.sizeStatusLabelMapping()];
+					for ( int i = 0 ; i < stats.length ; i++ )
+						stats[i] = 0.0;
+					aggregatedVolume.put( layer.getParent().indexOf(layer) + 1, stats);
+
 				}
 				 
 				// iterate over all segments and aggregate the segment length
 				for (Segment segment : allSegments) {
 					int layerID = segment.layerIndex;
 					int status = segment.status;
-					aggregatedStats.get( layerID)[ status] += segment.length;
+					aggregatedLength.get( layerID)[ status] += segment.length;
+					aggregatedSurface.get( layerID)[ status] += segment.surfaceArea;
+					aggregatedVolume.get( layerID)[ status] += segment.volume;
 				}
 				
 				// write header and one line per layer
-				bw.write( "experiment" + sep + "tube" + sep + "timepoint" + sep + "layerID" );
+				bw.write( "experiment" + sep + "tube" + sep + "timepoint" + sep + "layerID" +  
+						sep + "length_" + this.outputUnit + sep + "surfaceArea_" + this.outputUnit + "^2" + sep + "volume_" + this.outputUnit + "^3" +
+						sep + "status" + sep + "statusName");
 				
-				for ( int s = 0 ; s < config.sizeStatusLabelMapping() ; s++) {		
-					bw.write( sep + config.getStatusLabel( s).getName() + "_" + this.outputUnit);
-				}
 				bw.newLine();
 				
-				List<Integer> sortedLayerIDs = new LinkedList<Integer>(aggregatedStats.keySet());
+				List<Integer> sortedLayerIDs = new LinkedList<Integer>(aggregatedLength.keySet());
 				Collections.sort( sortedLayerIDs);
 				for ( int layerID : sortedLayerIDs) {
 					ImagePlusCalibrationInfo calibInfo = allCalibInfos.get( layerID);
@@ -283,13 +297,16 @@ public class RhizoStatistics {
 					String tube = RhizoUtils.getICAPTube( imageName);
 					String experiment = RhizoUtils.getICAPExperiment(imageName);
 					String timepoint = RhizoUtils.getICAPTimepoint(imageName);
-
-					bw.write( experiment + sep + tube + sep + timepoint + sep + Integer.toString( layerID));
-
+					
 					for ( int s = 0 ; s < config.sizeStatusLabelMapping(); s++ ) {
-						bw.write( sep + aggregatedStats.get(layerID)[s]);
+						bw.write( experiment + sep + tube + sep + timepoint + sep + Integer.toString( layerID) +
+								sep + aggregatedLength.get(layerID)[s] + 
+								sep + aggregatedSurface.get(layerID)[s] + 
+								sep + aggregatedVolume.get(layerID)[s] +
+								sep + s + sep + config.getStatusLabel( s).getName());
+						bw.newLine();
+
 					}
-					bw.newLine();
 				}
 
 			} else {
