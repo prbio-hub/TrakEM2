@@ -664,6 +664,7 @@ public class RhizoProjectConfig {
 	 * @param nodesAsCircle the nodesAsCircle to set
 	 */
 	public void setNodesAsCircle(boolean nodesAsCircle) {
+		setUserSettingsChanged();
 		this.nodesAsCircle = nodesAsCircle;
 	}
 	
@@ -678,6 +679,7 @@ public class RhizoProjectConfig {
 	 * @param nodesDiameterLines the nodesDiameterLines to set
 	 */
 	public void setNodesDiameterLines(boolean nodesDiameterLines) {
+		setUserSettingsChanged();
 		this.nodesDiameterLines = nodesDiameterLines;
 	}
 	
@@ -692,6 +694,7 @@ public class RhizoProjectConfig {
 	 * @param segmentsAsPolygon the segmentsAsPolygon to set
 	 */
 	public void setSegmentsAsPolygon(boolean segmentsAsPolygon) {
+		setUserSettingsChanged();
 		this.segmentsAsPolygon = segmentsAsPolygon;
 	}
 	
@@ -706,6 +709,7 @@ public class RhizoProjectConfig {
 	 * @param segmentsFill the segmentsFill to set
 	 */
 	public void setSegmentsFill(boolean segmentsFill) {
+		setUserSettingsChanged();
 		this.segmentsFill = segmentsFill;
 	}
 
