@@ -91,9 +91,12 @@ public class RhizoProjectConfig {
 	 */
 	
 	public static final String NAME_UNDEFINED = "UNDEFINED";
+	
 	/**
-	 * to represent /virtual) segments created on import from RSML to connect all
+	 * to represent (virtual) segments to connect 
 	 * branches (polylines) of a root to form one (connected) treeline
+	 * <br>
+	 * used to represent genuine rizoTrak virtual segments
 	 * 
 	 */
 	public static final int STATUS_VIRTUAL = -2;
@@ -112,6 +115,20 @@ public class RhizoProjectConfig {
 	 * The name for <code>STATUS_CONNECTOR</code>
 	 */
 	public static final String NAME_CONNECTOR= "CONNECTOR";
+	
+	/**
+	 * to represent (virtual) segments created on import from RSML to connect all
+	 * branches (polylines) of a root to form one (connected) treeline
+	 * 	 * <br>
+	 * used to represent virtual segments create for/from RSML
+	 * 
+	 */
+	public static final int STATUS_VIRTUAL_RSML = -4;
+	
+	/**
+	 * The name for <code>STATUS_VIRTUAL_RSML</code>
+	 */
+	public static final String NAME_VIRTUAL_RSML = "VIRTUAL_RSML";
 	
 	
 	public static final Color DEFAULT_STATUS_COLOR = new Color( 255, 255, 0);
@@ -205,9 +222,11 @@ public class RhizoProjectConfig {
 		statusLabelSet.put( NAME_UNDEFINED, new RhizoStatusLabel( this, NAME_UNDEFINED, "*", DEFAULT_FIXED_STATUS_COLOR));
 		statusLabelSet.put( NAME_VIRTUAL, new RhizoStatusLabel( this, NAME_VIRTUAL, "-", DEFAULT_FIXED_STATUS_COLOR));
 		statusLabelSet.put( NAME_CONNECTOR, new RhizoStatusLabel( this, NAME_CONNECTOR, "@", DEFAULT_FIXED_STATUS_COLOR));
+		statusLabelSet.put( NAME_VIRTUAL_RSML, new RhizoStatusLabel( this, NAME_VIRTUAL_RSML, "-", DEFAULT_FIXED_STATUS_COLOR));
 		fixedStatusLabelMap.put( STATUS_UNDEFINED, NAME_UNDEFINED);
 		fixedStatusLabelMap.put( STATUS_VIRTUAL, NAME_VIRTUAL);
 		fixedStatusLabelMap.put( STATUS_CONNECTOR, NAME_CONNECTOR);	
+		fixedStatusLabelMap.put( STATUS_VIRTUAL_RSML, NAME_VIRTUAL_RSML);
 		setReceiverNodeColor( Node.getReceiverColor());	
 	}
 	
