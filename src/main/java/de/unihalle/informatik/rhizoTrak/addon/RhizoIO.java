@@ -217,6 +217,15 @@ public class RhizoIO {
 			if ( gs.getShowCalibrationInfo() != null)
 				rhizoMain.getProjectConfig().setShowCalibrationInfo(  gs.getShowCalibrationInfo());
 			
+			if ( gs.getNodesAsCircle() != null)
+				rhizoMain.getProjectConfig().setNodesAsCircle( gs.getNodesAsCircle());
+			if ( gs.getShowDiameterLines() != null)
+				rhizoMain.getProjectConfig().setNodesDiameterLines( gs.getShowDiameterLines());
+			if ( gs.getDrawRootShape() != null)
+				rhizoMain.getProjectConfig().setSegmentsAsPolygon( gs.getDrawRootShape());
+			if ( gs.getFillRootShape() != null)
+				rhizoMain.getProjectConfig().setSegmentsFill( gs.getFillRootShape());
+			
 			rhizoMain.getProjectConfig().resetChanged();
 			
 			if ( debug ) {
@@ -738,6 +747,10 @@ public class RhizoIO {
 	        gs.setAskSplitTreeline( rhizoMain.getProjectConfig().isAskSplitTreeline());
 	        gs.setFullGUI( rhizoMain.getProjectConfig().isFullGUI());
 	        gs.setShowCalibrationInfo( rhizoMain.getProjectConfig().isShowCalibrationInfo());
+	        gs.setNodesAsCircle( rhizoMain.getProjectConfig().isNodesAsCircle());
+	        gs.setShowDiameterLines( rhizoMain.getProjectConfig().isNodesDiameterLines()); 
+	        gs.setDrawRootShape(rhizoMain.getProjectConfig().isSegmentsAsPolygon());
+	        gs.setFillRootShape( rhizoMain.getProjectConfig().isSegmentsFill());
 			
 			m.marshal(gs, userSettingsFile);
 		} catch(Exception e) {

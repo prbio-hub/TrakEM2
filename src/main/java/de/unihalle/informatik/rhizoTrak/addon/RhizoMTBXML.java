@@ -53,9 +53,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.JOptionPane;
@@ -191,7 +193,7 @@ public class RhizoMTBXML
 			List<Displayable> connectors = layerSet.get(Connector.class);
 			
 			// connector = rootAssociation
-			List<MTBXMLRootAssociationType> rootAssociationList = new ArrayList<MTBXMLRootAssociationType>(); // arraylist for convenience
+			List<MTBXMLRootAssociationType> rootAssociationList = new ArrayList<MTBXMLRootAssociationType>();
 			
 			for(int i = 0; i < connectors.size(); i++)
 			{
@@ -199,10 +201,9 @@ public class RhizoMTBXML
 				
 				MTBXMLRootAssociationType rootAssociation = MTBXMLRootAssociationType.Factory.newInstance();
 				
-				// treeline = rootReference TODO: first rootreference is redundant in xml output? might be caused by changes to the connector class
-				List<MTBXMLRootReferenceType> rootReferencesList = new ArrayList<MTBXMLRootReferenceType>(); // arraylist for convenience
-				List<Treeline> treelinesOfConnector = treelinesOfConnector(currentConnector);
- 				
+				// treeline = rootReference
+				List<MTBXMLRootReferenceType> rootReferencesList = new ArrayList<MTBXMLRootReferenceType>();
+				List<Treeline> treelinesOfConnector = currentConnector.getConTreelines();
 				
 				for(int j = 0; j < treelinesOfConnector.size(); j++) 
 				{
@@ -322,6 +323,8 @@ public class RhizoMTBXML
 	public void readMTBXML()
 	{
 		String[] filepath = Utils.selectFile("test");
+		if(null == filepath) return;
+		
 		File file = new File(filepath[0] + filepath[1]);
 		
 		// TODO: check other violations
@@ -360,13 +363,15 @@ public class RhizoMTBXML
 			LayerSet layerSet = display.getLayerSet();  
 			ArrayList<Layer> layers = layerSet.getLayers();
 			
-			while(rootSets.length > layers.size())
+			if(rootSets.length > layers.size())
 			{
 				Utils.showMessage("Number of rootSets in the xml file is greater than the number of layers.\nCancelling MTBXML import.");
 				return;
 			}
 			
-
+			// used for creating connectors
+			Map<List<Integer>, Treeline> rootsTable = new HashMap<List<Integer>, Treeline>();
+			
 			for(int i = 0; i < rootSets.length; i++)
 			{
 				Layer currentLayer = layers.get(i); // order of rootsets has to correspond to the layer if we don't care about image names
@@ -394,8 +399,7 @@ public class RhizoMTBXML
 				}
 
 				MTBXMLRootType[] roots = currentRootSet.getRootsArray();
-				Utils.log("@readMTBXML: number of roots in rootset "+ i + ": " + roots.length);
-		
+
 				for(int j = 0; j < roots.length; j++)
 				{
 					MTBXMLRootType currentRoot = roots[j];
@@ -467,11 +471,34 @@ public class RhizoMTBXML
 	    				}
 	    			}
 	    			
+	    			rootsTable.put(Arrays.asList(currentRootSet.getRootSetID(), currentRoot.getRootID()), treeline);
 	    			treeline.updateCache();
-	    			Utils.log("treeline"+j+"; set layer at "+treeline.getLayer() + " " + treeline.getFirstLayer());
-	    			Utils.log(treeline.getNodesAt(currentLayer).size()); 
 				}
 			}
+			
+			
+			
+			// set connectors
+			MTBXMLRootAssociationType[] rootAssociations = rootProject.getRootAssociationsArray();
+			for(int i = 0;  i < rootAssociations.length; i++)
+			{
+				MTBXMLRootAssociationType currentRootAssociation = rootAssociations[i];
+				MTBXMLRootReferenceType[] rootReferences = currentRootAssociation.getRootReferencesArray();
+				
+				for(int j = 1; j < rootReferences.length; j++)
+				{
+					MTBXMLRootReferenceType previousRootReference = rootReferences[j-1];
+					MTBXMLRootReferenceType currentRootReference = rootReferences[j];
+					Treeline ptree = rootsTable.get(Arrays.asList(previousRootReference.getRootSetID(), previousRootReference.getRootID()));
+					Treeline ctree = rootsTable.get(Arrays.asList(currentRootReference.getRootSetID(), currentRootReference.getRootID()));
+					
+					if(!RhizoAddons.getRightPC(ptree, ctree))
+					{
+						Utils.log("rhizoTrak", "Can not create or find connector between #" + ctree.getId() + " and #" + ctree.getId());
+					}
+				}
+			}
+			
 		}
 		catch (Exception e) 
 		{
@@ -508,36 +535,7 @@ public class RhizoMTBXML
     	
     	return res;
     }
-    
 
-	/**
-	 * Returns the list of all treelines under the origin and under the targets. Used for reading MTBXML formats
-	 * TODO deprecated due to changes to the connector class
-	 * @param c - Connector
-	 * @return List of treelines
-	 * @author Tino
-	 */
-	private List<Treeline> treelinesOfConnector(Connector c)
-	{
-		List<Treeline> treelines = new ArrayList<Treeline>();
-		List<Set<Displayable>> targets = c.getTargets();
-		Set<Displayable> origins = c.getOrigins();
-		
-		for(Displayable d: origins)
-		{
-			if(d instanceof Treeline) treelines.add((Treeline) d);
-		}
-	
-		for(int i = 0; i < targets.size(); i++)
-		{
-			for(Displayable d: targets.get(i))
-			{
-				if(d instanceof Treeline) treelines.add((Treeline) d);
-			}
-		}
-		
-		return treelines;
-	}
 	
 	private boolean endNodesInside()
 	{
