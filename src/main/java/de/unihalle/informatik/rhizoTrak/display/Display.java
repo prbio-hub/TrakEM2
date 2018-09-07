@@ -72,6 +72,7 @@ Institute of Neuroinformatics, University of Zurich / ETH, Switzerland.
 package de.unihalle.informatik.rhizoTrak.display;
 
 import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Checkbox;
 import java.awt.Choice;
 import java.awt.Color;
@@ -80,6 +81,7 @@ import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Event;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -195,8 +197,11 @@ import de.unihalle.informatik.Alida.operator.ALDOperatorCollectionElement;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEventListener;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent.ALDOperatorCollectionEventType;
+import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootSegmentationOperator;
+import de.unihalle.informatik.MiToBo.apps.ridgeDetection.RidgeDetection;
 import de.unihalle.informatik.MiToBo.apps.ridgeDetection.RidgeDetectionOperator;
 import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage;
+import de.unihalle.informatik.MiToBo.core.operator.MTBOperatorCollection;
 import de.unihalle.informatik.rhizoTrak.ControlWindow;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
@@ -333,9 +338,11 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	 */
 	private JList<String> list;
 	
-	private ALDOperatorCollection<ALDOperatorCollectionElement> operatorCollection;
+	private MTBOperatorCollection<RootSegmentationOperator> operatorCollection;
 	
 	private ALDOperatorCollectionElement operator;
+	
+	private JButton runButton;
 
 	/** Keep track of all existing Display objects. */
 	static private Set<Display> al_displays = new HashSet<Display>();
@@ -6739,6 +6746,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			configureOperator();
 		}
 		else if(command.equals("runOperator")) {
+			runButton.setEnabled(false);
 			runOperator();
 		}
 		else if(command.equals("preferences")){
@@ -6872,7 +6880,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			RidgeDetectionOperator rd = (RidgeDetectionOperator) operator;
 			rd.setImage(img);
 		}
-			
 		LinkedList<String> operatorList = new LinkedList<String>();
 		// only one operator can be selected
 		operatorList.add(list.getSelectedValue());
@@ -7667,59 +7674,67 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	// Main panelbutton
     	JPanel panel = new JPanel();
     	panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-//    	panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+    	//panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
     	
     	// Sub panels
-    	JPanel group1 = new JPanel(new GridLayout(0, 2, 5, 3)); // Treeline related operations
-    	JPanel group2 = new JPanel(new GridLayout(0, 2, 5, 3)); // Read and write operations
-    	JPanel group3 = new JPanel(new GridLayout(0, 2, 5, 3)); // Connector related operations
-    	JPanel group4 = new JPanel(new GridLayout(0, 2, 5, 3)); // Image related operations
-    	JPanel group5 = new JPanel(new GridLayout(0, 1, 5, 3)); // Choose operator from list
-    	JPanel group51 = new JPanel(new GridLayout(0, 2, 5, 3)); // Configure and run chosen operator
-    	JPanel group6 = new JPanel(new GridLayout(0, 2, 5, 3)); // RhizoTrak miscellaneous
-    	group1.setBorder(new EmptyBorder(5, 5, 5, 5));
-    	group2.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	JPanel group1  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for treelines
+    	JPanel group11 = new JPanel(new GridLayout(0, 2, 5, 1)); // Treeline related operations
+    	JPanel group2  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for Data-IO
+    	JPanel group21 = new JPanel(new GridLayout(0, 2, 5, 1)); // Read and write operations
+    	JPanel group3  = new JPanel(new GridLayout(0, 2, 5, 1)); // Connector related operations
+    	JPanel group4  = new JPanel(new GridLayout(0, 2, 5, 1)); // Image related operations
+    	JPanel group5  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for operators
+    	JPanel group51 = new JPanel(new GridLayout(0, 1, 5, 1)); // Choose operator from list
+    	JPanel group52 = new JPanel(new GridLayout(0, 2, 5, 1)); // Configure and run chosen operator
+    	JPanel group6  = new JPanel(new GridLayout(0, 2, 5, 1)); // RhizoTrak miscellaneous
+    	group11.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	group21.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group3.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group4.setBorder(new EmptyBorder(5, 5, 5, 5));
-    	group51.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	group52.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group6.setBorder(new EmptyBorder(5, 5, 5, 5));
     	
+    	JLabel labelTreeline = new JLabel("Treelines:", JLabel.LEFT);
+    	group1.add(labelTreeline);
     	
-    	JButton copyButton = new JButton("Copy Treelines");
+    	JButton copyButton = new JButton("Copy");
     	copyButton.setToolTipText("Copys treelines from the current layer to the next layer.");
     	copyButton.setActionCommand("Copy treelines");
     	copyButton.addActionListener(this);
-    	group1.add(copyButton);
+    	group11.add(copyButton);
     	
-    	JButton deleteButton = new JButton("Delete Treelines");
+    	JButton deleteButton = new JButton("Delete");
     	deleteButton.setToolTipText("Deletes all treelines from the current layer.");
     	deleteButton.setActionCommand("Delete treelines");
     	deleteButton.addActionListener(this);
-    	group1.add(deleteButton);
+    	group11.add(deleteButton);
     	
-    	JButton readXMLButton = new JButton("Read MTBXML");
+    	JLabel labelData = new JLabel("Data-IO:", JLabel.LEFT);
+    	group2.add(labelData);
+    	
+    	JButton readXMLButton = new JButton("ReadRSML");
     	readXMLButton.setToolTipText("Reads a MTBXML file that corresponds to the images already loaded.");
     	readXMLButton.setActionCommand("readXML");
     	readXMLButton.addActionListener(this);
     	readXMLButton.setEnabled(true);
-    	group2.add(readXMLButton);    	
+    	group21.add(readXMLButton);    	
     	
-    	JButton writeXMLButton = new JButton("Write MTBXML");
+    	JButton writeXMLButton = new JButton("WriteRSML");
     	writeXMLButton.setToolTipText("Writes the current TrakEM project to MTBXML format.");
     	writeXMLButton.setActionCommand("writeXML");
     	writeXMLButton.setEnabled(true);
     	writeXMLButton.addActionListener(this);
-    	group2.add(writeXMLButton);
+    	group21.add(writeXMLButton);
 
-    	JButton statButton = new JButton("Write Statistics");
+    	JButton statButton = new JButton("Statistics");
     	statButton.setToolTipText("");
     	statButton.setActionCommand("stat");
     	statButton.addActionListener(this);
     	statButton.setEnabled(true);
-    	group2.add(statButton);
+    	group21.add(statButton);
     		
-    	JButton conflicManagerButton = new JButton("Conflict Manager");
+    	JButton conflicManagerButton = new JButton("Conflicts");
     	conflicManagerButton.setToolTipText("Manage conflicts related to connectors.");
     	conflicManagerButton.setActionCommand("conflictPanel");
     	conflicManagerButton.addActionListener(this);
@@ -7732,7 +7747,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	loadImagesButton.addActionListener(this);
     	group4.add(loadImagesButton);
     	
-    	// Get avilable operators
+    	// Get available operators
     	JScrollPane scrollPane = getScrollableOperatorList();
     	boolean isOperatorAvailable = false;
     	if ( list.getModel().getSize() > 0 )
@@ -7740,21 +7755,22 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     		isOperatorAvailable = true;
     	}
     	
-    	JLabel label = new JLabel("Available Operators:", JLabel.LEFT);
-    	group5.add(label);
-    	group5.add(scrollPane);
+    	JLabel labelOperators = new JLabel("Available Operators:", JLabel.LEFT);
+    	group5.add(labelOperators);
     	
-    	JButton runButton = new JButton("Run");
+    	group51.add(scrollPane);
+    	
+    	runButton = new JButton("Run");
     	runButton.setToolTipText("Runs the selected operator.");
     	runButton.setActionCommand("runOperator");
     	runButton.addActionListener(this);
-    	group51.add(runButton);
+    	group52.add(runButton);
 		
     	JButton configureButton = new JButton("Configure");
     	configureButton.setToolTipText("Opens a new window to configure the selected operator.");
     	configureButton.setActionCommand("configureOperator");
     	configureButton.addActionListener(this);
-    	group51.add(configureButton);
+    	group52.add(configureButton);
     	
     	JButton preferencesButton = new JButton("Preferences");
     	preferencesButton.setToolTipText("Adjust the color and opacity of treelines of a certain type.");
@@ -7762,7 +7778,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	preferencesButton.addActionListener(this);
     	group6.add(preferencesButton);
 
-    	JButton aboutButton = new JButton("About rhizoTrak");
+    	JButton aboutButton = new JButton("About");
     	aboutButton.setToolTipText("");
     	aboutButton.setActionCommand("aboutRhizo");
     	aboutButton.addActionListener(this);
@@ -7782,10 +7798,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	panel.setBorder(tb);
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     	panel.add(group1);
+    	panel.add(group11);
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     	panel.add(new JSeparator(JSeparator.HORIZONTAL));
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     	panel.add(group2);
+    	panel.add(group21);
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     	panel.add(new JSeparator(JSeparator.HORIZONTAL));
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
@@ -7802,6 +7820,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     		panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     		panel.add(group5);
     		panel.add(group51);
+    		panel.add(group52);
     		panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     		panel.add(new JSeparator(JSeparator.HORIZONTAL));
     	}
@@ -7818,7 +7837,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			
 		try 
 		{
-			operatorCollection = new ALDOperatorCollection<ALDOperatorCollectionElement>(ALDOperatorCollectionElement.class);
+			operatorCollection = new MTBOperatorCollection<RootSegmentationOperator>(RootSegmentationOperator.class);			
 			operatorCollection.addALDOperatorCollectionEventListener(new ALDOperatorCollectionEventListener() 
 			{	
 				// Event Listener for operator
@@ -7827,6 +7846,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				{
 					if ( event.getEventType() == ALDOperatorCollectionEventType.RESULTS_AVAILABLE )
 					{
+						runButton.setEnabled(true);
 						JOptionPane.showMessageDialog(null, 
 								"Operator done. Results are available.", 
 								"Results available", JOptionPane.OK_OPTION);
@@ -7867,8 +7887,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					else if ( event.getEventType() == ALDOperatorCollectionEventType.RUN_FAILURE )
 					{
 						JOptionPane.showMessageDialog(null, 
-								"Something went wrong during execution of the operator.", 
-								"Run failure", JOptionPane.ERROR_MESSAGE);
+							"Something went wrong during execution of the operator.", 
+							"Run failure", JOptionPane.ERROR_MESSAGE);
 					}
 					else if ( event.getEventType() == ALDOperatorCollectionEventType.INIT_FAILURE )
 					{
@@ -7893,10 +7913,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		Collections.sort(detectorList);
 		list = new JList<String>(detectorList);
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		// only as high as needed for all found operators
+		list.setVisibleRowCount(detectorList.size());
 		
 		JScrollPane scroll = new JScrollPane(list);
         scroll.setVerticalScrollBarPolicy(
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		
 		return scroll;
 	}
