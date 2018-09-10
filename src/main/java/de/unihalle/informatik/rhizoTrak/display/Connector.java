@@ -133,13 +133,14 @@ public class Connector extends Treeline  implements TreeEventListener{
 
 		@Override
 		public final Node<Float> newInstance(final float lx, final float ly, final Layer layer) {
-			return new ConnectorNode(lx, ly, layer, 0);
+			Node<Float> newNode = new ConnectorNode(lx, ly, layer, 0);
+			return newNode;
 		}
 		@Override
 		public void paintData(final Graphics2D g, final Rectangle srcRect,
 				final Tree<Float> tree, final AffineTransform to_screen, final Color cc,
 				final Layer active_layer) {
-			g.setColor(cc);
+			g.setColor(this.rhizoMain.getProjectConfig().getColorForStatus( (byte) RhizoProjectConfig.STATUS_CONNECTOR));
 			g.draw(to_screen.createTransformedShape(new Ellipse2D.Float(x -r, y -r, r+r, r+r)));
 		}
 
