@@ -72,7 +72,6 @@ Institute of Neuroinformatics, University of Zurich / ETH, Switzerland.
 package de.unihalle.informatik.rhizoTrak.display;
 
 import java.awt.BasicStroke;
-import java.awt.BorderLayout;
 import java.awt.Checkbox;
 import java.awt.Choice;
 import java.awt.Color;
@@ -81,7 +80,6 @@ import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Event;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -179,7 +177,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -192,15 +189,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.intensity.MatchIntensities;
 
 import de.unihalle.informatik.Alida.exceptions.ALDOperatorException;
-import de.unihalle.informatik.Alida.operator.ALDOperatorCollection;
 import de.unihalle.informatik.Alida.operator.ALDOperatorCollectionElement;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEventListener;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent.ALDOperatorCollectionEventType;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootSegmentationOperator;
-import de.unihalle.informatik.MiToBo.apps.ridgeDetection.RidgeDetection;
-import de.unihalle.informatik.MiToBo.apps.ridgeDetection.RidgeDetectionOperator;
 import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage;
+import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImageByte;
+import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage.MTBImageType;
 import de.unihalle.informatik.MiToBo.core.operator.MTBOperatorCollection;
 import de.unihalle.informatik.rhizoTrak.ControlWindow;
 import de.unihalle.informatik.rhizoTrak.Project;
@@ -6875,11 +6871,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		
 		// Set the image if the operator is a RidgeDetection
 		operator = operatorCollection.getOperator(list.getSelectedValue());	
-		if ( operator instanceof RidgeDetectionOperator )
-		{
-			RidgeDetectionOperator rd = (RidgeDetectionOperator) operator;
-			rd.setImage(img);
-		}
+		// Add method of RootSegmentationOperator to set image 
+		
 		LinkedList<String> operatorList = new LinkedList<String>();
 		// only one operator can be selected
 		operatorList.add(list.getSelectedValue());
