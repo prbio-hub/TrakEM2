@@ -487,7 +487,7 @@ public class Treeline extends Tree<Float> {
 			Ellipse2D parentCircle = new Ellipse2D.Float((float) p1.getX()-pRadius, (float) p1.getY()-pRadius,pRadius*2, pRadius*2);
 			Ellipse2D thisCircle = new Ellipse2D.Float((float) p2.getX()-tRadius, (float) p2.getY()-tRadius,tRadius*2, tRadius*2);
 			result[0] = parentCircle;
-			result[0] = thisCircle;
+			result[1] = thisCircle;
 			return result;		
 		}
 		//ende
@@ -593,7 +593,7 @@ public class Treeline extends Tree<Float> {
 					g.draw(circles[0]);
 				} else {
 					g.draw(circles[0]);
-					g.draw(circles[0]);
+					g.draw(circles[1]);
 					
 				}
 			}
