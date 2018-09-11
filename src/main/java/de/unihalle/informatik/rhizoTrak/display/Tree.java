@@ -140,6 +140,7 @@ import org.scijava.vecmath.Point3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
 import de.unihalle.informatik.rhizoTrak.analysis.Centrality;
 import de.unihalle.informatik.rhizoTrak.analysis.Vertex;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
@@ -870,27 +871,33 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 					removeReview(node);
 				}
 
-				// aeekz
+				RadiusNode rn = null;
 				RadiusNode parentRadiusNode = (RadiusNode) nd.parent;
-				final float MINRADIUS = 35;
+				
+				if(nd.getConfidence() != RhizoProjectConfig.STATUS_VIRTUAL && nd.getConfidence() != RhizoProjectConfig.STATUS_VIRTUAL_RSML)
+				{
+					// aeekz
+					final float MINRADIUS = 35;
 
-				float x0 = nd.parent.x;
-				float y0 = nd.parent.y;
-				float x1 = nd.x;
-				float y1 = nd.y;
-				float r = parentRadiusNode.getData() > MINRADIUS ? parentRadiusNode.getData() : MINRADIUS;
+					float x0 = nd.parent.x;
+					float y0 = nd.parent.y;
+					float x1 = nd.x;
+					float y1 = nd.y;
+					float r = parentRadiusNode.getData() > MINRADIUS ? parentRadiusNode.getData() : MINRADIUS;
 
-				double dist = Math.sqrt((x1 - x0)*(x1 - x0) + (y1 - y0)*(y1 - y0));
+					double dist = Math.sqrt((x1 - x0)*(x1 - x0) + (y1 - y0)*(y1 - y0));
 
-				float newX = x0 + ((float) (r / dist) * (x1 - x0));
-				float newY = y0 + ((float) (r / dist) * (y1 - y0));
+					float newX = x0 + ((float) (r / dist) * (x1 - x0));
+					float newY = y0 + ((float) (r / dist) * (y1 - y0));
 
-				RadiusNode rn = new RadiusNode(newX, newY, nd.getLayer(), parentRadiusNode.getData());
+					rn = new RadiusNode(newX, newY, nd.getLayer(), parentRadiusNode.getData());
+				}
+
 
 				// Remove all children nodes of found node 'nd' from the Tree cache arrays:
 				removeNode(nd, subtree_nodes);
 
-				nd.parent = (Node<T>) rn;
+				nd.parent = null == rn ? null : (Node<T>) rn;
 
 				// With the found nd, now a root, create a new Tree
 				final Tree<T> t = newInstance();
@@ -898,7 +905,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				t.root = nd;
 				// ... and fill its cache arrays
 				t.cacheSubtree(subtree_nodes); // includes nd itself
-				t.addNode(null, (Node<T>) rn, parentRadiusNode.getConfidence());
+				if(null != rn) t.addNode(null, (Node<T>) rn, parentRadiusNode.getConfidence());
 				// Recompute bounds -- TODO: must translate the second properly, or apply the transforms and then recalculate bounding boxes and transforms.
 				t.calculateBoundingBox(null);
 				// Done!
