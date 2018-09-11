@@ -1742,7 +1742,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				
 				if (null != found) {
 					
-					if (2 == me.getClickCount()) {
+					if (2 == me.getClickCount() && this.project.getRhizoMain().getProjectConfig().isFullGUI()) {
 						setLastMarked(found);
 						setActive(null);
 
@@ -1765,7 +1765,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 						return;
 					}
 				} else {
-					if (2 == me.getClickCount()) {
+					if (2 == me.getClickCount() && this.project.getRhizoMain().getProjectConfig().isFullGUI()) {
 						setLastMarked(null);
 						return;
 					}

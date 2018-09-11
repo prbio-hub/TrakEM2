@@ -191,12 +191,10 @@ import org.janelia.intensity.MatchIntensities;
 import de.unihalle.informatik.Alida.exceptions.ALDOperatorException;
 import de.unihalle.informatik.Alida.operator.ALDOperatorCollectionElement;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent;
-import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEventListener;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent.ALDOperatorCollectionEventType;
+import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEventListener;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootSegmentationOperator;
 import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage;
-import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImageByte;
-import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage.MTBImageType;
 import de.unihalle.informatik.MiToBo.core.operator.MTBOperatorCollection;
 import de.unihalle.informatik.rhizoTrak.ControlWindow;
 import de.unihalle.informatik.rhizoTrak.Project;
@@ -3075,8 +3073,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 
 				//
 				final JMenu nodeMenu = new JMenu("Nodes");
-				item = new JMenuItem("Mark"); item.addActionListener(this); nodeMenu.add(item);
-				item = new JMenuItem("Clear marks (selected Trees)"); item.addActionListener(this); nodeMenu.add(item);
+				item = new JMenuItem("Mark"); item.addActionListener(this); if(rm.getProjectConfig().isFullGUI()) nodeMenu.add(item);
+				item = new JMenuItem("Clear marks (selected Trees)"); item.addActionListener(this); if(rm.getProjectConfig().isFullGUI()) nodeMenu.add(item);
 				final JMenuItem nodeColor = new JMenuItem("Color..."); nodeMenu.add(nodeColor);
 				nodeColor.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.SHIFT_MASK, true));
 				final JMenuItem nodePairColor = new JMenuItem("Color path between two nodes tagged as..."); nodeMenu.add(nodePairColor);
@@ -7714,14 +7712,14 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	group21.add(readXMLButton);    	
     	
     	JButton writeXMLButton = new JButton("WriteMTB");
-    	writeXMLButton.setToolTipText("Writes the current TrakEM project to MTBXML format.");
+    	writeXMLButton.setToolTipText("Writes the current rhizoTrak project to MTBXML format.");
     	writeXMLButton.setActionCommand("writeXML");
     	writeXMLButton.setEnabled(true);
     	writeXMLButton.addActionListener(this);
     	group21.add(writeXMLButton);
 
     	JButton statButton = new JButton("Statistics");
-    	statButton.setToolTipText("");
+    	statButton.setToolTipText("Open the statistics output panel.");
     	statButton.setActionCommand("stat");
     	statButton.addActionListener(this);
     	statButton.setEnabled(true);
@@ -7766,7 +7764,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	group52.add(configureButton);
     	
     	JButton preferencesButton = new JButton("Preferences");
-    	preferencesButton.setToolTipText("Adjust the color and opacity of treelines of a certain type.");
+    	preferencesButton.setToolTipText("Edit treelines display options and other user settings.");
     	preferencesButton.setActionCommand("preferences");
     	preferencesButton.addActionListener(this);
     	group6.add(preferencesButton);
