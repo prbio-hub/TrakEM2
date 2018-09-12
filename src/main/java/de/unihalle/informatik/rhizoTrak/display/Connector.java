@@ -70,6 +70,7 @@ import java.util.Set;
 import org.scijava.vecmath.Point3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
@@ -784,6 +785,7 @@ public class Connector extends Treeline  implements TreeEventListener{
                 Treeline currentTree = it.next();
                 if(currentTree != null)
                 {
+                	RhizoColVis.removeHighlight(currentTree, false);
                     currentTree.removeTreeEventListener(this);
                     this.getProject().getRhizoMain().getRhizoAddons().getConflictManager().processChange(currentTree, this);
                     it.remove();
