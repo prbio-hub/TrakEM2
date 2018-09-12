@@ -1397,6 +1397,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					break; 
 				case "pencil":
 					ProjectToolbar.setTool(ProjectToolbar.PENCIL);
+					break;
 				case "pen": 
 					ProjectToolbar.setTool(ProjectToolbar.PEN);
 					break; 
@@ -1454,7 +1455,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					pencilButton.setBorder(activeBorder);
 					deactivateOtherTools(pencilButton);
 					break;
-				case ProjectToolbar.PEN: 
+				case ProjectToolbar.PEN:
 					penButton.setEnabled(false);
 					penButton.setBorder(activeBorder);
 					deactivateOtherTools(penButton);
