@@ -120,6 +120,9 @@ public class Connector extends Treeline  implements TreeEventListener{
 	}
 
 	static public class ConnectorNode extends Treeline.RadiusNode {
+		
+		boolean drawRootNode = false;
+		boolean drawRootRadius = false;
 
 		public ConnectorNode(final float lx, final float ly, final Layer la) {
 			super(lx, ly, la);
@@ -142,7 +145,9 @@ public class Connector extends Treeline  implements TreeEventListener{
 				final Tree<Float> tree, final AffineTransform to_screen, final Color cc,
 				final Layer active_layer) {
 			g.setColor(this.rhizoMain.getProjectConfig().getColorForStatus( (byte) RhizoProjectConfig.STATUS_CONNECTOR));
-			g.draw(to_screen.createTransformedShape(new Ellipse2D.Float(x -r, y -r, r+r, r+r)));
+			if(drawRootRadius) {
+				g.draw(to_screen.createTransformedShape(new Ellipse2D.Float(x -r, y -r, r+r, r+r)));
+			}
 		}
 
 		@Override
@@ -170,10 +175,12 @@ public class Connector extends Treeline  implements TreeEventListener{
 			final float y = (float)((po.y - srcRect.y) * magnification);
 
 			if (null == parent) {
-				g.setColor(brightGreen);
-				g.fillOval((int)x - 6, (int)y - 6, 11, 11);
-				g.setColor(Color.black);
-				g.drawString("o", (int)x -4, (int)y + 3); // TODO ensure Font is proper
+				if(drawRootNode) {
+					g.setColor(brightGreen);
+					g.fillOval((int)x - 6, (int)y - 6, 11, 11);
+					g.setColor(Color.black);
+					g.drawString("o", (int)x -4, (int)y + 3); // TODO ensure Font is proper	
+				}
 			} else {
 				g.setColor(Color.white);
 				g.fillOval((int)x - 6, (int)y - 6, 11, 11);
