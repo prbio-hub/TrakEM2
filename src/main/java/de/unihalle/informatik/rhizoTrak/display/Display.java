@@ -1023,7 +1023,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		this.annot_editor.setMinimumSize(new Dimension(200, 50));
 		this.annot_label = new JLabel("(No selected object)");
 		this.annot_panel = makeAnnotationsPanel(this.annot_editor, this.annot_label);
-		this.addTab("Annotations", this.annot_panel, "Shows the annotation of the currently active displayable.");
+		if(rm.getProjectConfig().isFullGUI()) this.addTab("Annotations", this.annot_panel, "Shows the annotation of the currently active displayable.");
 
 		// Tab 9: filter options
 		this.filter_options = createFilterOptionPanel();
