@@ -631,7 +631,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 					for (final Node<Float> nd : targets) {
 						//Utils.log("xdist: "+ Math.abs((float)result.getX()-nd.getX()) +" ydist: "+Math.abs((float)result.getY()-nd.getY()));
 						
-						if( Math.abs((float)result.getX()-nd.getX())<3 && Math.abs((float)result.getY()-nd.getY())<3 && nd.getLayer().equals(treeRootLayer)) {
+						if( Math.abs((float)result.getX()-nd.getX())==0 && Math.abs((float)result.getY()-nd.getY())==0 && nd.getLayer().equals(treeRootLayer)) {
 							found = true;
 							deleteList.remove(nd);
 							//Utils.log("inside the if");
