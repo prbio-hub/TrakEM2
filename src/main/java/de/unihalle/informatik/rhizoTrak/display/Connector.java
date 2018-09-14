@@ -122,7 +122,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 	static public class ConnectorNode extends Treeline.RadiusNode {
 		
 		boolean drawRootNode = false;
-		boolean drawRootRadius = false;
+		boolean drawRootRadius = true; // only for tip nodes
 
 		public ConnectorNode(final float lx, final float ly, final Layer la) {
 			super(lx, ly, la);
@@ -145,7 +145,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 				final Tree<Float> tree, final AffineTransform to_screen, final Color cc,
 				final Layer active_layer) {
 			g.setColor(this.rhizoMain.getProjectConfig().getColorForStatus( (byte) RhizoProjectConfig.STATUS_CONNECTOR));
-			if(drawRootRadius) {
+			if(drawRootRadius && null != parent) {
 				g.draw(to_screen.createTransformedShape(new Ellipse2D.Float(x -r, y -r, r+r, r+r)));
 			}
 		}
