@@ -90,6 +90,8 @@ public class Connector extends Treeline  implements TreeEventListener{
 	
 	//actyc: variable to store connected Treelines explicitly 
 	protected HashSet<Treeline>  conTreelines = new HashSet<Treeline>();
+	
+	private final int MIN_RADIUS = 10;
 
 	public Connector(final Project project, final String title) {
 		super(project, title);
@@ -451,7 +453,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 		if (ProjectToolbar.PEN == ProjectToolbar.getToolId()) {
 
 			if (-1 == last_radius) {
-				last_radius = 10 / (float)mag;
+				last_radius = MIN_RADIUS / (float)mag;
 			}
 
 			if (null != root) {
@@ -596,6 +598,11 @@ public class Connector extends Treeline  implements TreeEventListener{
 	 * @return
 	 */
 	public boolean sanityCheck( boolean headless){
+		
+		float mag = null != Display.getFront() ? (float) Display.getFront().getCanvas().getMagnification() : 1f;
+		 	
+		if (-1 == last_radius) last_radius = MIN_RADIUS / mag;
+		
 		if(!conTreelines.isEmpty()){
 			if(root!=null && root.hasChildren()){
 				ArrayList<Node<Float>> targets = new ArrayList<Node<Float>>();
