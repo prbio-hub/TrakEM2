@@ -47,14 +47,19 @@
 
 package de.unihalle.informatik.rhizoTrak.addon;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoStatistics.Segment;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
+import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
@@ -170,6 +175,75 @@ public class RhizoUtils {
 			return null;
 		}
 	}
+
+	/** Collect all <code>treelines</code>s below a <code>rootstack</code> in the current layer or all layers
+	 * @param project
+	 * @param currentLayer if null all layers are considered 
+	 * 
+	 * @return list of collected  <code>treelines</code>s or <code>null</code> if no rootstack found
+	 */
+	public static List<Treeline> getTreelinesBelowRootstacks( Project project, Layer currentLayer) {
+		// find all rootstacks
+		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
+		if ( rootstackThings == null) {
+			return null;
+		}
+
+		// all treelines below a rootstack
+		LinkedList<Treeline> allTreelines = new LinkedList<Treeline>();
+
+		for ( ProjectThing rootstackThing :rootstackThings ) {
+			//			if ( debug)	System.out.println("rootstack " + rootstackThing.getId());
+			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
+				// we also find connectors!
+				Treeline tl = (Treeline)pt.getObject();
+				//				if ( debug)	System.out.println( "    treeline " + tl.getId());
+
+				if ( tl.getClass().equals( Treeline.class)) {
+					if ( tl.getFirstLayer() != null && 
+							( currentLayer == null || currentLayer.equals( tl.getFirstLayer())) ) {
+						//						if ( debug)	System.out.println( "           as treeline");
+						allTreelines.add(tl);
+					}
+				}
+			}
+		}
+		return allTreelines;
+	}
+
+	/** Collect all <code>connector</code>s below a <code>rootstack</code> in the current layer or all layers
+	 * @param project
+	 * @param currentLayer if null all layers are considered 
+	 * 
+	 * @return list of collected  <code>connector</code>s or <code>null</code> if no rootstack found
+	 */
+	public static List<Connector> getConnectorsBelowRootstacks( Project project, Layer currentLayer) {
+		// find all rootstacks
+		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
+		if ( rootstackThings == null) {
+			return null;
+		}
+
+		// all treelines below a rootstack
+		LinkedList<Connector> allConnectors = new LinkedList<Connector>();
+
+		for ( ProjectThing rootstackThing :rootstackThings ) {
+			//			if ( debug)	System.out.println("rootstack " + rootstackThing.getId());
+			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Connector.class)) {
+				Connector conn = (Connector)pt.getObject();
+				//				if ( debug)	System.out.println( "    treeline " + tl.getId());
+
+				if ( conn.getFirstLayer() != null && 
+						( currentLayer == null || currentLayer.equals( conn.getFirstLayer())) ) {
+					//						if ( debug)	System.out.println( "           as treeline");
+					allConnectors.add(conn);
+				}
+
+			}
+		}
+		return allConnectors;
+	}
+
 
 	/** Code a string to conform to html convention
 		 * @param rel_path

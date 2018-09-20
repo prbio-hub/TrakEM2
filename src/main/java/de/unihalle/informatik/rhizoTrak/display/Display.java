@@ -6756,6 +6756,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("writeXML")){
 			Display.getFront().getProject().getRhizoMain().getRhizoMTBXML().writeMTBXML();
 		}
+		else if(command.equals("readRSML")){
+			Display.getFront().getProject().getRhizoMain().getRhizoRSML().readRSML();
+		}
+		else if(command.equals("writeRSML")){
+			Display.getFront().getProject().getRhizoMain().getRhizoRSML().writeRSML();
+		}
 		else if(command.equals("conflictPanel")){
                         RhizoMain rhizoMain = Display.getFront().getProject().getRhizoMain();
                         ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
@@ -7719,7 +7725,21 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	writeXMLButton.addActionListener(this);
     	group21.add(writeXMLButton);
 
-    	JButton statButton = new JButton("Statistics");
+    	JButton readRSMLButton = new JButton("ReadRSML");
+    	readRSMLButton.setToolTipText("Reads RSML file(s) into the rizoTrak project.");
+    	readRSMLButton.setActionCommand("readRSML");
+    	readRSMLButton.addActionListener(this);
+    	readRSMLButton.setEnabled(true);
+    	group21.add(readRSMLButton);    	
+    	
+    	JButton writeRSMLButton = new JButton("WriteRSML");
+    	writeRSMLButton.setToolTipText("Writes the current rhizoTrak project to RSML format.");
+    	writeRSMLButton.setActionCommand("writeRSML");
+    	writeRSMLButton.setEnabled(true);
+    	writeRSMLButton.addActionListener(this);
+    	group21.add(writeRSMLButton);
+
+   	JButton statButton = new JButton("Statistics");
     	statButton.setToolTipText("Open the statistics output panel.");
     	statButton.setActionCommand("stat");
     	statButton.addActionListener(this);

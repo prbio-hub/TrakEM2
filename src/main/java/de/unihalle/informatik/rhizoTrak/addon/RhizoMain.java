@@ -63,6 +63,7 @@ public class RhizoMain
 	private RhizoImages rI;
 	private RhizoStatistics rS;
 	private RhizoMTBXML rMTBXML;
+	private RhizoRSML rRSML;
 	private RhizoLineMapToTreeline rLineMapToTreeline;
 	
 	private Project p;
@@ -88,6 +89,7 @@ public class RhizoMain
 		rI = new RhizoImages(this);
 		rS = new RhizoStatistics(this);
 		rMTBXML = new RhizoMTBXML(this);
+		rRSML = new RhizoRSML( this);
 		rLineMapToTreeline = new RhizoLineMapToTreeline(this);
 	}
 	
@@ -121,6 +123,13 @@ public class RhizoMain
 		return rMTBXML;
 	}
 	
+	/**
+	 * @return the rRSML
+	 */
+	public RhizoRSML getRhizoRSML() {
+		return rRSML;
+	}
+
 	public RhizoLineMapToTreeline getRhizoLineMapToTreeline()
 	{
 		return rLineMapToTreeline;
