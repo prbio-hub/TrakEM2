@@ -1,0 +1,8 @@
+very old version:
+	config.xsd 			(.cfg: status label mapping)
+old version:
+	RhizoTrakProjectConfig.xsd	(.cfg: status label mapping)
+
+current version
+	RhizoTrakProject.xsd		(.rtk: combined status label mapping and connectors)
+	settings.xsd			(user settings)
