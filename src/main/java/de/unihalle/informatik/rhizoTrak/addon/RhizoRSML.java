@@ -48,10 +48,14 @@
 package de.unihalle.informatik.rhizoTrak.addon;
 
 import java.awt.GridLayout;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.GregorianCalendar;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -73,11 +77,26 @@ import javax.xml.datatype.Duration;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
 
+import org.w3c.dom.Element;
+
+import com.jogamp.newt.event.MouseEvent.PointerType;
+
+import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Display;
+import de.unihalle.informatik.rhizoTrak.display.Layer;
+import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
+import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.IntegerStringPairType;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.PointType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.PropertyListType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Functions;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Functions.Function;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Functions.Function.Sample;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Geometry;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Geometry.Polyline;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata.PropertyDefinitions;
@@ -107,149 +126,267 @@ public class RhizoRSML
 		this.rhizoMain = rhizoMain;
 	}
 
-	
-    /**
-     *  Writes the current project to a RSML file.
-     *  @author Posch
+
+	/**
+	 *  Writes the current project to a RSML file.
+	 *  @author Posch
+	 */
+	public void writeRSML() {
+
+		// query output options
+		String[] choicesLayers = {ALL_STRING, ONLY_STRING};
+		JComboBox<String> comboLayers = new JComboBox<String>(choicesLayers);
+
+		JPanel statChoicesPanel = new JPanel();
+		statChoicesPanel.setLayout(new GridLayout( 4, 2, 0, 10));
+		statChoicesPanel.add(new JLabel("Layers"));
+		statChoicesPanel.add( comboLayers);
+
+		//    	TODO: comment just as long as we only write current layer
+		//    	int result = JOptionPane.showConfirmDialog(null, statChoicesPanel, "Output Options", 
+		//    			JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+		//
+		//    	if(result != JOptionPane.OK_OPTION) {
+		//    		return;
+		//    	}
+		//
+		//    	boolean writeAllLAyers  = ((String) comboLayers.getSelectedItem()).equals( ALL_STRING);
+		boolean writeAllLAyers  = false;
+
+
+		if ( writeAllLAyers ) {
+
+		} else {
+			// Select and open output file
+			String basefilename = rhizoMain.getXmlName().replaceFirst(".xml\\z", "");
+
+			String folder;
+			if  ( rhizoMain.getStorageFolder() == null )
+				folder = System.getProperty("user.home");
+			else 
+				folder = rhizoMain.getStorageFolder();
+
+			JFileChooser fileChooser = new JFileChooser();
+			FileNameExtensionFilter filter = new FileNameExtensionFilter( "RSML file", "rsml"); 
+			fileChooser.setFileFilter(filter);
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			fileChooser.setDialogTitle("File to write RSML to");
+			fileChooser.setSelectedFile(new File( folder + basefilename + ".rsml"));
+			int returnVal = fileChooser.showOpenDialog(null);
+
+			if (returnVal != JFileChooser.APPROVE_OPTION)
+				return; // user cancelled dialog
+
+			File saveFile = fileChooser.getSelectedFile();
+
+			Rsml rsml = createRSML( Display.getFront().getLayer());
+			if ( rsml == null ) return;
+			
+			JAXBContext context;
+			try {
+				context = JAXBContext.newInstance(Rsml.class);
+				Marshaller m = context.createMarshaller();
+				m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+				m.marshal( rsml, saveFile);
+
+			} catch (JAXBException e) {
+				Utils.showMessage( "cannot write RSML to  " + saveFile.getPath());
+				e.printStackTrace();
+			}
+
+			Utils.log("Saved to RSML file  - " + saveFile.getAbsolutePath());
+		}
+	}	
+    
+    /** Create a rsml xml data structure for the current layer from scratch, i.e. no previous rsml file loaded
+     * 
+     * @param layer 
+     *
+     * @return the rsml data strucutre or null, if no rootstacks are found
      */
-    public void writeRSML() {
+    private Rsml createRSML(Layer layer) {
+    	Project project = Display.getFront().getProject();
     	
-    	// query output options
-    	String[] choicesLayers = {ALL_STRING, ONLY_STRING};
-    	JComboBox<String> comboLayers = new JComboBox<String>(choicesLayers);
-
-    	JPanel statChoicesPanel = new JPanel();
-    	statChoicesPanel.setLayout(new GridLayout( 4, 2, 0, 10));
-    	statChoicesPanel.add(new JLabel("Layers"));
-    	statChoicesPanel.add( comboLayers);
-
-//    	int result = JOptionPane.showConfirmDialog(null, statChoicesPanel, "Output Options", 
-//    			JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-//
-//    	if(result != JOptionPane.OK_OPTION) {
-//    		return;
-//    	}
-//
-//    	boolean writeAllLAyers  = ((String) comboLayers.getSelectedItem()).equals( ALL_STRING);
-    	boolean writeAllLAyers  = false;
-
 		// compile all segments to write 
 		List<Treeline> allTreelines;
-		if ( writeAllLAyers ) {
-			allTreelines = RhizoUtils.getTreelinesBelowRootstacks( Display.getFront().getProject(), null);
-		} else {
-			allTreelines = RhizoUtils.getTreelinesBelowRootstacks( Display.getFront().getProject(), Display.getFront().getLayer());
-		}
-		
+		allTreelines = RhizoUtils.getTreelinesBelowRootstacks( project, layer);
+
 		if ( allTreelines == null) {
 			Utils.showMessage( "rhizoTrak", "WARNING: no rootstacks found");
-			return;
+			return null;
 		}
-			
-    	// Select and open output file
-    	String basefilename = rhizoMain.getXmlName().replaceFirst(".xml\\z", "");
-
-    	String folder;
-    	if  ( rhizoMain.getStorageFolder() == null )
-    		folder = System.getProperty("user.home");
-    	else 
-    		folder = rhizoMain.getStorageFolder();
-
-    	JFileChooser fileChooser = new JFileChooser();
-    	FileNameExtensionFilter filter = new FileNameExtensionFilter( "RSML file", "rsml"); 
-    	fileChooser.setFileFilter(filter);
-    	fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-    	fileChooser.setDialogTitle("File to write RSML to");
-    	fileChooser.setSelectedFile(new File( folder + basefilename + ".rsml"));
-    	int returnVal = fileChooser.showOpenDialog(null);
-
-    	if (returnVal != JFileChooser.APPROVE_OPTION)
-    		return; // user cancelled dialog
-
-    	File saveFile = fileChooser.getSelectedFile();
 
     	// create rsml
-    	// TODO currently only the current layer
     	Rsml rsml = new Rsml();
     	
-    	// --- meta data
-    	Rsml.Metadata metadata = new Metadata();
-    	metadata.setVersion(  RSML_VERSION);
-    	// TODO: set unit from calibration information, if available
-    	metadata.setUnit(  "pixel");
-    	metadata.setResolution( new BigDecimal(1));
-    	
-    	final GregorianCalendar now = new GregorianCalendar();
     	try {
-			metadata.setLastModified(  DatatypeFactory.newInstance().newXMLGregorianCalendar(now));
-		} catch (DatatypeConfigurationException e1) {
-			Utils.showMessage( "write RSML: can not generate time for rsml");
-		}
-    	
-    	metadata.setSoftware( SOFTWARE_NAME);
-    	metadata.setUser( System.getProperty("user.name"));
-    	
-    	// TODO metadata.setFileKey);
-    	// TOOD image
-    	// TODO time series
-    	
-    	// property definitions
-    	PropertyDefinitions pDefs = new PropertyDefinitions();
-    	
-    	PropertyDefinition pDef = new PropertyDefinition();
-    	pDef.setLabel( "StatusLabelMapping");
-    	pDef.setType( "String-Integer-Pair");
-		pDefs.getPropertyDefinition().add( pDef); 
-		
-		pDef = new PropertyDefinition();
-    	pDef.setLabel( "VirtualBraching");
-    	pDef.setType( "boolean");
-		pDefs.getPropertyDefinition().add( pDef); 
-	
-		metadata.setPropertyDefinitions( pDefs);
-    	
-    	rsml.setMetadata( metadata);
-    	
-    	// --- the scene
-    	Rsml.Scene scene = new Scene();
-    	
-    	PropertyListType pList = new PropertyListType();
-    	// TODO properties: status label mappings; something to indicate branching without VIRUTAL segments
-    	scene.setProperties( pList);
- 
-    	for ( Treeline tl :allTreelines ) {
-    		scene.getPlant().add(createPlantForTreeline( tl));
+    		// --- meta data
+    		Rsml.Metadata metadata = new Metadata();
+    		metadata.setVersion(  RSML_VERSION);
+    		// TODO: set unit from calibration information, if available
+    		metadata.setUnit(  "pixel");
+    		metadata.setResolution( new BigDecimal(1));
+
+    		final GregorianCalendar now = new GregorianCalendar();
+    		try {
+    			metadata.setLastModified(  DatatypeFactory.newInstance().newXMLGregorianCalendar(now));
+    		} catch (DatatypeConfigurationException e1) {
+    			Utils.showMessage( "write RSML: can not generate time for rsml");
+    		}
+
+    		metadata.setSoftware( SOFTWARE_NAME);
+    		metadata.setUser( System.getProperty("user.name"));
+
+    		// TODO metadata.setFileKey);
+    		// TOOD image
+    		// TODO time series
+
+    		// property definitions
+    		PropertyDefinitions pDefs = new PropertyDefinitions();
+
+    		PropertyDefinition pDef = new PropertyDefinition();
+    		pDef.setLabel( "StatusLabelMapping");
+    		pDef.setType( "Integer-String-Pair");
+    		pDefs.getPropertyDefinition().add( pDef); 
+    		
+    		PropertyDefinition pnDef = new PropertyDefinition();
+    		pnDef.setLabel( "parent-node");
+    		pnDef.setType( "integer");
+    		pDefs.getPropertyDefinition().add( pnDef); 
+    		
+    		metadata.setPropertyDefinitions( pDefs);
+
+    		rsml.setMetadata( metadata);
+
+    		// --- the scene
+    		Rsml.Scene scene = new Scene();
+
+    		PropertyListType pList = new PropertyListType();
+    		// TODO properties: status label mappings; something to indicate branching without VIRUTAL segments
+    		for ( int i = 0 ; i < this.rhizoMain.getProjectConfig().sizeStatusLabelMapping() ; i++) {
+    			IntegerStringPairType sp = new IntegerStringPairType();
+    			sp.setInt( i);
+    			sp.setValue( this.rhizoMain.getProjectConfig().getStatusLabel( i).getName());
+    			System.out.println( "add " + i + " " + this.rhizoMain.getProjectConfig().getStatusLabel( i).getName());
+    			//pList.getAny().add( (Element)sp);
+    		}
+    		scene.setProperties( pList);
+
+    		for ( Treeline tl :allTreelines ) {
+    			scene.getPlant().add(createPlantForTreeline( tl));
+    		}
+
+    		rsml.setScene( scene);
+
+    	} catch (Exception e) {
+    		e.printStackTrace();
     	}
-    	
-    	rsml.setScene( scene);
-    	
-		JAXBContext context;
-		try {
-			context = JAXBContext.newInstance(Rsml.class);
-			Marshaller m = context.createMarshaller();
-			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-			m.marshal( rsml, saveFile);
+    	return rsml;
+    }
 
-		} catch (JAXBException e) {
-			Utils.showMessage( "cannot write RSML to  " + saveFile.getPath());
-			e.printStackTrace();
-		}
-
-    	Utils.log("Saved to RSML file  - " + saveFile.getAbsolutePath());
-	}	
-
-	/** create one rsml plant for one treeline
+	/** create one rsml plant with one root for one treeline
 	 * 
 	 * @param tl
 	 * @return
 	 */
 	private Plant createPlantForTreeline(Treeline tl) {
 		Plant plant = new Plant();
-		RootType root = new RootType();
-	
+		
+		Node<Float> rootNode = tl.getRoot();
+		RootType root = createRSMLRootFromNode( tl, rootNode, null);
+
 		plant.getRoot().add( root);
 		return plant;
 	}
+
+	/** Create a rsml root for a part of a treeline. 
+	 * if <code>parentNode</code> is null, <code>node</code> is the root node of the treeline.
+	 * Otherwise  the subtree starting with the segment defined by <code>parentNode</code> 
+	 * and <code>node</code> is used
+	 * 
+	 * @param node
+	 * @param parentNode
+	 * @return
+	 */
+	private RootType createRSMLRootFromNode( Treeline tl, Node<Float> node, Node<Float> parentNode) {
+		RootType root = new RootType();
+		
+		Polyline polyline = new Polyline();
+		
+		Function diameters = new Function();
+		diameters.setName( "diameter");
+		diameters.setDomain( "polyline");
+		
+		Function statusLabels = new Function();
+		statusLabels.setName( "statusLabel");
+		statusLabels.setDomain( "polyline");			
+	
+		if ( parentNode != null ) {
+			addNode( parentNode, tl, polyline, diameters, statusLabels);
+		}
+		
+		addNode( node, tl, polyline, diameters, statusLabels);
+
+		ArrayList<Node<Float>> children = node.getChildrenNodes();
+		while ( children.size() > 0 ) {
+			Iterator<Node<Float>> itr = children.iterator();
+			// continue the polyline with the first child
+			Node<Float> child = itr.next();
+			addNode( child, tl, polyline, diameters, statusLabels);
+
+			while ( itr.hasNext()) {
+				child = itr.next();
+				// create branching root
+				root.getRoot().add( createRSMLRootFromNode( tl, child, node));
+			}
+			
+			node = children.get(0);
+			children = node.getChildrenNodes();
+		}
+		
+		Functions functions = new Functions();
+		functions.getFunction().add(  diameters);
+		functions.getFunction().add( statusLabels);
+		root.setFunctions( functions);
+	
+		Geometry geometry = new Geometry();
+		geometry.setPolyline( polyline);
+		root.setGeometry( geometry);
+		
+		return root;
+	}		
+	
+	private void addNode(Node<Float> node, Treeline tl, Polyline polyline, Function diameters,
+			Function statusLabels) {
+		
+		AffineTransform at = tl.getAffineTransform();
+		Point2D p = at.transform(new Point2D.Float( node.getX(), node.getY()), null);
+		PointType pt = new PointType();
+		pt.setX( new BigDecimal( p.getX()));
+		pt.setY( new BigDecimal( p.getY()));
+		setRsmlPoint( tl, node, pt);
+		polyline.getPoint().add( pt);
+		
+		Sample diameter = new Sample();
+		diameter.setValue( new BigDecimal( 2*((RadiusNode)node).getData()));
+		diameters.getSample().add( diameter);
+
+		Sample sl = new Sample();
+		sl.setValue( new BigDecimal( node.getConfidence()));
+		statusLabels.getSample().add(sl);
+	}
+
+
+	/** sets the coordinates in the rsml point <code>pt</code> fromt the node
+	 * reflecting the transformation of the treeline <code>tl</code>
+	 * 
+	 * @param tl
+	 * @param node
+	 * @param pt
+	 */
+	private void setRsmlPoint(Treeline tl, Node<Float> node, PointType pt) {
+	}
+	
 
 	/**
 	 * Reads one or more RSML file into the rhizoTrak project.
