@@ -75,10 +75,6 @@ import javax.xml.transform.dom.DOMResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import org.w3c.dom.Element;
-
-import com.jogamp.newt.event.MouseEvent.PointerType;
-
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
@@ -97,8 +93,10 @@ import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Geometry;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Geometry.Polyline;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata.Image;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata.PropertyDefinitions;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata.PropertyDefinitions.PropertyDefinition;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata.TimeSequence;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Scene;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Scene.Plant;
 
@@ -124,6 +122,7 @@ public class RhizoRSML
 		this.rhizoMain = rhizoMain;
 	}
 
+	private String projectName;
 
 	/**
 	 *  Writes the current project to a RSML file.
@@ -131,6 +130,8 @@ public class RhizoRSML
 	 */
 	public void writeRSML() {
 
+		projectName = rhizoMain.getXmlName().replaceFirst(".xml\\z", "");
+		
 		// query output options
 		String[] choicesLayers = {ALL_STRING, ONLY_STRING};
 		JComboBox<String> comboLayers = new JComboBox<String>(choicesLayers);
@@ -156,7 +157,7 @@ public class RhizoRSML
 
 		} else {
 			// Select and open output file
-			String basefilename = rhizoMain.getXmlName().replaceFirst(".xml\\z", "");
+			
 
 			String folder;
 			if  ( rhizoMain.getStorageFolder() == null )
@@ -169,7 +170,7 @@ public class RhizoRSML
 			fileChooser.setFileFilter(filter);
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			fileChooser.setDialogTitle("File to write RSML to");
-			fileChooser.setSelectedFile(new File( folder + basefilename + ".rsml"));
+			fileChooser.setSelectedFile(new File( folder + projectName + ".rsml"));
 			int returnVal = fileChooser.showOpenDialog(null);
 
 			if (returnVal != JFileChooser.APPROVE_OPTION)
@@ -236,8 +237,15 @@ public class RhizoRSML
     		metadata.setUser( System.getProperty("user.name"));
 
     		// TODO metadata.setFileKey);
+    		// TODO create util-method to get timepoint from layer (and use in other place)
+    		metadata.setFileKey( projectName + "_" + BigInteger.valueOf( (long)layer.getZ() + 1));
     		// TOOD image
+    		metadata.setImage( new Image());
     		// TODO time series
+    		TimeSequence timeSequence = new TimeSequence();
+    		timeSequence.setLabel( projectName);
+    		timeSequence.setIndex(  BigInteger.valueOf( (long)layer.getZ() + 1));
+    		metadata.setTimeSequence( timeSequence);
 
     		// property definitions
     		PropertyDefinitions pDefs = new PropertyDefinitions();
@@ -271,7 +279,7 @@ public class RhizoRSML
  		
 			scene.setProperties( pList);
 
-    		for ( Treeline tl :allTreelines ) {
+    		for ( Treeline tl : allTreelines ) {
     			scene.getPlant().add(createPlantForTreeline( tl));
     		}
 
@@ -329,6 +337,9 @@ public class RhizoRSML
 	 */
 	private RootType createRSMLRootFromNode( Treeline tl, Node<Float> node, Node<Float> parentNode) {
 		RootType root = new RootType();
+		// TODO
+		root.setId( "");
+		root.setLabel( "");
 		
 		Polyline polyline = new Polyline();
 		
