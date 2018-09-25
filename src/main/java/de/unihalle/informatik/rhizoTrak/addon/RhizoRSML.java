@@ -356,6 +356,11 @@ public class RhizoRSML
 		if ( parentNode != null ) {
 			//TODO we have to cope with VIRTUAL and VIRTUAL_RSML status labels
 			addNode( parentNode, RhizoProjectConfig.STATUS_UNDEFINED, tl, polyline, diameters, statusLabels);
+		} else {
+			// we start a new top level root
+			// RSML R reader requires a, even if empty, property list
+			PropertyListType props = new PropertyListType();
+			root.setProperties( props);
 		}
 		
 		addNode( node, node.getConfidence(), tl, polyline, diameters, statusLabels);
