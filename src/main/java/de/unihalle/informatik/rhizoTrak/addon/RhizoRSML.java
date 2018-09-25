@@ -236,15 +236,15 @@ public class RhizoRSML
     		metadata.setSoftware( SOFTWARE_NAME);
     		metadata.setUser( System.getProperty("user.name"));
 
-    		// TODO metadata.setFileKey);
-    		// TODO create util-method to get timepoint from layer (and use in other place)
     		metadata.setFileKey( projectName + "_" + BigInteger.valueOf( (long)layer.getZ() + 1));
+    		
     		// TOOD image
     		metadata.setImage( new Image());
-    		// TODO time series
+    		
     		TimeSequence timeSequence = new TimeSequence();
     		timeSequence.setLabel( projectName);
     		timeSequence.setIndex(  BigInteger.valueOf( (long)layer.getZ() + 1));
+    		timeSequence.setUnified( true);
     		metadata.setTimeSequence( timeSequence);
 
     		// property definitions
@@ -343,6 +343,8 @@ public class RhizoRSML
 		
 		Polyline polyline = new Polyline();
 		
+		//TODO set property parent node (which will require an additional argument to the method
+		
 		Function diameters = new Function();
 		diameters.setName( "diameter");
 		diameters.setDomain( "polyline");
@@ -352,11 +354,14 @@ public class RhizoRSML
 		statusLabels.setDomain( "polyline");			
 	
 		if ( parentNode != null ) {
+			//TODO we have to cope with VIRTUAL and VIRTUAL_RSML status labels
 			addNode( parentNode, RhizoProjectConfig.STATUS_UNDEFINED, tl, polyline, diameters, statusLabels);
 		}
 		
 		addNode( node, node.getConfidence(), tl, polyline, diameters, statusLabels);
 
+		// TODO we have to choose the node we use to continue this polyline from those
+		// child nodes with a status label not equal to VIRTUAL and VIRTUAL_RSML
 		ArrayList<Node<Float>> children = node.getChildrenNodes();
 		while ( children.size() > 0 ) {
 			Iterator<Node<Float>> itr = children.iterator();
