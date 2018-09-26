@@ -55,7 +55,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -76,6 +78,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.Node;
@@ -83,6 +86,7 @@ import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.IntegerStringPairType;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.ParentNodeIndex;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.PointType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.PropertyListType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType;
@@ -141,7 +145,7 @@ public class RhizoRSML
 		statChoicesPanel.add(new JLabel("Layers"));
 		statChoicesPanel.add( comboLayers);
 
-		//    	TODO: comment just as long as we only write current layer
+		//    	TODO: commented just as long as we only write the current layer
 		//    	int result = JOptionPane.showConfirmDialog(null, statChoicesPanel, "Output Options", 
 		//    			JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 		//
@@ -152,18 +156,15 @@ public class RhizoRSML
 		//    	boolean writeAllLAyers  = ((String) comboLayers.getSelectedItem()).equals( ALL_STRING);
 		boolean writeAllLAyers  = false;
 
-
 		if ( writeAllLAyers ) {
 
 		} else {
 			// Select and open output file
-			
-
 			String folder;
-			if  ( rhizoMain.getStorageFolder() == null )
+			if  ( this.rhizoMain.getStorageFolder() == null )
 				folder = System.getProperty("user.home");
 			else 
-				folder = rhizoMain.getStorageFolder();
+				folder = this.rhizoMain.getStorageFolder();
 
 			JFileChooser fileChooser = new JFileChooser();
 			FileNameExtensionFilter filter = new FileNameExtensionFilter( "RSML file", "rsml"); 
@@ -176,10 +177,14 @@ public class RhizoRSML
 			if (returnVal != JFileChooser.APPROVE_OPTION)
 				return; // user cancelled dialog
 
+			// TODO: ask if file should be overridden, if is exists??
 			File saveFile = fileChooser.getSelectedFile();
 
 			Rsml rsml = createRSML( Display.getFront().getLayer());
-			if ( rsml == null ) return;
+			if ( rsml == null ) {
+				Utils.showMessage( "cannot write RSML");
+				return;
+			}
 			
 			JAXBContext context;
 			try {
@@ -201,20 +206,37 @@ public class RhizoRSML
      * 
      * @param layer 
      *
-     * @return the rsml data strucutre or null, if no rootstacks are found
+     * @return the rsml data structure or null, if no rootstacks are found
      */
     private Rsml createRSML(Layer layer) {
     	Project project = Display.getFront().getProject();
     	
-		// compile all segments to write 
-		List<Treeline> allTreelines;
-		allTreelines = RhizoUtils.getTreelinesBelowRootstacks( project, layer);
+		// compile all treelines to write 
+		List<Treeline> allTreelinesInLayer;
+		allTreelinesInLayer = RhizoUtils.getTreelinesBelowRootstacks( project, layer);
 
-		if ( allTreelines == null) {
-			Utils.showMessage( "rhizoTrak", "WARNING: no rootstacks found");
+		if ( allTreelinesInLayer == null) {
+			Utils.showMessage( "rhizoTrak", "WARNING: no rootstacks found, nothing to write");
 			return null;
 		}
 
+		// create hash map form treeline to connector
+		// if a treeline is contained in more than one connector an arbitray one is used
+		HashMap<Treeline,Connector> treelineConnectorMap = new HashMap<Treeline,Connector>();
+		
+		List<Connector> allConnectors = RhizoUtils.getConnectorsBelowRootstacks(project);
+		if ( allConnectors == null)
+			allConnectors = new LinkedList<Connector> ();
+		
+		for ( Treeline tl : allTreelinesInLayer) {
+			for ( Connector conn : allConnectors) {
+				if ( conn.getConTreelines().contains( tl) ) {
+					System.out.println( "add " + tl.getId() + " -> " + conn.getId());
+					treelineConnectorMap.put( tl,  conn);
+				}
+			}
+		}
+		
     	// create rsml
     	Rsml rsml = new Rsml();
     	
@@ -279,92 +301,108 @@ public class RhizoRSML
  		
 			scene.setProperties( pList);
 
-    		for ( Treeline tl : allTreelines ) {
-    			scene.getPlant().add(createPlantForTreeline( tl));
+			// now create the roots
+    		for ( Treeline tl : allTreelinesInLayer ) {
+    			scene.getPlant().add(createPlantForTreeline( tl, treelineConnectorMap.get( tl)));
     		}
 
     		rsml.setScene( scene);
 
     	} catch (Exception e) {
+			Utils.showMessage( "rhizoTrak", "Internal error when creating the rsml representation for layer " + 
+					String.valueOf( (long)layer.getZ() + 1));
+    		//TODO should we keep the stack trace on production??
     		e.printStackTrace();
     	}
     	return rsml;
     }
-    
-    private Element createElementForStatusLabelMapping ( int idx, String name) {
-    	IntegerStringPairType sp = new IntegerStringPairType();
-    	sp.setInt( idx);
-    	sp.setValue( name);
-    	System.out.println( "add " + idx + " " + name);
-
-    	Document document = null;
-		try {
-			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		} catch (ParserConfigurationException e) {
-			Utils.showMessage( "write RSML: internal error, cannot marshal status label mapping " + idx + " " + name);
-			e.printStackTrace();
-		}
-    	JAXB.marshal(sp, new DOMResult(document));
-    	Element element = document.getDocumentElement();
-
-    	return element;
-    }
    
-
 	/** create one rsml plant with one root for one treeline
 	 * 
 	 * @param tl
+	 * @param connector the tl is member of, null if treeline is not member of any treeline
 	 * @return
 	 */
-	private Plant createPlantForTreeline(Treeline tl) {
+	private Plant createPlantForTreeline(Treeline tl, Connector connector) {
 		Plant plant = new Plant();
 		
 		Node<Float> rootNode = tl.getRoot();
-		RootType root = createRSMLRootFromNode( tl, rootNode, null);
+		RootType root = createRSMLRootFromNode( tl, connector, rootNode, null, -1, -1);
 
 		plant.getRoot().add( root);
 		return plant;
 	}
 
-	/** Create a rsml root for a part of a treeline. 
-	 * if <code>parentNode</code> is null, <code>node</code> is the root node of the treeline.
-	 * Otherwise  the subtree starting with the segment defined by <code>parentNode</code> 
-	 * and <code>node</code> is used
+	/** Create a rsml representation for the subtree of a treeline <code>tl</code> .
+	 * If the subtree contains branches this representation comprises mulitple rsml roots, i.e. polylines.
+	 * <br>
+	 * If the parent node of  <code>node</code> is null, a representation for the  complete treeline <code>tl</code> is created.
+	 * Otherwise  the subtree starting with the segment defined by the parent node 
+	 * and <code>node</code> is considered as the subtree. I.e. the parent node may included if this
+	 * segment has not the status VIRTUAL.
 	 * 
+	 * @param tl
+	 * @param connector connector the tl is member of, null if treeline is not member of any treeline
 	 * @param node
-	 * @param parentNode
+	 * @param parentRSMLRoot the parent root of the rsml root to be created, null if the top level root 
+	 * @param siblingIndex gives the position of the rsml root to be created amongst its sibling polyline, starting with 1,
+	 *                    ignored for the top level rsml root for a treeline
+	 * @param parentNodeIndex index of the parent node in the rsml root above this subtree to be created, 
+	 *                    ignored for the top level rsml root for a treeline
 	 * @return
 	 */
-	private RootType createRSMLRootFromNode( Treeline tl, Node<Float> node, Node<Float> parentNode) {
+	private RootType createRSMLRootFromNode( Treeline tl, Connector connector, Node<Float> node, RootType parentRSMLRoot, 
+			int siblingIndex, int parentNodeIndex) {
+		Node<Float> parentNode = node.getParent();
+		
 		RootType root = new RootType();
-		// TODO
-		root.setId( "");
-		root.setLabel( "");
 		
 		Polyline polyline = new Polyline();
-		
-		//TODO set property parent node (which will require an additional argument to the method
-		
+				
 		Function diameters = new Function();
 		diameters.setName( "diameter");
 		diameters.setDomain( "polyline");
 		
 		Function statusLabels = new Function();
 		statusLabels.setName( "statusLabel");
-		statusLabels.setDomain( "polyline");			
-	
+		statusLabels.setDomain( "polyline");		
+		
+		// counting the nodes in this rsml root, i.e. polyline, starting with 1
+		int nodeCount = 0; // no node yet
+
+		// RSML R reader requires a, even if empty, property list
+		PropertyListType props = new PropertyListType();
+
 		if ( parentNode != null ) {
+			// non top level root
+			root.setId( parentRSMLRoot.getId() + "-" + String.valueOf( siblingIndex));
+
 			//TODO we have to cope with VIRTUAL and VIRTUAL_RSML status labels
 			addNode( parentNode, RhizoProjectConfig.STATUS_UNDEFINED, tl, polyline, diameters, statusLabels);
+			nodeCount++;
+			
+			// add parent node
+			props.getAny().add( createElementForParentNode( parentNodeIndex));
+			
 		} else {
-			// we start a new top level root
-			// RSML R reader requires a, even if empty, property list
-			PropertyListType props = new PropertyListType();
-			root.setProperties( props);
+			// top level root
+			long id;
+			if ( connector == null)
+				id = tl.getId();
+			else
+				id = connector.getId();
+			
+			root.setId( String.valueOf( id));
 		}
-		
-		addNode( node, node.getConfidence(), tl, polyline, diameters, statusLabels);
+		root.setProperties( props);
 
+				
+		addNode( node, node.getConfidence(), tl, polyline, diameters, statusLabels);
+		nodeCount++;
+
+		// index for all (direct) branching subtrees
+		int brachingSubtreeIndex = 1;
+		
 		// TODO we have to choose the node we use to continue this polyline from those
 		// child nodes with a status label not equal to VIRTUAL and VIRTUAL_RSML
 		ArrayList<Node<Float>> children = node.getChildrenNodes();
@@ -372,12 +410,16 @@ public class RhizoRSML
 			Iterator<Node<Float>> itr = children.iterator();
 			// continue the polyline with the first child
 			Node<Float> child = itr.next();
+			
 			addNode( child, child.getConfidence(), tl, polyline, diameters, statusLabels);
+			nodeCount++;
 
 			while ( itr.hasNext()) {
 				child = itr.next();
 				// create branching root
-				root.getRoot().add( createRSMLRootFromNode( tl, child, node));
+				// beware: we already added a node after the branching node
+				root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-1));
+				brachingSubtreeIndex++;
 			}
 			
 			node = children.get(0);
@@ -397,8 +439,8 @@ public class RhizoRSML
 	}		
 	
 	/** Add a node to the RSML representation of the treeline, i.e., the corresponding polyline.
-	 * NOTE: the status label is not taken from the node to faciliated special coding of the
-	 * base node of a polyline
+	 * NOTE: the status label is given as argument and not taken from the node to facilitate special coding of the
+	 * base node of a rsml root
 	 * 
 	 * @param node
 	 * @param statusLabelInteger
@@ -415,7 +457,6 @@ public class RhizoRSML
 		PointType pt = new PointType();
 		pt.setX( new BigDecimal( p.getX()));
 		pt.setY( new BigDecimal( p.getY()));
-		setRsmlPoint( tl, node, pt);
 		polyline.getPoint().add( pt);
 		
 		Sample diameter = new Sample();
@@ -427,17 +468,53 @@ public class RhizoRSML
 		statusLabels.getSample().add(sl);
 	}
 
+	/** Create a <code>org.w3c.dom.Element</code> holing a <code>IntegerStringPairType</code> 
+     * representing the status label mapping <code>idx</code> to <code>name</code>
+     * 
+     * @param idx
+     * @param name
+     * @return
+     */
+    private Element createElementForStatusLabelMapping ( int idx, String name) {
+    	IntegerStringPairType sp = new IntegerStringPairType();
+    	sp.setInt( idx);
+    	sp.setValue( name);
+    	System.out.println( "add " + idx + " " + name);
 
-	/** sets the coordinates in the rsml point <code>pt</code> fromt the node
-	 * reflecting the transformation of the treeline <code>tl</code>
-	 * 
-	 * @param tl
-	 * @param node
-	 * @param pt
-	 */
-	private void setRsmlPoint(Treeline tl, Node<Float> node, PointType pt) {
-	}
-	
+    	Document document = null;
+		try {
+			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		} catch (ParserConfigurationException e) {
+			Utils.showMessage( "write RSML: internal error, cannot marshal status label mapping " + idx + " " + name);
+			e.printStackTrace();
+		}
+    	JAXB.marshal(sp, new DOMResult(document));
+    	Element element = document.getDocumentElement();
+
+    	return element;
+    }
+	 /** Create a <code>org.w3c.dom.Element</code> holing a <code>xs:int</code> 
+     * representing the index of the parent node
+     * 
+     * @param idx
+     * @param name
+     * @return
+     */
+    private Element createElementForParentNode( int idx) {
+    	ParentNodeIndex  rsmlIndex = new ParentNodeIndex();
+    	rsmlIndex.setIndex( idx);
+    	Document document = null;
+		try {
+			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		} catch (ParserConfigurationException e) {
+			Utils.showMessage( "write RSML: internal error, cannot marshal parent node index " + idx);
+			e.printStackTrace();
+		}
+    	JAXB.marshal( rsmlIndex, new DOMResult(document));
+    	Element element = document.getDocumentElement();
+
+    	return element;
+    }
 
 	/**
 	 * Reads one or more RSML file into the rhizoTrak project.

@@ -211,13 +211,13 @@ public class RhizoUtils {
 		return allTreelines;
 	}
 
-	/** Collect all <code>connector</code>s below a <code>rootstack</code> in the current layer or all layers
+	/** Collect all <code>connector</code>s below a <code>rootstack</code> 
+	 * 
 	 * @param project
-	 * @param currentLayer if null all layers are considered 
 	 * 
 	 * @return list of collected  <code>connector</code>s or <code>null</code> if no rootstack found
 	 */
-	public static List<Connector> getConnectorsBelowRootstacks( Project project, Layer currentLayer) {
+	public static List<Connector> getConnectorsBelowRootstacks( Project project) {
 		// find all rootstacks
 		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
 		if ( rootstackThings == null) {
@@ -232,13 +232,7 @@ public class RhizoUtils {
 			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Connector.class)) {
 				Connector conn = (Connector)pt.getObject();
 				//				if ( debug)	System.out.println( "    treeline " + tl.getId());
-
-				if ( conn.getFirstLayer() != null && 
-						( currentLayer == null || currentLayer.equals( conn.getFirstLayer())) ) {
-					//						if ( debug)	System.out.println( "           as treeline");
-					allConnectors.add(conn);
-				}
-
+				allConnectors.add(conn);
 			}
 		}
 		return allConnectors;
