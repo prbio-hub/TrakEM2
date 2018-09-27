@@ -64,6 +64,7 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.bind.JAXB;
@@ -133,6 +134,7 @@ public class RhizoRSML
 	 *  @author Posch
 	 */
 	public void writeRSML() {
+		//TODO this writes currently always from scratch
 
 		projectName = rhizoMain.getXmlName().replaceFirst(".xml\\z", "");
 		
@@ -145,16 +147,15 @@ public class RhizoRSML
 		statChoicesPanel.add(new JLabel("Layers"));
 		statChoicesPanel.add( comboLayers);
 
-		//    	TODO: commented just as long as we only write the current layer
-		//    	int result = JOptionPane.showConfirmDialog(null, statChoicesPanel, "Output Options", 
-		//    			JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-		//
-		//    	if(result != JOptionPane.OK_OPTION) {
-		//    		return;
-		//    	}
-		//
-		//    	boolean writeAllLAyers  = ((String) comboLayers.getSelectedItem()).equals( ALL_STRING);
-		boolean writeAllLAyers  = false;
+		// TODO: commented just as long as we only write the current layer
+		int result = JOptionPane.showConfirmDialog(null, statChoicesPanel, "Output Options", 
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+		if(result != JOptionPane.OK_OPTION) {
+			return;
+		}
+
+		boolean writeAllLAyers  = ((String) comboLayers.getSelectedItem()).equals( ALL_STRING);
 
 		if ( writeAllLAyers ) {
 
@@ -177,38 +178,50 @@ public class RhizoRSML
 			if (returnVal != JFileChooser.APPROVE_OPTION)
 				return; // user cancelled dialog
 
+			Layer layer = Display.getFront().getLayer();
 			// TODO: ask if file should be overridden, if is exists??
-			File saveFile = fileChooser.getSelectedFile();
-
-			Rsml rsml = createRSML( Display.getFront().getLayer());
-			if ( rsml == null ) {
-				Utils.showMessage( "cannot write RSML");
-				return;
-			}
 			
-			JAXBContext context;
-			try {
-				context = JAXBContext.newInstance(Rsml.class);
-				Marshaller m = context.createMarshaller();
-				m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-				m.marshal( rsml, saveFile);
-
-			} catch (JAXBException e) {
-				Utils.showMessage( "cannot write RSML to  " + saveFile.getPath());
-				e.printStackTrace();
-			}
-
-			Utils.log("Saved to RSML file  - " + saveFile.getAbsolutePath());
-		}
-	}	
+			// TODO check if a RSML file was read into this layer previously
+			writeLayerFromScratch( fileChooser.getSelectedFile(), layer);
+		}	
+	}
     
-    /** Create a rsml xml data structure for the current layer from scratch, i.e. no previous rsml file loaded
+	/** Write the <code>layer</code> as an RSML to <code>saveFaile</code> from scratch.
+	 * This means we did not read a RSML file previously for this layer (or ignore it)
+	 * 
+	 * @param saveFile
+	 * @param layer
+	 */
+	private void writeLayerFromScratch(File saveFile, Layer layer) {
+		Rsml rsml = createRSMLFromScratch( layer);
+		if ( rsml == null ) {
+			Utils.showMessage( "cannot write RSML");
+			return;
+		}
+
+		JAXBContext context;
+		try {
+			context = JAXBContext.newInstance(Rsml.class);
+			Marshaller m = context.createMarshaller();
+			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+			m.marshal( rsml, saveFile);
+
+		} catch (JAXBException e) {
+			Utils.showMessage( "cannot write RSML to  " + saveFile.getPath());
+			e.printStackTrace();
+		}
+
+		Utils.log("Saved layer " + String.valueOf( layer.getZ()+1) + " to RSML file  - " + saveFile.getAbsolutePath());
+	}
+
+	/** Create a rsml xml data structure for the current layer from scratch, from scratch.
+	 * This means we did not read a RSML file previously for this layer (or ignore it)
      * 
      * @param layer 
      *
      * @return the rsml data structure or null, if no rootstacks are found
      */
-    private Rsml createRSML(Layer layer) {
+    private Rsml createRSMLFromScratch(Layer layer) {
     	Project project = Display.getFront().getProject();
     	
 		// collect all treelines to write 
@@ -257,7 +270,6 @@ public class RhizoRSML
     		for ( int i : this.rhizoMain.getProjectConfig().getFixedStatusLabelInt()) {
     			pList.getAny().add( createElementForStatusLabelMapping( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName()));
     		}
-			pList.getAny().add( createElementForStatusLabelMapping( RhizoProjectConfig.STATUS_UNDEFINED, RhizoProjectConfig.NAME_UNDEFINED));
  		
 			scene.setProperties( pList);
 
