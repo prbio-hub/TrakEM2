@@ -211,7 +211,7 @@ public class RhizoRSML
     private Rsml createRSML(Layer layer) {
     	Project project = Display.getFront().getProject();
     	
-		// compile all treelines to write 
+		// collect all treelines to write 
 		List<Treeline> allTreelinesInLayer;
 		allTreelinesInLayer = RhizoUtils.getTreelinesBelowRootstacks( project, layer);
 
@@ -242,68 +242,31 @@ public class RhizoRSML
     	
     	try {
     		// --- meta data
-    		Rsml.Metadata metadata = new Metadata();
-    		metadata.setVersion(  RSML_VERSION);
-    		// TODO: set unit from calibration information, if available
-    		metadata.setUnit(  "pixel");
-    		metadata.setResolution( new BigDecimal(1));
-
-    		final GregorianCalendar now = new GregorianCalendar();
-    		try {
-    			metadata.setLastModified(  DatatypeFactory.newInstance().newXMLGregorianCalendar(now));
-    		} catch (DatatypeConfigurationException e1) {
-    			Utils.showMessage( "write RSML: can not generate time for rsml");
-    		}
-
-    		metadata.setSoftware( SOFTWARE_NAME);
-    		metadata.setUser( System.getProperty("user.name"));
-
-    		metadata.setFileKey( projectName + "_" + BigInteger.valueOf( (long)layer.getZ() + 1));
-    		
-    		// TOOD image
-    		metadata.setImage( new Image());
-    		
-    		TimeSequence timeSequence = new TimeSequence();
-    		timeSequence.setLabel( projectName);
-    		timeSequence.setIndex(  BigInteger.valueOf( (long)layer.getZ() + 1));
-    		timeSequence.setUnified( true);
-    		metadata.setTimeSequence( timeSequence);
-
-    		// property definitions
-    		PropertyDefinitions pDefs = new PropertyDefinitions();
-
-    		PropertyDefinition pDef = new PropertyDefinition();
-    		pDef.setLabel( "StatusLabelMapping");
-    		pDef.setType( "Integer-String-Pair");
-    		pDefs.getPropertyDefinition().add( pDef); 
-    		
-    		PropertyDefinition pnDef = new PropertyDefinition();
-    		pnDef.setLabel( "parent-node");
-    		pnDef.setType( "integer");
-    		pDefs.getPropertyDefinition().add( pnDef); 
-    		
-    		metadata.setPropertyDefinitions( pDefs);
-
+    		Rsml.Metadata metadata = createRhizotrakMetatdata( layer);
     		rsml.setMetadata( metadata);
 
     		// --- the scene
     		Rsml.Scene scene = new Scene();
 
-    		// properties: status label mappings; something to indicate branching without VIRTUAL segments
+    		// properties: status label mappings
     		PropertyListType pList = new PropertyListType();
     		for ( int i = 0 ; i < this.rhizoMain.getProjectConfig().sizeStatusLabelMapping() ; i++) {
     	    	pList.getAny().add( createElementForStatusLabelMapping(i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName()));
     		}
-    		// add UNDEFINED
-    		this.rhizoMain.getProjectConfig();
-			this.rhizoMain.getProjectConfig();
+    		// add internal status labels
+    		for ( int i : this.rhizoMain.getProjectConfig().getFixedStatusLabelInt()) {
+    			pList.getAny().add( createElementForStatusLabelMapping( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName()));
+    		}
 			pList.getAny().add( createElementForStatusLabelMapping( RhizoProjectConfig.STATUS_UNDEFINED, RhizoProjectConfig.NAME_UNDEFINED));
  		
 			scene.setProperties( pList);
 
 			// now create the roots
     		for ( Treeline tl : allTreelinesInLayer ) {
-    			scene.getPlant().add(createPlantForTreeline( tl, treelineConnectorMap.get( tl)));
+    			Plant plant = createPlantForTreeline( tl, treelineConnectorMap.get( tl));
+    			if ( plant != null ) {
+    				scene.getPlant().add( plant);
+    			}
     		}
 
     		rsml.setScene( scene);
@@ -317,13 +280,67 @@ public class RhizoRSML
     	return rsml;
     }
    
+    /** Create the metadata for a rhizotrak project for the given <code>layer</code>.
+     * <br>
+     * Property definitions for status label mapping and parent node
+     * 
+     * @param layer
+     * @return
+     */
+    private Metadata createRhizotrakMetatdata( Layer layer) {
+    	Rsml.Metadata metadata= new Metadata();
+    	metadata.setVersion(  RSML_VERSION);
+    	
+    	// TODO: set unit from calibration information, if available
+    	metadata.setUnit(  "pixel");
+    	metadata.setResolution( new BigDecimal(1));
+
+    	final GregorianCalendar now = new GregorianCalendar();
+    	try {
+    		metadata.setLastModified(  DatatypeFactory.newInstance().newXMLGregorianCalendar(now));
+    	} catch (DatatypeConfigurationException e1) {
+    		Utils.showMessage( "write RSML: can not generate time for rsml");
+    	}
+
+    	metadata.setSoftware( SOFTWARE_NAME);
+    	metadata.setUser( System.getProperty("user.name"));
+
+    	metadata.setFileKey( projectName + "_" + BigInteger.valueOf( (long)layer.getZ() + 1));
+
+    	// TOOD image
+    	metadata.setImage( new Image());
+
+    	TimeSequence timeSequence = new TimeSequence();
+    	timeSequence.setLabel( projectName);
+    	timeSequence.setIndex(  BigInteger.valueOf( (long)layer.getZ() + 1));
+    	timeSequence.setUnified( true);
+    	metadata.setTimeSequence( timeSequence);
+
+    	// property definitions
+    	PropertyDefinitions pDefs = new PropertyDefinitions();
+
+    	PropertyDefinition pDef = new PropertyDefinition();
+    	pDef.setLabel( "StatusLabelMapping");
+    	pDef.setType( "Integer-String-Pair");
+    	pDefs.getPropertyDefinition().add( pDef); 
+
+    	PropertyDefinition pnDef = new PropertyDefinition();
+    	pnDef.setLabel( "parent-node");
+    	pnDef.setType( "integer");
+    	pDefs.getPropertyDefinition().add( pnDef); 
+
+    	metadata.setPropertyDefinitions( pDefs);
+    	return metadata;
+    }
+
 	/** create one rsml plant with one root for one treeline
 	 * 
 	 * @param tl
 	 * @param connector the tl is member of, null if treeline is not member of any treeline
-	 * @return
+	 * @return the rsml plant or null, if the treeline has no root node
 	 */
 	private Plant createPlantForTreeline(Treeline tl, Connector connector) {
+		if ( tl.getRoot() != null ) {
 		Plant plant = new Plant();
 		
 		Node<Float> rootNode = tl.getRoot();
@@ -331,6 +348,9 @@ public class RhizoRSML
 
 		plant.getRoot().add( root);
 		return plant;
+		} else {
+			return null;
+		}
 	}
 
 	/** Create a rsml representation for the subtree of a treeline <code>tl</code> .
