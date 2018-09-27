@@ -82,6 +82,7 @@ import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
+import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
@@ -157,28 +158,42 @@ public class RhizoRSML
 
 		boolean writeAllLAyers  = ((String) comboLayers.getSelectedItem()).equals( ALL_STRING);
 
+		String folder;
+		if  ( this.rhizoMain.getStorageFolder() == null )
+			folder = System.getProperty("user.home");
+		else 
+			folder = this.rhizoMain.getStorageFolder();
+
+		JFileChooser fileChooser = new JFileChooser();
+		FileNameExtensionFilter filter = new FileNameExtensionFilter( "RSML file", "rsml"); 
+		fileChooser.setFileFilter(filter);
+		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
 		if ( writeAllLAyers ) {
-
-		} else {
-			// Select and open output file
-			String folder;
-			if  ( this.rhizoMain.getStorageFolder() == null )
-				folder = System.getProperty("user.home");
-			else 
-				folder = this.rhizoMain.getStorageFolder();
-
-			JFileChooser fileChooser = new JFileChooser();
-			FileNameExtensionFilter filter = new FileNameExtensionFilter( "RSML file", "rsml"); 
-			fileChooser.setFileFilter(filter);
-			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			fileChooser.setDialogTitle("File to write RSML to");
+          // TODO: query base name, iterate over layers and add time point to base name
+			fileChooser.setDialogTitle("File(s) to write RSML to");
 			fileChooser.setSelectedFile(new File( folder + projectName + ".rsml"));
 			int returnVal = fileChooser.showOpenDialog(null);
 
 			if (returnVal != JFileChooser.APPROVE_OPTION)
 				return; // user cancelled dialog
+			String name = fileChooser.getSelectedFile().toString().replaceFirst(".rsml\\z", "");;
+			System.out.println( "filename " + name);
+			for ( Layer layer : rhizoMain.getProject().getRootLayerSet().getLayers()) {
+				writeLayerFromScratch( new File( name + "-" + String.valueOf( (int)layer.getZ()+1) + ".rsml"), layer);
+			}
 
+		} else {
+			// Select and open output file
 			Layer layer = Display.getFront().getLayer();
+
+			fileChooser.setDialogTitle("File to write RSML to");
+			fileChooser.setSelectedFile(new File( folder + projectName + "-" + String.valueOf( (int)layer.getZ()+1) + ".rsml"));
+			int returnVal = fileChooser.showOpenDialog(null);
+
+			if (returnVal != JFileChooser.APPROVE_OPTION)
+				return; // user cancelled dialog
+
 			// TODO: ask if file should be overridden, if is exists??
 			
 			// TODO check if a RSML file was read into this layer previously
@@ -244,7 +259,6 @@ public class RhizoRSML
 		for ( Treeline tl : allTreelinesInLayer) {
 			for ( Connector conn : allConnectors) {
 				if ( conn.getConTreelines().contains( tl) ) {
-					System.out.println( "add " + tl.getId() + " -> " + conn.getId());
 					treelineConnectorMap.put( tl,  conn);
 				}
 			}
@@ -264,11 +278,13 @@ public class RhizoRSML
     		// properties: status label mappings
     		PropertyListType pList = new PropertyListType();
     		for ( int i = 0 ; i < this.rhizoMain.getProjectConfig().sizeStatusLabelMapping() ; i++) {
-    	    	pList.getAny().add( createElementForStatusLabelMapping(i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName()));
+    	    	pList.getAny().add( createElementForXJAXBObject(
+    	    			createIntegerStringPair( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName())));
     		}
     		// add internal status labels
     		for ( int i : this.rhizoMain.getProjectConfig().getFixedStatusLabelInt()) {
-    			pList.getAny().add( createElementForStatusLabelMapping( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName()));
+    			pList.getAny().add( createElementForXJAXBObject(
+    					createIntegerStringPair( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName())));
     		}
  		
 			scene.setProperties( pList);
@@ -302,6 +318,9 @@ public class RhizoRSML
     private Metadata createRhizotrakMetatdata( Layer layer) {
     	Rsml.Metadata metadata= new Metadata();
     	metadata.setVersion(  RSML_VERSION);
+    	
+    	//TOOO:; maybe can generalize this method to also extend an existing annotation object
+    	// read previously with rhizoTrak specific information if ot already contained
     	
     	// TODO: set unit from calibration information, if available
     	metadata.setUnit(  "pixel");
@@ -414,7 +433,10 @@ public class RhizoRSML
 			nodeCount++;
 			
 			// add parent node
-			props.getAny().add( createElementForParentNode( parentNodeIndex));
+			ParentNodeIndex pn = new ParentNodeIndex();
+			pn.setIndex(parentNodeIndex);
+			props.getAny().add( createElementForXJAXBObject( pn));
+			
 			
 		} else {
 			// top level root
@@ -500,54 +522,41 @@ public class RhizoRSML
 		statusLabels.getSample().add(sl);
 	}
 
-	/** Create a <code>org.w3c.dom.Element</code> holing a <code>IntegerStringPairType</code> 
+	/** Create a <code>org.w3c.dom.Element</code> holding a Object created by JAXB 
+     * 
+     * @param jaxbObject
+     * @return
+     */
+    private Element createElementForXJAXBObject( Object jaxbObject) {
+    	
+    	Document document = null;
+		try {
+			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		} catch (ParserConfigurationException e) {
+			Utils.showMessage( "write RSML: internal error, cannot marshal object of type " + jaxbObject.getClass().getCanonicalName());
+			e.printStackTrace();
+		}
+    	JAXB.marshal( jaxbObject, new DOMResult(document));
+    	Element element = document.getDocumentElement();
+
+    	return element;
+    }
+    
+	/** Create a  <code>IntegerStringPairType</code> 
      * representing the status label mapping <code>idx</code> to <code>name</code>
      * 
      * @param idx
      * @param name
      * @return
      */
-    private Element createElementForStatusLabelMapping ( int idx, String name) {
-    	IntegerStringPairType sp = new IntegerStringPairType();
-    	sp.setInt( idx);
-    	sp.setValue( name);
-    	System.out.println( "add " + idx + " " + name);
-
-    	Document document = null;
-		try {
-			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		} catch (ParserConfigurationException e) {
-			Utils.showMessage( "write RSML: internal error, cannot marshal status label mapping " + idx + " " + name);
-			e.printStackTrace();
-		}
-    	JAXB.marshal(sp, new DOMResult(document));
-    	Element element = document.getDocumentElement();
-
-    	return element;
+    private IntegerStringPairType createIntegerStringPair ( int idx, String name) {
+    	IntegerStringPairType isp = new IntegerStringPairType();
+    	isp.setInt( idx);
+    	isp.setValue( name);
+    	
+    	return isp;
     }
-	 /** Create a <code>org.w3c.dom.Element</code> holing a <code>xs:int</code> 
-     * representing the index of the parent node
-     * 
-     * @param idx
-     * @param name
-     * @return
-     */
-    private Element createElementForParentNode( int idx) {
-    	ParentNodeIndex  rsmlIndex = new ParentNodeIndex();
-    	rsmlIndex.setIndex( idx);
-    	Document document = null;
-		try {
-			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		} catch (ParserConfigurationException e) {
-			Utils.showMessage( "write RSML: internal error, cannot marshal parent node index " + idx);
-			e.printStackTrace();
-		}
-    	JAXB.marshal( rsmlIndex, new DOMResult(document));
-    	Element element = document.getDocumentElement();
-
-    	return element;
-    }
-
+    
 	/**
 	 * Reads one or more RSML file into the rhizoTrak project.
 	 * @author Posch
