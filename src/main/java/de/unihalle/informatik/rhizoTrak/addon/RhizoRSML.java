@@ -82,13 +82,12 @@ import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
-import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.IntegerStringPairType;
-import de.unihalle.informatik.rhizoTrak.xsd.rsml.ParentNodeIndex;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.ParentNode;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.PointType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.PropertyListType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType;
@@ -170,7 +169,8 @@ public class RhizoRSML
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
 		if ( writeAllLAyers ) {
-          // TODO: query base name, iterate over layers and add time point to base name
+            // TODO: ask user if generated filenames are ok? at least if existing files are overridden?
+			// TODO: potentially create ICAP conforming filenames
 			fileChooser.setDialogTitle("File(s) to write RSML to");
 			fileChooser.setSelectedFile(new File( folder + projectName + ".rsml"));
 			int returnVal = fileChooser.showOpenDialog(null);
@@ -178,7 +178,6 @@ public class RhizoRSML
 			if (returnVal != JFileChooser.APPROVE_OPTION)
 				return; // user cancelled dialog
 			String name = fileChooser.getSelectedFile().toString().replaceFirst(".rsml\\z", "");;
-			System.out.println( "filename " + name);
 			for ( Layer layer : rhizoMain.getProject().getRootLayerSet().getLayers()) {
 				writeLayerFromScratch( new File( name + "-" + String.valueOf( (int)layer.getZ()+1) + ".rsml"), layer);
 			}
@@ -319,10 +318,21 @@ public class RhizoRSML
     	Rsml.Metadata metadata= new Metadata();
     	metadata.setVersion(  RSML_VERSION);
     	
+    	return extendMetatdata( metadata, layer);
+    }
+    
+    /** Extend a RSM metadata object with rhizoTrak specific information/content
+     * 
+     * @param metadata
+     * @param layer
+     * @return
+     */
+    private Rsml.Metadata extendMetatdata( Rsml.Metadata metadata, Layer layer) {
     	//TOOO:; maybe can generalize this method to also extend an existing annotation object
-    	// read previously with rhizoTrak specific information if ot already contained
+    	// read previously with rhizoTrak specific information if not already contained
     	
     	// TODO: set unit from calibration information, if available
+    	// TODO cope with extending, i.e. set only if not already set ???
     	metadata.setUnit(  "pixel");
     	metadata.setResolution( new BigDecimal(1));
 
@@ -336,11 +346,14 @@ public class RhizoRSML
     	metadata.setSoftware( SOFTWARE_NAME);
     	metadata.setUser( System.getProperty("user.name"));
 
+    	// TODO cope with extending, i.e. set only if not already set ???
     	metadata.setFileKey( projectName + "_" + BigInteger.valueOf( (long)layer.getZ() + 1));
 
     	// TOOD image
+    	// TODO cope with extending, i.e. set only if not already set ???
     	metadata.setImage( new Image());
 
+    	// TODO cope with extending, i.e. set only if not already set ???
     	TimeSequence timeSequence = new TimeSequence();
     	timeSequence.setLabel( projectName);
     	timeSequence.setIndex(  BigInteger.valueOf( (long)layer.getZ() + 1));
@@ -348,13 +361,16 @@ public class RhizoRSML
     	metadata.setTimeSequence( timeSequence);
 
     	// property definitions
-    	PropertyDefinitions pDefs = new PropertyDefinitions();
+    	PropertyDefinitions pDefs = metadata.getPropertyDefinitions();
+    	if ( pDefs == null ) pDefs = new PropertyDefinitions();
 
+    	// TODO cope with extending, i.e. set only if not already set ???
     	PropertyDefinition pDef = new PropertyDefinition();
     	pDef.setLabel( "StatusLabelMapping");
     	pDef.setType( "Integer-String-Pair");
     	pDefs.getPropertyDefinition().add( pDef); 
 
+    	// TODO cope with extending, i.e. set only if not already set ???
     	PropertyDefinition pnDef = new PropertyDefinition();
     	pnDef.setLabel( "parent-node");
     	pnDef.setType( "integer");
@@ -433,8 +449,8 @@ public class RhizoRSML
 			nodeCount++;
 			
 			// add parent node
-			ParentNodeIndex pn = new ParentNodeIndex();
-			pn.setIndex(parentNodeIndex);
+			ParentNode pn = new ParentNode();
+			pn.setValue(parentNodeIndex);
 			props.getAny().add( createElementForXJAXBObject( pn));
 			
 			
@@ -457,9 +473,7 @@ public class RhizoRSML
 		// index for all (direct) branching subtrees
 		int brachingSubtreeIndex = 1;
 		
-		// TODO we have to choose the node we use to continue this polyline from those
-		// child nodes with a status label not equal to VIRTUAL and VIRTUAL_RSML
-		ArrayList<Node<Float>> children = node.getChildrenNodes();
+		ArrayList<Node<Float>> children = reorderChildNodes( node.getChildrenNodes());
 		while ( children.size() > 0 ) {
 			Iterator<Node<Float>> itr = children.iterator();
 			// continue the polyline with the first child
@@ -492,6 +506,21 @@ public class RhizoRSML
 		return root;
 	}		
 	
+	/** Reorder the list of child nodes. The first node in the list return will continue the rsml root/poly line.
+	 * The remaining nodes will be branching, i.e. the second or first node of a rsml root/polyline on the
+	 * next level
+	 * 
+	 * @param childNodes
+	 * @return
+	 */
+	private ArrayList<Node<Float>> reorderChildNodes(ArrayList<Node<Float>> childNodes) {
+		// to first child connected by segment with a user define status label will be the continuing node,
+		// (if any)
+		// the rest are branching nodes in untouched order
+		
+		return childNodes;
+	}
+
 	/** Add a node to the RSML representation of the treeline, i.e., the corresponding polyline.
 	 * NOTE: the status label is given as argument and not taken from the node to facilitate special coding of the
 	 * base node of a rsml root
