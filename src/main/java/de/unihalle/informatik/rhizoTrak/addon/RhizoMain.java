@@ -48,16 +48,18 @@
 package de.unihalle.informatik.rhizoTrak.addon;
 
 import java.io.File;
+import java.util.HashMap;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.persistence.FSLoader;
 import de.unihalle.informatik.rhizoTrak.persistence.Loader;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml;
 
 public class RhizoMain
 {
 	private RhizoAddons rA;
-	
 	private RhizoIO rIO;
 	private RhizoColVis rCV;
 	private RhizoImages rI;
@@ -65,6 +67,8 @@ public class RhizoMain
 	private RhizoMTBXML rMTBXML;
 	private RhizoRSML rRSML;
 	private RhizoLineMapToTreeline rLineMapToTreeline;
+	
+	private HashMap<Layer,RhizoRSMLLayerInfo> layerInfoMap = new HashMap<Layer,RhizoRSMLLayerInfo>();
 	
 	private Project p;
 
@@ -140,6 +144,17 @@ public class RhizoMain
 		return p;
 	}
 	
+	/** 
+	 * @param layer
+	 * @return the LayerInfo associated with this layer or null if unset
+	 */
+	public RhizoRSMLLayerInfo getLayerInfo( Layer layer) {
+		return layerInfoMap.get( layer);
+	}
+	
+	public void setLayerInfo( Layer layer, RhizoRSMLLayerInfo layerInfo) {
+		layerInfoMap.put( layer, layerInfo);
+	}
     
     /**
 	 * @return the projectConfig

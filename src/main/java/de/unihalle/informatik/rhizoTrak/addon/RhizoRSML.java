@@ -67,10 +67,13 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import javax.xml.bind.JAXB;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.dom.DOMResult;
@@ -83,8 +86,12 @@ import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.Node;
+import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
+import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
+import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
+import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.IntegerStringPairType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.ParentNode;
@@ -232,7 +239,7 @@ public class RhizoRSML
 	 * This means we did not read a RSML file previously for this layer (or ignore it)
      * 
      * @param layer 
-     *
+     *RhizoTrakProjectConfig
      * @return the rsml data structure or null, if no rootstacks are found
      */
     private Rsml createRSMLFromScratch(Layer layer) {
@@ -591,5 +598,62 @@ public class RhizoRSML
 	 * @author Posch
 	 */
 	public void readRSML() {
+		// TODO; just a first (zeroth) version; read into current layer
+		//TODO 
+		String[] filepath = Utils.selectFile("test");
+		if(null == filepath) return;
+		File file = new File(filepath[0] + filepath[1]);
+		
+		Rsml rsml = null;
+		try {
+			JAXBContext context = JAXBContext.newInstance( Rsml.class);
+			Unmarshaller um = context.createUnmarshaller();
+			rsml  = (Rsml) um.unmarshal( file);
+		} catch (Exception e) {
+			Utils.showMessage( "cannot read RSML from  " + file.getPath());
+		}
+		
+		Layer layer = Display.getFront().getLayer();
+		
+		RhizoRSMLLayerInfo layerInfo = new RhizoRSMLLayerInfo( layer, rsml);
+		this.rhizoMain.setLayerInfo( layer, layerInfo);
+		
+		// TODO check meta data
+		
+		// TODO check status label mapping
+		
+		// import the root
+		for ( Scene.Plant plant : rsml.getScene().getPlant() ) {
+			for ( RootType root : plant.getRoot() ) {
+				layerInfo.mapRoot( plant, root);
+				
+				Treeline tl = createTreelineForRoot( root, layer);
+				layerInfo.mapTreeline( root, tl);
+			}
+		}
+	}
+
+	/** Create a treeline for the toplevel <code>root</code>
+	 * 
+	 * @param root
+	 * @param layer project layer in which to insert the treeline
+	 * @return
+	 */
+	private Treeline createTreelineForRoot(RootType root, Layer layer) {
+		Project project = this.rhizoMain.getProject();
+		ProjectTree projectTree = project.getProjectTree();
+		
+		ProjectThing possibleParent = RhizoAddons.findParentAllowing("treeline", project);
+		ProjectThing treelineThing = possibleParent.createChild("treeline");
+		
+		DefaultMutableTreeNode parentNode = DNDTree.findNode(possibleParent, projectTree);
+		DefaultMutableTreeNode node = new DefaultMutableTreeNode(treelineThing);
+		((DefaultTreeModel) projectTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
+		
+		Treeline treeline = (Treeline) treelineThing.getObject();
+		treeline.setLayer( layer);
+		
+		// TODO fill in the data, i.e. geometry, potentially diameter/radius and status labels
+		return treeline;
 	}
 }
