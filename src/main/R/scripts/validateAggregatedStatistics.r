@@ -3,8 +3,8 @@ library(data.table)
 library(dplyr)
 
 # read csv files with fread to account for all separatores that may be used
-segmentsData_rt <- fread("data/rhizoTrak_t23_segmentsAllLayers.csv.csv")
-aggregatedData_rt <- fread("data/rhizoTrak_t23_aggregatedAllLayers.csv.csv")
+segmentsData_rt <- fread("data/rhizoTrak_t23_segmentsAllLayers.csv")
+aggregatedData_rt <- fread("data/rhizoTrak_t23_aggregatedAllLayers.csv")
 
 
 for(i in unique(aggregatedData_rt$layerID))
