@@ -49,6 +49,7 @@ package de.unihalle.informatik.rhizoTrak.addon;
 
 import java.awt.GridLayout;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.io.File;
 import java.math.BigDecimal;
@@ -548,8 +549,8 @@ public class RhizoRSML
 	private void addNode(Node<Float> node, int statusLabelInteger, Treeline tl, Polyline polyline, Function diameters,
 			Function statusLabels) {
 		
-		AffineTransform at = tl.getAffineTransform();
-		Point2D p = at.transform(new Point2D.Float( node.getX(), node.getY()), null);
+		Point2D p = RhizoUtils.getAbsoluteTreelineCoordinates( new Point2D.Float( node.getX(), node.getY()), tl);
+
 		PointType pt = new PointType();
 		pt.setX( new BigDecimal( p.getX()));
 		pt.setY( new BigDecimal( p.getY()));
@@ -631,7 +632,6 @@ public class RhizoRSML
 		RhizoRSMLLayerInfo layerInfo = new RhizoRSMLLayerInfo( layer, rsml);
 		this.rhizoMain.setLayerInfo( layer, layerInfo);
 
-		layer.mtbxml = true;
 		// TODO check meta data
 
 		// TODO check status label mapping
@@ -672,7 +672,7 @@ public class RhizoRSML
 		Function diameters = getFunctionByName( root, FUNCTION_NAME_DIAMETER);
 		Function statuslabels = getFunctionByName( root, FUNCTION_NAME_STATUSLABEL);
 		
-		System.out.println( "new treeline");
+//		System.out.println( "new treeline");
 		
 		Iterator<PointType> pointItr = geometry.getPolyline().getPoint().iterator();
 		if ( ! pointItr.hasNext()) {
@@ -684,8 +684,8 @@ public class RhizoRSML
 		int pointIndex = 0;
 		
 		// add base node
-		RadiusNode previousnode = createRhizoTrakNode( pointItr.next(), getRadius( diameters, pointIndex), layer);
-		System.out.println("rt node " + previousnode.getX() + "   " + previousnode.getY());
+		RadiusNode previousnode = createRhizoTrakNode( pointItr.next(), getRadius( diameters, pointIndex), treeline, layer);
+//		System.out.println("rt node " + previousnode.getX() + "   " + previousnode.getY());
 		treeline.addNode( null, previousnode, (byte) 0);
 		treeline.setRoot( previousnode);
 		pointIndex++;
@@ -693,7 +693,7 @@ public class RhizoRSML
 		
 		while ( pointItr.hasNext()) {
 			PointType point = pointItr.next();
-			RadiusNode node = createRhizoTrakNode( point, getRadius( diameters, pointIndex), layer);
+			RadiusNode node = createRhizoTrakNode( point, getRadius( diameters, pointIndex), treeline, layer);
 			System.out.println("rt node " + node.getX() + "   " + node.getY());
 
 			byte statuslabel = getStatuslabel( statuslabels, pointIndex);
@@ -705,17 +705,25 @@ public class RhizoRSML
 		return treeline;
 	}
 
-	/** create a RadiusNode for the rsmlnode in the givne layer
+	/** create a RadiusNode for the rsmlnode in the given layer
 	 * @param rsmlNode
 	 * @param radius
 	 * @param layer
 	 * @return
 	 */
-	private RadiusNode createRhizoTrakNode(PointType rsmlNode, float radius,  Layer layer) {
-		return new RadiusNode( rsmlNode.getX().floatValue(), rsmlNode.getY().floatValue(), layer, radius);
+	private RadiusNode createRhizoTrakNode(PointType rsmlNode, float radius, Treeline tl, Layer layer) {
+		AffineTransform at = tl.getAffineTransform();
+		Point2D pt = null;
+		try {
+			pt = RhizoUtils.getRelativeTreelineCoordinates( new Point2D.Float( rsmlNode.getX().floatValue(), rsmlNode.getY().floatValue()), tl);
+		} catch (NoninvertibleTransformException e) {
+			// TODO Auto-generated catch block
+			pt = new Point2D.Float( 0.0f, 0.0f);
+			e.printStackTrace();
+		}
+		return new RadiusNode( (float)pt.getX(), (float)pt.getY(), layer, radius);
 	}
 
-	
 	/**Get the statuslabel for index <code>pointIndex</code> from the function <code>statuslabels</code>
 	 * or null if  <code>statuslabels</code> is null or index out of range
 	 * @param statuslabels
