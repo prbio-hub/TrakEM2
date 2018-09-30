@@ -59,6 +59,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
+
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.swing.JComboBox;
@@ -124,6 +126,10 @@ public class RhizoRSML
 	private static final String RSML_VERSION = "1.0";
 
 	private static final String SOFTWARE_NAME = "rhizoTrak";
+	
+	private static final String FUNCTION_NAME_DIAMETER = "diameter";
+	private static final String FUNCTION_NAME_STATUSLABEL = "statusLabel";
+
 
 	private RhizoMain rhizoMain;
 	
@@ -434,11 +440,11 @@ public class RhizoRSML
 		Polyline polyline = new Polyline();
 				
 		Function diameters = new Function();
-		diameters.setName( "diameter");
+		diameters.setName( FUNCTION_NAME_DIAMETER);
 		diameters.setDomain( "polyline");
 		
 		Function statusLabels = new Function();
-		statusLabels.setName( "statusLabel");
+		statusLabels.setName( FUNCTION_NAME_STATUSLABEL);
 		statusLabels.setDomain( "polyline");		
 		
 		// counting the nodes in this rsml root, i.e. polyline, starting with 1
@@ -614,19 +620,27 @@ public class RhizoRSML
 		}
 		
 		Layer layer = Display.getFront().getLayer();
+		parseRsmlToLayer( rsml, layer);
+	}
 		
+	/** parse the information in <code>rsml</code> into rhizoTrak for <code>layer</code>.
+	 * @param rsml
+	 * @param layer
+	 */
+	private void parseRsmlToLayer( Rsml rsml, Layer layer) {
 		RhizoRSMLLayerInfo layerInfo = new RhizoRSMLLayerInfo( layer, rsml);
 		this.rhizoMain.setLayerInfo( layer, layerInfo);
-		
+
+		layer.mtbxml = true;
 		// TODO check meta data
-		
+
 		// TODO check status label mapping
-		
+
 		// import the root
 		for ( Scene.Plant plant : rsml.getScene().getPlant() ) {
 			for ( RootType root : plant.getRoot() ) {
 				layerInfo.mapRoot( plant, root);
-				
+
 				Treeline tl = createTreelineForRoot( root, layer);
 				layerInfo.mapTreeline( root, tl);
 			}
@@ -647,13 +661,105 @@ public class RhizoRSML
 		ProjectThing treelineThing = possibleParent.createChild("treeline");
 		
 		DefaultMutableTreeNode parentNode = DNDTree.findNode(possibleParent, projectTree);
-		DefaultMutableTreeNode node = new DefaultMutableTreeNode(treelineThing);
-		((DefaultTreeModel) projectTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
+		DefaultMutableTreeNode projecttreeNode = new DefaultMutableTreeNode(treelineThing);
+		((DefaultTreeModel) projectTree.getModel()).insertNodeInto(projecttreeNode, parentNode, parentNode.getChildCount());
 		
 		Treeline treeline = (Treeline) treelineThing.getObject();
 		treeline.setLayer( layer);
 		
 		// TODO fill in the data, i.e. geometry, potentially diameter/radius and status labels
+		Geometry geometry = root.getGeometry();
+		Function diameters = getFunctionByName( root, FUNCTION_NAME_DIAMETER);
+		Function statuslabels = getFunctionByName( root, FUNCTION_NAME_STATUSLABEL);
+		
+		System.out.println( "new treeline");
+		
+		Iterator<PointType> pointItr = geometry.getPolyline().getPoint().iterator();
+		if ( ! pointItr.hasNext()) {
+			// no nodes at all
+			return treeline;
+		}
+		
+		// index of the next node to insert into the treeline
+		int pointIndex = 0;
+		
+		// add base node
+		RadiusNode previousnode = createRhizoTrakNode( pointItr.next(), getRadius( diameters, pointIndex), layer);
+		System.out.println("rt node " + previousnode.getX() + "   " + previousnode.getY());
+		treeline.addNode( null, previousnode, (byte) 0);
+		treeline.setRoot( previousnode);
+		pointIndex++;
+		
+		
+		while ( pointItr.hasNext()) {
+			PointType point = pointItr.next();
+			RadiusNode node = createRhizoTrakNode( point, getRadius( diameters, pointIndex), layer);
+			System.out.println("rt node " + node.getX() + "   " + node.getY());
+
+			byte statuslabel = getStatuslabel( statuslabels, pointIndex);
+			treeline.addNode(previousnode, node, statuslabel);
+			previousnode = node;
+			pointIndex++;
+		}
+		
 		return treeline;
+	}
+
+	/** create a RadiusNode for the rsmlnode in the givne layer
+	 * @param rsmlNode
+	 * @param radius
+	 * @param layer
+	 * @return
+	 */
+	private RadiusNode createRhizoTrakNode(PointType rsmlNode, float radius,  Layer layer) {
+		return new RadiusNode( rsmlNode.getX().floatValue(), rsmlNode.getY().floatValue(), layer, radius);
+	}
+
+	
+	/**Get the statuslabel for index <code>pointIndex</code> from the function <code>statuslabels</code>
+	 * or null if  <code>statuslabels</code> is null or index out of range
+	 * @param statuslabels
+	 * @param pointIndex
+	 * @return
+	 */
+	private byte getStatuslabel(Function statuslabels, int pointIndex) {
+		if ( statuslabels != null && statuslabels.getSample().size() >= pointIndex && pointIndex >= 0) {
+			return statuslabels.getSample().get( pointIndex).getValue().byteValue();
+		} else {
+			return RhizoProjectConfig.STATUS_UNDEFINED;
+		}
+	}
+
+	/** Get the radius for index <code>pointIndex</code> from the function <code>diameters</code>
+	 * or null if  <code>diameters</code> is null or index out of range
+	 * @param diameters
+	 * @param pointIndex
+	 * @return
+	 */
+	private float getRadius(Function diameters, int pointIndex) {
+		if ( diameters != null && diameters.getSample().size() >= pointIndex && pointIndex >= 0) {
+			return 0.5f * diameters.getSample().get( pointIndex).getValue().floatValue();
+		} else {
+			return 0.0f;
+		}
+	}
+
+	
+	/**
+	 * @param root
+	 * @param name
+	 * 
+	 * @return the first function with name <code>name</code>, null if none exists
+	 */
+	private Function getFunctionByName(RootType root, String name) {
+		ListIterator<Function> itr = root.getFunctions().getFunction().listIterator();
+		
+		while ( itr.hasNext() ) {
+			Function fct = itr.next();
+			if ( fct.getName().equals(name) ) {
+				return fct;
+			}
+		}
+		return null;
 	}
 }
