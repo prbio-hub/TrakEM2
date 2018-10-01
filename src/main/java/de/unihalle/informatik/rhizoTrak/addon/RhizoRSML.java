@@ -123,12 +123,19 @@ import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Scene.Plant;
 
 public class RhizoRSML
 {
+	private boolean debug = false;
+	
 	private static final String RSML_VERSION = "1.0";
 
 	private static final String SOFTWARE_NAME = "rhizoTrak";
 	
 	private static final String FUNCTION_NAME_DIAMETER = "diameter";
 	private static final String FUNCTION_NAME_STATUSLABEL = "statusLabel";
+	
+	private static final String PROPERTY_NAME_PARENTNODE = "parentNode";
+
+	// TODO make this configurable
+	private static byte default_statuslabel = 0;
 
 
 	private RhizoMain rhizoMain;
@@ -385,7 +392,7 @@ public class RhizoRSML
 
     	// TODO cope with extending, i.e. set only if not already set ???
     	PropertyDefinition pnDef = new PropertyDefinition();
-    	pnDef.setLabel( "parent-node");
+    	pnDef.setLabel( PROPERTY_NAME_PARENTNODE);
     	pnDef.setType( "integer");
     	pDefs.getPropertyDefinition().add( pnDef); 
 
@@ -463,6 +470,7 @@ public class RhizoRSML
 			
 			// add parent node
 			ParentNode pn = new ParentNode();
+//			pn.setValue(parentNodeIndex);
 			pn.setValue(parentNodeIndex);
 			props.getAny().add( createElementForXJAXBObject( pn));
 			
@@ -634,6 +642,7 @@ public class RhizoRSML
 	 * @param layer
 	 */
 	private void parseRsmlToLayer( Rsml rsml, Layer layer) {
+		try {
 		RhizoRSMLLayerInfo layerInfo = new RhizoRSMLLayerInfo( layer, rsml);
 		this.rhizoMain.setLayerInfo( layer, layerInfo);
 
@@ -649,6 +658,9 @@ public class RhizoRSML
 				Treeline tl = createTreelineForRoot( root, layer);
 				layerInfo.mapTreeline( root, tl);
 			}
+		}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -675,8 +687,14 @@ public class RhizoRSML
 		return treeline;
 	}
 	
-	private void fillTreelineFromRoot( RootType root, Treeline treeline, ArrayList<RadiusNode> parentTreelineNodes, Layer layer) {
-		// TODO fill in the data, i.e. geometry, potentially diameter/radius and status labels
+	/** This adds one root/polyline to the treeline
+	 * 
+	 * @param root to be added
+	 * @param treeline to add the root to
+	 * @param parentTreelineNodes hashmap of indices in the root as represented in RSML to the corresponding RadiusNode
+	 * @param layer
+	 */
+	private void fillTreelineFromRoot( RootType root, Treeline treeline, HashMap<Integer, RadiusNode> parentTreelineNodes, Layer layer) {
 		Geometry geometry = root.getGeometry();
 		Function diameters = getFunctionByName( root, FUNCTION_NAME_DIAMETER);
 		Function statuslabels = getFunctionByName( root, FUNCTION_NAME_STATUSLABEL);
@@ -690,28 +708,111 @@ public class RhizoRSML
 		// create the rhizoTrak nodes and segments for the polyline/root
 		// index of the next node to insert into the treeline
 		int pointIndex = 0;
-		// list of treeline nodes created for this rsml Root
-		ArrayList<RadiusNode> treelineNodes = new ArrayList<>( geometry.getPolyline().getPoint().size());
+		// hash map pointIndex to  treeline nodes created for this rsml Root
+		// (pointIndices start at 0)
+		HashMap<Integer,RadiusNode> treelineNodes = new HashMap<Integer,RadiusNode>( geometry.getPolyline().getPoint().size());
 		
-		// add base node (root node)
-		// TODO add segment to parent node if this property is set
-		RadiusNode previousnode = createRhizoTrakNode( pointItr.next(), getRadiusFromRsml( diameters, pointIndex), treeline, layer);
-		treeline.addNode( null, previousnode, (byte) 0);
-		treelineNodes.add( previousnode);
-		treeline.setRoot( previousnode);
-		pointIndex++;
+		// this radius node is the last one when we will iterate the nodes of this treeline
+		RadiusNode previousnode;
+		
+		PointType firstPoint = pointItr.next();
+
+		// create first node and connect to parent node within the treeline
+		
+		if ( parentTreelineNodes == null) {
+			// top level root/polyline
+			previousnode = createRhizoTrakNode( firstPoint, getRadiusFromRsml( diameters, pointIndex), treeline, layer);
+			if ( debug )
+				System.out.println("First rt node " + RhizoUtils.getAbsoluteTreelineCoordinates( previousnode.getX(), previousnode.getY(), treeline));
+			treeline.addNode( null, previousnode, (byte) 0);
+			treelineNodes.put( pointIndex, previousnode);
+			treeline.setRoot( previousnode);
+			
+			pointIndex++;
+		} else {
+			// non toplevel root/polyline
+			
+			// find the previous node in the treeline from which the current root/polyline gets connected into the treeline
+			int parentNodeIndex = getParentNodeIndex( root);
+			
+			RadiusNode parentNode = null;
+			if ( parentNodeIndex != (-1) ) {
+				// TODO the RSML homepage (thesaurus) seems to indicate that the node indices in RSML files
+				// start with 1
+				// if this is correct, we need to lookup  parentNodeIndex-1, as pointIndex starts with 0
+				parentNode = parentTreelineNodes.get( parentNodeIndex-1);
+				if ( parentNode == null ) {
+					for ( int i : parentTreelineNodes.keySet()) {
+						if ( debug ) System.out.println( "          " + i + "  -> " + parentTreelineNodes.get(i));
+					}
+				} else {
+				if ( debug ) 
+					System.out.println("  parent rt node " +  
+						RhizoUtils.getAbsoluteTreelineCoordinates( parentNode.getX(), parentNode.getY(), treeline));
+				}
+			}
+			
+			// this is just in case parent-node as read from RSML is broken
+			if ( parentNode == null ) {
+				// nearest node of the parent root/polyline
+				Double minDist = Double.MAX_VALUE;
+				for ( RadiusNode node : parentTreelineNodes.values() ) {
+					Double dist = distance( (float)firstPoint.getX().doubleValue(), (float)firstPoint.getY().doubleValue(), node, treeline);
+					if ( dist < minDist) {
+						parentNode = node;
+						minDist = dist;
+					}
+				}
+			}
+			
+			byte statuslabel = getStatuslabelFromRsml( statuslabels, pointIndex);
+ 
+			if ( isStatuslabelFromRsmlDefined(statuslabels, pointIndex) && statuslabel == RhizoProjectConfig.STATUS_UNDEFINED) {
+				// skip the first node of this root/polyline if there are mode nodes
+
+				if ( pointItr.hasNext()) {
+					pointIndex++;
+					firstPoint = pointItr.next();
+					statuslabel = getStatuslabelFromRsml( statuslabels, pointIndex);	
+				}
+
+				previousnode = createRhizoTrakNode( firstPoint, getRadiusFromRsml( diameters, pointIndex), treeline, layer);
+				
+				treeline.addNode( parentNode, previousnode, statuslabel);
+				treelineNodes.put( pointIndex, previousnode);
+
+				pointIndex++;
+
+
+			} else {
+				if ( ! isStatuslabelFromRsmlDefined(statuslabels, pointIndex) ||
+						statuslabel != RhizoProjectConfig.STATUS_VIRTUAL ) {
+					statuslabel = RhizoProjectConfig.STATUS_VIRTUAL_RSML;
+				} 
+
+				previousnode = createRhizoTrakNode( firstPoint, getRadiusFromRsml( diameters, pointIndex), treeline, layer);
+				if ( debug )
+					System.out.println("First rt node " + RhizoUtils.getAbsoluteTreelineCoordinates( previousnode.getX(), previousnode.getY(), treeline));
+				treeline.addNode( parentNode, previousnode, statuslabel);
+				treelineNodes.put( pointIndex, previousnode);
+
+				
+				pointIndex++;
+			}
+		}
+		
 		
 		
 		while ( pointItr.hasNext()) {
 			PointType point = pointItr.next();
 			RadiusNode node = createRhizoTrakNode( point, getRadiusFromRsml( diameters, pointIndex), treeline, layer);
-			System.out.println("rt node " + node.getX() + "   " + node.getY());
+			if ( debug ) System.out.println("     rt node " +  RhizoUtils.getAbsoluteTreelineCoordinates( node.getX(), node.getY(), treeline));
 
 			byte statuslabel = getStatuslabelFromRsml( statuslabels, pointIndex);
 			
-			// TODO check for VIRTUAL and VIRTUAL_RSML status labels
+			// TODO o we need to check for VIRTUAL and VIRTUAL_RSML status labels
 			treeline.addNode(previousnode, node, statuslabel);
-			treelineNodes.add( node);
+			treelineNodes.put( pointIndex, node);
 			previousnode = node;
 			pointIndex++;
 		}
@@ -720,6 +821,49 @@ public class RhizoRSML
 		for ( RootType childRoot : root.getRoot() ) {
 			fillTreelineFromRoot( childRoot, treeline, treelineNodes, layer);
 		}
+	}
+
+	/** Distance of <code>(x,y)</code> in absolute coordinates to <code>node</code>
+	 * @param x
+	 * @param y
+	 * @param node
+	 * @return
+	 */
+	private Double distance(float x, float y, RadiusNode node, Treeline tl) {
+		Point2D.Float pt = RhizoUtils.getAbsoluteTreelineCoordinates( node.getX(), node.getY(), tl);
+		return pt.distance( x, y);
+	}
+
+	/** Parse the parent-node or parentNode attribute from the root
+	 * @param root
+	 * @return parent node index (starting with 1 by RSML convetions) or <code>-1</code> if not found
+	 */
+	private int getParentNodeIndex(RootType root) {
+		int parentNodeIndex = -1;
+		
+//		// parse from element
+//		if ( root.getProperties() != null && root.getProperties().getAny() != null ) {
+//			for ( Element e : root.getProperties().getAny()) {
+//				if ( e.getNodeName().equals( PROPERTY_NAME_PARENTNODE)) {
+//					for ( int index = 0 ; index <e.getChildNodes().getLength(); index++ ) {
+//						if ( e.getChildNodes().item(index).getNodeName().equals("value")) {
+//							parentNodeIndex = Integer.valueOf(e.getChildNodes().item(index).getTextContent());
+//						}
+//					}
+//				}
+//			}
+//		}
+		
+		if ( root.getProperties() != null && root.getProperties().getAny() != null ) {
+			for ( Element e : root.getProperties().getAny()) {
+				//					System.out.println( "p nodename " + e.getNodeName());
+				if ( e.getNodeName().equals( PROPERTY_NAME_PARENTNODE) || e.getNodeName().equals( "parent-node") ) {
+					if ( debug ) System.out.println( "  parent-node index " + e.getAttribute( "value"));
+					parentNodeIndex =  Integer.valueOf( e.getAttribute( "value"));
+				} 
+			}
+		}
+		return parentNodeIndex;
 	}
 
 	/** create a RadiusNode for the rsml node in the given layer
@@ -743,7 +887,7 @@ public class RhizoRSML
 	}
 
 	/**Get the status label for index <code>pointIndex</code> from the function <code>statuslabels</code>
-	 * or null if  <code>statuslabels</code> is null or index out of range
+	 * or <code>default_statuslabel</code> if function <code>statuslabels</code> is null or index out of range
 	 * @param statuslabels
 	 * @param pointIndex
 	 * @return
@@ -752,7 +896,15 @@ public class RhizoRSML
 		if ( statuslabels != null && statuslabels.getSample().size() >= pointIndex && pointIndex >= 0) {
 			return statuslabels.getSample().get( pointIndex).getValue().byteValue();
 		} else {
-			return RhizoProjectConfig.STATUS_UNDEFINED;
+			return default_statuslabel;
+		}
+	}
+	
+	private boolean isStatuslabelFromRsmlDefined( Function statuslabels, int pointIndex) {
+		if ( statuslabels != null && statuslabels.getSample().size() >= pointIndex && pointIndex >= 0) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 
@@ -777,6 +929,10 @@ public class RhizoRSML
 	 * @return the first function with name <code>name</code>, null if none exists
 	 */
 	private Function getFunctionByName(RootType root, String name) {
+		if ( root.getFunctions() == null || root.getFunctions().getFunction() == null ) {
+			return null;
+		}
+		
 		ListIterator<Function> itr = root.getFunctions().getFunction().listIterator();
 		
 		while ( itr.hasNext() ) {

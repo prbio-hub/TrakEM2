@@ -409,6 +409,18 @@ public class RhizoUtils {
 			return (Point2D.Float) at.transform( srcPoint, null);
 		}
 
+		/** Transform coordinates <code>(x,y)</code> which are relative to the transformation of treeline <code>tl</code> to
+		 * absolute coordinates
+		 * 
+		 * @param x
+		 * @param y
+		 * @param tl
+		 * @return
+		 */
+		public static Point2D.Float getAbsoluteTreelineCoordinates( float x, float y, Treeline tl ) {
+			return getAbsoluteTreelineCoordinates( new Point2D.Float( x, y), tl);
+		}
+		
 		/** Transform absolute coordinates of <code>srcPoint</code> in relative coordinates of treeline <code>tl</code>
 		 * 
 		 * @param srcPoint
@@ -419,6 +431,19 @@ public class RhizoUtils {
 		public static Point2D.Float getRelativeTreelineCoordinates( Point2D.Float srcPoint, Treeline tl ) throws NoninvertibleTransformException  {
 			AffineTransform at = tl.getAffineTransform();
 			return (Point2D.Float) at.inverseTransform( srcPoint, null);
+		}
+		
+		/** Transform absolute coordinates <code>(x,y)</code> in relative coordinates of treeline <code>tl</code>
+		
+		 * @param x
+		 * @param y
+		 * @param tl
+		 * @return
+		 * @throws NoninvertibleTransformException if the transformation of <code>tl</code> is not invertible
+		 */
+		public static Point2D.Float getRelativeTreelineCoordinates( float x, float y, Treeline tl ) throws NoninvertibleTransformException  {
+			AffineTransform at = tl.getAffineTransform();
+			return (Point2D.Float) at.inverseTransform( new Point2D.Float( x, y), null);
 		}
 		
 }

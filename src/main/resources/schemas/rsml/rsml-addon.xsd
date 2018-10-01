@@ -11,8 +11,6 @@
 
   <!-- integer -->
   <xs:complexType name="parent-node">
-            <xs:sequence>
-              <xs:element name="value" type="xs:int" />
-            </xs:sequence>
+    <xs:attribute name="value"  type="xs:int" />
   </xs:complexType>
 </xs:schema>
