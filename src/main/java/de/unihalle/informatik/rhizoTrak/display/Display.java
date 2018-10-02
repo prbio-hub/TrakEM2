@@ -5248,13 +5248,13 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			Display.update(layer.getParent(), false);
 		} else if (command.startsWith("Hide all ")) {
 			final String type = command.substring(9, command.length() -1); // skip the ending plural 's'
-			final Collection<Displayable> col = layer.getParent().setVisible(type, false, true);
+			final Collection<Displayable> col = layer.getParent().setVisible(type, false, true, Display.getFrontLayer());
 			selection.removeAll(col);
 			Display.updateCheckboxes(col, DisplayablePanel.VISIBILITY_STATE);
 		} else if (command.startsWith("Unhide all ")) {
 			String type = command.substring(11, command.length() -1); // skip the ending plural 's'
 			type = type.substring(0, 1).toUpperCase() + type.substring(1);
-			updateCheckboxes(layer.getParent().setVisible(type, true, true), DisplayablePanel.VISIBILITY_STATE);
+			updateCheckboxes(layer.getParent().setVisible(type, true, true, Display.getFrontLayer()), DisplayablePanel.VISIBILITY_STATE);
 		} else if (command.equals("Hide deselected")) {
 			hideDeselected(0 != (ActionEvent.ALT_MASK & ae.getModifiers()));
 		} else if (command.equals("Hide deselected except images")) {

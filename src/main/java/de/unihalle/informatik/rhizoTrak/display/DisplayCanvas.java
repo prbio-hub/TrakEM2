@@ -2249,8 +2249,8 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				
 				if(null != layer && null != layer.getParent())
 				{
-					final Collection<Displayable> col1 = layer.getParent().setVisible("treeline", !displayablesVisible, true);
-					final Collection<Displayable> col2 = layer.getParent().setVisible("connector", !displayablesVisible, true);
+					final Collection<Displayable> col1 = layer.getParent().setVisible("treeline", !displayablesVisible, true, Display.getFrontLayer());
+					final Collection<Displayable> col2 = layer.getParent().setVisible("connector", !displayablesVisible, true,  Display.getFrontLayer());
 					Display.updateCheckboxes(col1, DisplayablePanel.VISIBILITY_STATE);
 					Display.updateCheckboxes(col2, DisplayablePanel.VISIBILITY_STATE);
 
