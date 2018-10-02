@@ -651,22 +651,27 @@ public class RhizoRSML
 	 */
 	private void parseRsmlToLayer( Rsml rsml, Layer layer) {
 		try {
-		RhizoRSMLLayerInfo layerInfo = new RhizoRSMLLayerInfo( layer, rsml);
-		this.rhizoMain.setLayerInfo( layer, layerInfo);
-
-		// TODO check meta data
-
-		// TODO check status label mapping
-
-		// import the root
-		for ( Scene.Plant plant : rsml.getScene().getPlant() ) {
-			for ( RootType root : plant.getRoot() ) {
-				layerInfo.mapRoot( plant, root);
-
-				Treeline tl = createTreelineForRoot( root, layer);
-				layerInfo.mapTreeline( root, tl);
+			RhizoLayerInfo layerInfo = this.rhizoMain.getLayerInfo(layer);
+			if ( layerInfo == null ) {
+				layerInfo = new RhizoLayerInfo( layer, rsml);
+				this.rhizoMain.setLayerInfo( layer, layerInfo);
+			} else {
+				layerInfo.setRsml( rsml);
 			}
-		}
+
+			// TODO check meta data
+
+			// TODO check status label mapping
+
+			// import the root
+			for ( Scene.Plant plant : rsml.getScene().getPlant() ) {
+				for ( RootType root : plant.getRoot() ) {
+					layerInfo.mapRoot( plant, root);
+
+					Treeline tl = createTreelineForRoot( root, layer);
+					layerInfo.mapTreeline( root, tl);
+				}
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -681,10 +686,10 @@ public class RhizoRSML
 	private Treeline createTreelineForRoot(RootType root, Layer layer) {
 		Project project = this.rhizoMain.getProject();
 		ProjectTree projectTree = project.getProjectTree();
-		
+
 		ProjectThing possibleParent = RhizoAddons.findParentAllowing("treeline", project);
 		ProjectThing treelineThing = possibleParent.createChild("treeline");
-		
+
 		DefaultMutableTreeNode parentNode = DNDTree.findNode(possibleParent, projectTree);
 		DefaultMutableTreeNode projecttreeNode = new DefaultMutableTreeNode(treelineThing);
 		((DefaultTreeModel) projectTree.getModel()).insertNodeInto(projecttreeNode, parentNode, parentNode.getChildCount());
@@ -793,13 +798,6 @@ public class RhizoRSML
 					firstPoint = pointItr.next();
 					statuslabel = getStatuslabelFromRsml( statuslabels, pointIndex);	
 				}
-
-				previousnode = createRhizoTrakNode( firstPoint, getRadiusFromRsml( diameters, pointIndex), treeline, layer);
-				
-				treeline.addNode( parentNode, previousnode, statuslabel);
-				treelineNodes.put( pointIndex, previousnode);
-
-				pointIndex++;
 
 			} else {
 				if ( ! foundParentNode ) {

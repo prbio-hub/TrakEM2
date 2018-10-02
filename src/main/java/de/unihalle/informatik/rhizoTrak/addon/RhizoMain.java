@@ -68,7 +68,7 @@ public class RhizoMain
 	private RhizoRSML rRSML;
 	private RhizoLineMapToTreeline rLineMapToTreeline;
 	
-	private HashMap<Layer,RhizoRSMLLayerInfo> layerInfoMap = new HashMap<Layer,RhizoRSMLLayerInfo>();
+	private HashMap<Layer,RhizoLayerInfo> layerInfoMap = new HashMap<Layer,RhizoLayerInfo>();
 	
 	private Project p;
 
@@ -148,11 +148,11 @@ public class RhizoMain
 	 * @param layer
 	 * @return the LayerInfo associated with this layer or null if unset
 	 */
-	public RhizoRSMLLayerInfo getLayerInfo( Layer layer) {
+	public RhizoLayerInfo getLayerInfo( Layer layer) {
 		return layerInfoMap.get( layer);
 	}
 	
-	public void setLayerInfo( Layer layer, RhizoRSMLLayerInfo layerInfo) {
+	public void setLayerInfo( Layer layer, RhizoLayerInfo layerInfo) {
 		layerInfoMap.put( layer, layerInfo);
 	}
     

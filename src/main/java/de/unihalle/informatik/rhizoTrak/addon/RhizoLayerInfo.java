@@ -8,12 +8,13 @@ import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Scene;
 
-/** Hold all information needed when loading a RSML file into a layer
+/** Hold all information associated with a layer, especially including information related to RSML import/export
  * 
  * @author posch
  *
  */
-public class RhizoRSMLLayerInfo {
+public class RhizoLayerInfo {
+	
 	/**
 	 * the layer the rsml has been imported into
 	 */
@@ -34,7 +35,7 @@ public class RhizoRSMLLayerInfo {
 	 */
 	HashMap<RootType,Scene.Plant> rootPlantMap = new HashMap<RootType,Scene.Plant>();	
 	
-	public RhizoRSMLLayerInfo( Layer layer, Rsml rsml) {
+	public RhizoLayerInfo( Layer layer, Rsml rsml) {
 		this.layer = layer;
 		this.rsml = rsml;
 	}
@@ -53,5 +54,22 @@ public class RhizoRSMLLayerInfo {
 	
 	public Scene.Plant getPlantForRoot( RootType root) {
 		return rootPlantMap.get( root);
+	}
+
+	/**
+	 * @return the rsml
+	 */
+	public Rsml getRsml() {
+		return rsml;
+	}
+
+	/** Set a new RSML data structure. This invalidates maps.
+	 * @param rsml the rsml to set
+	 */
+	public void setRsml(Rsml rsml) {
+		this.rsml = rsml;
+		this.treelineRootMap = new HashMap<Treeline,RootType>();
+		this.rootPlantMap = new HashMap<RootType,Scene.Plant>();	
+
 	}
 }
