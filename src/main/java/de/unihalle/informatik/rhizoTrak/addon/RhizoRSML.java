@@ -371,19 +371,31 @@ public class RhizoRSML
     	metadata.setSoftware( SOFTWARE_NAME);
     	metadata.setUser( System.getProperty("user.name"));
 
-    	// TODO cope with extending, i.e. set only if not already set ???
-    	metadata.setFileKey( projectName + "_" + BigInteger.valueOf( (long)layer.getZ() + 1));
+    	// TODO check if there is really nothing to change in the file key  meta data if non null
+    	if ( metadata.getFileKey() == null) {
+    		metadata.setFileKey( projectName + "_" + BigInteger.valueOf( (long)layer.getZ() + 1));
+    	}
 
-    	// TOOD image
-    	// TODO cope with extending, i.e. set only if not already set ???
-    	metadata.setImage( new Image());
+    	
+    	// TODO check if there is really nothing to change in the image meta data if non null
+    	if ( metadata.getImage() == null ) { 
+    		Image imageMetaData = new Image();
+    		
+    		// TODO is this correct to just use the first patch ???
+    		imageMetaData.setName( layer.getPatches(true).get(0).getImageFilePath());
+    		// TODO set sha256 code
+    		metadata.setImage( imageMetaData);
+    		// TOOD is there a chance to get hold of capture time and set it??
+    	}
 
-    	// TODO cope with extending, i.e. set only if not already set ???
-    	TimeSequence timeSequence = new TimeSequence();
-    	timeSequence.setLabel( projectName);
-    	timeSequence.setIndex(  BigInteger.valueOf( (long)layer.getZ() + 1));
-    	timeSequence.setUnified( true);
-    	metadata.setTimeSequence( timeSequence);
+    	// TODO check if there is really nothing to change in the time sequence meta data if non null
+    	if ( metadata.getTimeSequence() == null ) { 
+    		TimeSequence timeSequence = new TimeSequence();
+    		timeSequence.setLabel( projectName);
+    		timeSequence.setIndex(  BigInteger.valueOf( (long)layer.getZ() + 1));
+    		timeSequence.setUnified( true);
+    		metadata.setTimeSequence( timeSequence);
+    	}
 
     	// property definitions
     	PropertyDefinitions pDefs = metadata.getPropertyDefinitions();
@@ -623,33 +635,64 @@ public class RhizoRSML
     
 	/**
 	 * Reads one or more RSML file into the rhizoTrak project.
+	 * 
 	 * @author Posch
 	 */
 	public void readRSML() {
-		// TODO; just a first (zeroth) version; read into current layer
-		//TODO 
+		//TODO ask the user for a list of rsRSMLml filenames and the first layer to import into
+		// and a base directory to which filename in the RSML files are relative
+		
+		
+		// these names we get from user interaction
+		LinkedList<String> rsmlFilenames = new LinkedList<String>();
+		LinkedList<Rsml> rsmls = new LinkedList<Rsml>();
+		LinkedList<Layer> layers = new LinkedList<Layer>();
+		
+		// ------------------------------------------
+		// just a first version; read one rsml into current layer
+
 		String[] filepath = Utils.selectFile("test");
 		if(null == filepath) return;
-		File file = new File(filepath[0] + filepath[1]);
-		
-		Rsml rsml = null;
-		try {
-			JAXBContext context = JAXBContext.newInstance( Rsml.class);
-			Unmarshaller um = context.createUnmarshaller();
-			rsml  = (Rsml) um.unmarshal( file);
-		} catch (Exception e) {
-			Utils.showMessage( "cannot read RSML from  " + file.getPath());
+		rsmlFilenames.add( filepath[0] + filepath[1]);
+		layers.add( Display.getFront().getLayer());	
+		// end just for now
+	
+		// parse all RSML files
+		for ( String rsmlFilename : rsmlFilenames ) {
+			try {
+				JAXBContext context = JAXBContext.newInstance( Rsml.class);
+				Unmarshaller um = context.createUnmarshaller();
+				rsmls.add( (Rsml) um.unmarshal( new File( rsmlFilename)));
+			} catch (Exception e) {
+				Utils.showMessage( "cannot read RSML from  " + rsmlFilename);
+			}
 		}
 		
-		Layer layer = Display.getFront().getLayer();
-		parseRsmlToLayer( rsml, layer);
+		// check if it is possible to import (potentially with user feedback)
+		// e.g. status label mappings, inconsistent sha256 codes when importing into non empty layer
+		// if in a layer there are already annotations (i.e. treelines) ask the user if these should be deleted
+		
+		// create new empty layers as needed
+
+		// collect for each ID of a toplevel root/polyline the treeline object created for this ID
+		HashMap<String,List<Treeline>> topLevelIdTreelineListMap = new HashMap<String,List<Treeline>>();
+		
+		// loop over the RSML files
+		for ( int i = 0 ; i < rsmls.size() ; i++ ) {
+			Rsml rsml = rsmls.get( i);
+			Layer layer = layers.get( i);
+			importRsmlToLayer( rsml, layer, topLevelIdTreelineListMap);
+		}
 	}
 		
-	/** parse the information in <code>rsml</code> into rhizoTrak for <code>layer</code>.
-	 * @param rsml
+	/** import the RSML file  <code>file</code> into rhizoTrak for <code>layer</code>.
+	 * @param file
 	 * @param layer
+	 * @param topLevelIdTreelineListMap 
 	 */
-	private void parseRsmlToLayer( Rsml rsml, Layer layer) {
+	private void importRsmlToLayer( Rsml rsml , Layer layer, HashMap<String, List<Treeline>> topLevelIdTreelineListMap) {
+		// read the rsml file
+
 		try {
 			RhizoLayerInfo layerInfo = this.rhizoMain.getLayerInfo(layer);
 			if ( layerInfo == null ) {
@@ -659,17 +702,21 @@ public class RhizoRSML
 				layerInfo.setRsml( rsml);
 			}
 
-			// TODO check meta data
-
-			// TODO check status label mapping
-
+			// TODO read image if layer is empty 
+			// TODO we have to figure out what to do about the meta data of the RSML at this point
+			
 			// import the root
 			for ( Scene.Plant plant : rsml.getScene().getPlant() ) {
 				for ( RootType root : plant.getRoot() ) {
 					layerInfo.mapRoot( plant, root);
 
 					Treeline tl = createTreelineForRoot( root, layer);
-					layerInfo.mapTreeline( root, tl);
+					layerInfo.mapTreeline( tl , root);
+					List<Treeline> tlList = topLevelIdTreelineListMap.get( root.getId());
+					if ( tlList == null) {
+						tlList = new LinkedList<Treeline>();
+						topLevelIdTreelineListMap.put( root.getId(), tlList);
+					}
 				}
 			}
 		} catch (Exception e) {

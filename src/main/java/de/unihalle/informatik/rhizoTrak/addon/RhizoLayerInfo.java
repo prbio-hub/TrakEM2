@@ -40,7 +40,7 @@ public class RhizoLayerInfo {
 		this.rsml = rsml;
 	}
 	
-	public void mapTreeline( RootType root, Treeline tl) {
+	public void mapTreeline( Treeline tl, RootType root) {
 		treelineRootMap.put( tl,  root);
 	}
 	
