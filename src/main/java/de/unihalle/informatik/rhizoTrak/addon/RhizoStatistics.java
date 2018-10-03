@@ -847,8 +847,8 @@ public class RhizoStatistics {
 			
 			double xMin = 0;
 			double yMin = 0;
-			double xMax = calibInfo.ip.getWidth();
-			double yMax = calibInfo.ip.getWidth();;
+			double xMax = calibInfo.ip.getWidth() - 1;
+			double yMax = calibInfo.ip.getHeight() - 1;
 
 			AffineTransform at = t.getAffineTransform();
 			Point2D p1 = at.transform(new Point2D.Float(parent.getX(), parent.getY()), null);
