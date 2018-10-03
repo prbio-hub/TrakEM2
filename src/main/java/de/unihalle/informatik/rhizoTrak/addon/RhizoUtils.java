@@ -69,6 +69,11 @@ import de.unihalle.informatik.rhizoTrak.utils.Utils;
  */
 public class RhizoUtils {
 	
+	/**
+	 * String to eoncode not available values
+	 */
+	public final static String NA_String = "NA";
+	
 	/** 
 	 * The default character separating part of an ICAP image filename
 	 */
@@ -198,7 +203,7 @@ public class RhizoUtils {
 		public static String getICAPTube(String filename) {
 			String[] s = splitICAP( filename);
 			if ( s == null ) 
-				return "NA";
+				return NA_String;
 			else
 				return s[1];
 
@@ -212,12 +217,12 @@ public class RhizoUtils {
 		public static String getICAPExperiment(String filename) {
 			String[] s = splitICAP( filename);
 			if ( s == null ) 
-				return "NA";
+				return NA_String;
 			else
 				return s[0];
 		}
 
-		/** Get the experiment part of an ICAP image filename
+		/** Get the time point part of an ICAP image filename
 		 * 
 		 * @param filename
 		 * @return
@@ -225,9 +230,22 @@ public class RhizoUtils {
 		public static String getICAPTimepoint(String filename) {
 			String[] s = splitICAP( filename);
 			if ( s == null ) 
-				return "NA";
+				return NA_String;
 			else
 				return s[5];
+		}
+
+		/** Get the experiment part of an ICAP image filename
+		 * date
+		 * @param filename
+		 * @return
+		 */
+		public static String getICAPDate(String filename) {
+			String[] s = splitICAP( filename);
+			if ( s == null ) 
+				return NA_String;
+			else
+				return s[3];
 		}
 
 		/** splits into ICAP part
