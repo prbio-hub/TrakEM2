@@ -53,6 +53,8 @@ import java.awt.geom.Point2D;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -382,10 +384,15 @@ public class RhizoRSML
     		Image imageMetaData = new Image();
     		
     		// TODO is this correct to just use the first patch ???
-    		imageMetaData.setName( layer.getPatches(true).get(0).getImageFilePath());
+    		Path imagePath = Paths.get( layer.getPatches(true).get(0).getImageFilePath());
+    		// TODO check if this works if storageFolder and image base path are not identical
+    		imageMetaData.setName( convertToRelativPath( imagePath.getParent(),Paths.get( this.rhizoMain.getStorageFolder())) + 
+    				imagePath.getFileName());
+    		
     		// TODO set sha256 code
-    		metadata.setImage( imageMetaData);
     		// TOOD is there a chance to get hold of capture time and set it??
+    		
+    		metadata.setImage( imageMetaData);
     	}
 
     	// TODO check if there is really nothing to change in the time sequence meta data if non null
@@ -416,6 +423,16 @@ public class RhizoRSML
     	metadata.setPropertyDefinitions( pDefs);
     	return metadata;
     }
+
+	// TODO add javadoc and move to rhizoUtils
+	public static String convertToRelativPath(Path path, Path basePath){
+		if ( path.equals(basePath)) {
+			return ( "");
+		} else {
+			Path relativPath = basePath.relativize( path);
+			return relativPath.toString();
+		}
+	}
 
 	/** create one rsml plant with one root for one treeline
 	 * 
