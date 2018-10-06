@@ -159,6 +159,14 @@ public class RhizoRSML
 
 	private String projectName;
 	
+	/**
+	 * true f the parent indices start with 1, otherwise it is assume the they start with 0
+	 * 
+	 */
+	// TODO move to ProjectConfig and store in user settings
+	private boolean parentNodeIndexStartsWithOne = true;
+
+	
 	private JFrame rsmlLoaderFrame;
 
 	/**
@@ -388,11 +396,18 @@ public class RhizoRSML
     	if ( metadata.getImage() == null ) { 
     		Image imageMetaData = new Image();
     		
+    		
+    		
     		// TODO is this correct to just use the first patch ???
+    		try {
     		Path imagePath = Paths.get( layer.getPatches(true).get(0).getImageFilePath());
     		// TODO check if this works if storageFolder and image base path are not identical
     		imageMetaData.setName( convertToRelativPath( imagePath.getParent(),Paths.get( this.rhizoMain.getStorageFolder())) + 
     				imagePath.getFileName());
+    		} catch (Exception e) {
+				// probably nothing to be done
+			}
+
     		
     		// TODO set sha256 code
     		// TOOD is there a chance to get hold of capture time and set it??
@@ -516,6 +531,7 @@ public class RhizoRSML
 
 			if ( statuslabel != RhizoProjectConfig.STATUS_VIRTUAL_RSML) {
 				// add parent node property
+				// TODO check for start of parent node index (0 or 1)
 				ParentNode pn = new ParentNode();
 				pn.setValue(parentNodeIndex);
 				props.getAny().add( createElementForXJAXBObject( pn));
@@ -543,7 +559,11 @@ public class RhizoRSML
 				child = itr.next();
 				// create branching root
 				// beware: we already added a node after the branching node
-				root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-1));
+				if ( parentNodeIndexStartsWithOne )
+					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-1));
+				else 
+					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-2));
+
 				brachingSubtreeIndex++;
 			}
 			
@@ -828,7 +848,13 @@ public class RhizoRSML
 				// TODO the RSML homepage (thesaurus) seems to indicate that the node indices in RSML files
 				// start with 1
 				// if this is correct, we need to lookup  parentNodeIndex-1, as pointIndex starts with 0
-				parentNode = parentTreelineNodes.get( parentNodeIndex-1);
+				// TODO check for start of parent node index (0 or 1)
+				if ( parentNodeIndexStartsWithOne )
+					parentNode = parentTreelineNodes.get( parentNodeIndex-1);
+				else 
+					parentNode = parentTreelineNodes.get( parentNodeIndex);
+				
+
 				if ( parentNode == null ) {
 					for ( int i : parentTreelineNodes.keySet()) {
 						if ( debug ) System.out.println( "          " + i + "  -> " + parentTreelineNodes.get(i));
