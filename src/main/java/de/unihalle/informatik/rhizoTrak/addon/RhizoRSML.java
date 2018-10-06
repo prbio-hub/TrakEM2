@@ -63,10 +63,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -78,6 +77,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.dom.DOMResult;
@@ -89,10 +90,12 @@ import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
+import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
+import de.unihalle.informatik.rhizoTrak.display.addonGui.RSMLLoader;
 import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
@@ -155,13 +158,8 @@ public class RhizoRSML
 	}
 
 	private String projectName;
-
-	/**
-	 * true f the parent indices start with 1, otherwise it is assume the they start with 0
-	 * 
-	 */
-	// TODO move to ProjectConfig and store in user settings
-	private boolean parentNodeIndexStartsWithOne = true;
+	
+	private JFrame rsmlLoaderFrame;
 
 	/**
 	 *  Writes the current project to a RSML file.
@@ -391,14 +389,10 @@ public class RhizoRSML
     		Image imageMetaData = new Image();
     		
     		// TODO is this correct to just use the first patch ???
-    		try {
     		Path imagePath = Paths.get( layer.getPatches(true).get(0).getImageFilePath());
     		// TODO check if this works if storageFolder and image base path are not identical
     		imageMetaData.setName( convertToRelativPath( imagePath.getParent(),Paths.get( this.rhizoMain.getStorageFolder())) + 
     				imagePath.getFileName());
-    		} catch (Exception e) {
-				// probably nothing to be done
-			}
     		
     		// TODO set sha256 code
     		// TOOD is there a chance to get hold of capture time and set it??
@@ -522,7 +516,6 @@ public class RhizoRSML
 
 			if ( statuslabel != RhizoProjectConfig.STATUS_VIRTUAL_RSML) {
 				// add parent node property
-				// TODO check for start of parent node index (0 or 1)
 				ParentNode pn = new ParentNode();
 				pn.setValue(parentNodeIndex);
 				props.getAny().add( createElementForXJAXBObject( pn));
@@ -550,11 +543,7 @@ public class RhizoRSML
 				child = itr.next();
 				// create branching root
 				// beware: we already added a node after the branching node
-				if ( parentNodeIndexStartsWithOne )
-					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-1));
-				else 
-					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-2));
-
+				root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-1));
 				brachingSubtreeIndex++;
 			}
 			
@@ -671,33 +660,21 @@ public class RhizoRSML
 	 * 
 	 * @author Posch
 	 */
-	public void readRSML() {
-		//TODO ask the user for a list of rsRSMLml filenames and the first layer to import into
-		// and a base directory to which filename in the RSML files are relative
+	public void readRSML(List<File> rsmlFiles, List<Layer> layerList) {
+		//TODO base directory to which filename in the RSML files are relative
 		
 		
-		// these names we get from user interaction
-		LinkedList<String> rsmlFilenames = new LinkedList<String>();
 		LinkedList<Rsml> rsmls = new LinkedList<Rsml>();
-		LinkedList<Layer> layers = new LinkedList<Layer>();
-		
-		// ------------------------------------------
-		// just a first version; read one rsml into current layer
-
-		String[] filepath = Utils.selectFile("test");
-		if(null == filepath) return;
-		rsmlFilenames.add( filepath[0] + filepath[1]);
-		layers.add( Display.getFront().getLayer());	
-		// end just for now
+		LinkedList<Layer> layers = new LinkedList<Layer>(layerList);
 	
 		// parse all RSML files
-		for ( String rsmlFilename : rsmlFilenames ) {
+		for ( File rsmlFile : rsmlFiles ) {
 			try {
 				JAXBContext context = JAXBContext.newInstance( Rsml.class);
 				Unmarshaller um = context.createUnmarshaller();
-				rsmls.add( (Rsml) um.unmarshal( new File( rsmlFilename)));
+				rsmls.add( (Rsml) um.unmarshal( rsmlFile));
 			} catch (Exception e) {
-				Utils.showMessage( "cannot read RSML from  " + rsmlFilename);
+				Utils.showMessage( "cannot read RSML from  " + rsmlFile.getName());
 			}
 		}
 		
@@ -706,6 +683,22 @@ public class RhizoRSML
 		// if in a layer there are already annotations (i.e. treelines) ask the user if these should be deleted
 		
 		// create new empty layers as needed
+		// TODO check if there are images in the base directory that correspond to the image names/sha codes in the rsml
+		// if found we can borrow methods from RhizoImages to import a layer and an image
+		// for now only add empty layers
+		while(rsmlFiles.size() > layers.size())
+		{
+			Layer lastLayer = layers.get(layers.size() - 1);
+			LayerSet layerSet = lastLayer.getParent();
+			double z = lastLayer.getZ();
+			
+			Layer newLayer = new Layer(lastLayer.getParent().getProject(), z + 1, 1, layerSet);
+			layerSet.add(newLayer);
+			newLayer.recreateBuckets();
+			newLayer.updateLayerTree();
+			
+			layers.add(newLayer);
+		}
 
 		// collect for each ID of a toplevel root/polyline the treeline object created for this ID
 		HashMap<String,List<Treeline>> topLevelIdTreelineListMap = new HashMap<String,List<Treeline>>();
@@ -835,12 +828,7 @@ public class RhizoRSML
 				// TODO the RSML homepage (thesaurus) seems to indicate that the node indices in RSML files
 				// start with 1
 				// if this is correct, we need to lookup  parentNodeIndex-1, as pointIndex starts with 0
-				// TODO check for start of parent node index (0 or 1)
-				if ( parentNodeIndexStartsWithOne )
-					parentNode = parentTreelineNodes.get( parentNodeIndex-1);
-				else 
-					parentNode = parentTreelineNodes.get( parentNodeIndex-1);
-				
+				parentNode = parentTreelineNodes.get( parentNodeIndex-1);
 				if ( parentNode == null ) {
 					for ( int i : parentTreelineNodes.keySet()) {
 						if ( debug ) System.out.println( "          " + i + "  -> " + parentTreelineNodes.get(i));
@@ -1040,5 +1028,22 @@ public class RhizoRSML
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Opens the RSML loader window
+	 * @author Tino
+	 */
+	public void openRSMLLoader() 
+	{
+		// create a new window on every button press so that the layers in the combobox get updated
+		if(null != rsmlLoaderFrame) rsmlLoaderFrame.dispose();
+		
+		rsmlLoaderFrame = new JFrame("RSML Loader");
+		rsmlLoaderFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		JPanel temp = new RSMLLoader(rhizoMain);
+		rsmlLoaderFrame.add(temp);
+		rsmlLoaderFrame.pack();
+		rsmlLoaderFrame.setVisible(true);
 	}
 }

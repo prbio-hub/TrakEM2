@@ -6757,7 +6757,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			Display.getFront().getProject().getRhizoMain().getRhizoMTBXML().writeMTBXML();
 		}
 		else if(command.equals("readRSML")){
-			Display.getFront().getProject().getRhizoMain().getRhizoRSML().readRSML();
+			Display.getFront().getProject().getRhizoMain().getRhizoRSML().openRSMLLoader();
 		}
 		else if(command.equals("writeRSML")){
 			Display.getFront().getProject().getRhizoMain().getRhizoRSML().writeRSML();
@@ -7739,7 +7739,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	writeRSMLButton.addActionListener(this);
     	group21.add(writeRSMLButton);
 
-   	JButton statButton = new JButton("Statistics");
+    	JButton statButton = new JButton("Statistics");
     	statButton.setToolTipText("Open the statistics output panel.");
     	statButton.setActionCommand("stat");
     	statButton.addActionListener(this);

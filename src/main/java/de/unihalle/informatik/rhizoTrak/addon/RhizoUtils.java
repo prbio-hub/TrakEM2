@@ -50,6 +50,7 @@ package de.unihalle.informatik.rhizoTrak.addon;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,13 +60,18 @@ import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoStatistics.ImagePlusCalibrationInfo;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoStatistics.Segment;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
+import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Node;
+import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
+import ij.ImagePlus;
 
 /**
  * some helper methods
@@ -442,6 +448,29 @@ public class RhizoUtils {
 		public static Point2D.Float getRelativeTreelineCoordinates( float x, float y, Treeline tl ) throws NoninvertibleTransformException  {
 			AffineTransform at = tl.getAffineTransform();
 			return (Point2D.Float) at.inverseTransform( new Point2D.Float( x, y), null);
+		}
+		
+		/**
+		 * Returns the image name associated with the first patch in a layer
+		 * @param layer
+		 * @return
+		 */
+		public static String getImageName(Layer layer)
+		{
+			LayerSet layerSet = layer.getParent();
+			List<Patch> patches = layerSet.getAll(Patch.class);
+			
+			boolean found = false;
+			for(Patch patch: patches) 	
+			{
+				if(patch.getLayer().equals(layer)) 
+				{
+					ImagePlus ip = patch.getImagePlus();
+					if(ip != null) return ip.getTitle();
+				}
+			}
+			
+			return null;
 		}
 		
 }
