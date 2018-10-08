@@ -322,11 +322,6 @@ public class RhizoMTBXML
 	 */
 	public void readMTBXML()
 	{		
-		long oldTime = System.currentTimeMillis();
-		long currentTime = System.currentTimeMillis();
-		System.out.println("start: "+ (currentTime-oldTime));
-		oldTime = currentTime;
-		
 		String[] filepath = Utils.selectFile("test");
 		if(null == filepath) return;
 		
@@ -405,10 +400,6 @@ public class RhizoMTBXML
 						return;
 					}
 				}
-				
-				currentTime = System.currentTimeMillis();
-				System.out.println("before adding roots: "+ (currentTime-oldTime));
-				oldTime = currentTime;
 
 				MTBXMLRootType[] roots = currentRootSet.getRootsArray();
 				
@@ -486,18 +477,10 @@ public class RhizoMTBXML
 	    			
 				}
 			}
-			
-			currentTime = System.currentTimeMillis();
-			System.out.println("before repaint: "+ (currentTime-oldTime));
-			oldTime = currentTime;
-			
+
 			for (Treeline treeline2 : allTheNewTreelines) {
 				treeline2.repaint(true,treeline2.getFirstLayer());
 			}
-			
-			currentTime = System.currentTimeMillis();
-			System.out.println("before adding connectors: "+ (currentTime-oldTime));
-			oldTime = currentTime;
 			
 			MTBXMLRootAssociationType[] rootAssociations = rootProject.getRootAssociationsArray();
 			
@@ -524,9 +507,6 @@ public class RhizoMTBXML
 					}
 				}
 			}
-			currentTime = System.currentTimeMillis();
-			System.out.println("end: "+ (currentTime-oldTime));
-			oldTime = currentTime;
 		}
 		catch (Exception e) 
 		{
