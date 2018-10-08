@@ -321,7 +321,12 @@ public class RhizoMTBXML
 	 * @author Tino
 	 */
 	public void readMTBXML()
-	{
+	{		
+		long oldTime = System.currentTimeMillis();
+		long currentTime = System.currentTimeMillis();
+		System.out.println("start: "+ (currentTime-oldTime));
+		oldTime = currentTime;
+		
 		String[] filepath = Utils.selectFile("test");
 		if(null == filepath) return;
 		
@@ -372,8 +377,11 @@ public class RhizoMTBXML
 			// used for creating connectors
 			Map<List<Integer>, Treeline> rootsTable = new HashMap<List<Integer>, Treeline>();
 			
+			
+			ArrayList<Treeline> allTheNewTreelines = new ArrayList<>();
+			
 			for(int i = 0; i < rootSets.length; i++)
-			{
+			{		
 				Layer currentLayer = layers.get(i); // order of rootsets has to correspond to the layer if we don't care about image names
 				MTBXMLRootImageAnnotationType currentRootSet = rootSets[i];
 				
@@ -397,20 +405,23 @@ public class RhizoMTBXML
 						return;
 					}
 				}
+				
+				currentTime = System.currentTimeMillis();
+				System.out.println("before adding roots: "+ (currentTime-oldTime));
+				oldTime = currentTime;
 
 				MTBXMLRootType[] roots = currentRootSet.getRootsArray();
+				
+				//add the appropriate number of treelines
+				final List<Displayable> addedRootsList = RhizoUtils.addDisplayableToProject(project, "treeline", roots.length);
 
+				//add the nodes and so on in the treelines stored in addedRootsList
 				for(int j = 0; j < roots.length; j++)
 				{
 					MTBXMLRootType currentRoot = roots[j];
 					
-					ProjectThing treelineThing = possibleParent.createChild("treeline");
-					
-					DefaultMutableTreeNode parentNode = DNDTree.findNode(possibleParent, projectTree);
-	    			DefaultMutableTreeNode node = new DefaultMutableTreeNode(treelineThing);
-	    			((DefaultTreeModel) projectTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
-	    			
-	    			Treeline treeline = (Treeline) treelineThing.getObject();
+	    			Treeline treeline = (Treeline) addedRootsList.get(j);
+	    			allTheNewTreelines.add(treeline);
 	    			treeline.setLayer(currentLayer);
 	    			
 	    			// TODO: this is a workaround for the repainting issues that occur when creating new nodes out of a mtbxml file
@@ -460,45 +471,62 @@ public class RhizoMTBXML
 
 	    				if(currentRootSegment.getParentID() == -1)
 	    				{
-	    					treeline.addNode(null, nodeIDmap.get(currentRootSegment.getParentID()), s);
-	    					treeline.addNode(nodeIDmap.get(currentRootSegment.getParentID()), nodeIDmap.get(currentRootSegment.getSegmentID()), s);
+	    					treeline.addNode(null, nodeIDmap.get(currentRootSegment.getParentID()), s,true);
+	    					treeline.addNode(nodeIDmap.get(currentRootSegment.getParentID()), nodeIDmap.get(currentRootSegment.getSegmentID()), s,true);
 	    					treeline.setRoot(nodeIDmap.get(currentRootSegment.getParentID()));
 	    			
 	    				}
 	    				else
 	    				{
-	    					treeline.addNode(nodeIDmap.get(currentRootSegment.getParentID()), nodeIDmap.get(currentRootSegment.getSegmentID()), s);
+	    					treeline.addNode(nodeIDmap.get(currentRootSegment.getParentID()), nodeIDmap.get(currentRootSegment.getSegmentID()), s,true);
 	    				}
 	    			}
-	    			
-	    			rootsTable.put(Arrays.asList(currentRootSet.getRootSetID(), currentRoot.getRootID()), treeline);
 	    			treeline.updateCache();
+	    			rootsTable.put(Arrays.asList(currentRootSet.getRootSetID(), currentRoot.getRootID()), treeline);
+	    			
 				}
 			}
 			
+			currentTime = System.currentTimeMillis();
+			System.out.println("before repaint: "+ (currentTime-oldTime));
+			oldTime = currentTime;
 			
+			for (Treeline treeline2 : allTheNewTreelines) {
+				treeline2.repaint(true,treeline2.getFirstLayer());
+			}
+			
+			currentTime = System.currentTimeMillis();
+			System.out.println("before adding connectors: "+ (currentTime-oldTime));
+			oldTime = currentTime;
+			
+			MTBXMLRootAssociationType[] rootAssociations = rootProject.getRootAssociationsArray();
+			
+			//add the appropriate number of connectors
+			final List<Displayable> addedConnectorList = RhizoUtils.addDisplayableToProject(project, "connector", rootAssociations.length);
+
 			
 			// set connectors
-			MTBXMLRootAssociationType[] rootAssociations = rootProject.getRootAssociationsArray();
 			for(int i = 0;  i < rootAssociations.length; i++)
 			{
+				Connector currentConnector = (Connector) addedConnectorList.get(i);
+				
 				MTBXMLRootAssociationType currentRootAssociation = rootAssociations[i];
 				MTBXMLRootReferenceType[] rootReferences = currentRootAssociation.getRootReferencesArray();
 				
-				for(int j = 1; j < rootReferences.length; j++)
+				for(int j = 0; j < rootReferences.length; j++)
 				{
-					MTBXMLRootReferenceType previousRootReference = rootReferences[j-1];
 					MTBXMLRootReferenceType currentRootReference = rootReferences[j];
-					Treeline ptree = rootsTable.get(Arrays.asList(previousRootReference.getRootSetID(), previousRootReference.getRootID()));
 					Treeline ctree = rootsTable.get(Arrays.asList(currentRootReference.getRootSetID(), currentRootReference.getRootID()));
 					
-					if(!RhizoAddons.getRightPC(ptree, ctree))
+					if(!currentConnector.addConTreeline(ctree));
 					{
 						Utils.log("rhizoTrak", "Can not create or find connector between #" + ctree.getId() + " and #" + ctree.getId());
 					}
 				}
 			}
-			
+			currentTime = System.currentTimeMillis();
+			System.out.println("end: "+ (currentTime-oldTime));
+			oldTime = currentTime;
 		}
 		catch (Exception e) 
 		{
