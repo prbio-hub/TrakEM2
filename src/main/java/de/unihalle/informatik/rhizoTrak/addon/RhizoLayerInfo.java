@@ -3,6 +3,7 @@ package de.unihalle.informatik.rhizoTrak.addon;
 import java.util.HashMap;
 
 import de.unihalle.informatik.rhizoTrak.display.Layer;
+import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml;
@@ -43,6 +44,7 @@ public class RhizoLayerInfo {
 	public RhizoLayerInfo( Layer layer, Rsml rsml) {
 		this.layer = layer;
 		this.rsml = rsml;
+		updateImageHash();
 	}
 	
 	public void mapTreeline( Treeline tl, RootType root) {
@@ -92,5 +94,13 @@ public class RhizoLayerInfo {
 	 */
 	public void setImageHash(String hash) {
 		this.imageHash=hash;
+	}
+	
+	public boolean updateImageHash(){
+		if(layer.getPatches(false)==null) return false;
+		Patch patch = layer.getPatches(false).get(0);
+		if(patch.getImagePlus()==null) return false;			
+		setImageHash(RhizoUtils.calculateSHA(patch.getImagePlus()));
+    	return true;
 	}
 }
