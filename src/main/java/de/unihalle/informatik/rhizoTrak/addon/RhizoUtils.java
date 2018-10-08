@@ -50,7 +50,11 @@ package de.unihalle.informatik.rhizoTrak.addon;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -473,4 +477,28 @@ public class RhizoUtils {
 			return null;
 		}
 		
+		/**		 
+		 * calculate the sha-hash of the image on the layer
+		 * @param ip
+		 * @return
+		 */
+		public static String calculateSHA(ImagePlus ip) {
+			String result="";
+			StringBuilder sb = new StringBuilder();
+			for(int[] firstD : ip.flatten().getProcessor().convertToByte(false).getIntArray()) {
+				for(int secD : firstD) {
+					sb.append(Integer.toString(secD));
+				}
+			}
+			String rawString = sb.toString();
+			try {
+				MessageDigest dige = MessageDigest.getInstance("SHA-256");
+				byte[] shaHash = dige.digest(rawString.getBytes("UTF-8"));	
+				result=Base64.getEncoder().encodeToString(shaHash);
+			} catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+				Utils.log2("unable to digest the string");
+				e.printStackTrace();
+			}
+			return result;
+		}
 }

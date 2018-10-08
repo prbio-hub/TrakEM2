@@ -129,6 +129,7 @@ import javax.swing.JPopupMenu;
 import amira.AmiraMeshDecoder;
 import de.unihalle.informatik.rhizoTrak.ControlWindow;
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.display.AreaList;
 import de.unihalle.informatik.rhizoTrak.display.DLabel;
 import de.unihalle.informatik.rhizoTrak.display.Display;
@@ -3087,6 +3088,9 @@ while (it.hasNext()) {
 							layer.add(p);
 							//actyc: lock all new imported images
 							p.setLocked(true);
+							//actyc: calculate and set image hash
+							String hash = RhizoUtils.calculateSHA(p.getImagePlus());
+							layer.getProject().getRhizoMain().getLayerInfo(layer).setImageHash(hash);
 						}
 						layer.getParent().enlargeToFit(p, LayerSet.NORTHWEST);
 					}

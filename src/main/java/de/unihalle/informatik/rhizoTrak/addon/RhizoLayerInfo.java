@@ -26,6 +26,11 @@ public class RhizoLayerInfo {
 	Rsml rsml;
 	
 	/**
+	 * the sha-hash of the layer patch image
+	 */
+	String imageHash;
+	
+	/**
 	 * map the treelines generated to the source RSML (top level) roots
 	 */
 	HashMap<Treeline,RootType> treelineRootMap = new HashMap<Treeline,RootType>();
@@ -71,5 +76,21 @@ public class RhizoLayerInfo {
 		this.treelineRootMap = new HashMap<Treeline,RootType>();
 		this.rootPlantMap = new HashMap<RootType,Scene.Plant>();	
 
+	}
+	
+	/**
+	 * return the imageHash
+	 * @return
+	 */
+	public String getImageHash() {
+		return imageHash;
+	}
+	
+	/**
+	 * set the imageHash
+	 * @param hash
+	 */
+	public void setImageHash(String hash) {
+		this.imageHash=hash;
 	}
 }
