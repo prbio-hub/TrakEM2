@@ -482,7 +482,7 @@ public class RhizoUtils {
 		 * @param ip
 		 * @return
 		 */
-		public static String calculateSHA(ImagePlus ip) {
+		public static String calculateSHA256(ImagePlus ip) {
 			String result="";
 			StringBuilder sb = new StringBuilder();
 			for(int[] firstD : ip.flatten().getProcessor().convertToByte(false).getIntArray()) {
