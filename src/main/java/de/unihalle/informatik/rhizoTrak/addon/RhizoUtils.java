@@ -492,6 +492,14 @@ public class RhizoUtils {
 			return null;
 		}
 		
+		/** Return the timepoint for the <code>layer</code>
+		 * @param layer
+		 * @return
+		 */
+		public static int getTimepointForLayer( Layer layer) {
+			return (int)layer.getZ()+1;
+		}
+		
 		/**		 
 		 * calculate the sha-hash of the image on the layer
 		 * @param ip

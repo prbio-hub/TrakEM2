@@ -141,6 +141,7 @@ public class RhizoRSML
 	private static final String FUNCTION_NAME_STATUSLABEL = "statusLabel";
 	
 	private static final String PROPERTY_NAME_PARENTNODE = "parentNode";
+	private static final String PROPERTY_NAME_STATUSLABELMAPPING = "StatusLabelMapping";
 
 	private static final Double EPSILON = 0.01;
 
@@ -176,8 +177,6 @@ public class RhizoRSML
 	 *  @author Posch
 	 */
 	public void writeRSML() {
-		//TODO this writes currently always from scratch
-
 		projectName = rhizoMain.getXmlName().replaceFirst(".xml\\z", "");
 		
 		// query output options
@@ -189,7 +188,6 @@ public class RhizoRSML
 		statChoicesPanel.add(new JLabel("Layers"));
 		statChoicesPanel.add( comboLayers);
 
-		// TODO: commented just as long as we only write the current layer
 		int result = JOptionPane.showConfirmDialog(null, statChoicesPanel, "Output Options", 
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 
@@ -221,7 +219,7 @@ public class RhizoRSML
 				return; // user cancelled dialog
 			String name = fileChooser.getSelectedFile().toString().replaceFirst(".rsml\\z", "");;
 			for ( Layer layer : rhizoMain.getProject().getRootLayerSet().getLayers()) {
-				writeLayerFromScratch( new File( name + "-" + String.valueOf( (int)layer.getZ()+1) + ".rsml"), layer);
+				writeLayer( new File( name + "-" + String.valueOf( RhizoUtils.getTimepointForLayer( layer)) + ".rsml"), layer, this.rhizoMain.getLayerInfo( layer));
 			}
 
 		} else {
@@ -229,29 +227,27 @@ public class RhizoRSML
 			Layer layer = Display.getFront().getLayer();
 
 			fileChooser.setDialogTitle("File to write RSML to");
-			fileChooser.setSelectedFile(new File( folder + projectName + "-" + String.valueOf( (int)layer.getZ()+1) + ".rsml"));
+			fileChooser.setSelectedFile(new File( folder + projectName + "-" + String.valueOf( RhizoUtils.getTimepointForLayer( layer)) + ".rsml"));
 			int returnVal = fileChooser.showOpenDialog(null);
 
 			if (returnVal != JFileChooser.APPROVE_OPTION)
 				return; // user cancelled dialog
 
 			// TODO: ask if file should be overridden, if is exists??
-			
-			// TODO check if a RSML file was read into this layer previously
-			writeLayerFromScratch( fileChooser.getSelectedFile(), layer);
+			writeLayer( fileChooser.getSelectedFile(), layer, this.rhizoMain.getLayerInfo( layer));
 		}	
 	}
     
-	/** Write the <code>layer</code> as an RSML to <code>saveFaile</code> from scratch.
-	 * This means we did not read a RSML file previously for this layer (or ignore it)
+	/** Write the <code>layer</code> as an RSML to <code>saveFile</code>.
 	 * 
 	 * @param saveFile
 	 * @param layer
+	 * @param rhizoLayerInfo 
 	 */
-	private void writeLayerFromScratch(File saveFile, Layer layer) {
-		Rsml rsml = createRSMLFromScratch( layer);
+	private void writeLayer(File saveFile, Layer layer, RhizoLayerInfo rhizoLayerInfo) {
+		Rsml rsml = createRSML( layer, rhizoLayerInfo);
 		if ( rsml == null ) {
-			Utils.showMessage( "cannot write RSML");
+			Utils.showMessage( "cannot create RSML for layer " + RhizoUtils.getTimepointForLayer( layer));
 			return;
 		}
 
@@ -267,17 +263,16 @@ public class RhizoRSML
 			e.printStackTrace();
 		}
 
-		Utils.log("Saved layer " + String.valueOf( layer.getZ()+1) + " to RSML file  - " + saveFile.getAbsolutePath());
+		Utils.log("Saved layer " + String.valueOf( RhizoUtils.getTimepointForLayer( layer)) + " to RSML file  - " + saveFile.getAbsolutePath());
 	}
 
-	/** Create a rsml xml data structure for the current layer from scratch, from scratch.
-	 * This means we did not read a RSML file previously for this layer (or ignore it)
+	/** Create a rsml xml data structure for the current layer.
      * 
      * @param layer 
-     *RhizoTrakProjectConfig
+	 * @param rhizoLayerInfo 
      * @return the rsml data structure or null, if no rootstacks are found
      */
-    private Rsml createRSMLFromScratch(Layer layer) {
+    private Rsml createRSML(Layer layer, RhizoLayerInfo rhizoLayerInfo) {
     	Project project = Display.getFront().getProject();
     	
 		// collect all treelines to write 
@@ -310,7 +305,12 @@ public class RhizoRSML
     	
     	try {
     		// --- meta data
-    		Rsml.Metadata metadata = createRhizotrakMetatdata( layer);
+    		Rsml.Metadata metadata;
+    		if (rhizoLayerInfo == null || rhizoLayerInfo.getRsml() == null || rhizoLayerInfo.getRsml().getMetadata() == null) {
+    			metadata = createMetatdata( layer, rhizoLayerInfo);
+    		} else {
+    			metadata = createMetatdata( layer, rhizoLayerInfo);
+    		}
     		rsml.setMetadata( metadata);
 
     		// --- the scene
@@ -342,42 +342,30 @@ public class RhizoRSML
 
     	} catch (Exception e) {
 			Utils.showMessage( "rhizoTrak", "Internal error when creating the rsml representation for layer " + 
-					String.valueOf( (long)layer.getZ() + 1));
+					String.valueOf( RhizoUtils.getTimepointForLayer( layer)));
     		//TODO should we keep the stack trace on production??
     		e.printStackTrace();
     	}
     	return rsml;
     }
    
-    /** Create the metadata for a rhizotrak project for the given <code>layer</code>.
-     * <br>
-     * Property definitions for status label mapping and parent node
-     * 
-     * @param layer
-     * @return
-     */
-    private Metadata createRhizotrakMetatdata( Layer layer) {
-    	Rsml.Metadata metadata= new Metadata();
-    	metadata.setVersion(  RSML_VERSION);
-    	
-    	return extendMetatdata( metadata, layer);
-    }
     
-    /** Extend a RSM metadata object with rhizoTrak specific information/content
+    /** Create a RSML metadata object with rhizoTrak specific information/content
      * 
-     * @param metadata
      * @param layer
+     * @param rhizoLayerInfo 
      * @return
      */
-    private Rsml.Metadata extendMetatdata( Rsml.Metadata metadata, Layer layer) {
-    	//TOOO:; maybe can generalize this method to also extend an existing annotation object
-    	// read previously with rhizoTrak specific information if not already contained
+    private Rsml.Metadata createMetatdata( Layer layer, RhizoLayerInfo rhizoLayerInfo) {
+    	Rsml.Metadata oldMetadata = null;
+    	if ( rhizoLayerInfo != null && rhizoLayerInfo.getRsml() != null)
+    		oldMetadata = rhizoLayerInfo.getRsml().getMetadata();
+    		
+    	Rsml.Metadata metadata = new Metadata();
+    	metadata.setVersion( RSML_VERSION);
     	
-    	// TODO: set unit from calibration information, if available
-    	// TODO cope with extending, i.e. set only if not already set ???
-    	metadata.setUnit(  "pixel");
-    	metadata.setResolution( new BigDecimal(1));
-
+    	// -----------------------------------------------------------------------------
+    	// first everything which is always set independent of a previous meta data object
     	final GregorianCalendar now = new GregorianCalendar();
     	try {
     		metadata.setLastModified(  DatatypeFactory.newInstance().newXMLGregorianCalendar(now));
@@ -388,61 +376,99 @@ public class RhizoRSML
     	metadata.setSoftware( SOFTWARE_NAME);
     	metadata.setUser( System.getProperty("user.name"));
 
-    	// TODO check if there is really nothing to change in the file key  meta data if non null
+    	// file key 
     	if ( metadata.getFileKey() == null) {
     		metadata.setFileKey( projectName + "_" + BigInteger.valueOf( (long)layer.getZ() + 1));
     	}
 
-    	
-    	// TODO check if there is really nothing to change in the image meta data if non null
-    	if ( metadata.getImage() == null ) { 
-    		Image imageMetaData = new Image();
-    		
-    		// get the first patch of the layer
-    		Path imagePath = Paths.get( layer.getPatches( false).get(0).getImageFilePath());
-    		Path storageFolderPath = Paths.get( this.rhizoMain.getStorageFolder());
-    		Path imageDirectory = imagePath.getParent();
-    		
-    		System.out.println( "sfp:" + storageFolderPath + " id: " + imageDirectory + " ip:" + imagePath);
-    		if ( imageDirectory.equals( storageFolderPath) ) {
-    			imageMetaData.setName( imagePath.getFileName().toString());
-    		} else if ( imagePath.toString().startsWith(storageFolderPath.toString()) ) {
-    			Path relativPath = storageFolderPath.relativize( imagePath);
-    			imageMetaData.setName( relativPath.toString());
+    	// time sequence
+    	TimeSequence timeSequence = new TimeSequence();
+    	timeSequence.setLabel( projectName);
+    	timeSequence.setIndex(  BigInteger.valueOf( (long)layer.getZ() + 1));
+    	timeSequence.setUnified( true);
+    	metadata.setTimeSequence( timeSequence);
+       	
+    	// -----------------------------------------------------------------------------
+    	// meta data related to the image
+    	Image imageMetaData = new Image();
+    	if ( oldMetadata == null || oldMetadata.getImage() == null ) { 
+    		if ( layer.getPatches( false).size() > 0 ) {
+    			// get the first patch of the layer
+    			Path imagePath = Paths.get( layer.getPatches( false).get(0).getImageFilePath());
+
+    			Path storageFolderPath = Paths.get( this.rhizoMain.getStorageFolder());
+    			Path imageDirectory = imagePath.getParent();
+
+    			System.out.println( "sfp:" + storageFolderPath + " id: " + imageDirectory + " ip:" + imagePath);
+    			if ( imageDirectory.equals( storageFolderPath) ) {
+    				imageMetaData.setName( imagePath.getFileName().toString());
+    			} else if ( imagePath.toString().startsWith(storageFolderPath.toString()) ) {
+    				Path relativPath = storageFolderPath.relativize( imagePath);
+    				imageMetaData.setName( relativPath.toString());
+    			} else {
+    				imageMetaData.setName( imagePath.toString());
+    			}
+
+    			// set sha256 code
+    			// TODO why is rhizoLayerInfo not always define, where to get shacode from
+    			if ( rhizoLayerInfo != null )
+    				imageMetaData.setSha256( rhizoLayerInfo.getImageHash());
+
+    			// TOOD is there a chance to get hold of capture time and set it??
+
+    			// TODO: set unit from calibration information, if available
+            	metadata.setUnit(  "pixel");
+            	metadata.setResolution( new BigDecimal(1));
+
     		} else {
-    			imageMetaData.setName( imagePath.toString());
+    			// no image in this layer
+    			imageMetaData.setName( "");
+    			imageMetaData.setSha256( "");
+            	metadata.setUnit(  "pixel");
+            	metadata.setResolution( new BigDecimal(1));
     		}
-
-    		// TODO set sha256 code
-    		// TOOD is there a chance to get hold of capture time and set it??
     		
-    		metadata.setImage( imageMetaData);
+    	} else {
+    		imageMetaData.setName( oldMetadata.getImage().getName());
+    		imageMetaData.setSha256( oldMetadata.getImage().getSha256());
+    		imageMetaData.setCaptured( oldMetadata.getImage().getCaptured());
+    		
+    		metadata.setUnit( oldMetadata.getUnit());
+    		metadata.setResolution( oldMetadata.getResolution());
     	}
+    	metadata.setImage( imageMetaData);
 
-    	// TODO check if there is really nothing to change in the time sequence meta data if non null
-    	if ( metadata.getTimeSequence() == null ) { 
-    		TimeSequence timeSequence = new TimeSequence();
-    		timeSequence.setLabel( projectName);
-    		timeSequence.setIndex(  BigInteger.valueOf( (long)layer.getZ() + 1));
-    		timeSequence.setUnified( true);
-    		metadata.setTimeSequence( timeSequence);
-    	}
-
+    	// -----------------------------------------------------------------------------
     	// property definitions
-    	PropertyDefinitions pDefs = metadata.getPropertyDefinitions();
-    	if ( pDefs == null ) pDefs = new PropertyDefinitions();
+    	PropertyDefinitions pDefs = new PropertyDefinitions();
+    	PropertyDefinition pDef;
+    	
+    	// copy old definitions if any, but skip status label mapping and parent node
+    	if ( oldMetadata != null && oldMetadata.getPropertyDefinitions() != null &&
+    			oldMetadata.getPropertyDefinitions().getPropertyDefinition() != null) {
+    		for( PropertyDefinition oldPdef : oldMetadata.getPropertyDefinitions().getPropertyDefinition()) {
+    			if ( ! oldPdef.getLabel().equals( PROPERTY_NAME_PARENTNODE) &&
+    					! oldPdef.getLabel().equals( PROPERTY_NAME_STATUSLABELMAPPING) ) {
+    				pDef = new PropertyDefinition();
+    				pDef.setLabel( oldPdef.getLabel());
+    				pDef.setType( oldPdef.getType());
+    				pDef.setUnit( oldPdef.getUnit());
+    				pDef.setDefault( oldPdef.getDefault());
+    			}
+    		}
+    	}
 
-    	// TODO cope with extending, i.e. set only if not already set ???
-    	PropertyDefinition pDef = new PropertyDefinition();
-    	pDef.setLabel( "StatusLabelMapping");
+    	// StatusLabelMapping
+    	pDef = new PropertyDefinition();
+    	pDef.setLabel( PROPERTY_NAME_STATUSLABELMAPPING);
     	pDef.setType( "Integer-String-Pair");
     	pDefs.getPropertyDefinition().add( pDef); 
 
-    	// TODO cope with extending, i.e. set only if not already set ???
-    	PropertyDefinition pnDef = new PropertyDefinition();
-    	pnDef.setLabel( PROPERTY_NAME_PARENTNODE);
-    	pnDef.setType( "integer");
-    	pDefs.getPropertyDefinition().add( pnDef); 
+    	// ParentNode
+    	pDef = new PropertyDefinition();
+    	pDef.setLabel( PROPERTY_NAME_PARENTNODE);
+    	pDef.setType( "integer");
+    	pDefs.getPropertyDefinition().add( pDef); 
 
     	metadata.setPropertyDefinitions( pDefs);
     	return metadata;
