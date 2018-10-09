@@ -96,11 +96,14 @@ public class RhizoLayerInfo {
 		this.imageHash=hash;
 	}
 	
+	/** update the SHA256 hash for the layer, if a image is found for this layer
+	 * @return teen urue if SHA256 hash has been updated
+	 */
 	public boolean updateImageHash(){
-		if(layer.getPatches(false)==null) return false;
+		if(layer.getPatches(false)==null || layer.getPatches(false).size() < 1) return false;
 		Patch patch = layer.getPatches(false).get(0);
 		if(patch.getImagePlus()==null) return false;			
-		setImageHash(RhizoUtils.calculateSHA(patch.getImagePlus()));
+		setImageHash(RhizoUtils.calculateSHA256(patch.getImagePlus()));
     	return true;
 	}
 }
