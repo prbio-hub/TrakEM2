@@ -501,4 +501,61 @@ public class RhizoUtils {
 			}
 			return result;
 		}
+		
+		/**
+		 * Checks if there is at least on treeline in the specified layer.
+		 * @param rootstackThings Set of rootstacks
+		 * @param layer Layer to be checked
+		 * @author Tino
+		 */
+		public static boolean areTreelinesInLayer(HashSet<ProjectThing> rootstacks, Layer layer)
+		{
+			for(ProjectThing rootstackThing: rootstacks) 
+			{
+				for(ProjectThing pt: rootstackThing.findChildrenOfTypeR(Treeline.class)) 
+				{
+					Treeline ctree = (Treeline) pt.getObject();
+					if(ctree.getFirstLayer() != null && layer.equals(ctree.getFirstLayer())) return true;
+				}
+			}
+					// we also find connectors!
+			return false;
+		}
+
+		/**
+		 * Deletes all treelines from the specified layer
+		 * @param layer Layer from which all treelines should be deleted
+		 * @author Tino 
+		 */
+		public static void deleteAllTreelinesFromLayer(Layer layer, Project project)
+		{
+			if(layer == null) 
+			{
+				Utils.showMessage("rhizoTrak", "Deleting treelines failed: internal error, can not find layer.");
+				return;
+			}
+
+			HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
+			if(rootstackThings == null) 
+			{
+				Utils.showMessage( "rhizoTrak", "Deleting treelines failed: no rootstack found.");
+				return;
+			}
+
+			for(ProjectThing rootstackThing :rootstackThings) 
+			{
+				for(ProjectThing pt: rootstackThing.findChildrenOfTypeR(Treeline.class)) 
+				{
+					Treeline ctree = (Treeline) pt.getObject();
+
+					if(ctree.getClass().equals(Treeline.class)) 
+					{
+						if(ctree.getFirstLayer() != null && layer.equals(ctree.getFirstLayer()))
+						{
+							if(!ctree.remove2(false)) Utils.log("@deleteAll: failed to delete treeline " + ctree.getId());
+						}
+					}
+				}
+			}
+		}
 }

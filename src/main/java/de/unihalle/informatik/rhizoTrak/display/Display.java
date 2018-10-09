@@ -201,6 +201,7 @@ import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoLineMapToTreeline;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.analysis.Graph;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.SplitDialog;
@@ -6732,7 +6733,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("Delete treelines")){
 			int answer = JOptionPane.showConfirmDialog(null, "This will delete every treeline from the current layer and may not be undone.\nAre you sure?", 
 					"", JOptionPane.YES_NO_OPTION);
-			if(answer == JOptionPane.YES_OPTION) Display.getFront().getProject().getRhizoMain().getRhizoAddons().deleteAllTreelinesFromLayer(Display.getFrontLayer());
+			if(answer == JOptionPane.YES_OPTION) RhizoUtils.deleteAllTreelinesFromLayer(layer, project);
 		}
 		else if(command.equals("Load images")){
 			Display.getFront().getProject().getRhizoMain().getRhizoImages().createImageLoaderFrame();

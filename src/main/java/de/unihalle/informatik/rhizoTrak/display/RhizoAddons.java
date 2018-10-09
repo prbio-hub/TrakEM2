@@ -167,12 +167,12 @@ public class RhizoAddons
 		}
 
 		// check if there are any treelines in the next layer
-		if(areTreelinesInLayer(rootstackThings, nextLayer))
+		if(RhizoUtils.areTreelinesInLayer(rootstackThings, nextLayer))
 		{
 			// ask the user if he wants to delete the treelines before copying
 			int answer = JOptionPane.showConfirmDialog(null, "There are treelines on the layer you are about to copy to.\nDo you want to delete them before copying?", 
 					"", JOptionPane.YES_NO_OPTION);
-			if(answer == JOptionPane.YES_OPTION) deleteAllTreelinesFromLayer(nextLayer);
+			if(answer == JOptionPane.YES_OPTION) RhizoUtils.deleteAllTreelinesFromLayer(nextLayer, project);
 		}
 		
 		// and now find all treelines
@@ -216,62 +216,7 @@ public class RhizoAddons
 
 	}
 	
-	/**
-	 * Checks if there is at least on treeline in the specified layer.
-	 * @param rootstackThings Set of rootstacks
-	 * @param layer Layer to be checked
-	 * @author Tino
-	 */
-	private boolean areTreelinesInLayer(HashSet<ProjectThing> rootstacks, Layer layer)
-	{
-		for(ProjectThing rootstackThing: rootstacks) 
-		{
-			for(ProjectThing pt: rootstackThing.findChildrenOfTypeR(Treeline.class)) 
-			{
-				Treeline ctree = (Treeline) pt.getObject();
-				if(ctree.getFirstLayer() != null && layer.equals(ctree.getFirstLayer())) return true;
-			}
-		}
-				// we also find connectors!
-		return false;
-	}
 
-	/**
-	 * Deletes all treelines from the specified layer
-	 * @param layer Layer from which all treelines should be deleted
-	 * @author Tino 
-	 */
-	public void deleteAllTreelinesFromLayer(Layer layer)
-	{
-		if(layer == null) 
-		{
-			Utils.showMessage("rhizoTrak", "Deleting treelines failed: internal error, can not find layer.");
-			return;
-		}
-
-		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
-		if(rootstackThings == null) 
-		{
-			Utils.showMessage( "rhizoTrak", "Deleting treelines failed: no rootstack found.");
-			return;
-		}
-
-		for(ProjectThing rootstackThing :rootstackThings) 
-		{
-			for(ProjectThing pt: rootstackThing.findChildrenOfTypeR(Treeline.class)) 
-			{
-				Treeline ctree = (Treeline) pt.getObject();
-
-				if(ctree.getClass().equals(Treeline.class)) 
-				{
-					if(ctree.getFirstLayer() != null && layer.equals(ctree.getFirstLayer()))
-					{
-						if(!ctree.remove2(false)) Utils.log("@deleteAll: failed to delete treeline " + ctree.getId());
-					}
-				}
-			}
-		}
-	}
 
 	
 	/**

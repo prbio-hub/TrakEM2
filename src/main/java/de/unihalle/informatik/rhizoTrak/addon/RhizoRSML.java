@@ -150,6 +150,8 @@ public class RhizoRSML
 
 	private RhizoMain rhizoMain;
 	
+	private File rsmlBaseDir = null;
+	
 	private final String ONLY_STRING = "Current layer only";
 	private final String ALL_STRING = "All layers";
 
@@ -680,12 +682,11 @@ public class RhizoRSML
 	 * 
 	 * @author Posch
 	 */
-	public void readRSML(List<File> rsmlFiles, List<Layer> layerList) {
+	public void readRSML(List<File> rsmlFiles, Layer firstLayer) {
 		//TODO base directory to which filename in the RSML files are relative
 		
 		
-		LinkedList<Rsml> rsmls = new LinkedList<Rsml>();
-		LinkedList<Layer> layers = new LinkedList<Layer>(layerList);
+		List<Rsml> rsmls = new LinkedList<Rsml>();
 	
 		// parse all RSML files
 		for ( File rsmlFile : rsmlFiles ) {
@@ -698,6 +699,8 @@ public class RhizoRSML
 			}
 		}
 		
+		List<Layer> availableLayers = getAvailableLayers(firstLayer);
+
 		// check if it is possible to import (potentially with user feedback)
 		// e.g. status label mappings, inconsistent sha256 codes when importing into non empty layer
 		// if in a layer there are already annotations (i.e. treelines) ask the user if these should be deleted
@@ -706,9 +709,9 @@ public class RhizoRSML
 		// TODO check if there are images in the base directory that correspond to the image names/sha codes in the rsml
 		// if found we can borrow methods from RhizoImages to import a layer and an image
 		// for now only add empty layers
-		while(rsmlFiles.size() > layers.size())
+		while(rsmlFiles.size() > availableLayers.size())
 		{
-			Layer lastLayer = layers.get(layers.size() - 1);
+			Layer lastLayer = availableLayers.get(availableLayers.size() - 1);
 			LayerSet layerSet = lastLayer.getParent();
 			double z = lastLayer.getZ();
 			
@@ -717,7 +720,7 @@ public class RhizoRSML
 			newLayer.recreateBuckets();
 			newLayer.updateLayerTree();
 			
-			layers.add(newLayer);
+			availableLayers.add(newLayer);
 		}
 
 		// collect for each ID of a toplevel root/polyline the treeline object created for this ID
@@ -726,9 +729,31 @@ public class RhizoRSML
 		// loop over the RSML files
 		for ( int i = 0 ; i < rsmls.size() ; i++ ) {
 			Rsml rsml = rsmls.get( i);
-			Layer layer = layers.get( i);
+			Layer layer = availableLayers.get( i);
 			importRsmlToLayer( rsml, layer, topLevelIdTreelineListMap);
 		}
+	}
+	
+	/**
+	 * Returns all layers in the project starting from <code>firstLayer</code>. LayerSet class ensures that the list of
+	 * layers is always ordered by Z value.
+	 * @param firstLayer
+	 * @return
+	 */
+	private List<Layer> getAvailableLayers(Layer firstLayer)
+	{
+		LayerSet layerSet = rhizoMain.getProject().getRootLayerSet();
+		List<Layer> allLayers = layerSet.getLayers();
+		
+		List<Layer> layerList = new ArrayList<Layer>();
+		
+		int index = allLayers.indexOf(firstLayer);
+		for(int i = index; i < allLayers.size(); i++)
+		{
+			layerList.add(layerList.get(i));
+		}
+		
+		return layerList;
 	}
 		
 	/** import the RSML file  <code>file</code> into rhizoTrak for <code>layer</code>.
@@ -1065,11 +1090,27 @@ public class RhizoRSML
 		// create a new window on every button press so that the layers in the combobox get updated
 		if(null != rsmlLoaderFrame) rsmlLoaderFrame.dispose();
 		
-		rsmlLoaderFrame = new JFrame("RSML Loader");
+		rsmlLoaderFrame = new JFrame(null == rsmlBaseDir ? "RSML Loader" : "RSML Loader - " + rsmlBaseDir.getAbsolutePath());
 		rsmlLoaderFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JPanel temp = new RSMLLoader(rhizoMain);
 		rsmlLoaderFrame.add(temp);
 		rsmlLoaderFrame.pack();
 		rsmlLoaderFrame.setVisible(true);
+	}
+	
+	public void setRSMLBaseDir(File dir)
+	{
+		if(!dir.isDirectory()) Utils.log("Can not set RSML base directory. File has been selected."); 
+		else this.rsmlBaseDir = dir;
+	}
+	
+	public File getRSMLBaseDir()
+	{
+		return rsmlBaseDir;
+	}
+	
+	public JFrame getRSMLLoaderFrame()
+	{
+		return rsmlLoaderFrame;
 	}
 }

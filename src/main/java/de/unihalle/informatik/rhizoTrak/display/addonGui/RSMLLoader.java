@@ -47,7 +47,7 @@ public class RSMLLoader extends JPanel
 	private JLabel jLabelComboBox;
 	private JComboBox<String> jComboBox;
 	private List<String> layerNames; // can't use layers directly without editing Layer.toString() method
-	private JButton jButtonSelect, jButtonSort, jButtonImport;
+	private JButton jButtonSelect, jButtonSort, jButtonImport, jButtonBaseDir;
 
 	private List<File> allFiles;
 	
@@ -113,7 +113,7 @@ public class RSMLLoader extends JPanel
 			@Override
 			public void actionPerformed(ActionEvent e) 
 			{
-				openSelectDialog();
+				openRSMLFileChooser();
 			}
 		});
 		
@@ -135,21 +135,26 @@ public class RSMLLoader extends JPanel
 			{
 				LayerSet layerSet = rhizoMain.getProject().getRootLayerSet();
 				List<Layer> layerList = layerSet.getLayers();
-				List<Layer> layerListFromIndex = new ArrayList<Layer>();
 				
 				int index = layerNames.indexOf(jComboBox.getSelectedItem());
-				for(int i = index; i < layerList.size(); i++)
-				{
-					layerListFromIndex.add(layerList.get(i));
-				}
 				
-				rhizoMain.getRhizoRSML().readRSML(allFiles, layerListFromIndex);
+				rhizoMain.getRhizoRSML().readRSML(allFiles, layerList.get(index));
 				
 				if(SwingUtilities.getRoot(jPanelLeft) instanceof JFrame)
 				{
 					JFrame jf = (JFrame) SwingUtilities.getRoot(jPanelLeft);
 					jf.dispose();
 				}
+			}
+		});
+		
+		jButtonBaseDir = new JButton("Select base directory");
+		jButtonBaseDir.addActionListener(new ActionListener() 
+		{
+			@Override
+			public void actionPerformed(ActionEvent e) 
+			{
+				openRSMLBaseDirChooser();
 			}
 		});
 		
@@ -165,10 +170,11 @@ public class RSMLLoader extends JPanel
 		jPanelComboBox.add(jLabelComboBox);
 		jPanelComboBox.add(jComboBox);
 		
-		jPanelRightButtons = new JPanel(new GridLayout(0, 2));
+		jPanelRightButtons = new JPanel(new GridLayout(0, 1));
 		jPanelRightButtons.add(jButtonSelect);
 //		jPanelRightButtons.add(jButtonSort); // TODO
 		jPanelRightButtons.add(jButtonImport);
+		jPanelRightButtons.add(jButtonBaseDir);
 
 		jPanelRight = new JPanel(new BorderLayout());
 		jPanelRight.add(jPanelRightButtons, BorderLayout.NORTH);
@@ -206,11 +212,11 @@ public class RSMLLoader extends JPanel
 	/**
 	 * Open file chooser for RSML files
 	 */
-	private void openSelectDialog()
+	private void openRSMLFileChooser()
 	{
 		JFileChooser chooser = new JFileChooser();
 		chooser.setMultiSelectionEnabled(true);
-		chooser.setCurrentDirectory(rhizoMain.getProjectConfig().getImageSearchDir()); // TODO image search dir is temporary
+		chooser.setCurrentDirectory(rhizoMain.getRhizoRSML().getRSMLBaseDir());
 		chooser.setFileFilter(new FileNameExtensionFilter("RSML File", "rsml"));
 
 		chooser.showOpenDialog(null);
@@ -223,5 +229,23 @@ public class RSMLLoader extends JPanel
 		}
 		
 		jListFiles.setTransferHandler(new ListTransferHandler());
+	}
+	
+	/**
+	 * Open directory chooser for the RSML base directory
+	 */
+	private void openRSMLBaseDirChooser()
+	{
+		JFileChooser chooser = new JFileChooser();
+		chooser.setCurrentDirectory(rhizoMain.getRhizoRSML().getRSMLBaseDir());
+		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+		int result = chooser.showOpenDialog(null);
+
+		if(result == JFileChooser.APPROVE_OPTION)
+		{
+			rhizoMain.getRhizoRSML().setRSMLBaseDir(chooser.getSelectedFile());
+			rhizoMain.getRhizoRSML().getRSMLLoaderFrame().setTitle("RSML Loader - " + chooser.getSelectedFile().getAbsolutePath());
+		}
 	}
 }
