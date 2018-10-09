@@ -724,6 +724,8 @@ public class RhizoRSML
 			availableLayers.add(newLayer);
 		}
 
+		// TODO list with imageplus objects for empty layers
+		
 		// collect for each ID of a toplevel root/polyline the treeline object created for this ID
 		HashMap<String,List<Treeline>> topLevelIdTreelineListMap = new HashMap<String,List<Treeline>>();
 		
@@ -791,6 +793,8 @@ public class RhizoRSML
 						tlList = new LinkedList<Treeline>();
 						topLevelIdTreelineListMap.put( root.getId(), tlList);
 					}
+					
+					tlList.add(tl);
 				}
 			}
 		} catch (Exception e) {
