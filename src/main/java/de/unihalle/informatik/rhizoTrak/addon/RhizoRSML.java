@@ -332,7 +332,7 @@ public class RhizoRSML
 
 			// now create the roots
     		for ( Treeline tl : allTreelinesInLayer ) {
-    			Plant plant = createPlantForTreeline( tl, treelineConnectorMap.get( tl));
+    			Plant plant = createPlantForTreeline( tl, rhizoLayerInfo, treelineConnectorMap.get( tl));
     			if ( plant != null ) {
     				scene.getPlant().add( plant);
     			}
@@ -350,7 +350,9 @@ public class RhizoRSML
     }
    
     
-    /** Create a RSML metadata object with rhizoTrak specific information/content
+    /** Create a RSML metadata object with rhizoTrak specific information/content.
+     * <p>
+     * Note: The RSML JAXB Object in <code>rhizoLayerInfo</code> may be modified
      * 
      * @param layer
      * @param rhizoLayerInfo 
@@ -378,13 +380,13 @@ public class RhizoRSML
 
     	// file key 
     	if ( metadata.getFileKey() == null) {
-    		metadata.setFileKey( projectName + "_" + BigInteger.valueOf( (long)layer.getZ() + 1));
+    		metadata.setFileKey( projectName + "_" + BigInteger.valueOf( RhizoUtils.getTimepointForLayer( layer)));
     	}
 
     	// time sequence
     	TimeSequence timeSequence = new TimeSequence();
     	timeSequence.setLabel( projectName);
-    	timeSequence.setIndex(  BigInteger.valueOf( (long)layer.getZ() + 1));
+    	timeSequence.setIndex(  BigInteger.valueOf( RhizoUtils.getTimepointForLayer( layer)));
     	timeSequence.setUnified( true);
     	metadata.setTimeSequence( timeSequence);
        	
@@ -449,11 +451,7 @@ public class RhizoRSML
     		for( PropertyDefinition oldPdef : oldMetadata.getPropertyDefinitions().getPropertyDefinition()) {
     			if ( ! oldPdef.getLabel().equals( PROPERTY_NAME_PARENTNODE) &&
     					! oldPdef.getLabel().equals( PROPERTY_NAME_STATUSLABELMAPPING) ) {
-    				pDef = new PropertyDefinition();
-    				pDef.setLabel( oldPdef.getLabel());
-    				pDef.setType( oldPdef.getType());
-    				pDef.setUnit( oldPdef.getUnit());
-    				pDef.setDefault( oldPdef.getDefault());
+    				pDefs.getPropertyDefinition().add( oldPdef);
     			}
     		}
     	}
@@ -475,24 +473,146 @@ public class RhizoRSML
     }
 
 
-	/** create one rsml plant with one root for one treeline
+	/** create one rsml plant with one root for one treeline.
+	 * <b>
+	 * Currently only one root for each plant
 	 * 
 	 * @param tl
+	 * @param rhizoLayerInfo 
 	 * @param connector the tl is member of, null if treeline is not member of any treeline
 	 * @return the rsml plant or null, if the treeline has no root node
+	 *
 	 */
-	private Plant createPlantForTreeline(Treeline tl, Connector connector) {
+    // TODO expand to handle multiple roots for one plant
+	private Plant createPlantForTreeline(Treeline tl, RhizoLayerInfo rhizoLayerInfo, Connector connector) {
 		if ( tl.getRoot() != null ) {
-		Plant plant = new Plant();
-		
-		Node<Float> rootNode = tl.getRoot();
-		RootType root = createRSMLRootFromNode( tl, connector, rootNode, null, -1, -1);
+			// create the JAXB root for the treeline
+			Node<Float> rootNode = tl.getRoot();
+			RootType root = createRSMLRootFromNode( tl, connector, rootNode, null, -1, -1);
 
-		plant.getRoot().add( root);
-		return plant;
+			// check if this treeline was created from a RSML toplevel root
+			if ( rhizoLayerInfo != null && rhizoLayerInfo.getRootForTreeline(tl) != null) {
+				RootType oldRoot = rhizoLayerInfo.getRootForTreeline(tl);
+				Plant plant = rhizoLayerInfo.getPlantForRoot(root);
+				
+				if ( rootEquals( root, oldRoot) ) {
+					// geometry did not change: update diameter and status label in old JAXB root
+					updateFunctions( root, oldRoot);
+				} else {
+					// geometry did change: use new JAXB root and copy everything possible from old one
+					// TODO: copy annotation from old toplevel root
+					plant.getRoot().remove( oldRoot);
+					plant.getRoot().add( root);
+				}
+				
+				return plant;
+			} else {
+				// no RSML toplevel root for this treeline
+				Plant plant = new Plant();
+				plant.getRoot().add( root);
+				return plant;
+			}
 		} else {
 			return null;
 		}
+	}
+
+	/** Update the functions diameter and status labels in from <code>rosrcRootot</code> to <code>srcRoot</code>.
+	 * The roots are assumed to be recursively of equal geometry, i.e. they passed
+	 * {@link #rootEquals}
+	 *  Specifically: the function values are copied from 
+	 * @param srcRoot
+	 * @param srcRoot
+	 */
+	private void updateFunctions(RootType srcRoot, RootType dstRoot) {
+		copyFunction( getFunctionByName( srcRoot, FUNCTION_NAME_DIAMETER), getFunctionByName( dstRoot, FUNCTION_NAME_DIAMETER));
+		copyFunction( getFunctionByName( srcRoot, PROPERTY_NAME_PARENTNODE), getFunctionByName( dstRoot, PROPERTY_NAME_PARENTNODE));
+		
+		List<RootType> srcChildList = srcRoot.getRoot();
+		List<RootType> dstChildList = dstRoot.getRoot();
+		for ( int i = 0 ; i < srcChildList.size() ; i++) {
+			updateFunctions( srcChildList.get( i), dstChildList.get( i));
+		}
+	}
+
+	
+	/** Copy function <code>srcFunction</code> to <code>dstFunction</code>
+	 * assuming equal length
+	 * 
+	 * @param srcFunction
+	 * @param dstFunction
+	 */
+	private void copyFunction(Function srcFunction, Function dstFunction) {
+		for ( int i = 0 ; i < srcFunction.getSample().size() ; i++) {
+			dstFunction.getSample().set( i, srcFunction.getSample().get( i));
+		}	
+	}
+
+	/** Test if the geometry of the two roots is identical.
+	 * This recursively checks the child roots for equality
+	 * @param root1
+	 * @param root2
+	 * @return
+	 */
+	private boolean rootEquals(RootType root1, RootType root2) {
+		if ( root1.getGeometry() == null || root2.getGeometry() == null) {
+			// not conforming to RSML specification
+			return false;
+		}
+		
+		Polyline polyline1 = root1.getGeometry().getPolyline();
+		Polyline polyline2 = root2.getGeometry().getPolyline();
+		
+		if ( polyline1 == null || polyline2 == null ) {
+			// not conforming to RSML specification
+			return false;
+		}
+		
+		List<RootType> childList1 = root1.getRoot();
+		List<RootType> childList2 = root2.getRoot();
+
+		if ( childList1 == null || childList2 == null) {
+			// not conforming to RSML specification
+			return false;
+		}
+
+		if ( ! equalPolylines( polyline1, polyline2)) {
+			return false;
+		}
+		
+		if ( childList1.size() != childList2.size()) {
+			return false;
+		}
+			
+		for ( int i = 0 ; i < childList1.size() ; i++) {
+			if ( ! rootEquals( childList1.get( i), childList2.get( i)) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/** Test the polylines for equal geometry
+	 * @param polyline1
+	 * @param polyline2
+	 * @return
+	 */
+	private boolean equalPolylines(Polyline polyline1, Polyline polyline2) {
+		if ( polyline1.getPoint().size() != polyline2.getPoint().size()) {
+			return false;
+		}
+			
+		for ( int i = 0 ; i < polyline1.getPoint().size() ; i++) {
+			PointType point1 = polyline1.getPoint().get(i);
+			PointType point2 = polyline2.getPoint().get(i);
+			if ( point1.getX().compareTo( point2.getX()) != 0 ||
+					point1.getY().compareTo( point2.getY()) != 0 ||
+					point1.getZ().compareTo( point2.getZ()) != 0 ) {
+				return false;
+			}
+		}
+		
+		return true;
 	}
 
 	/** Create a rsml representation for the subtree of a treeline <code>tl</code> .
