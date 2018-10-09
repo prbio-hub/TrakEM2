@@ -53,6 +53,8 @@ public class RSMLLoader extends JPanel
 	
 	private final Dimension comboBoxDimension = new Dimension(100, 26);
 	
+	private final String APPEND = "Append...";
+	
 	public RSMLLoader(RhizoMain rhizoMain)
 	{
 		this.rhizoMain = rhizoMain;
@@ -133,12 +135,19 @@ public class RSMLLoader extends JPanel
 			@Override
 			public void actionPerformed(ActionEvent e) 
 			{
-				LayerSet layerSet = rhizoMain.getProject().getRootLayerSet();
-				List<Layer> layerList = layerSet.getLayers();
-				
-				int index = layerNames.indexOf(jComboBox.getSelectedItem());
-				
-				rhizoMain.getRhizoRSML().readRSML(allFiles, layerList.get(index));
+				if(jComboBox.getSelectedItem().equals(APPEND))
+				{
+					rhizoMain.getRhizoRSML().readRSML(allFiles, null);
+				}
+				else
+				{
+					LayerSet layerSet = rhizoMain.getProject().getRootLayerSet();
+					List<Layer> layerList = layerSet.getLayers();
+					
+					int index = layerNames.indexOf(jComboBox.getSelectedItem());
+					
+					rhizoMain.getRhizoRSML().readRSML(allFiles, layerList.get(index));
+				}
 				
 				if(SwingUtilities.getRoot(jPanelLeft) instanceof JFrame)
 				{
@@ -206,6 +215,8 @@ public class RSMLLoader extends JPanel
 			layerNames.add("Layer " + (int) (layer.getZ()+1) + (null == imageName ? "" : " - " + imageName));
 		}
 		
+		layerNames.add(APPEND);
+		
 		return new JComboBox<String>(layerNames.toArray(new String[layerNames.size()]));
 	}
 	
@@ -219,16 +230,19 @@ public class RSMLLoader extends JPanel
 		chooser.setCurrentDirectory(rhizoMain.getRhizoRSML().getRSMLBaseDir());
 		chooser.setFileFilter(new FileNameExtensionFilter("RSML File", "rsml"));
 
-		chooser.showOpenDialog(null);
+		int result = chooser.showOpenDialog(null);
 		
-		File[] files = chooser.getSelectedFiles();
-		for (File file : files) 
+		if(result == JFileChooser.APPROVE_OPTION)
 		{
-			listModel.addElement(file.getName());	
-			allFiles.add(file);
+			File[] files = chooser.getSelectedFiles();
+			for (File file : files) 
+			{
+				listModel.addElement(file.getName());	
+				allFiles.add(file);
+			}
+			
+			jListFiles.setTransferHandler(new ListTransferHandler());
 		}
-		
-		jListFiles.setTransferHandler(new ListTransferHandler());
 	}
 	
 	/**

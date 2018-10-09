@@ -684,7 +684,7 @@ public class RhizoRSML
 	 */
 	public void readRSML(List<File> rsmlFiles, Layer firstLayer) {
 		//TODO base directory to which filename in the RSML files are relative
-		
+		//TODO firstLayer == null means that "append..." was selected
 		
 		List<Rsml> rsmls = new LinkedList<Rsml>();
 	
@@ -711,8 +711,9 @@ public class RhizoRSML
 		// for now only add empty layers
 		while(rsmlFiles.size() > availableLayers.size())
 		{
-			Layer lastLayer = availableLayers.get(availableLayers.size() - 1);
-			LayerSet layerSet = lastLayer.getParent();
+			LayerSet layerSet = rhizoMain.getProject().getRootLayerSet();
+			
+			Layer lastLayer = availableLayers.size() > 0 ? availableLayers.get(availableLayers.size() - 1) : layerSet.getLayers().get(layerSet.size() - 1);
 			double z = lastLayer.getZ();
 			
 			Layer newLayer = new Layer(lastLayer.getParent().getProject(), z + 1, 1, layerSet);
@@ -737,15 +738,17 @@ public class RhizoRSML
 	/**
 	 * Returns all layers in the project starting from <code>firstLayer</code>. LayerSet class ensures that the list of
 	 * layers is always ordered by Z value.
-	 * @param firstLayer
+	 * @param firstLayer - The first layer to import into. If <code>null==firstLayer</code> an empty list is returned.
 	 * @return
 	 */
 	private List<Layer> getAvailableLayers(Layer firstLayer)
 	{
+		List<Layer> layerList = new ArrayList<Layer>();
+		
+		if(null == firstLayer) return layerList;
+
 		LayerSet layerSet = rhizoMain.getProject().getRootLayerSet();
 		List<Layer> allLayers = layerSet.getLayers();
-		
-		List<Layer> layerList = new ArrayList<Layer>();
 		
 		int index = allLayers.indexOf(firstLayer);
 		for(int i = index; i < allLayers.size(); i++)
