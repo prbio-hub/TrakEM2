@@ -774,7 +774,7 @@ public class RhizoRSML
 		int index = allLayers.indexOf(firstLayer);
 		for(int i = index; i < allLayers.size(); i++)
 		{
-			layerList.add(layerList.get(i));
+			layerList.add(allLayers.get(i));
 		}
 		
 		return layerList;
