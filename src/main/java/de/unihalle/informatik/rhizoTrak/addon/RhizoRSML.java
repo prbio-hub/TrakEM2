@@ -398,19 +398,21 @@ public class RhizoRSML
     	if ( metadata.getImage() == null ) { 
     		Image imageMetaData = new Image();
     		
+    		// get the first patch of the layer
+    		Path imagePath = Paths.get( layer.getPatches( false).get(0).getImageFilePath());
+    		Path storageFolderPath = Paths.get( this.rhizoMain.getStorageFolder());
+    		Path imageDirectory = imagePath.getParent();
     		
-    		
-    		// TODO is this correct to just use the first patch ???
-    		try {
-    		Path imagePath = Paths.get( layer.getPatches(true).get(0).getImageFilePath());
-    		// TODO check if this works if storageFolder and image base path are not identical
-    		imageMetaData.setName( convertToRelativPath( imagePath.getParent(),Paths.get( this.rhizoMain.getStorageFolder())) + 
-    				imagePath.getFileName());
-    		} catch (Exception e) {
-				// probably nothing to be done
-			}
+    		System.out.println( "sfp:" + storageFolderPath + " id: " + imageDirectory + " ip:" + imagePath);
+    		if ( imageDirectory.equals( storageFolderPath) ) {
+    			imageMetaData.setName( imagePath.getFileName().toString());
+    		} else if ( imagePath.toString().startsWith(storageFolderPath.toString()) ) {
+    			Path relativPath = storageFolderPath.relativize( imagePath);
+    			imageMetaData.setName( relativPath.toString());
+    		} else {
+    			imageMetaData.setName( imagePath.toString());
+    		}
 
-    		
     		// TODO set sha256 code
     		// TOOD is there a chance to get hold of capture time and set it??
     		
@@ -446,15 +448,6 @@ public class RhizoRSML
     	return metadata;
     }
 
-	// TODO add javadoc and move to rhizoUtils
-	public static String convertToRelativPath(Path path, Path basePath){
-		if ( path.equals(basePath)) {
-			return ( "");
-		} else {
-			Path relativPath = basePath.relativize( path);
-			return relativPath.toString();
-		}
-	}
 
 	/** create one rsml plant with one root for one treeline
 	 * 
