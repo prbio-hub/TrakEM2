@@ -7740,8 +7740,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	writeRSMLButton.addActionListener(this);
     	group21.add(writeRSMLButton);
 
-    	JButton statButton = new JButton("Statistics");
-    	statButton.setToolTipText("Open the statistics output panel.");
+    	JButton statButton = new JButton("Write csv");
+    	statButton.setToolTipText("Write experimental data to csv file");
     	statButton.setActionCommand("stat");
     	statButton.addActionListener(this);
     	statButton.setEnabled(true);

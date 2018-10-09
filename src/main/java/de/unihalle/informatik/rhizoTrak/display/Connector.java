@@ -663,10 +663,17 @@ public class Connector extends Treeline  implements TreeEventListener{
 					this.getRoot().setPosition(posi);
 				}
 			} else {
-				//conTreelines is not empty but the root node of the connector has no children
+				//conTreelines is not empty but the root node of the connector has no children or the connector has no root
 				for(Treeline tree: conTreelines){
 					//take tree root
 					Node<Float> treeRoot = tree.getRoot();
+					//check if the connector has a root
+					if(this.getRoot()==null) {
+						Node<Float> newRoot = this.newNode(this.getX(), treeRoot.getY(), treeRoot.getLayer(), null);
+						this.addNode(null, newRoot, (byte) RhizoProjectConfig.STATUS_CONNECTOR); // aeekz  
+						this.setRoot(newRoot);
+						this.setAffineTransform(tree.getAffineTransform());
+					}			
 					//transfer the position with the connector affine-transform
 					Point2D result = RhizoAddons.changeSpace(treeRoot.getX(),treeRoot.getY(),tree.getAffineTransform(),this.getAffineTransform());
 					if(result==null) return false;
@@ -740,7 +747,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 			return false;
 		boolean added = conTreelines.add(newTreeline);
 		newTreeline.addTreeEventListener(this);
-		sanityCheck( true);
+		sanityCheck(true);
         RhizoMain rhizoMain = this.getProject().getRhizoMain();
         ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
 		conflictManager.processChange(newTreeline, this);
