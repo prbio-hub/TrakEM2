@@ -50,6 +50,7 @@ package de.unihalle.informatik.rhizoTrak.addon;
 import java.awt.GridLayout;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
+import java.awt.image.ImageConsumer;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -96,6 +97,7 @@ import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.RSMLLoader;
+import de.unihalle.informatik.rhizoTrak.persistence.Loader;
 import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
@@ -118,6 +120,8 @@ import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata.PropertyDefinitio
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata.TimeSequence;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Scene;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Scene.Plant;
+import ij.ImagePlus;
+import jj2000.j2k.entropy.encoder.LayersInfo;
 
 /**
  * I/O between rhizoTrak and RSML
@@ -854,12 +858,77 @@ public class RhizoRSML
 
 		// check if it is possible to import (potentially with user feedback)
 		// e.g. status label mappings, inconsistent sha256 codes when importing into non empty layer
-		// if in a layer there are already annotations (i.e. treelines) ask the user if these should be deleted
+		// TODO if in a layer there are already annotations (i.e. treelines) ask the user if these should be deleted
+		
+		// TODO: check for invalid rsml		
+		
+		// check for inconsistencies and create image list
+		StringBuilder imageInconsistencies = new StringBuilder();
+		List<String> imageFilePaths = new ArrayList<String>();
+		for(int i = 0; i < rsmls.size(); i++)
+		{
+			Rsml rsml = rsmls.get(i);
+
+			if(null != rsml.getMetadata().getImage().getSha256())
+			{
+				String path = rsml.getMetadata().getImage().getName();
+				File imageFile = new File(null != rsmlBaseDir ? (rsmlBaseDir.getAbsolutePath() + File.separator + path) 
+						: (rsmlFiles.get(i).getParent() + File.separator + path));
+				
+				Utils.log(imageFile.getAbsolutePath());
+				
+				if(imageFile.exists())
+				{
+					imageFilePaths.add(imageFile.getAbsolutePath());
+					
+					if(i < availableLayers.size())
+					{
+						Layer layer = availableLayers.get(i);
+						RhizoLayerInfo layerInfo = rhizoMain.getLayerInfo(layer);
+						
+						if(null == layerInfo)
+						{
+							// TODO: case that project has been opened so no layerInfos are created
+
+						}
+						else
+						{
+							if(!layerInfo.getImageHash().equals(rsml.getMetadata().getImage().getSha256()))
+							{
+								imageInconsistencies.append("\nImages do not match: " + RhizoUtils.getImageName(layer) + " and " + path + "\n");
+							}
+						}
+					}
+				}
+				else
+				{
+					imageFilePaths.add(null);
+					
+					imageInconsistencies.append("\nCould not find image for file: " + rsmlFiles.get(i).getName() + "\n");
+					continue;
+				}
+			}
+			else
+			{
+				// TODO: search for image anyway
+			} 
+		}
+		
+		if(imageInconsistencies.length() > 0)
+		{
+			imageInconsistencies.insert(0, "Found inconsistencies:\n\n");
+			imageInconsistencies.append("\n\nProceed anyway?");
+			
+			boolean check = Utils.checkYN(imageInconsistencies.toString());
+			
+			if(!check) return;
+		}
+		
+		// >>>>>>>>>> checks for inconsistencies need to happen before this point !!!
+		
+		
 		
 		// create new empty layers as needed
-		// TODO check if there are images in the base directory that correspond to the image names/sha codes in the rsml
-		// if found we can borrow methods from RhizoImages to import a layer and an image
-		// for now only add empty layers
 		while(rsmlFiles.size() > availableLayers.size())
 		{
 			LayerSet layerSet = rhizoMain.getProject().getRootLayerSet();
@@ -874,8 +943,6 @@ public class RhizoRSML
 			
 			availableLayers.add(newLayer);
 		}
-
-		// TODO list with imageplus objects for empty layers
 		
 		// collect for each ID of a toplevel root/polyline the treeline object created for this ID
 		HashMap<String,List<Treeline>> topLevelIdTreelineListMap = new HashMap<String,List<Treeline>>();
@@ -884,7 +951,9 @@ public class RhizoRSML
 		for ( int i = 0 ; i < rsmls.size() ; i++ ) {
 			Rsml rsml = rsmls.get( i);
 			Layer layer = availableLayers.get( i);
-			importRsmlToLayer( rsml, layer, topLevelIdTreelineListMap);
+			String imageFilePath = imageFilePaths.get(i);
+			
+			importRsmlToLayer( rsml, layer, imageFilePath, topLevelIdTreelineListMap);
 		}
 	}
 	
@@ -915,9 +984,10 @@ public class RhizoRSML
 	/** import the RSML file  <code>file</code> into rhizoTrak for <code>layer</code>.
 	 * @param file
 	 * @param layer
+	 * @param imageFilePath Is <code> null </code> if image has not been found for this rsml file
 	 * @param topLevelIdTreelineListMap 
 	 */
-	private void importRsmlToLayer( Rsml rsml , Layer layer, HashMap<String, List<Treeline>> topLevelIdTreelineListMap) {
+	private void importRsmlToLayer( Rsml rsml , Layer layer, String imageFilePath, HashMap<String, List<Treeline>> topLevelIdTreelineListMap) {
 		// read the rsml file
 
 		try {
@@ -926,12 +996,25 @@ public class RhizoRSML
 				layerInfo = new RhizoLayerInfo( layer, rsml);
 				this.rhizoMain.setLayerInfo( layer, layerInfo);
 			} else {
+				// if a rsml file has been imported into this layer before
+				// retain the meta data
+				if(null != layerInfo.getRsml())
+				{
+					rsml.setMetadata(layerInfo.getRsml().getMetadata());
+				}
+				
 				layerInfo.setRsml( rsml);
 			}
 
-			// TODO read image if layer is empty 
-			// TODO we have to figure out what to do about the meta data of the RSML at this point
-			
+			// load image if layer is empty and image was found for the rsml file
+			if(null == layerInfo.getImageHash() && null != imageFilePath)
+			{
+				Project project = rhizoMain.getProject();
+				Loader loader = project.getLoader();
+				
+				loader.importImage(layer, 0, 0, imageFilePath, true);
+			}
+
 			// import the root
 			for ( Scene.Plant plant : rsml.getScene().getPlant() ) {
 				for ( RootType root : plant.getRoot() ) {
@@ -948,6 +1031,10 @@ public class RhizoRSML
 					tlList.add(tl);
 				}
 			}
+			
+			// TODO connectors
+			
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1210,7 +1297,7 @@ public class RhizoRSML
 	 * @return
 	 */
 	private float getRadiusFromRsml(Function diameters, int pointIndex) {
-		if ( diameters != null && diameters.getSample().size() >= pointIndex && pointIndex >= 0) {
+		if ( diameters != null && diameters.getSample().size() > pointIndex && pointIndex >= 0) {
 			return 0.5f * diameters.getSample().get( pointIndex).getValue().floatValue();
 		} else {
 			return 0.0f;
