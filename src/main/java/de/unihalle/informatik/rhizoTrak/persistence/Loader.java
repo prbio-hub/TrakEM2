@@ -129,6 +129,8 @@ import javax.swing.JPopupMenu;
 import amira.AmiraMeshDecoder;
 import de.unihalle.informatik.rhizoTrak.ControlWindow;
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoLayerInfo;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.display.AreaList;
 import de.unihalle.informatik.rhizoTrak.display.DLabel;
@@ -185,6 +187,7 @@ import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
 import ij.process.StackStatistics;
+import jj2000.j2k.entropy.encoder.LayersInfo;
 import loci.formats.ChannelSeparator;
 import loci.formats.FormatException;
 import loci.formats.IFormatReader;
@@ -3089,8 +3092,8 @@ while (it.hasNext()) {
 							//actyc: lock all new imported images
 							p.setLocked(true);
 							//actyc: calculate and set image hash
-							String hash = RhizoUtils.calculateSHA256(p.getImagePlus());
-							layer.getProject().getRhizoMain().getLayerInfo(layer).setImageHash(hash);
+							RhizoLayerInfo layerInfo = new RhizoLayerInfo(layer, null);
+							layer.getProject().getRhizoMain().setLayerInfo(layer, layerInfo);
 						}
 						layer.getParent().enlargeToFit(p, LayerSet.NORTHWEST);
 					}

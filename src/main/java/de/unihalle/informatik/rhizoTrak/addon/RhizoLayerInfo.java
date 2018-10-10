@@ -85,25 +85,20 @@ public class RhizoLayerInfo {
 	 * @return
 	 */
 	public String getImageHash() {
+		//make sure to deliver the current hash
+		updateImageHash();
 		return imageHash;
 	}
 	
-	/**
-	 * set the imageHash
-	 * @param hash
-	 */
-	public void setImageHash(String hash) {
-		this.imageHash=hash;
-	}
 	
 	/** update the SHA256 hash for the layer, if a image is found for this layer
-	 * @return teen urue if SHA256 hash has been updated
+	 * @return true if SHA256 hash has been updated
 	 */
 	public boolean updateImageHash(){
 		if(layer.getPatches(false)==null || layer.getPatches(false).size() < 1) return false;
 		Patch patch = layer.getPatches(false).get(0);
-		if(patch.getImagePlus()==null) return false;			
-		setImageHash(RhizoUtils.calculateSHA256(patch.getImagePlus()));
+		if(patch.getImagePlus()==null) return false;
+		this.imageHash = RhizoUtils.calculateSHA256(patch.getFilePath());
     	return true;
 	}
 }

@@ -50,7 +50,11 @@ package de.unihalle.informatik.rhizoTrak.addon;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -505,23 +509,18 @@ public class RhizoUtils {
 		 * @param ip
 		 * @return
 		 */
-		public static String calculateSHA256(ImagePlus ip) {
+		public static String calculateSHA256(String pathString) {
 			String result="";
-			StringBuilder sb = new StringBuilder();
-			for(int[] firstD : ip.flatten().getProcessor().convertToByte(false).getIntArray()) {
-				for(int secD : firstD) {
-					sb.append(Integer.toString(secD));
-				}
-			}
-			String rawString = sb.toString();
 			try {
+				Path path = Paths.get(pathString);
+				byte[] fileByteArray = Files.readAllBytes(path);
 				MessageDigest dige = MessageDigest.getInstance("SHA-256");
-				byte[] shaHash = dige.digest(rawString.getBytes("UTF-8"));	
+				byte[] shaHash = dige.digest(fileByteArray);	
 				result=Base64.getEncoder().encodeToString(shaHash);
-			} catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
-				Utils.log2("unable to digest the string");
-				e.printStackTrace();
+			} catch (NoSuchAlgorithmException | IOException e) {
+				Utils.log2("unable to create sha-256 code for path"+pathString);
 			}
+			System.out.println(result);
 			return result;
 		}
 
