@@ -373,8 +373,6 @@ public class RhizoMTBXML
 			Map<List<Integer>, Treeline> rootsTable = new HashMap<List<Integer>, Treeline>();
 			
 			
-			ArrayList<Treeline> allTheNewTreelines = new ArrayList<>();
-			
 			for(int i = 0; i < rootSets.length; i++)
 			{		
 				Layer currentLayer = layers.get(i); // order of rootsets has to correspond to the layer if we don't care about image names
@@ -412,7 +410,6 @@ public class RhizoMTBXML
 					MTBXMLRootType currentRoot = roots[j];
 					
 	    			Treeline treeline = (Treeline) addedRootsList.get(j);
-	    			allTheNewTreelines.add(treeline);
 	    			treeline.setLayer(currentLayer);
 	    			
 	    			// TODO: this is a workaround for the repainting issues that occur when creating new nodes out of a mtbxml file
@@ -476,10 +473,7 @@ public class RhizoMTBXML
 	    			rootsTable.put(Arrays.asList(currentRootSet.getRootSetID(), currentRoot.getRootID()), treeline);
 	    			
 				}
-			}
-
-			for (Treeline treeline2 : allTheNewTreelines) {
-				treeline2.repaint(true,treeline2.getFirstLayer());
+				RhizoUtils.repaintTreelineList(addedRootsList);
 			}
 			
 			MTBXMLRootAssociationType[] rootAssociations = rootProject.getRootAssociationsArray();
