@@ -172,6 +172,7 @@ public class RhizoRSML
 	
 	private JFrame rsmlLoaderFrame;
 
+	private boolean debugWrite = true;
 	/**
 	 *  Writes the current project to a RSML file.
 	 *  @author Posch
@@ -401,7 +402,6 @@ public class RhizoRSML
     			Path storageFolderPath = Paths.get( this.rhizoMain.getStorageFolder());
     			Path imageDirectory = imagePath.getParent();
 
-    			System.out.println( "sfp:" + storageFolderPath + " id: " + imageDirectory + " ip:" + imagePath);
     			if ( imageDirectory.equals( storageFolderPath) ) {
     				imageMetaData.setName( imagePath.getFileName().toString());
     			} else if ( imagePath.toString().startsWith(storageFolderPath.toString()) ) {
@@ -474,8 +474,6 @@ public class RhizoRSML
 
 
 	/** create one rsml plant with one root for one treeline.
-	 * <b>
-	 * Currently only one root for each plant
 	 * 
 	 * @param tl
 	 * @param rhizoLayerInfo 
@@ -483,7 +481,6 @@ public class RhizoRSML
 	 * @return the rsml plant or null, if the treeline has no root node
 	 *
 	 */
-    // TODO expand to handle multiple roots for one plant
 	private Plant createPlantForTreeline(Treeline tl, RhizoLayerInfo rhizoLayerInfo, Connector connector) {
 		if ( tl.getRoot() != null ) {
 			// create the JAXB root for the treeline
@@ -492,15 +489,21 @@ public class RhizoRSML
 
 			// check if this treeline was created from a RSML toplevel root
 			if ( rhizoLayerInfo != null && rhizoLayerInfo.getRootForTreeline(tl) != null) {
+				if ( debugWrite ) System.out.println( "createPlantForTreeline: found an old root");
 				RootType oldRoot = rhizoLayerInfo.getRootForTreeline(tl);
-				Plant plant = rhizoLayerInfo.getPlantForRoot(root);
+				Plant plant = rhizoLayerInfo.getPlantForRoot(oldRoot);
 				
 				if ( rootEquals( root, oldRoot) ) {
 					// geometry did not change: update diameter and status label in old JAXB root
 					updateFunctions( root, oldRoot);
+					if ( debugWrite ) System.out.println( "    unchanged geometry " + plant.getRoot().size() + " oldRoot " + oldRoot);
 				} else {
 					// geometry did change: use new JAXB root and copy everything possible from old one
-					// TODO: copy annotation from old toplevel root
+					if ( debugWrite )  System.out.println( "    changed geometry " + plant.getRoot().size() + "  oldRoot contained: " + plant.getRoot().contains(oldRoot));
+					root.setId( oldRoot.getId());
+					root.setLabel( oldRoot.getLabel());
+					root.setAccession( oldRoot.getAccession());
+					root.setAnnotations( oldRoot.getAnnotations());
 					plant.getRoot().remove( oldRoot);
 					plant.getRoot().add( root);
 				}
@@ -508,6 +511,8 @@ public class RhizoRSML
 				return plant;
 			} else {
 				// no RSML toplevel root for this treeline
+				if ( debugWrite )  System.out.println( "createPlantForTreeline: treeline with out RSML root " + tl.getId());
+
 				Plant plant = new Plant();
 				plant.getRoot().add( root);
 				return plant;
@@ -526,7 +531,7 @@ public class RhizoRSML
 	 */
 	private void updateFunctions(RootType srcRoot, RootType dstRoot) {
 		copyFunction( getFunctionByName( srcRoot, FUNCTION_NAME_DIAMETER), getFunctionByName( dstRoot, FUNCTION_NAME_DIAMETER));
-		copyFunction( getFunctionByName( srcRoot, PROPERTY_NAME_PARENTNODE), getFunctionByName( dstRoot, PROPERTY_NAME_PARENTNODE));
+		copyFunction( getFunctionByName( srcRoot, FUNCTION_NAME_STATUSLABEL), getFunctionByName( dstRoot, FUNCTION_NAME_STATUSLABEL));
 		
 		List<RootType> srcChildList = srcRoot.getRoot();
 		List<RootType> dstChildList = dstRoot.getRoot();
@@ -606,12 +611,19 @@ public class RhizoRSML
 			PointType point1 = polyline1.getPoint().get(i);
 			PointType point2 = polyline2.getPoint().get(i);
 			if ( point1.getX().compareTo( point2.getX()) != 0 ||
-					point1.getY().compareTo( point2.getY()) != 0 ||
-					point1.getZ().compareTo( point2.getZ()) != 0 ) {
+					point1.getY().compareTo( point2.getY()) != 0 ) {
+//				System.out.println("A");
+				return false;
+			} else if ( point1.getZ() == null &&  point2.getZ() == null) {
+//				System.out.println("B");
+				continue;
+			} else if (point1.getZ() == null ||  point2.getZ() == null ||
+					point1.getZ().compareTo( point2.getZ()) != 0) {
+//				System.out.println("C");
 				return false;
 			}
 		}
-		
+
 		return true;
 	}
 
