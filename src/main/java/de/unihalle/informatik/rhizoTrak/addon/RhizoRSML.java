@@ -59,6 +59,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -156,6 +157,11 @@ public class RhizoRSML
 	private RhizoMain rhizoMain;
 	
 	private File rsmlBaseDir = null;
+	
+	/**
+	 * Set by user dialog
+	 */
+	private boolean deleteTreelinesBeforeImport = false;
 	
 	private final String ONLY_STRING = "Current layer only";
 	private final String ALL_STRING = "All layers";
@@ -858,9 +864,34 @@ public class RhizoRSML
 
 		// check if it is possible to import (potentially with user feedback)
 		// e.g. status label mappings, inconsistent sha256 codes when importing into non empty layer
-		// TODO if in a layer there are already annotations (i.e. treelines) ask the user if these should be deleted
 		
 		// TODO: check for invalid rsml		
+		
+		// check if treelines already exist on available layers
+		StringBuilder layersWithTreelines = new StringBuilder();
+		HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks(rhizoMain.getProject());
+		for(Layer layer: availableLayers)
+		{
+			if(RhizoUtils.areTreelinesInLayer(rootstackThings, layer))
+			{
+				layersWithTreelines.append("Layer " + (int)(layer.getZ()+1) + "\n");
+			}
+		}
+		
+		if(layersWithTreelines.length() > 0)
+		{
+			layersWithTreelines.insert(0, "The following layers already contain treelines: \n\n");
+			layersWithTreelines.append("\n");
+			String[] options = new String[] {"Delete treelines before importing", "Import and don't delete", "Cancel"};
+			
+			int result = JOptionPane.showOptionDialog(null, layersWithTreelines.toString(), "Warning", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE,
+			        null, options, options[0]);
+			
+			if(result == 2) return; // 2 == Cancel
+			
+			// set the flag for the import method
+			deleteTreelinesBeforeImport = result == 0;
+		}
 		
 		// check for inconsistencies and create image list
 		StringBuilder imageInconsistencies = new StringBuilder();
@@ -868,6 +899,8 @@ public class RhizoRSML
 		for(int i = 0; i < rsmls.size(); i++)
 		{
 			Rsml rsml = rsmls.get(i);
+			
+			// TODO: rsml file image object is null -> rsml file invalid?
 
 			if(null != rsml.getMetadata().getImage().getSha256())
 			{
@@ -895,7 +928,7 @@ public class RhizoRSML
 						{
 							if(!layerInfo.getImageHash().equals(rsml.getMetadata().getImage().getSha256()))
 							{
-								imageInconsistencies.append("\nImages do not match: " + RhizoUtils.getImageName(layer) + " and " + path + "\n");
+								imageInconsistencies.append("Images do not match: " + RhizoUtils.getImageName(layer) + " and " + path + "\n");
 							}
 						}
 					}
@@ -904,7 +937,7 @@ public class RhizoRSML
 				{
 					imageFilePaths.add(null);
 					
-					imageInconsistencies.append("\nCould not find image for file: " + rsmlFiles.get(i).getName() + "\n");
+					imageInconsistencies.append("Could not find image for file: " + rsmlFiles.get(i).getName() + "\n");
 					continue;
 				}
 			}
@@ -917,11 +950,11 @@ public class RhizoRSML
 		if(imageInconsistencies.length() > 0)
 		{
 			imageInconsistencies.insert(0, "Found inconsistencies:\n\n");
-			imageInconsistencies.append("\n\nProceed anyway?");
+			imageInconsistencies.append("\nProceed anyway?");
+
+			int result = JOptionPane.showConfirmDialog(null, imageInconsistencies.toString(), "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 			
-			boolean check = Utils.checkYN(imageInconsistencies.toString());
-			
-			if(!check) return;
+			if(result == JOptionPane.NO_OPTION) return;
 		}
 		
 		// >>>>>>>>>> checks for inconsistencies need to happen before this point !!!
@@ -1005,6 +1038,9 @@ public class RhizoRSML
 				
 				layerInfo.setRsml( rsml);
 			}
+			
+			// set by user
+			if(deleteTreelinesBeforeImport) RhizoUtils.deleteAllTreelinesFromLayer(layer, rhizoMain.getProject());
 
 			// load image if layer is empty and image was found for the rsml file
 			if(null == layerInfo.getImageHash() && null != imageFilePath)
