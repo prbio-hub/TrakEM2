@@ -420,9 +420,15 @@ public class RhizoRSML
 
     			// TOOD is there a chance to get hold of capture time and set it??
 
-    			// TODO: set unit from calibration information, if available
-            	metadata.setUnit(  "pixel");
-            	metadata.setResolution( new BigDecimal(1));
+    			// set unit from calibration information, if available
+    			if ( layer.getPatches( false).get(0) != null && layer.getPatches( false).get(0).getImagePlus() != null ) {
+    				// Note: we use the calibration of x
+    				metadata.setUnit(  layer.getPatches( false).get(0).getImagePlus().getCalibration().getXUnit());
+    				metadata.setResolution( new BigDecimal( layer.getPatches( false).get(0).getImagePlus().getCalibration().pixelWidth));
+    			} else {
+    				metadata.setUnit(  "pixel");
+    				metadata.setResolution( new BigDecimal(1));
+    			}
 
     		} else {
     			// no image in this layer
