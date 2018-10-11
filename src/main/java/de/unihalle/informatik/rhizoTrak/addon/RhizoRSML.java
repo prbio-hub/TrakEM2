@@ -131,7 +131,7 @@ import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Scene.Plant;
 
 public class RhizoRSML
 {
-	//TODO general TODO: better always check if JAXB objects are null, even if they should not
+	//TODO  better always check if JAXB objects are null, even if they should not
 	// e.g. geometry of a root - might happen with broken rsml files
 	
 	private boolean debug = false;
@@ -156,7 +156,6 @@ public class RhizoRSML
 	// TODO make this configurable
 	private static byte default_statuslabel = 0;
 
-
 	private RhizoMain rhizoMain;
 	
 	private File rsmlBaseDir = null;
@@ -166,8 +165,10 @@ public class RhizoRSML
 	 */
 	private boolean deleteTreelinesBeforeImport = false;
 	
-	private final String ONLY_STRING = "Current layer only";
-	private final String ALL_STRING = "All layers";
+	private static final String ONLY_STRING = "Current layer only";
+	private static final String ALL_STRING = "All layers";
+	private static final String UNIFIED_STRING = "Unified";
+	private static final String NOTUNIFIED_STRING = "Not unified";
 
 	public RhizoRSML(RhizoMain rhizoMain) {
 		this.rhizoMain = rhizoMain;
@@ -177,7 +178,7 @@ public class RhizoRSML
 	
 	private JDialog rsmlLoaderFrame;
 
-	private boolean debugWrite = true;
+	private boolean debugWrite = false;
 
 	/**
 	 *  Writes the current project to a RSML file.
@@ -189,11 +190,18 @@ public class RhizoRSML
 		// query output options
 		String[] choicesLayers = {ALL_STRING, ONLY_STRING};
 		JComboBox<String> comboLayers = new JComboBox<String>(choicesLayers);
+		
+		String[] choicesUnified = {UNIFIED_STRING, NOTUNIFIED_STRING};
+		JComboBox<String> comboUnified = new JComboBox<String>(choicesUnified);
+
 
 		JPanel statChoicesPanel = new JPanel();
 		statChoicesPanel.setLayout(new GridLayout( 4, 2, 0, 10));
 		statChoicesPanel.add(new JLabel("Layers"));
 		statChoicesPanel.add( comboLayers);
+		statChoicesPanel.add(new JLabel("Unified "));
+		statChoicesPanel.add( comboUnified);
+
 
 		int result = JOptionPane.showConfirmDialog(null, statChoicesPanel, "Output Options", 
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -203,6 +211,7 @@ public class RhizoRSML
 		}
 
 		boolean writeAllLAyers  = ((String) comboLayers.getSelectedItem()).equals( ALL_STRING);
+		boolean unified = ((String) comboUnified.getSelectedItem()).equals( UNIFIED_STRING);
 
 		String folder;
 		if  ( this.rhizoMain.getStorageFolder() == null )
@@ -226,7 +235,8 @@ public class RhizoRSML
 				return; // user cancelled dialog
 			String name = fileChooser.getSelectedFile().toString().replaceFirst(".rsml\\z", "");;
 			for ( Layer layer : rhizoMain.getProject().getRootLayerSet().getLayers()) {
-				writeLayer( new File( name + "-" + String.valueOf( RhizoUtils.getTimepointForLayer( layer)) + ".rsml"), layer, this.rhizoMain.getLayerInfo( layer));
+				writeLayer( new File( name + "-" + String.valueOf( RhizoUtils.getTimepointForLayer( layer)) + ".rsml"), layer, 
+						this.rhizoMain.getLayerInfo( layer), unified);
 			}
 
 		} else {
@@ -241,7 +251,7 @@ public class RhizoRSML
 				return; // user cancelled dialog
 
 			// TODO: ask if file should be overridden, if is exists??
-			writeLayer( fileChooser.getSelectedFile(), layer, this.rhizoMain.getLayerInfo( layer));
+			writeLayer( fileChooser.getSelectedFile(), layer, this.rhizoMain.getLayerInfo( layer), unified);
 		}	
 	}
     
@@ -250,9 +260,10 @@ public class RhizoRSML
 	 * @param saveFile
 	 * @param layer
 	 * @param rhizoLayerInfo 
+	 * @param unified 
 	 */
-	private void writeLayer(File saveFile, Layer layer, RhizoLayerInfo rhizoLayerInfo) {
-		Rsml rsml = createRSML( layer, rhizoLayerInfo);
+	private void writeLayer(File saveFile, Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified) {
+		Rsml rsml = createRSML( layer, rhizoLayerInfo, unified);
 		if ( rsml == null ) {
 			Utils.showMessage( "cannot create RSML for layer " + RhizoUtils.getTimepointForLayer( layer));
 			return;
@@ -277,9 +288,10 @@ public class RhizoRSML
      * 
      * @param layer 
 	 * @param rhizoLayerInfo 
+	 * @param unified 
      * @return the rsml data structure or null, if no rootstacks are found
      */
-    private Rsml createRSML(Layer layer, RhizoLayerInfo rhizoLayerInfo) {
+    private Rsml createRSML(Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified) {
     	Project project = Display.getFront().getProject();
     	
 		// collect all treelines to write 
@@ -314,9 +326,9 @@ public class RhizoRSML
     		// --- meta data
     		Rsml.Metadata metadata;
     		if (rhizoLayerInfo == null || rhizoLayerInfo.getRsml() == null || rhizoLayerInfo.getRsml().getMetadata() == null) {
-    			metadata = createMetatdata( layer, rhizoLayerInfo);
+    			metadata = createMetatdata( layer, rhizoLayerInfo, unified);
     		} else {
-    			metadata = createMetatdata( layer, rhizoLayerInfo);
+    			metadata = createMetatdata( layer, rhizoLayerInfo, unified);
     		}
     		rsml.setMetadata( metadata);
 
@@ -339,8 +351,8 @@ public class RhizoRSML
 
 			// now create the roots
     		for ( Treeline tl : allTreelinesInLayer ) {
-    			Plant plant = createPlantForTreeline( tl, rhizoLayerInfo, treelineConnectorMap.get( tl));
-    			if ( plant != null ) {
+    			Plant plant = createPlantForTreeline( tl, rhizoLayerInfo, treelineConnectorMap.get( tl), unified);
+    			if ( plant != null && ! scene.getPlant().contains( plant)) {
     				scene.getPlant().add( plant);
     			}
     		}
@@ -363,9 +375,10 @@ public class RhizoRSML
      * 
      * @param layer
      * @param rhizoLayerInfo 
+     * @param unified 
      * @return
      */
-    private Rsml.Metadata createMetatdata( Layer layer, RhizoLayerInfo rhizoLayerInfo) {
+    private Rsml.Metadata createMetatdata( Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified) {
     	Rsml.Metadata oldMetadata = null;
     	if ( rhizoLayerInfo != null && rhizoLayerInfo.getRsml() != null)
     		oldMetadata = rhizoLayerInfo.getRsml().getMetadata();
@@ -394,7 +407,7 @@ public class RhizoRSML
     	TimeSequence timeSequence = new TimeSequence();
     	timeSequence.setLabel( projectName);
     	timeSequence.setIndex(  BigInteger.valueOf( RhizoUtils.getTimepointForLayer( layer)));
-    	timeSequence.setUnified( true);
+    	timeSequence.setUnified( unified);
     	metadata.setTimeSequence( timeSequence);
        	
     	// -----------------------------------------------------------------------------
@@ -490,14 +503,15 @@ public class RhizoRSML
 	 * @param tl
 	 * @param rhizoLayerInfo 
 	 * @param connector the tl is member of, null if treeline is not member of any treeline
+	 * @param unified 
 	 * @return the rsml plant or null, if the treeline has no root node
 	 *
 	 */
-	private Plant createPlantForTreeline(Treeline tl, RhizoLayerInfo rhizoLayerInfo, Connector connector) {
+	private Plant createPlantForTreeline(Treeline tl, RhizoLayerInfo rhizoLayerInfo, Connector connector, boolean unified) {
 		if ( tl.getRoot() != null ) {
 			// create the JAXB root for the treeline
 			Node<Float> rootNode = tl.getRoot();
-			RootType root = createRSMLRootFromNode( tl, connector, rootNode, null, -1, -1);
+			RootType root = createRSMLRootFromNode( tl, connector, rootNode, null, -1, -1, unified);
 
 			// check if this treeline was created from a RSML toplevel root
 			if ( rhizoLayerInfo != null && rhizoLayerInfo.getRootForTreeline(tl) != null) {
@@ -660,10 +674,11 @@ public class RhizoRSML
 	 *                    ignored for the top level rsml root for a treeline
 	 * @param parentNodeIndex index of the parent node in the rsml root above this subtree to be created, 
 	 *                    ignored for the top level rsml root for a treeline
+	 * @param unified 
 	 * @return
 	 */
 	private RootType createRSMLRootFromNode( Treeline tl, Connector connector, Node<Float> node, RootType parentRSMLRoot, 
-			int siblingIndex, int parentNodeIndex) {
+			int siblingIndex, int parentNodeIndex, boolean unified) {
 		Node<Float> parentNode = node.getParent();
 		
 		RootType root = new RootType();
@@ -686,7 +701,7 @@ public class RhizoRSML
 
 		if ( parentNode == null ) {
 			// top level root
-			root.setId( getRsmlIdForTreeline( tl, connector));
+			root.setId( getRsmlIdForTreeline( tl, connector, unified));
 		} else {
 			// non top level root
 			root.setId( parentRSMLRoot.getId() + "-" + String.valueOf( siblingIndex));
@@ -735,9 +750,9 @@ public class RhizoRSML
 				// create branching root
 				// beware: we already added a node after the branching node
 				if ( this.rhizoMain.getProjectConfig().isParentNodeIndexStartsWithOne() )
-					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-1));
+					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-1, unified));
 				else 
-					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-2));
+					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-2, unified));
 
 				brachingSubtreeIndex++;
 			}
@@ -778,13 +793,25 @@ public class RhizoRSML
 		}
 	}
 
-	/** return a string id which represent the treeline <code>tl</code> in a RSML file
+	/** return a string id which represent the treeline <code>tl</code> in a RSML file.
+	 * Always use the connector Id, if any
 	 * @param tl
 	 * @param connector
 	 * @return
 	 */
 	private String getRsmlIdForTreeline(Treeline tl, Connector connector) {
-		if ( connector == null)
+		return getRsmlIdForTreeline(tl, connector);
+	}
+	
+	/** return a string id which represent the treeline <code>tl</code> in a RSML file.
+	 * If <code>unified</code> is true the connector Id is used, if any, otherwise always the treeline Id
+	 * @param tl
+	 * @param connector
+	 * @param unified 
+	 * @return
+	 */
+	private String getRsmlIdForTreeline(Treeline tl, Connector connector, boolean unified) {
+		if ( connector == null || ! unified)
 			return String.valueOf( "T-" + tl.getId());
 		else
 			return String.valueOf( "C-" + connector.getId());	
@@ -1325,10 +1352,7 @@ public class RhizoRSML
 			
 			RadiusNode parentNode = null;
 			if ( parentNodeIndex != (-1) ) {
-				// TODO the RSML homepage (thesaurus) seems to indicate that the node indices in RSML files
-				// start with 1
-				// if this is correct, we need to lookup  parentNodeIndex-1, as pointIndex starts with 0
-				// TODO check for start of parent node index (0 or 1)
+				// check for start of parent node index (0 or 1)
 				if ( this.rhizoMain.getProjectConfig().isParentNodeIndexStartsWithOne() )
 					parentNode = parentTreelineNodes.get( parentNodeIndex-1);
 				else 
