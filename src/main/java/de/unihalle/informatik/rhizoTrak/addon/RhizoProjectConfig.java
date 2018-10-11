@@ -216,6 +216,18 @@ public class RhizoProjectConfig {
 	 * If true the image calibration information is shown to the user when writing statistics with non-pixel units
 	 */
 	private boolean showCalibrationInfo = true;
+
+	/**
+	 * true if the parent indices start with 1, otherwise it is assume the they start with 0
+	 * 
+	 */
+	private boolean parentNodeIndexStartsWithOne = true;
+
+	/**
+	 * if true sample element in functions of RSML files are written as attribute value,
+	 * otherwise written as text
+	 */
+	private boolean writeFunctionSamplesAsAttribute = true;
 	
 	public RhizoProjectConfig() {
 		// we always need the fixed status labels
@@ -760,6 +772,36 @@ public class RhizoProjectConfig {
 	public void setShowCalibrationInfo(boolean showCalibrationInfo) {
 		setUserSettingsChanged();
 		this.showCalibrationInfo = showCalibrationInfo;
+	}
+
+	/**
+	 * @return the parentNodeIndexStartsWithOne
+	 */
+	public boolean isParentNodeIndexStartsWithOne() {
+		return parentNodeIndexStartsWithOne;
+	}
+
+	/**
+	 * @param parentNodeIndexStartsWithOne the parentNodeIndexStartsWithOne to set
+	 */
+	public void setParentNodeIndexStartsWithOne(boolean parentNodeIndexStartsWithOne) {
+		setUserSettingsChanged();
+		this.parentNodeIndexStartsWithOne = parentNodeIndexStartsWithOne;
+	}
+
+	/**
+	 * @return the writeFunctionSamplesAsAttribute
+	 */
+	public boolean isWriteFunctionSamplesAsAttribute() {
+		return writeFunctionSamplesAsAttribute;
+	}
+
+	/**
+	 * @param writeFunctionSamplesAsAttribute the writeFunctionSamplesAsAttribute to set
+	 */
+	public void setWriteFunctionSamplesAsAttribute(boolean writeFunctionSamplesAsAttribute) {
+		setUserSettingsChanged();
+		this.writeFunctionSamplesAsAttribute = writeFunctionSamplesAsAttribute;
 	}
 
 	/**

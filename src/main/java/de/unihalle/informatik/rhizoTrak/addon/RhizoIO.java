@@ -226,6 +226,12 @@ public class RhizoIO {
 			if ( gs.getFillRootShape() != null)
 				rhizoMain.getProjectConfig().setSegmentsFill( gs.getFillRootShape());
 			
+			if ( gs.getWriteFunctionSamplesAsAttribute() != null)
+				rhizoMain.getProjectConfig().setWriteFunctionSamplesAsAttribute( gs.getWriteFunctionSamplesAsAttribute());
+			if ( gs.getParentNodeIndexStartsWithOne() != null)
+				rhizoMain.getProjectConfig().setParentNodeIndexStartsWithOne( gs.getParentNodeIndexStartsWithOne());
+
+
 			rhizoMain.getProjectConfig().resetChanged();
 			
 			if ( debug ) {
@@ -751,6 +757,8 @@ public class RhizoIO {
 	        gs.setShowDiameterLines( rhizoMain.getProjectConfig().isNodesDiameterLines()); 
 	        gs.setDrawRootShape(rhizoMain.getProjectConfig().isSegmentsAsPolygon());
 	        gs.setFillRootShape( rhizoMain.getProjectConfig().isSegmentsFill());
+	        gs.setParentNodeIndexStartsWithOne( rhizoMain.getProjectConfig().isParentNodeIndexStartsWithOne());
+	        gs.setWriteFunctionSamplesAsAttribute(rhizoMain.getProjectConfig().isWriteFunctionSamplesAsAttribute());
 			
 			m.marshal(gs, userSettingsFile);
 		} catch(Exception e) {

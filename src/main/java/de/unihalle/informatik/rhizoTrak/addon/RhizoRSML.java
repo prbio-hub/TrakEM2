@@ -85,7 +85,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.dom.DOMResult;
 
-import org.python.indexer.NBinding;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -172,20 +171,6 @@ public class RhizoRSML
 
 	private String projectName;
 	
-	/**
-	 * true f the parent indices start with 1, otherwise it is assume the they start with 0
-	 * 
-	 */
-	// TODO move to ProjectConfig and store in user settings
-	private boolean parentNodeIndexStartsWithOne = true;
-	
-	/**
-	 * if true sample element in functions of RSML files are written as attribute value,
-	 * otherwise written as text
-	 */
-	// TODO move to ProjectConfig and store in user settings
-	private boolean writeFunctionSamplesAsAttribute = true;
-
 	private JDialog rsmlLoaderFrame;
 
 	private boolean debugWrite = true;
@@ -740,7 +725,7 @@ public class RhizoRSML
 				child = itr.next();
 				// create branching root
 				// beware: we already added a node after the branching node
-				if ( parentNodeIndexStartsWithOne )
+				if ( this.rhizoMain.getProjectConfig().isParentNodeIndexStartsWithOne() )
 					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-1));
 				else 
 					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-2));
@@ -860,7 +845,7 @@ public class RhizoRSML
 	 * @param value
 	 */
 	private void setSampleValue(Element element, BigDecimal value) {
-		if ( writeFunctionSamplesAsAttribute ) {
+		if ( this.rhizoMain.getProjectConfig().isWriteFunctionSamplesAsAttribute() ) {
 			element.setAttribute( "value", String.valueOf( value));
 		} else {
 			element.setTextContent(String.valueOf( value));
@@ -1337,7 +1322,7 @@ public class RhizoRSML
 				// start with 1
 				// if this is correct, we need to lookup  parentNodeIndex-1, as pointIndex starts with 0
 				// TODO check for start of parent node index (0 or 1)
-				if ( parentNodeIndexStartsWithOne )
+				if ( this.rhizoMain.getProjectConfig().isParentNodeIndexStartsWithOne() )
 					parentNode = parentTreelineNodes.get( parentNodeIndex-1);
 				else 
 					parentNode = parentTreelineNodes.get( parentNodeIndex);

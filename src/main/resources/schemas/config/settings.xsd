@@ -54,6 +54,8 @@
 			<xs:element name="showDiameterLines" type="xs:boolean" minOccurs="0"></xs:element>
 			<xs:element name="drawRootShape" type="xs:boolean" minOccurs="0"></xs:element>
 			<xs:element name="fillRootShape" type="xs:boolean" minOccurs="0"></xs:element>
+			<xs:element name="parentNodeIndexStartsWithOne" type="xs:boolean" minOccurs="0"></xs:element>
+			<xs:element name="writeFunctionSamplesAsAttribute" type="xs:boolean" minOccurs="0"></xs:element>
 		</xs:sequence>
 	</xs:complexType>
 	</xs:element>
