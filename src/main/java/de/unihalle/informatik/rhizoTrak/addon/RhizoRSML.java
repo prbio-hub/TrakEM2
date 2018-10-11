@@ -977,18 +977,30 @@ public class RhizoRSML
 		List<String> imageFilePaths = new ArrayList<String>();
 		for(int i = 0; i < rsmls.size(); i++)
 		{
-			Rsml rsml = rsmls.get(i);
+			Rsml rsml = rsmls.get(i);		
 			
-			// TODO: rsml file image object is null -> rsml file invalid?
-
-			if(null != rsml.getMetadata().getImage().getSha256())
+			if(null != rsml.getMetadata())
 			{
+				if(null == rsml.getMetadata().getImage())
+				{
+					imageFilePaths.add(null);
+					imageInconsistencies.append("Image data is missing for file: " + rsmlFiles.get(i).getName() + "\n");
+					continue;
+				}
+				
+				String rsmlSHA256 = rsml.getMetadata().getImage().getSha256();
 				String path = rsml.getMetadata().getImage().getName();
+				
+				if(null == path)
+				{
+					imageFilePaths.add(null);
+					imageInconsistencies.append("Image path is not set in file: " + rsmlFiles.get(i).getName() + "\n");
+					continue;
+				}
+				
 				File imageFile = new File(null != rsmlBaseDir ? (rsmlBaseDir.getAbsolutePath() + File.separator + path) 
 						: (rsmlFiles.get(i).getParent() + File.separator + path));
-				
-				Utils.log(imageFile.getAbsolutePath());
-				
+									
 				if(imageFile.exists())
 				{
 					imageFilePaths.add(imageFile.getAbsolutePath());
@@ -998,14 +1010,20 @@ public class RhizoRSML
 						Layer layer = availableLayers.get(i);
 						RhizoLayerInfo layerInfo = rhizoMain.getLayerInfo(layer);
 						
-						if(null == layerInfo)
+						if(null == layerInfo.getImageHash()) continue;
+						
+						if(null != rsmlSHA256 && !rsmlSHA256.equals(""))
 						{
-							// TODO: case that project has been opened so no layerInfos are created
-
+							if(!layerInfo.getImageHash().equals(rsmlSHA256))
+							{
+								imageInconsistencies.append("Images do not match: " + RhizoUtils.getImageName(layer) + " and " + path + "\n");
+							}
 						}
-						else
+						else // search for image anyway and calculate the sha256
 						{
-							if(!layerInfo.getImageHash().equals(rsml.getMetadata().getImage().getSha256()))
+							String rsmlSHA256calculated = RhizoUtils.calculateSHA256(imageFile.getAbsolutePath());
+							
+							if(!layerInfo.getImageHash().equals(rsmlSHA256calculated))
 							{
 								imageInconsistencies.append("Images do not match: " + RhizoUtils.getImageName(layer) + " and " + path + "\n");
 							}
@@ -1015,16 +1033,19 @@ public class RhizoRSML
 				else
 				{
 					imageFilePaths.add(null);
-					
 					imageInconsistencies.append("Could not find image for file: " + rsmlFiles.get(i).getName() + "\n");
 					continue;
 				}
 			}
 			else
 			{
-				// TODO: search for image anyway
-			} 
+				imageFilePaths.add(null);
+				imageInconsistencies.append("Meta data is missing for file: " + rsmlFiles.get(i).getName() + "\n");
+				continue;
+			}
 		}
+
+
 		
 		if(imageInconsistencies.length() > 0)
 		{

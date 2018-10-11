@@ -150,7 +150,7 @@ public class RhizoMain
 	 */
 	public RhizoLayerInfo getLayerInfo( Layer layer) {
 		if ( layerInfoMap.get( layer) == null)
-			layerInfoMap.put( layer, null);
+			layerInfoMap.put( layer, new RhizoLayerInfo(layer, null));
 		
 		return layerInfoMap.get( layer);
 	}
