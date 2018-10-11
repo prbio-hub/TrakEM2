@@ -1087,15 +1087,18 @@ public class RhizoRSML
 				layerInfo = new RhizoLayerInfo( layer, rsml);
 				this.rhizoMain.setLayerInfo( layer, layerInfo);
 			} else {
+				
+				// image exists in layer -> invalidate image object of incoming rsml
+				if(null != layerInfo.getImageHash())
+				{
+					rsml.getMetadata().setImage(null);
+				}
+				
 				// if a rsml file has been imported into this layer before
 				// retain the image meta data
 				if(null != layerInfo.getRsml())
 				{
 					rsml.getMetadata().setImage(layerInfo.getRsml().getMetadata().getImage());
-				}
-				else // no old RSML object -> invalidate image object
-				{
-					rsml.getMetadata().setImage(null);
 				}
 				
 				layerInfo.setRsml( rsml);
