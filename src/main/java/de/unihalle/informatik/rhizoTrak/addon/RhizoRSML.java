@@ -140,7 +140,7 @@ public class RhizoRSML
 	private static final String FUNCTION_NAME_DIAMETER = "diameter";
 	private static final String FUNCTION_NAME_STATUSLABEL = "statusLabel";
 	
-	private static final String PROPERTY_NAME_PARENTNODE = "parentNode";
+	private static final String PROPERTY_NAME_PARENTNODE = "parent-node";
 	private static final String PROPERTY_NAME_STATUSLABELMAPPING = "StatusLabelMapping";
 
 	private static final Double EPSILON = 0.01;
@@ -467,7 +467,7 @@ public class RhizoRSML
     	pDef.setLabel( PROPERTY_NAME_PARENTNODE);
     	pDef.setType( "integer");
     	pDefs.getPropertyDefinition().add( pDef); 
-
+    	
     	metadata.setPropertyDefinitions( pDefs);
     	return metadata;
     }
@@ -685,9 +685,28 @@ public class RhizoRSML
 			if ( statuslabel != RhizoProjectConfig.STATUS_VIRTUAL_RSML) {
 				// add parent node property
 				// TODO check for start of parent node index (0 or 1)
-				ParentNode pn = new ParentNode();
-				pn.setValue(parentNodeIndex);
-				props.getAny().add( createElementForXJAXBObject( pn));
+				
+				// the following using JAXB yields wrong name
+				//ParentNode pn = new ParentNode();
+				//pn.setValue(parentNodeIndex);
+				//props.getAny().add( createElementForXJAXBObject( pn));
+				
+				// TODO move into method
+				// TO check if documentBuilderFactory and documentBuilder ,ay be recycled
+		    	javax.xml.parsers.DocumentBuilderFactory documentBuilderFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+		    	documentBuilderFactory.setNamespaceAware(false);
+		   
+		    	try {
+		    		javax.xml.parsers.DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+					org.w3c.dom.Document doc = documentBuilder.newDocument();
+			    	Element customElement = doc.createElement( "parent-node");
+			    	customElement.setAttribute( "value", String.valueOf(parentNodeIndex));
+			    	props.getAny().add( customElement);
+				} catch (ParserConfigurationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		    	
 			}
 		}
 		
