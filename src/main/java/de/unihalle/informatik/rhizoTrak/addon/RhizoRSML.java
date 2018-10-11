@@ -836,6 +836,7 @@ public class RhizoRSML
 		pt.setY( new BigDecimal( p.getY()));
 		polyline.getPoint().add( pt);
 		
+		// original xsd schema with sample values as attributes
 //		Sample diameter = new Sample();
 //		diameter.setValue( new BigDecimal( 2*((RadiusNode)node).getData()));
 //		diameters.getSample().add( diameter);
