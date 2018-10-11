@@ -50,7 +50,6 @@ package de.unihalle.informatik.rhizoTrak.addon;
 import java.awt.GridLayout;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
-import java.awt.image.ImageConsumer;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -66,6 +65,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -92,6 +92,7 @@ import org.w3c.dom.Element;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Display;
+import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Node;
@@ -105,7 +106,6 @@ import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.IntegerStringPairType;
-import de.unihalle.informatik.rhizoTrak.xsd.rsml.ParentNode;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.PointType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.PropertyListType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType;
@@ -121,8 +121,6 @@ import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata.PropertyDefinitio
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata.TimeSequence;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Scene;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Scene.Plant;
-import ij.ImagePlus;
-import jj2000.j2k.entropy.encoder.LayersInfo;
 
 /**
  * I/O between rhizoTrak and RSML
@@ -188,7 +186,7 @@ public class RhizoRSML
 	// TODO move to ProjectConfig and store in user settings
 	private boolean writeFunctionSamplesAsAttribute = true;
 
-	private JFrame rsmlLoaderFrame;
+	private JDialog rsmlLoaderFrame;
 
 	private boolean debugWrite = true;
 
@@ -923,14 +921,13 @@ public class RhizoRSML
     }
     
 	/**
-	 * Reads one or more RSML file into the rhizoTrak project.
+	 * Reads one or more RSML file into the rhizoTrak project. Starting with <code> firstLayer</code>.
+	 * If <code> firstLayer </code> is <code> null </code> the RSML files are appended at the end of the LayerSet.
 	 * 
 	 * @author Posch
 	 */
 	public void readRSML(List<File> rsmlFiles, Layer firstLayer) {
-		//TODO base directory to which filename in the RSML files are relative
-		//TODO firstLayer == null means that "append..." was selected
-		
+
 		List<Rsml> rsmls = new LinkedList<Rsml>();
 	
 		// parse all RSML files
@@ -946,10 +943,8 @@ public class RhizoRSML
 		
 		List<Layer> availableLayers = getAvailableLayers(firstLayer);
 
-		// check if it is possible to import (potentially with user feedback)
-		// e.g. status label mappings, inconsistent sha256 codes when importing into non empty layer
-		
 		// TODO: check for invalid rsml		
+		// TODO: check status label mappings
 		
 		// check if treelines already exist on available layers
 		StringBuilder layersWithTreelines = new StringBuilder();
@@ -1072,6 +1067,51 @@ public class RhizoRSML
 			
 			importRsmlToLayer( rsml, layer, imageFilePath, topLevelIdTreelineListMap);
 		}
+		
+		// collect connectors before the loop so we dont get the newly created ones
+		List<Connector> connectors = RhizoUtils.getConnectorsBelowRootstacks(rhizoMain.getProject());
+		// TODO connectors		
+		for(String id: topLevelIdTreelineListMap.keySet())
+		{
+			List<Treeline> treelineList = topLevelIdTreelineListMap.get(id);
+			
+			boolean connectorFound = false;
+			
+			// find connectors
+			for(Connector connector: connectors)
+			{
+				if(id.equals(getRsmlIdForTreeline(null, connector)))
+				{
+					for(Treeline treeline: treelineList)
+					{
+						if(!connector.addConTreeline(treeline))
+						{
+							Utils.log("rhizoTrak", "Can not add treeline to connector " + connector.getId());
+						}
+					}
+					
+					connectorFound = true;
+					break;
+				}
+			}
+			
+			// no connector found and more than one treeline in list
+			// then create new connector
+			if(!connectorFound && treelineList.size() > 1)
+			{
+				List<Displayable> connector = RhizoUtils.addDisplayableToProject(rhizoMain.getProject(), "connector", 1);
+				Connector newConnector = (Connector) connector.get(0);
+				
+				for(Treeline treeline: treelineList)
+				{
+					if(!newConnector.addConTreeline(treeline))
+					{
+						Utils.log("rhizoTrak", "Can not add treeline to connector " + newConnector.getId());
+					}
+				}
+			}
+		}
+		
 	}
 	
 	/**
@@ -1113,11 +1153,18 @@ public class RhizoRSML
 				layerInfo = new RhizoLayerInfo( layer, rsml);
 				this.rhizoMain.setLayerInfo( layer, layerInfo);
 			} else {
+				
+				// image exists in layer -> invalidate image object of incoming rsml
+				if(null != layerInfo.getImageHash())
+				{
+					rsml.getMetadata().setImage(null);
+				}
+				
 				// if a rsml file has been imported into this layer before
-				// retain the meta data
+				// retain the image meta data
 				if(null != layerInfo.getRsml())
 				{
-					rsml.setMetadata(layerInfo.getRsml().getMetadata());
+					rsml.getMetadata().setImage(layerInfo.getRsml().getMetadata().getImage());
 				}
 				
 				layerInfo.setRsml( rsml);
@@ -1151,10 +1198,7 @@ public class RhizoRSML
 					tlList.add(tl);
 				}
 			}
-			
-			// TODO connectors
-			
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1474,7 +1518,7 @@ public class RhizoRSML
 		// create a new window on every button press so that the layers in the combobox get updated
 		if(null != rsmlLoaderFrame) rsmlLoaderFrame.dispose();
 		
-		rsmlLoaderFrame = new JFrame(null == rsmlBaseDir ? "RSML Loader" : "RSML Loader - " + rsmlBaseDir.getAbsolutePath());
+		rsmlLoaderFrame = new JDialog((JFrame) null, null == rsmlBaseDir ? "RSML Loader" : "RSML Loader - " + rsmlBaseDir.getAbsolutePath(), true);
 		rsmlLoaderFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JPanel temp = new RSMLLoader(rhizoMain);
 		rsmlLoaderFrame.add(temp);
@@ -1493,7 +1537,7 @@ public class RhizoRSML
 		return rsmlBaseDir;
 	}
 	
-	public JFrame getRSMLLoaderFrame()
+	public JDialog getRSMLLoaderFrame()
 	{
 		return rsmlLoaderFrame;
 	}
