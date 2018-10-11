@@ -75,6 +75,7 @@ import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
+import de.unihalle.informatik.rhizoTrak.display.ZDisplayable;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
@@ -528,8 +529,7 @@ public class RhizoUtils {
 		 * @param project
 		 * @param type
 		 * @param count
-		 */
-		
+		 */	
 		public static List<Displayable> addDisplayableToProject(Project project,String type,int count){
 			ArrayList<Displayable> result = new ArrayList<>();
 			// find one rootstack
@@ -608,4 +608,19 @@ public class RhizoUtils {
 				}
 			}
 		}
+
+		/*
+		 * helper to repaint a List of Treelines in their first Layer
+		 * @param displayableList
+		 */
+		public static void repaintTreelineList(List<Displayable> displayableList){
+			for (Displayable displayable : displayableList) {
+				if(displayable instanceof Treeline) {
+					Treeline treeline = (Treeline) displayable;
+					if(treeline.getFirstLayer()==null) return;
+					treeline.repaint(true, treeline.getFirstLayer());
+				}
+			}
+		}
+		
 }
