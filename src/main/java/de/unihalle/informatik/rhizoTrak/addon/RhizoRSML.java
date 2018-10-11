@@ -1058,6 +1058,35 @@ public class RhizoRSML
 			if(result == JOptionPane.NO_OPTION) return;
 		}
 		
+		// check for unified in all files
+		boolean allUnified = true;
+		for(Rsml rsml: rsmls)
+		{
+			if(null != rsml.getMetadata() && null != rsml.getMetadata().getTimeSequence())
+			{
+				if(!rsml.getMetadata().getTimeSequence().isUnified())
+				{
+					allUnified = false;
+					break;
+				}
+			}
+			else
+			{
+				allUnified = false;
+				break;
+			}
+		}
+		
+		if(!allUnified)
+		{
+			String message = "At least one unified flag has not been set or does not exist in the selected RSML files.\n"
+					+ "Consequently connectors will not be created on import.\n\nProceed anyway?";
+			
+			int result = JOptionPane.showConfirmDialog(null, message, "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+			
+			if(result == JOptionPane.NO_OPTION) return;
+		}
+		
 		// >>>>>>>>>> checks for inconsistencies need to happen before this point !!!
 		
 		
@@ -1090,45 +1119,48 @@ public class RhizoRSML
 			importRsmlToLayer( rsml, layer, imageFilePath, topLevelIdTreelineListMap);
 		}
 		
-		// collect connectors before the loop so we dont get the newly created ones
-		List<Connector> connectors = RhizoUtils.getConnectorsBelowRootstacks(rhizoMain.getProject());
-		// TODO connectors		
-		for(String id: topLevelIdTreelineListMap.keySet())
+
+		if(allUnified)
 		{
-			List<Treeline> treelineList = topLevelIdTreelineListMap.get(id);
-			
-			boolean connectorFound = false;
-			
-			// find connectors
-			for(Connector connector: connectors)
+			// collect connectors before the loop so we dont get the newly created ones
+			List<Connector> connectors = RhizoUtils.getConnectorsBelowRootstacks(rhizoMain.getProject());
+			for(String id: topLevelIdTreelineListMap.keySet())
 			{
-				if(id.equals(getRsmlIdForTreeline(null, connector)))
+				List<Treeline> treelineList = topLevelIdTreelineListMap.get(id);
+				
+				boolean connectorFound = false;
+				
+				// find connectors
+				for(Connector connector: connectors)
 				{
+					if(id.equals(getRsmlIdForTreeline(null, connector)))
+					{
+						for(Treeline treeline: treelineList)
+						{
+							if(!connector.addConTreeline(treeline))
+							{
+								Utils.log("rhizoTrak", "Can not add treeline to connector " + connector.getId());
+							}
+						}
+						
+						connectorFound = true;
+						break;
+					}
+				}
+
+				// no connector found and more than one treeline in list
+				// then create new connector
+				if(!connectorFound && treelineList.size() > 1)
+				{
+					List<Displayable> connector = RhizoUtils.addDisplayableToProject(rhizoMain.getProject(), "connector", 1);
+					Connector newConnector = (Connector) connector.get(0);
+					
 					for(Treeline treeline: treelineList)
 					{
-						if(!connector.addConTreeline(treeline))
+						if(!newConnector.addConTreeline(treeline))
 						{
-							Utils.log("rhizoTrak", "Can not add treeline to connector " + connector.getId());
+							Utils.log("rhizoTrak", "Can not add treeline to connector " + newConnector.getId());
 						}
-					}
-					
-					connectorFound = true;
-					break;
-				}
-			}
-			
-			// no connector found and more than one treeline in list
-			// then create new connector
-			if(!connectorFound && treelineList.size() > 1)
-			{
-				List<Displayable> connector = RhizoUtils.addDisplayableToProject(rhizoMain.getProject(), "connector", 1);
-				Connector newConnector = (Connector) connector.get(0);
-				
-				for(Treeline treeline: treelineList)
-				{
-					if(!newConnector.addConTreeline(treeline))
-					{
-						Utils.log("rhizoTrak", "Can not add treeline to connector " + newConnector.getId());
 					}
 				}
 			}
