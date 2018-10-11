@@ -85,6 +85,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.dom.DOMResult;
 
+import org.python.indexer.NBinding;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -110,7 +111,6 @@ import de.unihalle.informatik.rhizoTrak.xsd.rsml.PropertyListType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Functions;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Functions.Function;
-import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Functions.Function.Sample;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Geometry;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Geometry.Polyline;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml;
@@ -145,6 +145,8 @@ public class RhizoRSML
 	private static final String FUNCTION_NAME_DIAMETER = "diameter";
 	private static final String FUNCTION_NAME_STATUSLABEL = "statusLabel";
 	
+	private static final String NAME_SAMPLE_ELEMENT = "sample";
+	
 	private static final String PROPERTY_NAME_PARENTNODE = "parent-node";
 	private static final String PROPERTY_NAME_STATUSLABELMAPPING = "StatusLabelMapping";
 
@@ -178,11 +180,18 @@ public class RhizoRSML
 	 */
 	// TODO move to ProjectConfig and store in user settings
 	private boolean parentNodeIndexStartsWithOne = true;
-
 	
+	/**
+	 * if true sample element in functions of RSML files are written as attribute value,
+	 * otherwise written as text
+	 */
+	// TODO move to ProjectConfig and store in user settings
+	private boolean writeFunctionSamplesAsAttribute = true;
+
 	private JFrame rsmlLoaderFrame;
 
 	private boolean debugWrite = true;
+
 	/**
 	 *  Writes the current project to a RSML file.
 	 *  @author Posch
@@ -558,9 +567,14 @@ public class RhizoRSML
 	 * @param dstFunction
 	 */
 	private void copyFunction(Function srcFunction, Function dstFunction) {
-		for ( int i = 0 ; i < srcFunction.getSample().size() ; i++) {
-			dstFunction.getSample().set( i, srcFunction.getSample().get( i));
-		}	
+		// original xsd schema with sample values as attributes
+//		for ( int i = 0 ; i < srcFunction.getSample().size() ; i++) {
+//			dstFunction.getSample().set( i, srcFunction.getSample().get( i));
+//		}	
+		for ( int i = 0 ; i < srcFunction.getAny().size() ; i++) {
+			dstFunction.getAny().set( i, srcFunction.getAny().get( i));
+	}	
+
 	}
 
 	/** Test if the geometry of the two roots is identical.
@@ -701,22 +715,9 @@ public class RhizoRSML
 				//pn.setValue(parentNodeIndex);
 				//props.getAny().add( createElementForXJAXBObject( pn));
 				
-				// TODO move into method
-				// TO check if documentBuilderFactory and documentBuilder ,ay be recycled
-		    	javax.xml.parsers.DocumentBuilderFactory documentBuilderFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
-		    	documentBuilderFactory.setNamespaceAware(false);
-		   
-		    	try {
-		    		javax.xml.parsers.DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-					org.w3c.dom.Document doc = documentBuilder.newDocument();
-			    	Element customElement = doc.createElement( "parent-node");
-			    	customElement.setAttribute( "value", String.valueOf(parentNodeIndex));
-			    	props.getAny().add( customElement);
-				} catch (ParserConfigurationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-		    	
+		    	Element pnProp = createW3Element( PROPERTY_NAME_PARENTNODE);
+		    	pnProp.setAttribute( "value", String.valueOf(parentNodeIndex));
+		    	props.getAny().add( pnProp);
 			}
 		}
 		
@@ -765,6 +766,28 @@ public class RhizoRSML
 		return root;
 	}		
 	
+	/**
+	 * @param name
+	 * @return
+	 */
+	private Element createW3Element(String name) {
+		// TODO check if documentBuilderFactory and documentBuilder ,ay be recycled
+		
+    	javax.xml.parsers.DocumentBuilderFactory documentBuilderFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+    	documentBuilderFactory.setNamespaceAware(false);
+   
+    	try {
+    		javax.xml.parsers.DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+			org.w3c.dom.Document doc = documentBuilder.newDocument();
+	    	Element customElement = doc.createElement( name);
+	    	return customElement;
+		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	/** return a string id which represent the treeline <code>tl</code> in a RSML file
 	 * @param tl
 	 * @param connector
@@ -813,15 +836,57 @@ public class RhizoRSML
 		pt.setY( new BigDecimal( p.getY()));
 		polyline.getPoint().add( pt);
 		
-		Sample diameter = new Sample();
-		diameter.setValue( new BigDecimal( 2*((RadiusNode)node).getData()));
-		diameters.getSample().add( diameter);
-
-		Sample sl = new Sample();
-		sl.setValue( new BigDecimal( statusLabelInteger));
-		statusLabels.getSample().add(sl);
+//		Sample diameter = new Sample();
+//		diameter.setValue( new BigDecimal( 2*((RadiusNode)node).getData()));
+//		diameters.getSample().add( diameter);
+//
+//		Sample sl = new Sample();
+//		sl.setValue( new BigDecimal( statusLabelInteger));
+//		statusLabels.getSample().add(sl);
+		
+		Element diameterElement = createW3Element( NAME_SAMPLE_ELEMENT);
+		setSampleValue( diameterElement, new BigDecimal( 2*((RadiusNode)node).getData()));
+		diameters.getAny().add( diameterElement);
+		
+		Element slElement = createW3Element( NAME_SAMPLE_ELEMENT);
+		setSampleValue( slElement, new BigDecimal( statusLabelInteger));
+		statusLabels.getAny().add(slElement);
 	}
 
+	/** Set the value of a sample element in a function.
+	 * <p> depending on <code>writeFunctionSamplesAsAttribute</code> it is
+	 * written as the attribute <code>value</code> or the text
+	 * 
+	 * @param element
+	 * @param value
+	 */
+	private void setSampleValue(Element element, BigDecimal value) {
+		if ( writeFunctionSamplesAsAttribute ) {
+			element.setAttribute( "value", String.valueOf( value));
+		} else {
+			element.setTextContent(String.valueOf( value));
+		}		
+	}
+
+	/** Get the value of a sample element in a function.
+	 * Use the value attribute or the text content
+	 * 
+	 * @param element
+	 * @return null, if neither value attribute nor the text content defined
+	 */ 
+	private BigDecimal getSampleValue(Element element) {
+		if ( element == null) {
+			return null;
+		} else if ( element.getAttribute( "value") != null && ! element.getAttribute( "value").isEmpty()) {
+			System.out.println( "XX " + element.getAttribute( "value"));
+			return BigDecimal.valueOf( Double.valueOf( element.getAttribute( "value")));
+		} else if ( element.getTextContent() != null ) {
+			return BigDecimal.valueOf( Double.valueOf( element.getTextContent()));
+		} else {
+			return null;
+		}
+	}
+	
 	/** Create a <code>org.w3c.dom.Element</code> holding a Object created by JAXB 
      * 
      * @param jaxbObject
@@ -1330,15 +1395,28 @@ public class RhizoRSML
 	 * @return
 	 */
 	private byte getStatuslabelFromRsml(Function statuslabels, int pointIndex) {
-		if ( statuslabels != null && statuslabels.getSample().size() >= pointIndex && pointIndex >= 0) {
-			return statuslabels.getSample().get( pointIndex).getValue().byteValue();
+		// original xsd schema with sample values as attributes
+//		if ( statuslabels != null && statuslabels.getSample().size() >= pointIndex && pointIndex >= 0) {
+//			return statuslabels.getSample().get( pointIndex).getValue().byteValue();
+//		} else {
+//			return default_statuslabel;
+//		}
+		if ( statuslabels != null && statuslabels.getAny().size() > pointIndex && pointIndex >= 0) {
+			return getSampleValue( statuslabels.getAny().get( pointIndex)).byteValue();
 		} else {
 			return default_statuslabel;
 		}
+
 	}
 	
 	private boolean isStatuslabelFromRsmlDefined( Function statuslabels, int pointIndex) {
-		if ( statuslabels != null && statuslabels.getSample().size() >= pointIndex && pointIndex >= 0) {
+		// original xsd schema with sample values as attributes
+//		if ( statuslabels != null && statuslabels.getSample().size() >= pointIndex && pointIndex >= 0) {
+//			return true;
+//		} else {
+//			return false;
+//		}
+		if ( statuslabels != null && statuslabels.getAny().size() >= pointIndex && pointIndex >= 0) {
 			return true;
 		} else {
 			return false;
@@ -1352,8 +1430,14 @@ public class RhizoRSML
 	 * @return
 	 */
 	private float getRadiusFromRsml(Function diameters, int pointIndex) {
-		if ( diameters != null && diameters.getSample().size() > pointIndex && pointIndex >= 0) {
-			return 0.5f * diameters.getSample().get( pointIndex).getValue().floatValue();
+		// original xsd schema with sample values as attributes
+//		if ( diameters != null && diameters.getSample().size() > pointIndex && pointIndex >= 0) {
+//			return 0.5f * diameters.getSample().get( pointIndex).getValue().floatValue();
+//		} else {
+//			return 0.0f;
+//		}
+		if ( diameters != null && diameters.getAny().size() > pointIndex && pointIndex >= 0) {
+			return 0.5f * getSampleValue( diameters.getAny().get( pointIndex)).floatValue();
 		} else {
 			return 0.0f;
 		}
