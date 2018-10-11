@@ -428,7 +428,7 @@ public class RhizoRSML
     			if ( layer.getPatches( false).get(0) != null && layer.getPatches( false).get(0).getImagePlus() != null ) {
     				// Note: we use the calibration of x
     				metadata.setUnit(  layer.getPatches( false).get(0).getImagePlus().getCalibration().getXUnit());
-    				metadata.setResolution( new BigDecimal( layer.getPatches( false).get(0).getImagePlus().getCalibration().pixelWidth));
+    				metadata.setResolution( new BigDecimal( 1.0/layer.getPatches( false).get(0).getImagePlus().getCalibration().pixelWidth));
     			} else {
     				metadata.setUnit(  "pixel");
     				metadata.setResolution( new BigDecimal(1));
