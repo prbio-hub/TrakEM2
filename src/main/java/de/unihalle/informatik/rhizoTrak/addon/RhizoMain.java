@@ -149,6 +149,9 @@ public class RhizoMain
 	 * @return the LayerInfo associated with this layer or null if unset
 	 */
 	public RhizoLayerInfo getLayerInfo( Layer layer) {
+		if ( layerInfoMap.get( layer) == null)
+			layerInfoMap.put( layer, null);
+		
 		return layerInfoMap.get( layer);
 	}
 	
