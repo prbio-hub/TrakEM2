@@ -469,7 +469,7 @@ public class RhizoRSML
     			oldMetadata.getPropertyDefinitions().getPropertyDefinition() != null) {
     		for( PropertyDefinition oldPdef : oldMetadata.getPropertyDefinitions().getPropertyDefinition()) {
     			if ( ! oldPdef.getLabel().equals( PROPERTY_NAME_PARENTNODE) &&
-    					! oldPdef.getLabel().equals( PROPERTY_NAME_STATUSLABELMAPPING) ) {
+    					! oldPdef.getLabel().equals( "parentNode") ) {
     				pDefs.getPropertyDefinition().add( oldPdef);
     			}
     		}
@@ -879,7 +879,6 @@ public class RhizoRSML
 		if ( element == null) {
 			return null;
 		} else if ( element.getAttribute( "value") != null && ! element.getAttribute( "value").isEmpty()) {
-			System.out.println( "XX " + element.getAttribute( "value"));
 			return BigDecimal.valueOf( Double.valueOf( element.getAttribute( "value")));
 		} else if ( element.getTextContent() != null ) {
 			return BigDecimal.valueOf( Double.valueOf( element.getTextContent()));
@@ -1417,7 +1416,7 @@ public class RhizoRSML
 //		} else {
 //			return false;
 //		}
-		if ( statuslabels != null && statuslabels.getAny().size() >= pointIndex && pointIndex >= 0) {
+		if ( statuslabels != null && statuslabels.getAny().size() > pointIndex && pointIndex >= 0) {
 			return true;
 		} else {
 			return false;
