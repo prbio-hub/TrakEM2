@@ -13,8 +13,8 @@ import javax.swing.DefaultListModel;
 import javax.swing.DropMode;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -27,6 +27,7 @@ import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
+import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 @SuppressWarnings("serial")
 public class RSMLLoader extends JPanel
@@ -135,25 +136,29 @@ public class RSMLLoader extends JPanel
 			@Override
 			public void actionPerformed(ActionEvent e) 
 			{
-				if(jComboBox.getSelectedItem().equals(APPEND))
+				if(allFiles.size() > 0)
 				{
-					rhizoMain.getRhizoRSML().readRSML(allFiles, null);
-				}
-				else
-				{
-					LayerSet layerSet = rhizoMain.getProject().getRootLayerSet();
-					List<Layer> layerList = layerSet.getLayers();
+					if(jComboBox.getSelectedItem().equals(APPEND))
+					{
+						rhizoMain.getRhizoRSML().readRSML(allFiles, null);
+					}
+					else
+					{
+						LayerSet layerSet = rhizoMain.getProject().getRootLayerSet();
+						List<Layer> layerList = layerSet.getLayers();
+						
+						int index = layerNames.indexOf(jComboBox.getSelectedItem());
+						
+						rhizoMain.getRhizoRSML().readRSML(allFiles, layerList.get(index));
+					}
 					
-					int index = layerNames.indexOf(jComboBox.getSelectedItem());
-					
-					rhizoMain.getRhizoRSML().readRSML(allFiles, layerList.get(index));
+					if(SwingUtilities.getRoot(jPanelLeft) instanceof JDialog)
+					{
+						JDialog jd = (JDialog) SwingUtilities.getRoot(jPanelLeft);
+						jd.dispose();
+					}
 				}
-				
-				if(SwingUtilities.getRoot(jPanelLeft) instanceof JFrame)
-				{
-					JFrame jf = (JFrame) SwingUtilities.getRoot(jPanelLeft);
-					jf.dispose();
-				}
+				else Utils.showMessage("Nothing to import.\nNo RSML files were selected.");
 			}
 		});
 		

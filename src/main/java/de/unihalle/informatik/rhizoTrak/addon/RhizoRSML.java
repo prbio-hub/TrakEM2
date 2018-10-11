@@ -65,6 +65,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -177,7 +178,7 @@ public class RhizoRSML
 	private boolean parentNodeIndexStartsWithOne = true;
 
 	
-	private JFrame rsmlLoaderFrame;
+	private JDialog rsmlLoaderFrame;
 
 	private boolean debugWrite = true;
 	/**
@@ -1433,7 +1434,7 @@ public class RhizoRSML
 		// create a new window on every button press so that the layers in the combobox get updated
 		if(null != rsmlLoaderFrame) rsmlLoaderFrame.dispose();
 		
-		rsmlLoaderFrame = new JFrame(null == rsmlBaseDir ? "RSML Loader" : "RSML Loader - " + rsmlBaseDir.getAbsolutePath());
+		rsmlLoaderFrame = new JDialog((JFrame) null, null == rsmlBaseDir ? "RSML Loader" : "RSML Loader - " + rsmlBaseDir.getAbsolutePath(), true);
 		rsmlLoaderFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JPanel temp = new RSMLLoader(rhizoMain);
 		rsmlLoaderFrame.add(temp);
@@ -1452,7 +1453,7 @@ public class RhizoRSML
 		return rsmlBaseDir;
 	}
 	
-	public JFrame getRSMLLoaderFrame()
+	public JDialog getRSMLLoaderFrame()
 	{
 		return rsmlLoaderFrame;
 	}
