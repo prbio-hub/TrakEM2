@@ -81,6 +81,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.dom.DOMResult;
@@ -147,6 +148,9 @@ public class RhizoRSML
 	private static final String PROPERTY_NAME_PARENTNODE = "parent-node";
 	private static final String PROPERTY_NAME_STATUSLABELMAPPING = "StatusLabelMapping";
 
+	/**
+	 * maximal distance allowed for parent nodes to deviate from precise location w
+	 */
 	private static final Double EPSILON = 0.01;
 
 	// TODO make this configurable
@@ -697,7 +701,6 @@ public class RhizoRSML
 
 			if ( statuslabel != RhizoProjectConfig.STATUS_VIRTUAL_RSML) {
 				// add parent node property
-				// TODO check for start of parent node index (0 or 1)
 				
 				// the following using JAXB yields wrong name
 				//ParentNode pn = new ParentNode();
@@ -759,14 +762,12 @@ public class RhizoRSML
 	 * @param name
 	 * @return
 	 */
-	private Element createW3Element(String name) {
-		// TODO check if documentBuilderFactory and documentBuilder ,ay be recycled
-		
-    	javax.xml.parsers.DocumentBuilderFactory documentBuilderFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+	private Element createW3Element(String name) {		
+    	DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
     	documentBuilderFactory.setNamespaceAware(false);
    
     	try {
-    		javax.xml.parsers.DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+    		DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
 			org.w3c.dom.Document doc = documentBuilder.newDocument();
 	    	Element customElement = doc.createElement( name);
 	    	return customElement;
