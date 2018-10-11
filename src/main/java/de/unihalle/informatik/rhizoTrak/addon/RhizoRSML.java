@@ -937,7 +937,8 @@ public class RhizoRSML
 				Unmarshaller um = context.createUnmarshaller();
 				rsmls.add( (Rsml) um.unmarshal( rsmlFile));
 			} catch (Exception e) {
-				Utils.showMessage( "cannot read RSML from  " + rsmlFile.getName());
+				Utils.showMessage( "Cannot read RSML from " + rsmlFile.getName() + ".\nCancelling import.");
+				return;
 			}
 		}
 		
