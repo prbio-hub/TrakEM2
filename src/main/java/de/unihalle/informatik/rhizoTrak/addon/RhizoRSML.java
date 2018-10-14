@@ -1611,4 +1611,9 @@ public class RhizoRSML
 	{
 		return rsmlLoaderFrame;
 	}
+	
+	public void setDefaultStatusLabel(byte b)
+	{
+		this.default_statuslabel = b;
+	}
 }
