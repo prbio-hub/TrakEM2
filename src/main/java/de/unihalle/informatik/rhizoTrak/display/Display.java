@@ -1034,7 +1034,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		
 		//actyc: Test tab 10
 //		this.filter_options = createExtendedOptionPanel();
-		this.scroll_filter_options = makeScrollPane(createExtendedOptionPanel());
+		this.scroll_filter_options = makeScrollPane(createExtendedOptionPanel(rm));
 //		this.scroll_filter_options.setHorizontalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		this.addTab("rhizoTrak Operations", this.scroll_filter_options, "Settings, tools and functions related to rhizoTrak.");
 
@@ -7667,7 +7667,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	}
 	
     //actyc: new Panel to add more functionality
-    private JPanel createExtendedOptionPanel() 
+    private JPanel createExtendedOptionPanel(RhizoMain rm) 
     {
     	
     	// Main panelbutton
@@ -7717,14 +7717,14 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	readXMLButton.setActionCommand("readXML");
     	readXMLButton.addActionListener(this);
     	readXMLButton.setEnabled(true);
-    	group21.add(readXMLButton);    	
+    	if(rm.getProjectConfig().isFullGUI()) group21.add(readXMLButton);    	
     	
     	JButton writeXMLButton = new JButton("WriteMTB");
     	writeXMLButton.setToolTipText("Writes the current rhizoTrak project to MTBXML format.");
     	writeXMLButton.setActionCommand("writeXML");
     	writeXMLButton.setEnabled(true);
     	writeXMLButton.addActionListener(this);
-    	group21.add(writeXMLButton);
+    	if(rm.getProjectConfig().isFullGUI()) group21.add(writeXMLButton);
 
     	JButton readRSMLButton = new JButton("ReadRSML");
     	readRSMLButton.setToolTipText("Reads RSML file(s) into the rizoTrak project.");
