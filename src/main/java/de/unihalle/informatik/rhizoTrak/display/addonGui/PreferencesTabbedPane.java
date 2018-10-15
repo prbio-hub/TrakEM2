@@ -129,10 +129,10 @@ public class PreferencesTabbedPane extends JTabbedPane
 	private final String CONFIRM_SPLITREELINE = "Confirm split treeline";
 	private final String FULLGUI = "Full GUI (includes all TrakEM2 features)";
 	private final String SHOW_CALIBRATION_INFO = "Show calibration info";
-	private final String NODES_AS_CIRCLE = "Nodes as circle";
+	private final String NODES_AS_CIRCLE = "Diameter as circle";
 	private final String NODES_DIAMETERLINES = "Show diameter lines";
-	private final String SEGMENTS_AS_POLYGON = "Draw root shape";
-	private final String SEGMENTS_FILL = "Fill root shape";
+	private final String SEGMENTS_AS_POLYGON = "Show borders of segments";
+	private final String SEGMENTS_FILL = "Fill segments";
 
 	
 	// general members

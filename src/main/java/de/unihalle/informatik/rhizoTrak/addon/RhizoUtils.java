@@ -47,14 +47,17 @@
 
 package de.unihalle.informatik.rhizoTrak.addon;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
+import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
@@ -68,6 +71,11 @@ import de.unihalle.informatik.rhizoTrak.utils.Utils;
  *
  */
 public class RhizoUtils {
+	
+	/**
+	 * String to eoncode not available values
+	 */
+	public final static String NA_String = "NA";
 	
 	/** 
 	 * The default character separating part of an ICAP image filename
@@ -198,7 +206,7 @@ public class RhizoUtils {
 		public static String getICAPTube(String filename) {
 			String[] s = splitICAP( filename);
 			if ( s == null ) 
-				return "NA";
+				return NA_String;
 			else
 				return s[1];
 
@@ -212,12 +220,12 @@ public class RhizoUtils {
 		public static String getICAPExperiment(String filename) {
 			String[] s = splitICAP( filename);
 			if ( s == null ) 
-				return "NA";
+				return NA_String;
 			else
 				return s[0];
 		}
 
-		/** Get the experiment part of an ICAP image filename
+		/** Get the time point part of an ICAP image filename
 		 * 
 		 * @param filename
 		 * @return
@@ -225,9 +233,22 @@ public class RhizoUtils {
 		public static String getICAPTimepoint(String filename) {
 			String[] s = splitICAP( filename);
 			if ( s == null ) 
-				return "NA";
+				return NA_String;
 			else
 				return s[5];
+		}
+
+		/** Get the experiment part of an ICAP image filename
+		 * date
+		 * @param filename
+		 * @return
+		 */
+		public static String getICAPDate(String filename) {
+			String[] s = splitICAP( filename);
+			if ( s == null ) 
+				return NA_String;
+			else
+				return s[3];
 		}
 
 		/** splits into ICAP part
@@ -323,6 +344,34 @@ public class RhizoUtils {
 					" (" + pt.getObject().getClass() + ")" +
 					", parent " + (parent != null ? parent.getId() : "null" ));
 		
+		}
+		
+		/** Add the defined number of Displayables to the project, e.g. type='treeline'
+		 * @param project
+		 * @param type
+		 * @param count
+		 */
+		
+		public static List<Displayable> addDisplayableToProject(Project project,String type,int count){
+			ArrayList<Displayable> result = new ArrayList<>();
+			// find one rootstack
+			ProjectThing rootstackProjectThing = RhizoUtils.getOneRootstack(project);
+			if ( rootstackProjectThing == null ) {
+				Utils.showMessage( "Create treeline: WARNING  can not find a rootstack in project tree");
+				return null;	
+			}
+			
+			project.getRootLayerSet().addChangeTreesStep();
+			final ArrayList<ProjectThing> addedList = rootstackProjectThing.createChildren(type, count, true);		
+			project.getProjectTree().addLeafs(addedList, new Runnable() {
+				public void run() {
+					project.getRootLayerSet().addChangeTreesStep();
+				}});
+			
+			for (ProjectThing projectThing : addedList) {
+				result.add((Displayable) projectThing.getObject());
+			}
+			return result;
 		}
 		
 }

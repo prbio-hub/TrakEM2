@@ -70,6 +70,7 @@ import java.util.Set;
 import org.scijava.vecmath.Point3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
@@ -89,6 +90,8 @@ public class Connector extends Treeline  implements TreeEventListener{
 	
 	//actyc: variable to store connected Treelines explicitly 
 	protected HashSet<Treeline>  conTreelines = new HashSet<Treeline>();
+	
+	private final int MIN_RADIUS = 10;
 
 	public Connector(final Project project, final String title) {
 		super(project, title);
@@ -119,6 +122,9 @@ public class Connector extends Treeline  implements TreeEventListener{
 	}
 
 	static public class ConnectorNode extends Treeline.RadiusNode {
+		
+		boolean drawRootNode = false;
+		boolean drawRootRadius = true; // only for tip nodes
 
 		public ConnectorNode(final float lx, final float ly, final Layer la) {
 			super(lx, ly, la);
@@ -141,7 +147,9 @@ public class Connector extends Treeline  implements TreeEventListener{
 				final Tree<Float> tree, final AffineTransform to_screen, final Color cc,
 				final Layer active_layer) {
 			g.setColor(this.rhizoMain.getProjectConfig().getColorForStatus( (byte) RhizoProjectConfig.STATUS_CONNECTOR));
-			g.draw(to_screen.createTransformedShape(new Ellipse2D.Float(x -r, y -r, r+r, r+r)));
+			if(drawRootRadius && null != parent) {
+				g.draw(to_screen.createTransformedShape(new Ellipse2D.Float(x -r, y -r, r+r, r+r)));
+			}
 		}
 
 		@Override
@@ -169,10 +177,12 @@ public class Connector extends Treeline  implements TreeEventListener{
 			final float y = (float)((po.y - srcRect.y) * magnification);
 
 			if (null == parent) {
-				g.setColor(brightGreen);
-				g.fillOval((int)x - 6, (int)y - 6, 11, 11);
-				g.setColor(Color.black);
-				g.drawString("o", (int)x -4, (int)y + 3); // TODO ensure Font is proper
+				if(drawRootNode) {
+					g.setColor(brightGreen);
+					g.fillOval((int)x - 6, (int)y - 6, 11, 11);
+					g.setColor(Color.black);
+					g.drawString("o", (int)x -4, (int)y + 3); // TODO ensure Font is proper	
+				}
 			} else {
 				g.setColor(Color.white);
 				g.fillOval((int)x - 6, (int)y - 6, 11, 11);
@@ -443,7 +453,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 		if (ProjectToolbar.PEN == ProjectToolbar.getToolId()) {
 
 			if (-1 == last_radius) {
-				last_radius = 10 / (float)mag;
+				last_radius = MIN_RADIUS / (float)mag;
 			}
 
 			if (null != root) {
@@ -588,6 +598,11 @@ public class Connector extends Treeline  implements TreeEventListener{
 	 * @return
 	 */
 	public boolean sanityCheck( boolean headless){
+		
+		float mag = null != Display.getFront() ? (float) Display.getFront().getCanvas().getMagnification() : 1f;
+		 	
+		if (-1 == last_radius) last_radius = MIN_RADIUS / mag;
+		
 		if(!conTreelines.isEmpty()){
 			if(root!=null && root.hasChildren()){
 				ArrayList<Node<Float>> targets = new ArrayList<Node<Float>>();
@@ -623,7 +638,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 					for (final Node<Float> nd : targets) {
 						//Utils.log("xdist: "+ Math.abs((float)result.getX()-nd.getX()) +" ydist: "+Math.abs((float)result.getY()-nd.getY()));
 						
-						if( Math.abs((float)result.getX()-nd.getX())<3 && Math.abs((float)result.getY()-nd.getY())<3 && nd.getLayer().equals(treeRootLayer)) {
+						if( Math.abs((float)result.getX()-nd.getX())==0 && Math.abs((float)result.getY()-nd.getY())==0 && nd.getLayer().equals(treeRootLayer)) {
 							found = true;
 							deleteList.remove(nd);
 							//Utils.log("inside the if");
@@ -648,10 +663,17 @@ public class Connector extends Treeline  implements TreeEventListener{
 					this.getRoot().setPosition(posi);
 				}
 			} else {
-				//conTreelines is not empty but the root node of the connector has no children
+				//conTreelines is not empty but the root node of the connector has no children or the connector has no root
 				for(Treeline tree: conTreelines){
 					//take tree root
 					Node<Float> treeRoot = tree.getRoot();
+					//check if the connector has a root
+					if(this.getRoot()==null) {
+						Node<Float> newRoot = this.newNode(this.getX(), treeRoot.getY(), treeRoot.getLayer(), null);
+						this.addNode(null, newRoot, (byte) RhizoProjectConfig.STATUS_CONNECTOR); // aeekz  
+						this.setRoot(newRoot);
+						this.setAffineTransform(tree.getAffineTransform());
+					}			
 					//transfer the position with the connector affine-transform
 					Point2D result = RhizoAddons.changeSpace(treeRoot.getX(),treeRoot.getY(),tree.getAffineTransform(),this.getAffineTransform());
 					if(result==null) return false;
@@ -725,7 +747,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 			return false;
 		boolean added = conTreelines.add(newTreeline);
 		newTreeline.addTreeEventListener(this);
-		sanityCheck( true);
+		sanityCheck(true);
         RhizoMain rhizoMain = this.getProject().getRhizoMain();
         ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
 		conflictManager.processChange(newTreeline, this);
@@ -784,6 +806,7 @@ public class Connector extends Treeline  implements TreeEventListener{
                 Treeline currentTree = it.next();
                 if(currentTree != null)
                 {
+                	RhizoColVis.removeHighlight(currentTree, false);
                     currentTree.removeTreeEventListener(this);
                     this.getProject().getRhizoMain().getRhizoAddons().getConflictManager().processChange(currentTree, this);
                     it.remove();

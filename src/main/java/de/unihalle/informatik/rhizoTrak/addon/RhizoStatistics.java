@@ -121,6 +121,7 @@ public class RhizoStatistics {
 	  IMAGEJ_UNITS.add( "mm");
 	}
 	
+	
 	private final String AGGREGATED = "Aggregated";
 	private final String SEGMENTS = "Segments";
 	private final String ONLY_STRING = "Current layer only";
@@ -172,7 +173,7 @@ public class RhizoStatistics {
 		statChoicesPanel.add(new JLabel("Separator "));
 		statChoicesPanel.add(combo1);
 
-		int result = JOptionPane.showConfirmDialog(null, statChoicesPanel, "Statistics Output Options", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+		int result = JOptionPane.showConfirmDialog(null, statChoicesPanel, "csv Output Options", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 
 		if(result != JOptionPane.OK_OPTION) {
 			return;
@@ -193,7 +194,7 @@ public class RhizoStatistics {
 		}
 		
 		if(sep.equals("") || outputLayers.equals("") || this.outputUnit.equals("")) {
-			Utils.showMessage( "rhizoTrak", "illegal choice of options for Write Statistics");
+			Utils.showMessage( "rhizoTrak", "illegal choice of options for Write csv file");
 			return;
 		}
 		
@@ -207,10 +208,10 @@ public class RhizoStatistics {
 			folder = rhizoMain.getStorageFolder();
 
 		JFileChooser fileChooser = new JFileChooser();
-		FileNameExtensionFilter filter = new FileNameExtensionFilter( "Statistics file", "csv"); 
+		FileNameExtensionFilter filter = new FileNameExtensionFilter( "File for wrting experimental data", "csv"); 
 		fileChooser.setFileFilter(filter);
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		fileChooser.setDialogTitle("File to write statistics to");
+		fileChooser.setDialogTitle("File to write experimental to");
 		fileChooser.setSelectedFile(new File( folder + basefilename + ".csv"));
 		int returnVal = fileChooser.showOpenDialog(null);
 
@@ -283,9 +284,9 @@ public class RhizoStatistics {
 				}
 				
 				// write header and one line per layer
-				bw.write( "experiment" + sep + "tube" + sep + "timepoint" + sep + "layerID" +  
+				bw.write( "experiment" + sep + "tube" + sep + "timepoint" + sep + "timepoint" + sep + "layerID" +  
 						sep + "length_" + this.outputUnit + sep + "surfaceArea_" + this.outputUnit + "^2" + sep + "volume_" + this.outputUnit + "^3" +
-						sep + "status" + sep + "statusName");
+						sep + "status" + sep + "statusName" + sep + "ImageWidth" + sep + "ImageHeight");
 				
 				bw.newLine();
 				
@@ -297,13 +298,22 @@ public class RhizoStatistics {
 					String tube = RhizoUtils.getICAPTube( imageName);
 					String experiment = RhizoUtils.getICAPExperiment(imageName);
 					String timepoint = RhizoUtils.getICAPTimepoint(imageName);
+					String date = RhizoUtils.getICAPDate(imageName);
+					String width = RhizoUtils.NA_String;
+					String height =  RhizoUtils.NA_String; 
+				
+					if ( calibInfo != null && calibInfo.ip != null ) {
+						width = String.valueOf( calibInfo.ip.getWidth());
+						height = String.valueOf( calibInfo.ip.getHeight());
+					}
 					
 					for ( int s = 0 ; s < config.sizeStatusLabelMapping(); s++ ) {
-						bw.write( experiment + sep + tube + sep + timepoint + sep + Integer.toString( layerID) +
+						bw.write( experiment + sep + tube + sep + timepoint + sep + date + sep + Integer.toString( layerID) +
 								sep + aggregatedLength.get(layerID)[s] + 
 								sep + aggregatedSurface.get(layerID)[s] + 
 								sep + aggregatedVolume.get(layerID)[s] +
-								sep + s + sep + config.getStatusLabel( s).getName());
+								sep + s + sep + config.getStatusLabel( s).getName() +
+								sep + width + sep + height);
 						bw.newLine();
 
 					}
@@ -311,7 +321,7 @@ public class RhizoStatistics {
 
 			} else {
 				// write header
-				bw.write("experiment" + sep + "tube" + sep + "timepoint" + sep + "rootID" + sep + "layerID" +sep + "segmentID" +  
+				bw.write("experiment" + sep + "tube" + sep + "timepoint" + sep + "date" + sep + "rootID" + sep + "layerID" +sep + "segmentID" +  
 						sep + "length_" + this.outputUnit + sep + "startDiameter_" + this.outputUnit + sep + "endDiameter_" + this.outputUnit +
 						sep + "surfaceArea_" + this.outputUnit + "^2" + sep + "volume_" + this.outputUnit + "^3" + sep + "children" + sep + "status" + sep + "statusName" + "\n");
 				for (Segment segment : allSegments) {
@@ -434,7 +444,7 @@ public class RhizoStatistics {
 			return null;
 		}
 		if ( msg.length() > 1 ) {
-			msg.insert(0, "WARNING Write Statistics\n \n");
+			msg.insert(0, "WARNING Write experimental data\n \n");
 			Utils.showMessage( "rhizoTrak", new String( msg));
 		}
 
@@ -624,14 +634,14 @@ public class RhizoStatistics {
 			 if ( value > 0 ) 
 				 return String.format("%.4f", value);
 			 else 
-				 return "NA";
+				 return RhizoUtils.NA_String;
 		 }
 		 
 		 private String fmtd( int value) {
 			 if ( value > 0 ) 
 				 return String.format("%d", value);
 			 else 
-				 return "NA";
+				 return RhizoUtils.NA_String;
 		 }
 		 
 		 /** Valid if xunit and yunit are supported to convert and if the pixels are square
@@ -686,7 +696,7 @@ public class RhizoStatistics {
 		private Treeline t;
 
 		// infos
-		private String imageName, experiment, tube, timepoint;
+		private String imageName, experiment, tube, timepoint, date;
 		private double length, surfaceArea, volume;
 		private int segmentID, numberOfChildren;
 
@@ -761,6 +771,7 @@ public class RhizoStatistics {
 			this.tube = RhizoUtils.getICAPTube( imageName);
 			this.experiment = RhizoUtils.getICAPExperiment(imageName);
 			this.timepoint = RhizoUtils.getICAPTimepoint(imageName);
+			this.date = RhizoUtils.getICAPDate( imageName);
 
 			this.treeID = treeID;
 			this.segmentID = segmentID;
@@ -787,7 +798,7 @@ public class RhizoStatistics {
 		 * @return
 		 */
 		public String getStatistics(String sep) {
-			String result = experiment + sep + tube + sep + timepoint + sep + Long.toString(treeID) +
+			String result = experiment + sep + tube + sep + timepoint + sep + date + sep + Long.toString(treeID) +
 					sep + this.layerIndex  +
 					sep + Integer.toString(segmentID) +
 					sep + Double.toString(length) + sep + Double.toString(2*radiusParent) + sep + Double.toString(2*radiusChild) +
@@ -836,8 +847,8 @@ public class RhizoStatistics {
 			
 			double xMin = 0;
 			double yMin = 0;
-			double xMax = calibInfo.ip.getWidth();
-			double yMax = calibInfo.ip.getWidth();;
+			double xMax = calibInfo.ip.getWidth() - 1;
+			double yMax = calibInfo.ip.getHeight() - 1;
 
 			AffineTransform at = t.getAffineTransform();
 			Point2D p1 = at.transform(new Point2D.Float(parent.getX(), parent.getY()), null);

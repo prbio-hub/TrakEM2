@@ -191,12 +191,10 @@ import org.janelia.intensity.MatchIntensities;
 import de.unihalle.informatik.Alida.exceptions.ALDOperatorException;
 import de.unihalle.informatik.Alida.operator.ALDOperatorCollectionElement;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent;
-import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEventListener;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent.ALDOperatorCollectionEventType;
+import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEventListener;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootSegmentationOperator;
 import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage;
-import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImageByte;
-import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage.MTBImageType;
 import de.unihalle.informatik.MiToBo.core.operator.MTBOperatorCollection;
 import de.unihalle.informatik.rhizoTrak.ControlWindow;
 import de.unihalle.informatik.rhizoTrak.Project;
@@ -1025,7 +1023,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		this.annot_editor.setMinimumSize(new Dimension(200, 50));
 		this.annot_label = new JLabel("(No selected object)");
 		this.annot_panel = makeAnnotationsPanel(this.annot_editor, this.annot_label);
-		this.addTab("Annotations", this.annot_panel, "Shows the annotation of the currently active displayable.");
+		if(rm.getProjectConfig().isFullGUI()) this.addTab("Annotations", this.annot_panel, "Shows the annotation of the currently active displayable.");
 
 		// Tab 9: filter options
 		this.filter_options = createFilterOptionPanel();
@@ -1399,6 +1397,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					break; 
 				case "pencil":
 					ProjectToolbar.setTool(ProjectToolbar.PENCIL);
+					break;
 				case "pen": 
 					ProjectToolbar.setTool(ProjectToolbar.PEN);
 					break; 
@@ -1456,7 +1455,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					pencilButton.setBorder(activeBorder);
 					deactivateOtherTools(pencilButton);
 					break;
-				case ProjectToolbar.PEN: 
+				case ProjectToolbar.PEN:
 					penButton.setEnabled(false);
 					penButton.setBorder(activeBorder);
 					deactivateOtherTools(penButton);
@@ -3075,8 +3074,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 
 				//
 				final JMenu nodeMenu = new JMenu("Nodes");
-				item = new JMenuItem("Mark"); item.addActionListener(this); nodeMenu.add(item);
-				item = new JMenuItem("Clear marks (selected Trees)"); item.addActionListener(this); nodeMenu.add(item);
+				item = new JMenuItem("Mark"); item.addActionListener(this); if(rm.getProjectConfig().isFullGUI()) nodeMenu.add(item);
+				item = new JMenuItem("Clear marks (selected Trees)"); item.addActionListener(this); if(rm.getProjectConfig().isFullGUI()) nodeMenu.add(item);
 				final JMenuItem nodeColor = new JMenuItem("Color..."); nodeMenu.add(nodeColor);
 				nodeColor.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.SHIFT_MASK, true));
 				final JMenuItem nodePairColor = new JMenuItem("Color path between two nodes tagged as..."); nodeMenu.add(nodePairColor);
@@ -5249,13 +5248,13 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			Display.update(layer.getParent(), false);
 		} else if (command.startsWith("Hide all ")) {
 			final String type = command.substring(9, command.length() -1); // skip the ending plural 's'
-			final Collection<Displayable> col = layer.getParent().setVisible(type, false, true);
+			final Collection<Displayable> col = layer.getParent().setVisible(type, false, true, Display.getFrontLayer());
 			selection.removeAll(col);
 			Display.updateCheckboxes(col, DisplayablePanel.VISIBILITY_STATE);
 		} else if (command.startsWith("Unhide all ")) {
 			String type = command.substring(11, command.length() -1); // skip the ending plural 's'
 			type = type.substring(0, 1).toUpperCase() + type.substring(1);
-			updateCheckboxes(layer.getParent().setVisible(type, true, true), DisplayablePanel.VISIBILITY_STATE);
+			updateCheckboxes(layer.getParent().setVisible(type, true, true, Display.getFrontLayer()), DisplayablePanel.VISIBILITY_STATE);
 		} else if (command.equals("Hide deselected")) {
 			hideDeselected(0 != (ActionEvent.ALT_MASK & ae.getModifiers()));
 		} else if (command.equals("Hide deselected except images")) {
@@ -7717,14 +7716,14 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	group21.add(readXMLButton);    	
     	
     	JButton writeXMLButton = new JButton("WriteMTB");
-    	writeXMLButton.setToolTipText("Writes the current TrakEM project to MTBXML format.");
+    	writeXMLButton.setToolTipText("Writes the current rhizoTrak project to MTBXML format.");
     	writeXMLButton.setActionCommand("writeXML");
     	writeXMLButton.setEnabled(true);
     	writeXMLButton.addActionListener(this);
     	group21.add(writeXMLButton);
 
-    	JButton statButton = new JButton("Statistics");
-    	statButton.setToolTipText("");
+    	JButton statButton = new JButton("Write csv");
+    	statButton.setToolTipText("Write experimental data to csv file");
     	statButton.setActionCommand("stat");
     	statButton.addActionListener(this);
     	statButton.setEnabled(true);
@@ -7769,7 +7768,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	group52.add(configureButton);
     	
     	JButton preferencesButton = new JButton("Preferences");
-    	preferencesButton.setToolTipText("Adjust the color and opacity of treelines of a certain type.");
+    	preferencesButton.setToolTipText("Edit treelines display options and other user settings.");
     	preferencesButton.setActionCommand("preferences");
     	preferencesButton.addActionListener(this);
     	group6.add(preferencesButton);
