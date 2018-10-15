@@ -6869,9 +6869,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			img = l.getPatches(true).get(0).getImagePlus();
 		}
 		
-		// Set the image if the operator is a RidgeDetection
 		operator = operatorCollection.getOperator(list.getSelectedValue());	
 		// Add method of RootSegmentationOperator to set image 
+		if ( operator instanceof RootSegmentationOperator)
+		{
+			((RootSegmentationOperator) operator).setImage(img);
+		}
 		
 		LinkedList<String> operatorList = new LinkedList<String>();
 		// only one operator can be selected
@@ -7840,9 +7843,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					if ( event.getEventType() == ALDOperatorCollectionEventType.RESULTS_AVAILABLE )
 					{
 						runButton.setEnabled(true);
-						JOptionPane.showMessageDialog(null, 
-								"Operator done. Results are available.", 
-								"Results available", JOptionPane.OK_OPTION);
 						
 						// Get results from operator
 						try 
@@ -7856,20 +7856,23 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 						}
 						
 						Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.core.datatypes.Point>> resultLineMap = null;
-						try 
+						int answer = JOptionPane.showConfirmDialog(null, 
+								"Accept the shown results and plot as treeline?", 
+								"Results available", JOptionPane.YES_NO_OPTION);
+						if ( answer == JOptionPane.YES_OPTION )
 						{
-							resultLineMap = (Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.core.datatypes.Point>>) 
-									operator.getParameter("resultLineMap");
-						} 
-						catch (ALDOperatorException e) 
-						{
-							IJError.print(e);
+							try 
+							{
+								resultLineMap = (Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.core.datatypes.Point>>) 
+										operator.getParameter("resultLineMap");
+							} 
+							catch (ALDOperatorException e) 
+							{
+								IJError.print(e);
+							}
+							RhizoLineMapToTreeline lineMapToTree = new RhizoLineMapToTreeline(new RhizoMain(Display.getFront().getProject()));
+							lineMapToTree.convertLineMapToTreeLine(resultLineMap);
 						}
-						RhizoLineMapToTreeline lineMapToTree = new RhizoLineMapToTreeline(new RhizoMain(Display.getFront().getProject()));
-						lineMapToTree.convertLineMapToTreeLine(resultLineMap);
-						
-						//getImageParameterAndShow("makeBinary", "binaryImage");
-						//getImageParameterAndShow("plotEigenvalues", "eigenvaluesImage");
 					}
 					else if ( event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED )
 					{
