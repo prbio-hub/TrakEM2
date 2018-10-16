@@ -47,7 +47,6 @@
 
 package de.unihalle.informatik.rhizoTrak.addon;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,7 +55,6 @@ import java.util.Map;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
-import de.unihalle.informatik.MiToBo.core.datatypes.Point;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootImageAnnotationType;
 import de.unihalle.informatik.MiToBo_xml.MTBXMLRootSegmentStatusType;
 import de.unihalle.informatik.rhizoTrak.Project;
@@ -88,7 +86,7 @@ public class RhizoLineMapToTreeline
 	 * @param lineMap - Map of lines with ids. The lines are stored as points in a map.
 	 * Where the points also have an id, which is only unique for the line they belong to.
 	 */
-	public void convertLineMapToTreeLine(Map<Integer, Map<Integer, Point>> lineMap)
+	public void convertLineMapToTreeLine(Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>> lineMap)
 	{
 		// get layers
 		Display display = Display.getFront();	
@@ -155,14 +153,14 @@ public class RhizoLineMapToTreeline
 			// TODO: this is a workaround for the repainting issues that occur when creating new nodes out of a mtbxml file
 			currentLayer.mtbxml = true;
 				
-			Map<Integer, Point> line = lineMap.get(id);
+			Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node> line = lineMap.get(id);
     		// create node -> ID map to later assign parents and children according to segment IDs and parent IDs
     		HashMap<Integer, RadiusNode> nodeIDmap = new HashMap<Integer, RadiusNode>();
 				
     		// Create a nodeIDmap of all points
 			for ( int pointId : line.keySet() )
 			{
-				Point p = line.get(pointId);
+				de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node p = line.get(pointId);
 
 				if(p.getPredecessor() == -1)
     			{
@@ -176,7 +174,7 @@ public class RhizoLineMapToTreeline
 			// Add all points to treeline
 			for ( int pointId : line.keySet() )
 			{
-				Point p = line.get(pointId);
+				de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node p = line.get(pointId);
 					
 				// assuming that default status is defined
     			byte s = (byte) 0;

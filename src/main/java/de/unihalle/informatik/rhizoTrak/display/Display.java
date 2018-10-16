@@ -185,7 +185,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.intensity.MatchIntensities;
 
 import de.unihalle.informatik.Alida.exceptions.ALDOperatorException;
@@ -6839,7 +6838,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			for ( Display display : Display.getDisplays() )
 			{
 				JFrame frame = display.getFrame();
-				if ( StringUtils.contains(frame.getTitle(), "ALDOperatorConfigurationFrame:") && frame.isShowing() )
+				if ( frame.getTitle().contains("ALDOperatorConfigurationFrame:") && frame.isShowing() )
 				{
 					isConfigFrameOpen = true;
 				}
@@ -7854,7 +7853,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 							IJError.print(e);
 						}
 						
-						Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.core.datatypes.Point>> resultLineMap = null;
+						Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>> resultLineMap = null;
 						int answer = JOptionPane.showConfirmDialog(null, 
 								"Accept the shown results and plot as treeline?", 
 								"Results available", JOptionPane.YES_NO_OPTION);
@@ -7862,7 +7861,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 						{
 							try 
 							{
-								resultLineMap = (Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.core.datatypes.Point>>) 
+								resultLineMap = (Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>>) 
 										operator.getParameter("resultLineMap");
 							} 
 							catch (ALDOperatorException e) 
