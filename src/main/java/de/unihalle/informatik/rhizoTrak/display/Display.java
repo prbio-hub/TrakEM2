@@ -200,6 +200,7 @@ import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoLineMapToTreeline;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.analysis.Graph;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.SplitDialog;
@@ -7859,6 +7860,19 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 								"Results available", JOptionPane.YES_NO_OPTION);
 						if ( answer == JOptionPane.YES_OPTION )
 						{
+							int sizeStatusLabel = getProject().getRhizoMain().getProjectConfig().sizeStatusLabelMapping();
+							String[] fullNames = new String[sizeStatusLabel+1];
+							for ( int i = 0; i < sizeStatusLabel; i++) 
+							{
+								fullNames[i] = getProject().getRhizoMain().getProjectConfig().getStatusLabel(i).getName();
+							}
+							fullNames[sizeStatusLabel] = "STATUS_UNDEFINED";
+							
+							String status = (String) JOptionPane.showInputDialog(null,
+									"Which status should the treeline nodes have?",
+									"Choose status", JOptionPane.QUESTION_MESSAGE,
+									null, fullNames, fullNames[0]);
+							
 							try 
 							{
 								resultLineMap = (Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>>) 
@@ -7869,7 +7883,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 								IJError.print(e);
 							}
 							RhizoLineMapToTreeline lineMapToTree = new RhizoLineMapToTreeline(new RhizoMain(Display.getFront().getProject()));
-							lineMapToTree.convertLineMapToTreeLine(resultLineMap);
+							lineMapToTree.convertLineMapToTreeLine(resultLineMap, status);
 						}
 					}
 					else if ( event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED )

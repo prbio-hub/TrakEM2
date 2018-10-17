@@ -86,7 +86,8 @@ public class RhizoLineMapToTreeline
 	 * @param lineMap - Map of lines with ids. The lines are stored as points in a map.
 	 * Where the points also have an id, which is only unique for the line they belong to.
 	 */
-	public void convertLineMapToTreeLine(Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>> lineMap)
+	public void convertLineMapToTreeLine(Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>> lineMap,
+			String status)
 	{
 		// get layers
 		Display display = Display.getFront();	
@@ -175,10 +176,16 @@ public class RhizoLineMapToTreeline
 			for ( int pointId : line.keySet() )
 			{
 				de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node p = line.get(pointId);
-					
+				
 				// assuming that default status is defined
-    			byte s = (byte) 0;
-    			//byte s = (byte) RhizoProjectConfig.STATUS_UNDEFINED;
+				byte s = (byte) RhizoProjectConfig.STATUS_UNDEFINED;
+				if ( status != null && !status.equals("STATUS_UNDEFINED") )
+				{
+					if ( status.equals("LIVING") ) 			s = (byte) 0;
+					else if ( status.equals("DEAD") ) 		s = (byte) 1;
+					else if ( status.equals("GAP") )		s = (byte) 2;
+					else if ( status.equals("DECAYED") )	s = (byte) 3;
+				}
     				
     			if(p.getPredecessor() == -1)
     			{
