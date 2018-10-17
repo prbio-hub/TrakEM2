@@ -391,10 +391,25 @@ public abstract class Node<T> implements Taggable {
 				}
 			} else if (with_arrows && !active) {
 				// paint a gray handle for the root
-				g.setColor(active_layer == this.la ? Color.gray : local_edge_color);
-				g.fillOval((int)x - 6, (int)y - 6, 11, 11);
-				g.setColor(Color.black);
-				g.drawString("S", (int)x -3, (int)y + 4); // TODO ensure Font is proper
+				Color currentColor = active_layer == this.la ? Color.gray : local_edge_color;
+				
+				if(this.hasChildren()) {
+					int highestAlpha=0;
+					for(Node<T> node : this.children) {
+						int currentAlpha = node.getCorrectedColor().getAlpha();
+						if(currentAlpha > highestAlpha) highestAlpha=currentAlpha;
+						g.setColor(new Color(currentColor.getRed(),currentColor.getGreen(),currentColor.getBlue(),highestAlpha));
+						g.fillOval((int)x - 6, (int)y - 6, 11, 11);
+						g.setColor(new Color(0,0,0,highestAlpha));
+						g.drawString("S", (int)x -3, (int)y + 4); // TODO ensure Font is proper
+					}
+				} else {
+					g.setColor(currentColor);
+					g.fillOval((int)x - 6, (int)y - 6, 11, 11);
+					g.setColor(Color.BLACK);
+					g.drawString("S", (int)x -3, (int)y + 4); // TODO ensure Font is proper
+				}	
+
 			}
 			if (null != children) {
 				final float[] fp = new float[2];
