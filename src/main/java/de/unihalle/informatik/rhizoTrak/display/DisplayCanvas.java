@@ -2263,6 +2263,22 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				}		
 				
 				break;
+			case KeyEvent.VK_D:
+				if (active instanceof Tree<?>)
+				{
+					display.getLayerSet().addDataEditStep(active);
+					if (((Tree)active).reRoot(((Tree)active).getLastVisited())) 
+					{
+						display.getLayerSet().addDataEditStep(active);
+						Display.repaint(display.getLayerSet());
+					} 
+					else 
+					{
+						display.getLayerSet().removeLastUndoStep();
+					}
+				}
+
+				break;
 			case KeyEvent.VK_P:
 				if (0 == ke.getModifiers()) {
 					display.getLayerSet().color_cues = !display.getLayerSet().color_cues;
