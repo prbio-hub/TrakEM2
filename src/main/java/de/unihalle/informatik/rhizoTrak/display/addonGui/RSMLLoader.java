@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.swing.DefaultListModel;
@@ -24,6 +25,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
@@ -45,10 +47,11 @@ public class RSMLLoader extends JPanel
 	// right panel and components
 	private JPanel jPanelRight;
 	private JPanel jPanelComboBox, jPanelRightButtons;
-	private JLabel jLabelComboBox;
-	private JComboBox<String> jComboBox;
+	private JLabel jLabelComboBoxLayers, jLabelComboBoxLabels;
+	private JComboBox<String> jComboBoxLayers, jComboBoxLabels;
 	private List<String> layerNames; // can't use layers directly without editing Layer.toString() method
-	private JButton jButtonSelect, jButtonSort, jButtonImport, jButtonBaseDir;
+	private List<String> labelNames;
+	private JButton jButtonSelect, jButtonImport, jButtonBaseDir;
 
 	private List<File> allFiles;
 	
@@ -120,16 +123,6 @@ public class RSMLLoader extends JPanel
 			}
 		});
 		
-		jButtonSort = new JButton("Sort");
-		jButtonSort.addActionListener(new ActionListener() 
-		{
-			@Override
-			public void actionPerformed(ActionEvent e) 
-			{
-				//sortList();
-			}
-		});
-		
 		jButtonImport = new JButton("Import RSML");
 		jButtonImport.addActionListener(new ActionListener() 
 		{
@@ -138,7 +131,7 @@ public class RSMLLoader extends JPanel
 			{
 				if(allFiles.size() > 0)
 				{
-					if(jComboBox.getSelectedItem().equals(APPEND))
+					if(jComboBoxLayers.getSelectedItem().equals(APPEND))
 					{
 						rhizoMain.getRhizoRSML().readRSML(allFiles, null);
 					}
@@ -147,8 +140,11 @@ public class RSMLLoader extends JPanel
 						LayerSet layerSet = rhizoMain.getProject().getRootLayerSet();
 						List<Layer> layerList = layerSet.getLayers();
 						
-						int index = layerNames.indexOf(jComboBox.getSelectedItem());
+						int index = layerNames.indexOf(jComboBoxLayers.getSelectedItem());
 						
+						byte labelIndex = (byte) labelNames.indexOf(jComboBoxLabels.getSelectedItem());
+						
+						rhizoMain.getRhizoRSML().setDefaultStatusLabel(labelIndex);
 						rhizoMain.getRhizoRSML().readRSML(allFiles, layerList.get(index));
 					}
 					
@@ -172,21 +168,27 @@ public class RSMLLoader extends JPanel
 			}
 		});
 		
-		jLabelComboBox = new JLabel("Choose first layer:");
-		jLabelComboBox.setHorizontalAlignment(JLabel.RIGHT);
+		jLabelComboBoxLayers = new JLabel("Choose first layer: ");
+		jLabelComboBoxLayers.setHorizontalAlignment(JLabel.RIGHT);
 		
-		jComboBox = createLayerComboBox();
+		jComboBoxLayers = createLayerComboBox();
+		
+		jLabelComboBoxLabels = new JLabel("Choose default status: ");
+		jLabelComboBoxLabels.setHorizontalAlignment(JLabel.RIGHT);
+		
+		jComboBoxLabels = createLabelComboBox();
 		// TODO show full name on popup but not in panel
 //		jComboBox.setPreferredSize(comboBoxDimension);
 //		jComboBox.setMaximumSize(comboBoxDimension);
 		
-		jPanelComboBox = new JPanel();
-		jPanelComboBox.add(jLabelComboBox);
-		jPanelComboBox.add(jComboBox);
+		jPanelComboBox = new JPanel(new GridLayout(2, 2));
+		jPanelComboBox.add(jLabelComboBoxLayers);
+		jPanelComboBox.add(jComboBoxLayers);
+		jPanelComboBox.add(jLabelComboBoxLabels);
+		jPanelComboBox.add(jComboBoxLabels);
 		
 		jPanelRightButtons = new JPanel(new GridLayout(0, 1));
 		jPanelRightButtons.add(jButtonSelect);
-//		jPanelRightButtons.add(jButtonSort); // TODO
 		jPanelRightButtons.add(jButtonImport);
 		jPanelRightButtons.add(jButtonBaseDir);
 
@@ -200,6 +202,21 @@ public class RSMLLoader extends JPanel
 		add(jPanelRight, BorderLayout.EAST);
 	}
 	
+	private JComboBox<String> createLabelComboBox() 
+	{
+		Collection<RhizoStatusLabel> labels = rhizoMain.getProjectConfig().getAllUserDefinedStatusLabel();
+		
+		labelNames = new ArrayList<String>();
+		
+		for(RhizoStatusLabel rsl: labels)
+		{
+			String labelName = rsl.getName();
+			labelNames.add(labelName);
+		}
+		
+		return new JComboBox<String>(labelNames.toArray(new String[labelNames.size()]));
+	}
+
 	/**
 	 * Creates a combobox with layers and their corresponding image names
 	 * 
