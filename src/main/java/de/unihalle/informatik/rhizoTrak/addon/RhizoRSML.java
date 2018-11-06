@@ -153,7 +153,6 @@ public class RhizoRSML
 	 */
 	private static final Double EPSILON = 0.01;
 
-	// TODO make this configurable
 	private static byte default_statuslabel = 0;
 
 	private RhizoMain rhizoMain;
@@ -181,7 +180,8 @@ public class RhizoRSML
 	private boolean debugWrite = false;
 
 	/**
-	 *  Writes the current project to a RSML file.
+	 *  Writes the current or all layers to a RSML file.
+	 *  
 	 *  @author Posch
 	 */
 	public void writeRSML() {
@@ -194,14 +194,12 @@ public class RhizoRSML
 		String[] choicesUnified = {UNIFIED_STRING, NOTUNIFIED_STRING};
 		JComboBox<String> comboUnified = new JComboBox<String>(choicesUnified);
 
-
 		JPanel statChoicesPanel = new JPanel();
 		statChoicesPanel.setLayout(new GridLayout( 4, 2, 0, 10));
 		statChoicesPanel.add(new JLabel("Layers"));
 		statChoicesPanel.add( comboLayers);
 		statChoicesPanel.add(new JLabel("Unified "));
 		statChoicesPanel.add( comboUnified);
-
 
 		int result = JOptionPane.showConfirmDialog(null, statChoicesPanel, "Output Options", 
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -213,6 +211,7 @@ public class RhizoRSML
 		boolean writeAllLAyers  = ((String) comboLayers.getSelectedItem()).equals( ALL_STRING);
 		boolean unified = ((String) comboUnified.getSelectedItem()).equals( UNIFIED_STRING);
 
+		// query output files
 		String folder;
 		if  ( this.rhizoMain.getStorageFolder() == null )
 			folder = System.getProperty("user.home");
@@ -225,16 +224,15 @@ public class RhizoRSML
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
 		if ( writeAllLAyers ) {
-            // TODO: ask user if generated filenames are ok? at least if existing files are overridden?
 			// TODO: potentially create ICAP conforming filenames
 			fileChooser.setDialogTitle("File(s) to write RSML to");
 			fileChooser.setSelectedFile(new File( folder + projectName + ".rsml"));
 			int returnVal = fileChooser.showOpenDialog(null);
 
 			if (returnVal != JFileChooser.APPROVE_OPTION)
-				return; // user cancelled dialog
-			String name = fileChooser.getSelectedFile().toString().replaceFirst(".rsml\\z", "");
+				return; 
 			
+			String name = fileChooser.getSelectedFile().toString().replaceFirst(".rsml\\z", "");
 			StringBuilder sb = new StringBuilder();
 			ArrayList<File> files = new ArrayList<File>();
 			for ( Layer layer : rhizoMain.getProject().getRootLayerSet().getLayers()) {
@@ -247,13 +245,11 @@ public class RhizoRSML
 				sb.append( "\n");
 			}
 			 
-			
-			int ok = JOptionPane.showConfirmDialog(null, new String( sb), 
+			result = JOptionPane.showConfirmDialog(null, new String( sb), 
 					"write all layers to following RSML files", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-			if( ok != JOptionPane.OK_OPTION) {
+			if( result != JOptionPane.OK_OPTION) {
 				return;
 			}
-
 
 			int i = 0;
 			for ( Layer layer : rhizoMain.getProject().getRootLayerSet().getLayers()) {
@@ -270,15 +266,15 @@ public class RhizoRSML
 			int returnVal = fileChooser.showOpenDialog(null);
 
 			if (returnVal != JFileChooser.APPROVE_OPTION)
-				return; // user cancelled dialog
+				return; 
 
 			//  ask if file should be overridden, if is exists??
 			File selectedFile = fileChooser.getSelectedFile();
 			if ( selectedFile.exists() ) {
-				int ok = JOptionPane.showConfirmDialog(null, "File " + selectedFile.getAbsolutePath() +
+				result = JOptionPane.showConfirmDialog(null, "File " + selectedFile.getAbsolutePath() +
 						" already exists, override?", 
-						"write RSML", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-				if( ok != JOptionPane.OK_OPTION) {
+						"write current layer to an RSML file", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+				if( result != JOptionPane.OK_OPTION) {
 					return;
 				}
 			}
@@ -296,9 +292,14 @@ public class RhizoRSML
 	 * @param unified 
 	 */
 	private void writeLayer(File saveFile, Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified) {
-		Rsml rsml = createRSML( layer, rhizoLayerInfo, unified);
+		Rsml rsml = null;
+		try {
+			rsml = createRSML( layer, rhizoLayerInfo, unified);
+		} catch (InternalError ex) {
+			Utils.showMessage( "cannot create RSML structure for layer " + String.valueOf( RhizoUtils.getTimepointForLayer( layer)));
+		}
+		
 		if ( rsml == null ) {
-			Utils.showMessage( "cannot create RSML for layer " + RhizoUtils.getTimepointForLayer( layer));
 			return;
 		}
 
@@ -317,7 +318,7 @@ public class RhizoRSML
 		Utils.log("Saved layer " + String.valueOf( RhizoUtils.getTimepointForLayer( layer)) + " to RSML file  - " + saveFile.getAbsolutePath());
 	}
 
-	/** Create a rsml xml data structure for the current layer.
+	/** Create a RSML data structure for the current layer.
      * 
      * @param layer 
 	 * @param rhizoLayerInfo 
@@ -332,7 +333,9 @@ public class RhizoRSML
 		allTreelinesInLayer = RhizoUtils.getTreelinesBelowRootstacks( project, layer);
 
 		if ( allTreelinesInLayer == null) {
-			Utils.showMessage( "rhizoTrak", "WARNING: no rootstacks found, nothing to write");
+			Utils.showMessage( "rhizoTrak", "WARNING: no rootstacks found in layer " + 
+					String.valueOf( RhizoUtils.getTimepointForLayer( layer)) +
+					", nothing to write");
 			return null;
 		}
 
@@ -355,49 +358,42 @@ public class RhizoRSML
     	// create rsml
     	Rsml rsml = new Rsml();
     	
-    	try {
-    		// --- meta data
-    		Rsml.Metadata metadata;
-    		if (rhizoLayerInfo == null || rhizoLayerInfo.getRsml() == null || rhizoLayerInfo.getRsml().getMetadata() == null) {
-    			metadata = createMetatdata( layer, rhizoLayerInfo, unified);
-    		} else {
-    			metadata = createMetatdata( layer, rhizoLayerInfo, unified);
-    		}
-    		rsml.setMetadata( metadata);
-
-    		// --- the scene
-    		Rsml.Scene scene = new Scene();
-
-    		// properties: status label mappings
-    		PropertyListType pList = new PropertyListType();
-    		for ( int i = 0 ; i < this.rhizoMain.getProjectConfig().sizeStatusLabelMapping() ; i++) {
-    	    	pList.getAny().add( createElementForXJAXBObject(
-    	    			createIntegerStringPair( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName())));
-    		}
-    		// add internal status labels
-    		for ( int i : this.rhizoMain.getProjectConfig().getFixedStatusLabelInt()) {
-    			pList.getAny().add( createElementForXJAXBObject(
-    					createIntegerStringPair( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName())));
-    		}
- 		
-			scene.setProperties( pList);
-
-			// now create the roots
-    		for ( Treeline tl : allTreelinesInLayer ) {
-    			Plant plant = createPlantForTreeline( tl, rhizoLayerInfo, treelineConnectorMap.get( tl), unified);
-    			if ( plant != null && ! scene.getPlant().contains( plant)) {
-    				scene.getPlant().add( plant);
-    			}
-    		}
-
-    		rsml.setScene( scene);
-
-    	} catch (Exception e) {
-			Utils.showMessage( "rhizoTrak", "Internal error when creating the rsml representation for layer " + 
-					String.valueOf( RhizoUtils.getTimepointForLayer( layer)));
-    		//TODO should we keep the stack trace on production??
-    		e.printStackTrace();
+    	// --- meta data
+    	Rsml.Metadata metadata;
+    	if (rhizoLayerInfo == null || rhizoLayerInfo.getRsml() == null || rhizoLayerInfo.getRsml().getMetadata() == null) {
+    		metadata = createMetatdata( layer, rhizoLayerInfo, unified);
+    	} else {
+    		metadata = createMetatdata( layer, rhizoLayerInfo, unified);
     	}
+    	rsml.setMetadata( metadata);
+
+    	// --- the scene
+    	Rsml.Scene scene = new Scene();
+
+    	// properties: status label mappings
+    	PropertyListType pList = new PropertyListType();
+    	for ( int i = 0 ; i < this.rhizoMain.getProjectConfig().sizeStatusLabelMapping() ; i++) {
+    		pList.getAny().add( createElementForXJAXBObject(
+    				createIntegerStringPair( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName())));
+    	}
+    	// add internal status labels
+    	for ( int i : this.rhizoMain.getProjectConfig().getFixedStatusLabelInt()) {
+    		pList.getAny().add( createElementForXJAXBObject(
+    				createIntegerStringPair( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName())));
+    	}
+
+    	scene.setProperties( pList);
+
+    	// now create the roots
+    	for ( Treeline tl : allTreelinesInLayer ) {
+    		Plant plant = createPlantForTreeline( tl, rhizoLayerInfo, treelineConnectorMap.get( tl), unified);
+    		if ( plant != null && ! scene.getPlant().contains( plant)) {
+    			scene.getPlant().add( plant);
+    		}
+    	}
+
+    	rsml.setScene( scene);
+
     	return rsml;
     }
    
@@ -425,7 +421,7 @@ public class RhizoRSML
     	try {
     		metadata.setLastModified(  DatatypeFactory.newInstance().newXMLGregorianCalendar(now));
     	} catch (DatatypeConfigurationException e1) {
-    		Utils.showMessage( "write RSML: can not generate time for rsml");
+    		throw new InternalError( "write RSML: can not generate time for rsml");
     	}
 
     	metadata.setSoftware( SOFTWARE_NAME);
@@ -464,7 +460,7 @@ public class RhizoRSML
     			}
 
     			// set sha256 code
-    			// TODO why is rhizoLayerInfo not always define, where to get shacode from
+    			// TODO why is rhizoLayerInfo not always defined, where to get shacode from
     			if ( rhizoLayerInfo != null )
     				imageMetaData.setSha256( rhizoLayerInfo.getImageHash());
 
@@ -817,9 +813,7 @@ public class RhizoRSML
 	    	Element customElement = doc.createElement( name);
 	    	return customElement;
 		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
+			throw new InternalError( "rhizoRSML: can not create W3 Element for " + name);
 		}
 	}
 
@@ -945,8 +939,8 @@ public class RhizoRSML
 		try {
 			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		} catch (ParserConfigurationException e) {
-			Utils.showMessage( "write RSML: internal error, cannot marshal object of type " + jaxbObject.getClass().getCanonicalName());
-			e.printStackTrace();
+			throw new InternalError( "write RSML: internal error, cannot marshal object of type " + 
+					jaxbObject.getClass().getCanonicalName());
 		}
     	JAXB.marshal( jaxbObject, new DOMResult(document));
     	Element element = document.getDocumentElement();
@@ -986,8 +980,7 @@ public class RhizoRSML
 				Unmarshaller um = context.createUnmarshaller();
 				rsmls.add( (Rsml) um.unmarshal( rsmlFile));
 			} catch (Exception e) {
-				Utils.showMessage( "Cannot read RSML from " + rsmlFile.getName() + ".\nCancelling import.");
-				return;
+				throw new InternalError( "Cannot read RSML from " + rsmlFile.getName() + ".\nCancelling import.");
 			}
 		}
 		
@@ -1512,7 +1505,7 @@ public class RhizoRSML
 		return parentNodeIndex;
 	}
 
-	/** create a RadiusNode for the rsml node in the given layer
+	/** create a RadiusNode for the RSML node in the given layer
 	 * 
 	 * @param rsmlNode
 	 * @param radius
@@ -1644,6 +1637,6 @@ public class RhizoRSML
 	
 	public void setDefaultStatusLabel(byte b)
 	{
-		this.default_statuslabel = b;
+		RhizoRSML.default_statuslabel = b;
 	}
 }
