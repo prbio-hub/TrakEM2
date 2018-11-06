@@ -233,10 +233,32 @@ public class RhizoRSML
 
 			if (returnVal != JFileChooser.APPROVE_OPTION)
 				return; // user cancelled dialog
-			String name = fileChooser.getSelectedFile().toString().replaceFirst(".rsml\\z", "");;
+			String name = fileChooser.getSelectedFile().toString().replaceFirst(".rsml\\z", "");
+			
+			StringBuilder sb = new StringBuilder();
+			ArrayList<File> files = new ArrayList<File>();
 			for ( Layer layer : rhizoMain.getProject().getRootLayerSet().getLayers()) {
-				writeLayer( new File( name + "-" + String.valueOf( RhizoUtils.getTimepointForLayer( layer)) + ".rsml"), layer, 
-						this.rhizoMain.getLayerInfo( layer), unified);
+				File file = new File( name + "-" + String.valueOf( RhizoUtils.getTimepointForLayer( layer)) + ".rsml");
+				files.add( file);
+				sb.append( "Layer " + RhizoUtils.getTimepointForLayer(layer) + " to: " + file.getName());
+				if ( file.exists() ) {
+					sb.append( " (exists!)");
+				}
+				sb.append( "\n");
+			}
+			 
+			
+			int ok = JOptionPane.showConfirmDialog(null, new String( sb), 
+					"write all layers to following RSML files", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+			if( ok != JOptionPane.OK_OPTION) {
+				return;
+			}
+
+
+			int i = 0;
+			for ( Layer layer : rhizoMain.getProject().getRootLayerSet().getLayers()) {
+				writeLayer( files.get( i), layer, this.rhizoMain.getLayerInfo( layer), unified);
+				i++;
 			}
 
 		} else {
@@ -250,8 +272,19 @@ public class RhizoRSML
 			if (returnVal != JFileChooser.APPROVE_OPTION)
 				return; // user cancelled dialog
 
-			// TODO: ask if file should be overridden, if is exists??
-			writeLayer( fileChooser.getSelectedFile(), layer, this.rhizoMain.getLayerInfo( layer), unified);
+			//  ask if file should be overridden, if is exists??
+			File selectedFile = fileChooser.getSelectedFile();
+			if ( selectedFile.exists() ) {
+				int ok = JOptionPane.showConfirmDialog(null, "File " + selectedFile.getAbsolutePath() +
+						" already exists, override?", 
+						"write RSML", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+				if( ok != JOptionPane.OK_OPTION) {
+					return;
+				}
+			}
+			
+			// write the layer
+			writeLayer( selectedFile, layer, this.rhizoMain.getLayerInfo( layer), unified);
 		}	
 	}
     
