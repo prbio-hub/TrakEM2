@@ -179,7 +179,9 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 	private boolean input_disabled2 = false;
 	
 	public static final AtomicBoolean addTreelineEnabled = new AtomicBoolean(true);
-	private boolean displayablesVisible = true;
+	public static boolean treelinesVisibleToggle = true;
+	public static boolean connectorsVisibleToggle = true;
+
 
 	/** Store a copy of whatever data as each Class may define it, one such data object per class.
 	 * Private to the package. */
@@ -2249,14 +2251,33 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				
 				if(null != layer && null != layer.getParent())
 				{
-					final Collection<Displayable> col1 = layer.getParent().setVisible("treeline", !displayablesVisible, true, Display.getFrontLayer());
-					final Collection<Displayable> col2 = layer.getParent().setVisible("connector", !displayablesVisible, true,  Display.getFrontLayer());
+					boolean vis = !treelinesVisibleToggle || !connectorsVisibleToggle;
+					
+					final Collection<Displayable> col1 = layer.getParent().setVisible("treeline", vis, true, Display.getFrontLayer());
+					final Collection<Displayable> col2 = layer.getParent().setVisible("connector", vis, true,  Display.getFrontLayer());
 					Display.updateCheckboxes(col1, DisplayablePanel.VISIBILITY_STATE);
 					Display.updateCheckboxes(col2, DisplayablePanel.VISIBILITY_STATE);
 
-					displayablesVisible = !displayablesVisible;
+					treelinesVisibleToggle = vis;
+					connectorsVisibleToggle = vis;
 				}		
 				
+				break;
+			case KeyEvent.VK_D:
+				if (active instanceof Tree<?>)
+				{
+					display.getLayerSet().addDataEditStep(active);
+					if (((Tree)active).reRoot(((Tree)active).getLastVisited())) 
+					{
+						display.getLayerSet().addDataEditStep(active);
+						Display.repaint(display.getLayerSet());
+					} 
+					else 
+					{
+						display.getLayerSet().removeLastUndoStep();
+					}
+				}
+
 				break;
 			case KeyEvent.VK_P:
 				if (0 == ke.getModifiers()) {

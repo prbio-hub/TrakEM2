@@ -589,20 +589,20 @@
       <id>develop</id>
       <properties>
         <mitobo.dep>mitobo-internal</mitobo.dep>
-        <mitobo.dep.version>2.1-SNAPSHOT</mitobo.dep.version>
+        <mitobo.dep.version>2.2-SNAPSHOT</mitobo.dep.version>
       </properties>
       <activation>
-		<activeByDefault>true</activeByDefault>
+	<activeByDefault>true</activeByDefault>
       </activation>
     </profile>
     <profile>
       <id>release</id>
       <activation>
-	  <activeByDefault>false</activeByDefault>
+	<activeByDefault>false</activeByDefault>
       </activation>
       <properties>
         <mitobo.dep>mitobo</mitobo.dep>
-        <mitobo.dep.version>1.8.11</mitobo.dep.version>
+        <mitobo.dep.version>1.8.12</mitobo.dep.version>
       </properties>
     </profile>
   </profiles>

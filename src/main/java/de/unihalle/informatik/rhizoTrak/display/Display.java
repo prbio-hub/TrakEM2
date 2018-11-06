@@ -185,7 +185,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.intensity.MatchIntensities;
 
 import de.unihalle.informatik.Alida.exceptions.ALDOperatorException;
@@ -202,6 +201,7 @@ import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoLineMapToTreeline;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.analysis.Graph;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.SplitDialog;
@@ -5252,10 +5252,16 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			final Collection<Displayable> col = layer.getParent().setVisible(type, false, true, Display.getFrontLayer());
 			selection.removeAll(col);
 			Display.updateCheckboxes(col, DisplayablePanel.VISIBILITY_STATE);
+			
+			if(type.equals("treeline")) DisplayCanvas.treelinesVisibleToggle = false;
+			if(type.equals("connector")) DisplayCanvas.connectorsVisibleToggle = false;
 		} else if (command.startsWith("Unhide all ")) {
 			String type = command.substring(11, command.length() -1); // skip the ending plural 's'
 			type = type.substring(0, 1).toUpperCase() + type.substring(1);
 			updateCheckboxes(layer.getParent().setVisible(type, true, true, Display.getFrontLayer()), DisplayablePanel.VISIBILITY_STATE);
+			
+			if(type.equals("treeline")) DisplayCanvas.treelinesVisibleToggle = true;
+			if(type.equals("connector")) DisplayCanvas.connectorsVisibleToggle = true;
 		} else if (command.equals("Hide deselected")) {
 			hideDeselected(0 != (ActionEvent.ALT_MASK & ae.getModifiers()));
 		} else if (command.equals("Hide deselected except images")) {
@@ -6846,7 +6852,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			for ( Display display : Display.getDisplays() )
 			{
 				JFrame frame = display.getFrame();
-				if ( StringUtils.contains(frame.getTitle(), "ALDOperatorConfigurationFrame:") && frame.isShowing() )
+				if ( frame.getTitle().contains("ALDOperatorConfigurationFrame:") && frame.isShowing() )
 				{
 					isConfigFrameOpen = true;
 				}
@@ -6875,9 +6881,12 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			img = l.getPatches(true).get(0).getImagePlus();
 		}
 		
-		// Set the image if the operator is a RidgeDetection
 		operator = operatorCollection.getOperator(list.getSelectedValue());	
 		// Add method of RootSegmentationOperator to set image 
+		if ( operator instanceof RootSegmentationOperator)
+		{
+			((RootSegmentationOperator) operator).setImage(img);
+		}
 		
 		LinkedList<String> operatorList = new LinkedList<String>();
 		// only one operator can be selected
@@ -7850,7 +7859,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			
 		try 
 		{
-			operatorCollection = new MTBOperatorCollection<RootSegmentationOperator>(RootSegmentationOperator.class);			
+			operatorCollection = new MTBOperatorCollection<RootSegmentationOperator>(RootSegmentationOperator.class);
 			operatorCollection.addALDOperatorCollectionEventListener(new ALDOperatorCollectionEventListener() 
 			{	
 				// Event Listener for operator
@@ -7860,9 +7869,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					if ( event.getEventType() == ALDOperatorCollectionEventType.RESULTS_AVAILABLE )
 					{
 						runButton.setEnabled(true);
-						JOptionPane.showMessageDialog(null, 
-								"Operator done. Results are available.", 
-								"Results available", JOptionPane.OK_OPTION);
 						
 						// Get results from operator
 						try 
@@ -7875,21 +7881,37 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 							IJError.print(e);
 						}
 						
-						Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.core.datatypes.Point>> resultLineMap = null;
-						try 
+						Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>> resultLineMap = null;
+						int answer = JOptionPane.showConfirmDialog(null, 
+								"Accept the shown results and plot as treeline?", 
+								"Results available", JOptionPane.YES_NO_OPTION);
+						if ( answer == JOptionPane.YES_OPTION )
 						{
-							resultLineMap = (Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.core.datatypes.Point>>) 
-									operator.getParameter("resultLineMap");
-						} 
-						catch (ALDOperatorException e) 
-						{
-							IJError.print(e);
+							int sizeStatusLabel = getProject().getRhizoMain().getProjectConfig().sizeStatusLabelMapping();
+							String[] fullNames = new String[sizeStatusLabel+1];
+							for ( int i = 0; i < sizeStatusLabel; i++) 
+							{
+								fullNames[i] = getProject().getRhizoMain().getProjectConfig().getStatusLabel(i).getName();
+							}
+							fullNames[sizeStatusLabel] = "STATUS_UNDEFINED";
+							
+							String status = (String) JOptionPane.showInputDialog(null,
+									"Which status should the treeline nodes have?",
+									"Choose status", JOptionPane.QUESTION_MESSAGE,
+									null, fullNames, fullNames[0]);
+							
+							try 
+							{
+								resultLineMap = (Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>>) 
+										operator.getParameter("resultLineMap");
+							} 
+							catch (ALDOperatorException e) 
+							{
+								IJError.print(e);
+							}
+							RhizoLineMapToTreeline lineMapToTree = new RhizoLineMapToTreeline(new RhizoMain(Display.getFront().getProject()));
+							lineMapToTree.convertLineMapToTreeLine(resultLineMap, status);
 						}
-						RhizoLineMapToTreeline lineMapToTree = new RhizoLineMapToTreeline(new RhizoMain(Display.getFront().getProject()));
-						lineMapToTree.convertLineMapToTreeLine(resultLineMap);
-						
-						//getImageParameterAndShow("makeBinary", "binaryImage");
-						//getImageParameterAndShow("plotEigenvalues", "eigenvaluesImage");
 					}
 					else if ( event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED )
 					{
