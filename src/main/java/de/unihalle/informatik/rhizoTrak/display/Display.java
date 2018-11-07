@@ -7855,28 +7855,28 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 						}
 						
 						Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>> resultLineMap = null;
-						int answer = JOptionPane.showConfirmDialog(null, 
-								"Accept the shown results and plot as treeline?", 
-								"Results available", JOptionPane.YES_NO_OPTION);
-						if ( answer == JOptionPane.YES_OPTION )
+						
+						int sizeStatusLabel = getProject().getRhizoMain().getProjectConfig().sizeStatusLabelMapping();
+						String[] fullNames = new String[sizeStatusLabel+1];
+						for ( int i = 0; i < sizeStatusLabel; i++) 
 						{
-							int sizeStatusLabel = getProject().getRhizoMain().getProjectConfig().sizeStatusLabelMapping();
-							String[] fullNames = new String[sizeStatusLabel+1];
-							for ( int i = 0; i < sizeStatusLabel; i++) 
-							{
-								fullNames[i] = getProject().getRhizoMain().getProjectConfig().getStatusLabel(i).getName();
-							}
-							fullNames[sizeStatusLabel] = "STATUS_UNDEFINED";
+							fullNames[i] = getProject().getRhizoMain().getProjectConfig().getStatusLabel(i).getName();
+						}
+						fullNames[sizeStatusLabel] = "STATUS_UNDEFINED";
 							
-							String status = (String) JOptionPane.showInputDialog(null,
-									"Which status should the treeline nodes have?",
-									"Choose status", JOptionPane.QUESTION_MESSAGE,
-									null, fullNames, fullNames[0]);
-							
+						String status = null;
+						status = (String) JOptionPane.showInputDialog(null,
+								"Which status should the treeline nodes have?\n"
+								+ "If you then press \'OK\', "
+								+ "the treelines will be imported in the image.",
+								"Choose status", JOptionPane.PLAIN_MESSAGE,
+								null, fullNames, fullNames[0]);
+						if( status != null )
+						{
 							try 
 							{
 								resultLineMap = (Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>>) 
-										operator.getParameter("resultLineMap");
+									operator.getParameter("resultLineMap");
 							} 
 							catch (ALDOperatorException e) 
 							{
