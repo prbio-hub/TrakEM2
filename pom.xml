@@ -589,7 +589,7 @@
       <id>develop</id>
       <properties>
         <mitobo.dep>mitobo-internal</mitobo.dep>
-        <mitobo.dep.version>2.1-SNAPSHOT</mitobo.dep.version>
+        <mitobo.dep.version>2.2-SNAPSHOT</mitobo.dep.version>
       </properties>
       <activation>
 	<activeByDefault>true</activeByDefault>
