@@ -7895,7 +7895,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					else if ( event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED )
 					{
 						JOptionPane.showMessageDialog(null, 
-								"Configure operator completely.", 
+								"Operator not completely configured.", 
 								"Configure operator", JOptionPane.ERROR_MESSAGE);
 					}
 					else if ( event.getEventType() == ALDOperatorCollectionEventType.RUN_FAILURE )
