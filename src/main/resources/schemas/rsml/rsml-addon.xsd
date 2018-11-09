@@ -2,11 +2,9 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">  
 
   <!-- integer string pair -->
-  <xs:complexType name="integerStringPairType">
-            <xs:sequence>
-              <xs:element name="int" type="xs:int" />
-              <xs:element name="value" type="xs:string" />
-            </xs:sequence>
+  <xs:complexType name="StatusLabelMapping">
+          <xs:attribute name="int" type="xs:int" />
+          <xs:attribute name="value" type="xs:string" />
   </xs:complexType>
 
   <!-- integer -->

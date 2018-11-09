@@ -105,7 +105,7 @@ import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
-import de.unihalle.informatik.rhizoTrak.xsd.rsml.IntegerStringPairType;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.StatusLabelMapping;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.PointType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.PropertyListType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType;
@@ -374,12 +374,12 @@ public class RhizoRSML
     	PropertyListType pList = new PropertyListType();
     	for ( int i = 0 ; i < this.rhizoMain.getProjectConfig().sizeStatusLabelMapping() ; i++) {
     		pList.getAny().add( createElementForXJAXBObject(
-    				createIntegerStringPair( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName())));
+    				createStatusLabelMapping( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName())));
     	}
     	// add internal status labels
     	for ( int i : this.rhizoMain.getProjectConfig().getFixedStatusLabelInt()) {
     		pList.getAny().add( createElementForXJAXBObject(
-    				createIntegerStringPair( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName())));
+    				createStatusLabelMapping( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName())));
     	}
 
     	scene.setProperties( pList);
@@ -948,15 +948,15 @@ public class RhizoRSML
     	return element;
     }
     
-	/** Create a  <code>IntegerStringPairType</code> 
+	/** Create a  <code>StatusLabelMapping</code> 
      * representing the status label mapping <code>idx</code> to <code>name</code>
      * 
      * @param idx
      * @param name
      * @return
      */
-    private IntegerStringPairType createIntegerStringPair ( int idx, String name) {
-    	IntegerStringPairType isp = new IntegerStringPairType();
+    private StatusLabelMapping createStatusLabelMapping ( int idx, String name) {
+    	StatusLabelMapping isp = new StatusLabelMapping();
     	isp.setInt( idx);
     	isp.setValue( name);
     	
