@@ -88,6 +88,8 @@ public class RSMLLoader extends JPanel
 			{
 				int index = jListFiles.getSelectedIndex();
 				if(index == -1) return;
+				
+				allFiles.remove(index);
 				listModel.remove(index);
 			}
 		});
