@@ -405,6 +405,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				for (final Collection<Node<T>> nodes : node_layer_map.values()) {
 					for (final Node<T> nd : nodes) {
 						nd.translate(-box.x, -box.y);
+					}}
 			}
 			this.at.translate(box.x, box.y); // not using super.translate(...) because a preConcatenation is not needed; here we deal with the data.
 

@@ -64,6 +64,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -1214,28 +1215,32 @@ public class RhizoRSML
 		{
 			// collect connectors before the loop so we dont get the newly created ones
 			List<Connector> connectors = RhizoUtils.getConnectorsBelowRootstacks(rhizoMain.getProject());
+			// create connector -> id map of current connectors
+			Map<String, Connector> connectorIds = new HashMap<String, Connector>();
+			for(Connector connector: connectors)
+			{
+				connectorIds.put(getRsmlIdForTreeline(null, connector), connector);
+			}
+			
 			for(String id: topLevelIdTreelineListMap.keySet())
 			{
 				List<Treeline> treelineList = topLevelIdTreelineListMap.get(id);
 				
 				boolean connectorFound = false;
 				
-				// find connectors
-				for(Connector connector: connectors)
+				// find connector
+				Connector c = connectorIds.get(id);
+				if(null != c)
 				{
-					if(id.equals(getRsmlIdForTreeline(null, connector)))
+					for(Treeline treeline: treelineList)
 					{
-						for(Treeline treeline: treelineList)
+						if(!c.addConTreeline(treeline))
 						{
-							if(!connector.addConTreeline(treeline))
-							{
-								Utils.log("rhizoTrak", "Can not add treeline to connector " + connector.getId());
-							}
+							Utils.log("rhizoTrak", "Can not add treeline to connector " + c.getId());
 						}
-						
-						connectorFound = true;
-						break;
 					}
+					
+					connectorFound = true;
 				}
 
 				// no connector found and more than one treeline in list
