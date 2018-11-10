@@ -996,6 +996,7 @@ public class RhizoRSML
 		Collection<Integer> fixedStatusLabelInt = config.getFixedStatusLabelInt();
 		
 		HashMap<Integer, RhizoStatusLabel> projectMap = new HashMap<Integer, RhizoStatusLabel>();
+		List<RhizoStatusLabel> additionalLabels = new ArrayList<RhizoStatusLabel>();
 		
 		for(int i: fixedStatusLabelInt) projectMap.put(i, config.getStatusLabel(i));
 		for(int i = 0; i < statusLabelMapping.size(); i++) projectMap.put(i, statusLabelMapping.get(i));
@@ -1009,13 +1010,19 @@ public class RhizoRSML
 				
 				for(int j: rsmlMap.keySet())
 				{
-					if(null == projectMap.get(j)) projectMap.put(j, new RhizoStatusLabel(config, rsmlMap.get(j), null));
+					if(null == projectMap.get(j))
+					{
+						RhizoStatusLabel rsl = new RhizoStatusLabel(config, rsmlMap.get(j), rsmlMap.get(j).substring(0, 1), RhizoProjectConfig.DEFAULT_STATUS_COLOR);
+						projectMap.put(j, rsl);
+						
+						additionalLabels.add(rsl);
+					}
 					else
 					{
 						if(!projectMap.get(j).getName().equals(rsmlMap.get(j)))
 						{
 							rsmlMappings.append(j + ": " + projectMap.get(j).getName() + " (project) does not match "
-									+ rsmlMap.get(j) + " (+" + rsmlFiles.get(i).getName() + ")\n");
+									+ rsmlMap.get(j) + " (" + rsmlFiles.get(i).getName() + ")\n");
 						}
 					}
 				}
@@ -1028,7 +1035,7 @@ public class RhizoRSML
 		if(rsmlMappings.length() > 0)
 		{
 			rsmlMappings.insert(0, "Found inconsistencies in the RSML status label mapping."
-					+ "\nIf you continue the mapping defined in the project will be used and "
+					+ "\nIf you continue, the mapping defined in the project will be used and "
 					+ "any additionally defined labels will be added to the project.\n\n");
 			rsmlMappings.append("\nProceed anyway?");
 			
@@ -1196,6 +1203,13 @@ public class RhizoRSML
 			newLayer.updateLayerTree();
 			
 			availableLayers.add(newLayer);
+		}
+		
+		// add additionally defined status labels to the project
+		for(RhizoStatusLabel rsl: additionalLabels)
+		{
+			config.addStatusLabelToSet(rsl);
+			config.appendStatusLabelMapping(rsl);
 		}
 		
 		// collect for each ID of a toplevel root/polyline the treeline object created for this ID
