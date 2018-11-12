@@ -56,6 +56,7 @@ import java.math.BigInteger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,6 +64,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -986,8 +988,62 @@ public class RhizoRSML
 		
 		List<Layer> availableLayers = getAvailableLayers(firstLayer);
 
-		// TODO: check for invalid rsml		
-		// TODO: check status label mappings
+		// check status label mappings
+		StringBuilder rsmlMappings = new StringBuilder();
+		RhizoProjectConfig config = rhizoMain.getProjectConfig();
+		
+		List<RhizoStatusLabel> statusLabelMapping = config.getStatusLabelMapping();
+		Collection<Integer> fixedStatusLabelInt = config.getFixedStatusLabelInt();
+		
+		HashMap<Integer, RhizoStatusLabel> projectMap = new HashMap<Integer, RhizoStatusLabel>();
+		List<RhizoStatusLabel> additionalLabels = new ArrayList<RhizoStatusLabel>();
+		
+		for(int i: fixedStatusLabelInt) projectMap.put(i, config.getStatusLabel(i));
+		for(int i = 0; i < statusLabelMapping.size(); i++) projectMap.put(i, statusLabelMapping.get(i));
+		
+		for(int i = 0; i < rsmls.size(); i++)
+		{
+			HashMap<Integer, String> rsmlMap = getStatusLabelMappingFromScene(rsmls.get(i));
+
+			if(null != rsmlMap && rsmlMap.size() > 0)
+			{
+				
+				for(int j: rsmlMap.keySet())
+				{
+					if(null == projectMap.get(j))
+					{
+						RhizoStatusLabel rsl = new RhizoStatusLabel(config, rsmlMap.get(j), rsmlMap.get(j).substring(0, 1), RhizoProjectConfig.DEFAULT_STATUS_COLOR);
+						projectMap.put(j, rsl);
+						
+						additionalLabels.add(rsl);
+					}
+					else
+					{
+						if(!projectMap.get(j).getName().equals(rsmlMap.get(j)))
+						{
+							rsmlMappings.append(j + ": " + projectMap.get(j).getName() + " (project) does not match "
+									+ rsmlMap.get(j) + " (" + rsmlFiles.get(i).getName() + ")\n");
+						}
+					}
+				}
+				
+				if(rsmlMappings.length() > 0) rsmlMappings.append("\n");
+			}
+			else rsmlMappings.append("No label mapping was defined in " + rsmlFiles.get(i).getName() + ".\n");
+		}
+		
+		if(rsmlMappings.length() > 0)
+		{
+			rsmlMappings.insert(0, "Found inconsistencies in the RSML status label mapping."
+					+ "\nIf you continue, the mapping defined in the project will be used and "
+					+ "any additionally defined labels will be added to the project.\n\n");
+			rsmlMappings.append("\nProceed anyway?");
+			
+			int result = JOptionPane.showConfirmDialog(null, rsmlMappings.toString(), "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+			
+			if(result == JOptionPane.NO_OPTION) return;
+		}
+		
 		
 		// check if treelines already exist on available layers
 		StringBuilder layersWithTreelines = new StringBuilder();
@@ -1149,6 +1205,13 @@ public class RhizoRSML
 			availableLayers.add(newLayer);
 		}
 		
+		// add additionally defined status labels to the project
+		for(RhizoStatusLabel rsl: additionalLabels)
+		{
+			config.addStatusLabelToSet(rsl);
+			config.appendStatusLabelMapping(rsl);
+		}
+		
 		// collect for each ID of a toplevel root/polyline the treeline object created for this ID
 		HashMap<String,List<Treeline>> topLevelIdTreelineListMap = new HashMap<String,List<Treeline>>();
 		
@@ -1166,28 +1229,32 @@ public class RhizoRSML
 		{
 			// collect connectors before the loop so we dont get the newly created ones
 			List<Connector> connectors = RhizoUtils.getConnectorsBelowRootstacks(rhizoMain.getProject());
+			// create connector -> id map of current connectors
+			Map<String, Connector> connectorIds = new HashMap<String, Connector>();
+			for(Connector connector: connectors)
+			{
+				connectorIds.put(getRsmlIdForTreeline(null, connector), connector);
+			}
+			
 			for(String id: topLevelIdTreelineListMap.keySet())
 			{
 				List<Treeline> treelineList = topLevelIdTreelineListMap.get(id);
 				
 				boolean connectorFound = false;
 				
-				// find connectors
-				for(Connector connector: connectors)
+				// find connector
+				Connector c = connectorIds.get(id);
+				if(null != c)
 				{
-					if(id.equals(getRsmlIdForTreeline(null, connector)))
+					for(Treeline treeline: treelineList)
 					{
-						for(Treeline treeline: treelineList)
+						if(!c.addConTreeline(treeline))
 						{
-							if(!connector.addConTreeline(treeline))
-							{
-								Utils.log("rhizoTrak", "Can not add treeline to connector " + connector.getId());
-							}
+							Utils.log("rhizoTrak", "Can not add treeline to connector " + c.getId());
 						}
-						
-						connectorFound = true;
-						break;
 					}
+					
+					connectorFound = true;
 				}
 
 				// no connector found and more than one treeline in list
@@ -1208,6 +1275,30 @@ public class RhizoRSML
 			}
 		}
 		
+	}
+	
+	/**
+	 * Parses the status label mapping from a RSML file.
+	 * @param rsml 
+	 * @return A HashMap of the status label mapping or null if none is defined in the RSML file
+	 */
+	private HashMap<Integer, String> getStatusLabelMappingFromScene(Rsml rsml)
+	{
+		if(null == rsml.getScene() || null == rsml.getScene().getProperties() || null == rsml.getScene().getProperties().getAny()) return null;
+		
+		HashMap<Integer, String> map = new HashMap<Integer, String>();
+		
+		for(Element e: rsml.getScene().getProperties().getAny())
+		{
+			if(e.getChildNodes().getLength() < 2 || !e.getNodeName().equals("integerStringPairType")) continue;
+			
+			int b = Integer.parseInt(e.getChildNodes().item(0).getTextContent());
+			String s = e.getChildNodes().item(1).getTextContent();
+			
+			map.put(b, s);
+		}
+		
+		return map;
 	}
 	
 	/**

@@ -405,7 +405,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				for (final Collection<Node<T>> nodes : node_layer_map.values()) {
 					for (final Node<T> nd : nodes) {
 						nd.translate(-box.x, -box.y);
-						Utils.log("@calculateBoundingBox2" + nd);}}
+					}}
 			}
 			this.at.translate(box.x, box.y); // not using super.translate(...) because a preConcatenation is not needed; here we deal with the data.
 
@@ -1369,7 +1369,6 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				cacheSubtree(subtree);
 
 				setLastAdded(child);
-				Utils.log("@addNode1: " + child);
 
 				added = true;
 				DisplayCanvas.addTreelineEnabled.set(true);
@@ -1383,7 +1382,6 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 				repaint(true, child.la);
 				updateView();
 			}
-			Utils.log("@addNode2: " + child);
 			if (null != subtree) {
 				synchronized (tolink) {
 					tolink.addAll(subtree);

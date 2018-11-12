@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Node;
@@ -481,6 +482,10 @@ public class RhizoProjectConfig {
 		return sizeStatusLabelMapping()-1;
 	}
 	
+	public List<RhizoStatusLabel> getStatusLabelMapping() {
+		return statusLabelMapping;
+	}
+	
 	/**
 	 * @return All (negative) status integer values of known fixed status labels
 	 */
@@ -528,6 +533,8 @@ public class RhizoProjectConfig {
 			return INVALID_STATUS_LABEL;
 		}			
 	}
+	
+	
  
 	/** The color of the status label currently mapped to <code>i</code>.
 	 * 
