@@ -1012,6 +1012,8 @@ public class RhizoRSML
 				{
 					if(null == projectMap.get(j))
 					{
+						if(j <= -fixedStatusLabelInt.size() && j > projectMap.size()) continue;
+						
 						RhizoStatusLabel rsl = new RhizoStatusLabel(config, rsmlMap.get(j), rsmlMap.get(j).substring(0, 1), RhizoProjectConfig.DEFAULT_STATUS_COLOR);
 						projectMap.put(j, rsl);
 						
@@ -1036,7 +1038,7 @@ public class RhizoRSML
 		{
 			rsmlMappings.insert(0, "Found inconsistencies in the RSML status label mapping."
 					+ "\nIf you continue, the mapping defined in the project will be used and "
-					+ "any additionally defined labels will be added to the project.\n\n");
+					+ "any additionally defined labels (except negative ones) will be added to the project.\n\n");
 			rsmlMappings.append("\nProceed anyway?");
 			
 			int result = JOptionPane.showConfirmDialog(null, rsmlMappings.toString(), "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
@@ -1205,11 +1207,19 @@ public class RhizoRSML
 			availableLayers.add(newLayer);
 		}
 		
+		StringBuilder addedLabels = new StringBuilder();
 		// add additionally defined status labels to the project
 		for(RhizoStatusLabel rsl: additionalLabels)
 		{
 			config.addStatusLabelToSet(rsl);
 			config.appendStatusLabelMapping(rsl);
+			addedLabels.append(rsl.getName() + "\n");
+		}
+		
+		if(addedLabels.length() > 0)
+		{
+			addedLabels.insert(0, "The following status labels were added: \n\n");
+			Utils.showMessage(addedLabels.toString());
 		}
 		
 		// collect for each ID of a toplevel root/polyline the treeline object created for this ID
@@ -1290,10 +1300,10 @@ public class RhizoRSML
 		
 		for(Element e: rsml.getScene().getProperties().getAny())
 		{
-			if(e.getChildNodes().getLength() < 2 || !e.getNodeName().equals("integerStringPairType")) continue;
+			if(e.getAttributes().getLength() < 2 || !e.getNodeName().equals("statusLabelMapping")) continue;
 			
-			int b = Integer.parseInt(e.getChildNodes().item(0).getTextContent());
-			String s = e.getChildNodes().item(1).getTextContent();
+			int b = Integer.parseInt(e.getAttribute("int"));
+			String s = e.getAttribute("value");
 			
 			map.put(b, s);
 		}
