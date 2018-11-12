@@ -204,10 +204,10 @@ public class RhizoLineMapToTreeline
 				byte s = (byte) RhizoProjectConfig.STATUS_UNDEFINED;
 				if ( status != null && !(status.equals("STATUS_UNDEFINED") || status.equals("UNDEFINED")) )
 				{
-						if ( status.equals("LIVING") ) 			s = (byte) 0;
-						else if ( status.equals("DEAD") ) 		s = (byte) 1;
-						else if ( status.equals("GAP") )		s = (byte) 2;
-						else if ( status.equals("DECAYED") )	s = (byte) 3;
+					if ( status.equals("LIVING") ) 			s = (byte) 0;
+					else if ( status.equals("DEAD") ) 		s = (byte) 1;
+					else if ( status.equals("DECAYED") )	s = (byte) 2;
+					else if ( status.equals("GAP") )		s = (byte) 3;
 				}
 				
     			if(p.getPredecessor() == -1)
