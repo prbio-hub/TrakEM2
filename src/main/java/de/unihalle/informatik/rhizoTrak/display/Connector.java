@@ -741,7 +741,7 @@ public class Connector extends Treeline  implements TreeEventListener{
 	}
 	
 	public boolean addConTreelineHeadless(Treeline newTreeline) {
-		System.out.println( "addConTreeline add " + newTreeline.getId() + " to " + this.getId());
+//		System.out.println( "addConTreeline add " + newTreeline.getId() + " to " + this.getId());
 
 		if(conTreelines.contains(newTreeline)) 
 			return false;
