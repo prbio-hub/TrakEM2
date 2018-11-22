@@ -6748,7 +6748,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			configureOperator();
 		}
 		else if(command.equals("runOperator")) {
-			runButton.setEnabled(false);
 			runOperator();
 		}
 		else if(command.equals("preferences")){
@@ -6876,16 +6875,25 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		}
 		
 		operator = operatorCollection.getOperator(list.getSelectedValue());	
-		// Add method of RootSegmentationOperator to set image 
-		if ( operator instanceof RootSegmentationOperator)
+		if( operator != null )
 		{
-			((RootSegmentationOperator) operator).setImage(img);
-		}
+			runButton.setEnabled(false);
+			// Add method of RootSegmentationOperator to set image 
+			if ( operator instanceof RootSegmentationOperator)
+			{
+				((RootSegmentationOperator) operator).setImage(img);
+			}
 		
-		LinkedList<String> operatorList = new LinkedList<String>();
-		// only one operator can be selected
-		operatorList.add(list.getSelectedValue());
-		operatorCollection.runOperators(operatorList);
+			LinkedList<String> operatorList = new LinkedList<String>();
+			// only one operator can be selected
+			operatorList.add(list.getSelectedValue());
+			operatorCollection.runOperators(operatorList);
+		}
+		else
+		{
+			JOptionPane.showMessageDialog(null, "Please choose an operator to run.", 
+						"Choose operator", JOptionPane.ERROR_MESSAGE);
+		}
 	}
 	
 	private static String[] getReleaseInfosFromJar() {
