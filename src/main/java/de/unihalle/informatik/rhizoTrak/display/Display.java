@@ -157,6 +157,7 @@ import javax.swing.BoxLayout;
 import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -185,6 +186,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
+import org.eclipse.jgit.transport.CredentialItem.InformationalMessage;
 import org.janelia.intensity.MatchIntensities;
 
 import de.unihalle.informatik.Alida.exceptions.ALDOperatorException;
@@ -200,7 +202,6 @@ import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoColVis;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoLineMapToTreeline;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
-import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.analysis.Graph;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.SplitDialog;
@@ -7869,9 +7870,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 							fullNames[i] = getProject().getRhizoMain().getProjectConfig().getStatusLabel(i).getName();
 						}
 						fullNames[sizeStatusLabel] = "STATUS_UNDEFINED";
-							
-						String status = null;
-						status = (String) JOptionPane.showInputDialog(null,
+
+						final String status = (String) JOptionPane.showInputDialog(null,
 								"Which status should the treeline nodes have?\n"
 								+ "If you then press \'OK\', "
 								+ "the treelines will be imported in the image.",
@@ -7888,8 +7888,43 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 							{
 								IJError.print(e);
 							}
-							RhizoLineMapToTreeline lineMapToTree = new RhizoLineMapToTreeline(new RhizoMain(Display.getFront().getProject()));
-							lineMapToTree.convertLineMapToTreeLine(resultLineMap, status);
+							
+							/*
+							 *  starts two threads: first one to transfer the polylines to treelines, second on to freeze the GUI through
+							 *  	a modal window. The window is then closed by the first thread if the transfer has been finished.
+							 */
+							final Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>> rLM = resultLineMap;
+							JDialog d = new JDialog();
+							
+							// transfer the result polylines to treelines
+							Thread transferTreeline = new Thread()
+							{
+								public void run()
+								{
+									RhizoLineMapToTreeline lineMapToTree = new RhizoLineMapToTreeline(new RhizoMain(Display.getFront().getProject()));
+									lineMapToTree.convertLineMapToTreeLine(rLM, status);
+									d.setVisible(false);
+								}
+							};
+							
+							// modal window to freeze the GUI
+							Thread showDialog = new Thread()
+							{
+								public void run()
+								{
+									JLabel l = new JLabel("Transfer of polylines to treelines in progress ... please wait!", JLabel.CENTER); 
+									l.setVerticalAlignment(JLabel.CENTER);
+									d.add(l);
+									d.setTitle("Transfer to treelines");
+									d.setSize(600,200);
+									d.setModal(true);
+									d.setVisible(true);
+								}
+							};
+							
+							// start both threads
+							showDialog.start();
+							transferTreeline.start();						
 						}
 					}
 					else if ( event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED )
