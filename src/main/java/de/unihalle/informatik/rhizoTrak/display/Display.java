@@ -7847,7 +7847,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			
 		try 
 		{
-			operatorCollection = new MTBOperatorCollection<RootSegmentationOperator>(RootSegmentationOperator.class);
+			operatorCollection = new MTBOperatorCollection<RootSegmentationOperator>(RootSegmentationOperator.class);		
+			// allows to restart the operator with the same parameter values
+			operatorCollection.setRerunFlags(true);
 			operatorCollection.addALDOperatorCollectionEventListener(new ALDOperatorCollectionEventListener() 
 			{	
 				// Event Listener for operator
