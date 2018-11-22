@@ -212,7 +212,7 @@ public class RhizoLineMapToTreeline
 				
     			if(p.getPredecessor() == -1)
     			{
-    				treeline.addNode(null, nodeIDmap.get(pointId), s,true);
+    				treeline.addNode(null, nodeIDmap.get(pointId), s, true);
     				treeline.setRoot(nodeIDmap.get(pointId));
     			}
     			else
