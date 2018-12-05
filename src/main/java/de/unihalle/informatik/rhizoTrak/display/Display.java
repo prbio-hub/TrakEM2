@@ -6872,14 +6872,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	// Runs the selected operator
 	private void runOperator()
 	{
-		ImagePlus img = null;
-		
 		// Gets the current image
-		List<Layer> layerList = Display.getFront().getLayerSet().getLayers();
-		for ( Layer l : layerList )
-		{
-			img = l.getPatches(true).get(0).getImagePlus();
-		}
+		Layer l = Display.getFrontLayer();
+		ImagePlus img = l.getPatches(true).get(0).getImagePlus();
 		
 		operator = operatorCollection.getOperator(list.getSelectedValue());	
 		// Add method of RootSegmentationOperator to set image 
