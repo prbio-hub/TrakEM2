@@ -156,6 +156,9 @@ public class RhizoImages
 			final_targets.remove(0);
 		}
 		
+		for ( Display display : Display.getDisplays()) {
+			display.updateFrameTitle();
+		}
 	}
 	
 	/**
