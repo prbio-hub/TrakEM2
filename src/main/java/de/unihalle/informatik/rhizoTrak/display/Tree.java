@@ -4143,7 +4143,7 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 	
 	//actyc: removeeventTrigger
 	public void deleteTrigger(){
-		Utils.log("remove something");
+		Utils.log("remove " + this);
 		//actyct: fire remove event or if tree is a connector remove all references
 		if(this instanceof Treeline)
 		{

@@ -51,7 +51,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -65,17 +64,18 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
+import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
-import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Node;
 import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
-import de.unihalle.informatik.rhizoTrak.display.ZDisplayable;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
@@ -591,7 +591,9 @@ public class RhizoUtils {
 				Utils.showMessage( "rhizoTrak", "Deleting treelines failed: no rootstack found.");
 				return;
 			}
-
+			
+			Set<Displayable> set = new HashSet<Displayable>();
+			
 			for(ProjectThing rootstackThing :rootstackThings) 
 			{
 				for(ProjectThing pt: rootstackThing.findChildrenOfTypeR(Treeline.class)) 
@@ -600,13 +602,12 @@ public class RhizoUtils {
 
 					if(ctree.getClass().equals(Treeline.class)) 
 					{
-						if(ctree.getFirstLayer() != null && layer.equals(ctree.getFirstLayer()))
-						{
-							if(!ctree.remove2(false)) Utils.log("@deleteAll: failed to delete treeline " + ctree.getId());
-						}
+						if(ctree.getFirstLayer() != null && layer.equals(ctree.getFirstLayer())) set.add(ctree);
 					}
 				}
 			}
+			
+			if(project.removeAll(set)) Utils.log("deleted "+set.size()+" treelines");
 		}
 
 		/*
