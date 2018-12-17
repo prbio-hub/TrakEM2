@@ -6838,7 +6838,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	// Opens the configuration window of the selected operator 
 	private void configureOperator() {
 		String selectedOperatorName = list.getSelectedValue();
-		if ( selectedOperatorName != null )
+		
+		if ( list.getSelectedValue() != null )
 		{
 			// Checks if the window is already open
 			boolean isConfigFrameOpen = false;
@@ -6858,7 +6859,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else
 		{
 			JOptionPane.showMessageDialog(null, "Please choose an operator to configure.", 
-						"Choose operator", JOptionPane.ERROR_MESSAGE);
+					"Choose operator", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	
@@ -7972,6 +7973,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		Collections.sort(detectorList);
 		list = new JList<String>(detectorList);
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		// first operator selected as default
+		list.setSelectedIndex(0);
 		// only as high as needed for all found operators
 		list.setVisibleRowCount(detectorList.size());
 		
