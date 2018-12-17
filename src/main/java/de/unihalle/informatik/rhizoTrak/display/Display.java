@@ -157,6 +157,7 @@ import javax.swing.BoxLayout;
 import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -6877,16 +6878,25 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		ImagePlus img = l.getPatches(true).get(0).getImagePlus();
 		
 		operator = operatorCollection.getOperator(list.getSelectedValue());	
-		// Add method of RootSegmentationOperator to set image 
-		if ( operator instanceof RootSegmentationOperator)
+		if( operator != null )
 		{
-			((RootSegmentationOperator) operator).setImage(img);
-		}
+			runButton.setEnabled(false);
+			// Add method of RootSegmentationOperator to set image 
+			if ( operator instanceof RootSegmentationOperator)
+			{
+				((RootSegmentationOperator) operator).setImage(img);
+			}
 		
-		LinkedList<String> operatorList = new LinkedList<String>();
-		// only one operator can be selected
-		operatorList.add(list.getSelectedValue());
-		operatorCollection.runOperators(operatorList);
+			LinkedList<String> operatorList = new LinkedList<String>();
+			// only one operator can be selected
+			operatorList.add(list.getSelectedValue());
+			operatorCollection.runOperators(operatorList);
+		}
+		else
+		{
+			JOptionPane.showMessageDialog(null, "Please choose an operator to run.", 
+						"Choose operator", JOptionPane.ERROR_MESSAGE);
+		}
 	}
 	
 	private static String[] getReleaseInfosFromJar() {
@@ -7854,7 +7864,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			
 		try 
 		{
-			operatorCollection = new MTBOperatorCollection<RootSegmentationOperator>(RootSegmentationOperator.class);
+			operatorCollection = new MTBOperatorCollection<RootSegmentationOperator>(RootSegmentationOperator.class);		
+			// allows to restart the operator with the same parameter values
+			operatorCollection.setRerunFlags(true);
 			operatorCollection.addALDOperatorCollectionEventListener(new ALDOperatorCollectionEventListener() 
 			{	
 				// Event Listener for operator
@@ -7885,9 +7897,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 							fullNames[i] = getProject().getRhizoMain().getProjectConfig().getStatusLabel(i).getName();
 						}
 						fullNames[sizeStatusLabel] = "STATUS_UNDEFINED";
-							
-						String status = null;
-						status = (String) JOptionPane.showInputDialog(null,
+
+						final String status = (String) JOptionPane.showInputDialog(null,
 								"Which status should the treeline nodes have?\n"
 								+ "If you then press \'OK\', "
 								+ "the treelines will be imported in the image.",
@@ -7904,8 +7915,43 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 							{
 								IJError.print(e);
 							}
-							RhizoLineMapToTreeline lineMapToTree = new RhizoLineMapToTreeline(new RhizoMain(Display.getFront().getProject()));
-							lineMapToTree.convertLineMapToTreeLine(resultLineMap, status);
+							
+							/*
+							 *  starts two threads: first one to transfer the polylines to treelines, second on to freeze the GUI through
+							 *  	a modal window. The window is then closed by the first thread if the transfer has been finished.
+							 */
+							final Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>> rLM = resultLineMap;
+							JDialog d = new JDialog();
+							
+							// transfer the result polylines to treelines
+							Thread transferTreeline = new Thread()
+							{
+								public void run()
+								{
+									RhizoLineMapToTreeline lineMapToTree = new RhizoLineMapToTreeline(new RhizoMain(Display.getFront().getProject()));
+									lineMapToTree.convertLineMapToTreeLine(rLM, status);
+									d.setVisible(false);
+								}
+							};
+							
+							// modal window to freeze the GUI
+							Thread showDialog = new Thread()
+							{
+								public void run()
+								{
+									JLabel l = new JLabel("Transfer of polylines to treelines in progress ... please wait!", JLabel.CENTER); 
+									l.setVerticalAlignment(JLabel.CENTER);
+									d.add(l);
+									d.setTitle("Transfer to treelines");
+									d.setSize(600,200);
+									d.setModal(true);
+									d.setVisible(true);
+								}
+							};
+							
+							// start both threads
+							showDialog.start();
+							transferTreeline.start();						
 						}
 					}
 					else if ( event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED )
@@ -7943,6 +7989,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		Collections.sort(detectorList);
 		list = new JList<String>(detectorList);
 		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		// first operator selected as default
+		list.setSelectedIndex(0);
 		// only as high as needed for all found operators
 		list.setVisibleRowCount(detectorList.size());
 		
