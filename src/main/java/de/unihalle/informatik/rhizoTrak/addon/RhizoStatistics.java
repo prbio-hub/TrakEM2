@@ -322,6 +322,7 @@ public class RhizoStatistics {
 			} else {
 				// write header
 				bw.write("experiment" + sep + "tube" + sep + "timepoint" + sep + "date" + sep + "rootID" + sep + "layerID" +sep + "segmentID" +  
+						sep + "x start [pxl]" + sep + "y start [pxl]" + sep + "x end [pxl]" + sep + "y end [pxl]" +
 						sep + "length_" + this.outputUnit + sep + "startDiameter_" + this.outputUnit + sep + "endDiameter_" + this.outputUnit +
 						sep + "surfaceArea_" + this.outputUnit + "^2" + sep + "volume_" + this.outputUnit + "^3" + sep + "children" + sep + "status" + sep + "statusName" + "\n");
 				for (Segment segment : allSegments) {
@@ -708,6 +709,10 @@ public class RhizoStatistics {
 		private final float minRadius = 0.0f;
 		private float radiusParent = minRadius;
 		private float radiusChild = minRadius;
+		private double xStart;
+		private double yStart;
+		private double xEnd;
+		private double yEnd;
 
 //		private Patch p;
 
@@ -733,6 +738,15 @@ public class RhizoStatistics {
 			this.layer = child.getLayer();
 //			this.layerIndex = (int) layer.getZ() + 1;
 			this.layerIndex = layer.getParent().indexOf(layer) + 1;
+			
+			AffineTransform at = t.getAffineTransform();
+			Point2D p1 = at.transform(new Point2D.Float(parent.getX(), parent.getY()), null);
+			Point2D p2 = at.transform(new Point2D.Float(child.getX(), child.getY()), null);
+
+			this.xStart = p1.getX();
+			this.yStart = p1.getY();
+			this.xEnd = p2.getX();
+			this.yEnd = p2.getY();
 
 			ImagePlusCalibrationInfo calibInfo = null;
 			if ( allCalibInfos == null ||
@@ -801,6 +815,7 @@ public class RhizoStatistics {
 			String result = experiment + sep + tube + sep + timepoint + sep + date + sep + Long.toString(treeID) +
 					sep + this.layerIndex  +
 					sep + Integer.toString(segmentID) +
+					sep + xStart + sep + yStart + sep + xEnd + sep + yEnd +
 					sep + Double.toString(length) + sep + Double.toString(2*radiusParent) + sep + Double.toString(2*radiusChild) +
 					sep + Double.toString(surfaceArea) + sep + Double.toString(volume) + 
 					sep + Integer.toString(numberOfChildren) + sep + status + sep + rhizoMain.getProjectConfig().getStatusLabel(status).getName();
