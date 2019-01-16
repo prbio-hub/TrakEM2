@@ -1,0 +1,12 @@
+- name: Home
+  link: /
+- name: Overview
+  link: /pages/overview.html
+- name: Installation
+  link: /pages/installation.html
+- name: Documentation
+  link: /pages/docs.html
+- name: Sample data
+  link: /pages/data.html
+- name: Contact
+  link: /pages/communicate.html

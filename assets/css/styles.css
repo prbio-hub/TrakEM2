@@ -1,0 +1,27 @@
+.current {
+  color: #146614;
+}
+
+.noncurrent {
+  color: #4dbf4d;
+}
+
+/* unvisited link */
+a:link {
+  color: black
+}
+
+/* visited link */
+a:visited {
+  color: black;
+}
+
+/* mouse over link */
+a:hover {
+  color: #146614;
+}
+
+/* selected link */
+a:active {
+  color: blue;
+} 

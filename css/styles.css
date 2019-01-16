@@ -1,0 +1,67 @@
+.current {
+  color: DarkSlateBlue ;
+  font-weight: bold
+}
+
+.noncurrent {
+  color: DarkSlateBlue ;
+}
+
+
+.rhizoTrakClass {
+  color: darkgreen;
+  font-weight: bold
+}
+
+/* unvisited link - does not work with jekyll /
+a:link {
+  color: red;
+}
+
+/* visited link - overrides all jeykell colors ?? */
+/*
+a:visited {
+  color: green;
+}
+*/
+
+
+/* mouse over link - this wirks with  jeykell */
+a:hover {
+  color: DarkTurquoise ;
+}
+
+/* selected link - does not work for me with jeykell */
+a:active {
+  color: red;
+} 
+
+.box {
+     float: left;
+     padding: 20px;
+}
+
+/* removes underline from href */
+a {
+color: DarkSlateBlue;
+text-decoration: none;
+} 
+
+.rtk-home-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+ }
+.col-left {
+  flex: 1;
+  width: 22%;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+.col-right:{
+  flex: 1;
+  width: 70%;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
