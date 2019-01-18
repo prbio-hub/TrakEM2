@@ -42,25 +42,12 @@ and export of annotations from/to [RSML format](http://rootsystemml.github.io/),
 - a plugin mechanism to merge results from automatic segmentation method which
   are to be implemented as a [MiToBo](http://www.informatik.uni-halle.de/mitobo) operator 
 
-<h4>Sample image</h4>
+<h4>Sample image  and annotation</h4>
 
-![minirhizotron sample image](assets/exampleDataSet1/me_T23_001_25.02.15_000000_1_njo.jpg)
-
-<h4> and sample annotation</h4>
-
-![minirhizotron sample image](assets/exampleDataSet1/me_T23_001_25.02.15_000000_1_njo-annotated.jpg)
+![minirhizotron sample image](assets/exampleDataSet1/me_T23_001_25.02.15_000000_1_njo-crop.jpg)
+![minirhizotron sample image](assets/exampleDataSet1/me_T23_001_25.02.15_000000_1_njo-annotated-crop.jpg)
 
 <hr>
-<h3>Licence
-</h3>
-
-<span class="rhizoTrakClass">rhizoTrak</span> is 
-free software: you can use, redistribute and/or modify it under the terms of
-the 
-[GNU General Public License version 3](http://www.gnu.org/licenses/gpl-3.0.html)
-as published by the 
-[Free Software Foundation](http://www.fsf.org/),
-either version 3 of the License, or (at your option) any later version.
 
 <span class="rhizoTrakClass">rhizoTrak</span> is developed 
 

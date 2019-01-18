@@ -35,3 +35,14 @@ To install there are two option
 	  	The easiest way to achieve this is to install rhizoTrak using Fiji and 
 		the MiToBo update site (see above) and copy the rhizoTrak jar to its <code>plugins</code> directory.
 	
+<hr>
+<h3>Licence
+</h3>
+
+<span class="rhizoTrakClass">rhizoTrak</span> is 
+free software: you can use, redistribute and/or modify it under the terms of
+the 
+[GNU General Public License version 3](http://www.gnu.org/licenses/gpl-3.0.html)
+as published by the 
+[Free Software Foundation](http://www.fsf.org/),
+either version 3 of the License, or (at your option) any later version.
