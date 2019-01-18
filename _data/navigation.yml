@@ -4,6 +4,8 @@
   link: /pages/installation.html
 - name: Documentation
   link: /pages/docs.html
+- name: Screen shots
+  link: /pages/screenshots.html
 - name: Sample data
   link: /pages/data.html
 - name: How to cite

@@ -77,14 +77,34 @@ a {
 
 #rtk-logo {
    float: left;
-   background-color: white;
    width: 70px;
 }
 
 #rtk-name {
-   background-color:white;
    margin-left: 00px;
    width:  300px;
-   height: 70px;
+   height: 50px;
 }
 
+html {
+   background-color: white;
+}
+
+
+
+body {
+   width: 800px;
+   padding-top: 20px;
+   padding-bottom: 20px;
+   padding-left: 20px;
+   padding-right: 20px;
+   margin-left: 20px;
+   margin-right: 20px;
+   background-color: #f8f8f8;
+}
+
+.center-image
+{
+    margin: 0 auto;
+    display: block;
+}
