@@ -104,6 +104,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
@@ -681,9 +682,18 @@ public final class ProjectTree extends DNDTree implements MouseListener, ActionL
 			}
 		}
 		// Updates the model properly:
-		for (final DefaultMutableTreeNode node : to_remove) {
-			((DefaultTreeModel)this.getModel()).removeNodeFromParent(node);
-		}
+		ProjectTree temp = this;
+		SwingUtilities.invokeLater(new Runnable()
+		{
+			public void run()
+			{	               
+				for (final DefaultMutableTreeNode node : to_remove) 
+				{
+					((DefaultTreeModel)temp.getModel()).removeNodeFromParent(node);
+				}
+			}
+		});
+		
 		if (!remaining.isEmpty()) {
 			Utils.log("Could not remove:", remaining);
 		}
