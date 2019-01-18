@@ -790,10 +790,10 @@ public class Connector extends Treeline  implements TreeEventListener{
 		}
 		if(te.getEventMessage().equals("remove")){
 			removeConTreeline((Treeline) te.getSource());
-                        if(conTreelines.size()==0)
-                        {
-                            this.remove2(false);
-                        }
+			if(conTreelines.size()==0)
+			{
+				this.remove2(false);
+			}
 		}
 	}
 	

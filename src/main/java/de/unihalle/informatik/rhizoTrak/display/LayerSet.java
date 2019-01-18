@@ -952,6 +952,10 @@ public final class LayerSet extends Displayable implements Bucketable { // Displ
 		}
 		al_zdispl.remove(old_stack_index);
 		// remove from Bucket AFTER modifying stack index, so it gets reindexed properly
+		if(zdispl instanceof Tree)
+		{
+			((Tree) zdispl).deleteTrigger();
+		}
 		removeFromBuckets(zdispl, old_stack_index);
 		removeFromOffscreens(zdispl);
 		Display.remove(zdispl);
@@ -964,6 +968,15 @@ public final class LayerSet extends Displayable implements Bucketable { // Displ
 		if (null == zds || null == al_zdispl) return false;
 		// Ensure list is iterated only once: don't ask for index every time!
 		int count = 0;
+		
+		for(ZDisplayable zd: zds)
+		{
+			if(zd instanceof Tree)
+			{
+				((Tree) zd).deleteTrigger();
+			}
+		}
+		
 		for (final Iterator<ZDisplayable> it = al_zdispl.iterator(); it.hasNext(); ) {
 			final ZDisplayable zd = it.next();
 			if (zds.contains(zd)) {
@@ -976,6 +989,7 @@ public final class LayerSet extends Displayable implements Bucketable { // Displ
 		}
 		removeFromBuckets(zds);
 		Display.updateVisibleTabs(this.project);
+		
 		return true;
 	}
 
