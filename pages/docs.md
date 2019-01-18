@@ -1,11 +1,9 @@
 ---
 layout: page
-title: Documentation and Citation
-description: Documentation and Citation of rhizoTrak
+title: Documentation 
+description: Documentation of rhizoTrak
 ---
 
 1. The User's Guide include a Quick start section can be downloaded [here](../assets/rhizoTrak-UserGuide.pdf)
-2. If you use <span class="rhizoTrakClass">rhizoTrak</span>  please cite the following paper
-	<br>
-	TODO fill in the link
+2. The online manual of TrakEM is located [here](https://www.ini.uzh.ch/~acardona/trakem2_manual.html)
 

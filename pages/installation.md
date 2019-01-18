@@ -27,7 +27,7 @@ To install there are two option
 	* Execute the maven goal <code>package</code> which creates the
 		rhizoTrak jar in the directory <code>target</code>.    
 	  The name of the jar will be <code>rhizoTrak_???.jar</code>, where <code>???</code>
-		depends on the version of the branch.
+		depends on the version of the artefact.
 	* This jar needs to be located in the <code>plugins</code> directory of
 		a [ImageJ](https://imagej.nih.gov/ij/) 
 		or [Fiji](https://fiji.sc/) installation, and all dependencies of rhizoTrak in

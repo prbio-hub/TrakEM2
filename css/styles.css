@@ -1,10 +1,11 @@
 .current {
-  color: DarkSlateBlue ;
-  font-weight: bold
+  color: RoyalBlue ;
+  font-weight: bold;
 }
 
 .noncurrent {
-  color: DarkSlateBlue ;
+  color: RoyalBlue ;
+  font-weight: normal ;
 }
 
 
@@ -42,10 +43,18 @@ a:active {
 }
 
 /* removes underline from href */
+/*
 a {
-color: DarkSlateBlue;
-text-decoration: none;
+   color: DarkSlateBlue;
+   text-decoration: none;
+  font-weight: bold
+}  */
+a {
+   color: RoyalBlue;
+   text-decoration: none;
+  font-weight: normal;
 } 
+
 
 .rtk-home-grid {
   display: flex;
@@ -63,5 +72,19 @@ text-decoration: none;
   width: 70%;
   margin-left: 20px;
   margin-right: 20px;
+}
+
+
+#rtk-logo {
+   float: left;
+   background-color: white;
+   width: 70px;
+}
+
+#rtk-name {
+   background-color:white;
+   margin-left: 00px;
+   width:  300px;
+   height: 70px;
 }
 
