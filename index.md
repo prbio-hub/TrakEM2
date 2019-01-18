@@ -50,6 +50,7 @@ and export of annotations from/to [RSML format](http://rootsystemml.github.io/),
 
 ![minirhizotron sample image](assets/exampleDataSet1/me_T23_001_25.02.15_000000_1_njo-annotated.jpg)
 
+<hr>
 <h3>Licence
 </h3>
 
@@ -61,7 +62,6 @@ as published by the
 [Free Software Foundation](http://www.fsf.org/),
 either version 3 of the License, or (at your option) any later version.
 
-<hr>
 <span class="rhizoTrakClass">rhizoTrak</span> is developed 
 
 * by the [Bioinformatics and Pattern Recognition](https://www.informatik.uni-halle.de/arbeitsgruppen/mustererkennung/)

@@ -1,3 +1,5 @@
+/*----------------------------- */
+/* classes for navigation panel */
 .current {
   color: RoyalBlue ;
   font-weight: bold;
@@ -8,24 +10,8 @@
   font-weight: normal ;
 }
 
-
-.rhizoTrakClass {
-  color: darkgreen;
-  font-weight: bold
-}
-
-/* unvisited link - does not work with jekyll /
-a:link {
-  color: red;
-}
-
-/* visited link - overrides all jeykell colors ?? */
-/*
-a:visited {
-  color: green;
-}
-*/
-
+/*------------ */
+/* link colors */
 
 /* mouse over link - this wirks with  jeykell */
 a:hover {
@@ -42,55 +28,43 @@ a:active {
      padding: 20px;
 }
 
-/* removes underline from href */
-/*
-a {
-   color: DarkSlateBlue;
-   text-decoration: none;
-  font-weight: bold
-}  */
+/* among others: removes underline from href */
 a {
    color: RoyalBlue;
    text-decoration: none;
   font-weight: normal;
 } 
 
-
-.rtk-home-grid {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
- }
-.col-left {
-  flex: 1;
-  width: 22%;
-  margin-left: 20px;
-  margin-right: 20px;
-}
-.col-right:{
-  flex: 1;
-  width: 70%;
-  margin-left: 20px;
-  margin-right: 20px;
+/* ---------------------- */
+/* class for rhizoTrak name in Text */
+.rhizoTrakClass {
+  color: darkgreen;
+  font-weight: bold
 }
 
-
+/*-------------------------------------- */
+/* classes for header (rtk logo and name */
 #rtk-logo {
+    display: table-cell;
+    vertical-align: middle;
    float: left;
    width: 70px;
+   height: 50px;
 }
 
 #rtk-name {
-   margin-left: 00px;
+    display: table-cell;
+    vertical-align: middle;
+   margin-left: 0px;
    width:  300px;
    height: 50px;
 }
 
+/*--------------------------------------------- */
+/* general layout (width, margin) and bg volors */
 html {
    background-color: white;
 }
-
-
 
 body {
    width: 800px;
@@ -103,6 +77,8 @@ body {
    background-color: #f8f8f8;
 }
 
+/*------------------------------- */
+/* center an image - only image? */
 .center-image
 {
     margin: 0 auto;
