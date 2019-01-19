@@ -1,12 +1,17 @@
 /*----------------------------- */
 /* classes for navigation panel */
+nav {
+  display: inline;
+  background-color: SeaGreen ;
+}
+
 .current {
-  color: RoyalBlue ;
+  color: white ;
   font-weight: bold;
 }
 
 .noncurrent {
-  color: RoyalBlue ;
+  color: white ;
   font-weight: normal ;
 }
 
@@ -44,21 +49,16 @@ a {
 
 /*-------------------------------------- */
 /* classes for header (rtk logo and name */
-#rtk-logo {
-    display: table-cell;
-    vertical-align: middle;
-   float: left;
-   width: 70px;
-   height: 50px;
+
+.header-container {
+  display: flex;
 }
 
-#rtk-name {
-    display: table-cell;
-    vertical-align: middle;
-   margin-left: 0px;
-   width:  300px;
-   height: 50px;
+.header-item {
+  font-size: 40px;
+  text-align: center;
 }
+
 
 /*--------------------------------------------- */
 /* general layout (width, margin) and bg volors */
