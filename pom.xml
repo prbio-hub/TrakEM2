@@ -180,7 +180,7 @@
   </issueManagement>
 
   <properties>
-    <YEAR>2018</YEAR>
+    <YEAR>2019</YEAR>
     <license.licenseName>gpl_v3</license.licenseName>
     <license.copyrightOwners>Albert Cardona, Stephan Saalfeld and others.</license.copyrightOwners>
     <jython-shaded.version>2.7.0</jython-shaded.version>
