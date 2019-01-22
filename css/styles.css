@@ -12,7 +12,7 @@ nav {
 
 .noncurrent {
   color: white ;
-  font-weight: normal ;
+  font-weight: bold ;
 }
 
 /*------------ */
@@ -67,7 +67,7 @@ html {
 }
 
 body {
-   width: 800px;
+   width: 820px;
    padding-top: 20px;
    padding-bottom: 20px;
    padding-left: 20px;

@@ -16,9 +16,8 @@ You can post your questions and comments to the forum. Please tag your post with
 
 <hr>
 
-<h2>
-Github
-</h2>
+![Github issues](../assets/images/GitHub_Logo.png)
+
 More technical issues like bugs, feature wishes, or even pull requests can be addressed to us via our Github repository website:
 
 * [https://github.com/prbio-hub/rhizoTrak/issues](https://github.com/prbio-hub/rhizoTrak/issues)
