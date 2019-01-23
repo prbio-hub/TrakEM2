@@ -322,7 +322,7 @@ public class RhizoStatistics {
 			} else {
 				// write header
 				bw.write("experiment" + sep + "tube" + sep + "timepoint" + sep + "date" + sep + "rootID" + sep + "layerID" +sep + "segmentID" +  
-						sep + "x start [pxl]" + sep + "y start [pxl]" + sep + "x end [pxl]" + sep + "y end [pxl]" +
+						sep + "x_start_pixel" + sep + "y_start_pixel" + sep + "x_end_pixel" + sep + "y_end_pixel" +
 						sep + "length_" + this.outputUnit + sep + "startDiameter_" + this.outputUnit + sep + "endDiameter_" + this.outputUnit +
 						sep + "surfaceArea_" + this.outputUnit + "^2" + sep + "volume_" + this.outputUnit + "^3" + sep + "children" + sep + "status" + sep + "statusName" + "\n");
 				for (Segment segment : allSegments) {
