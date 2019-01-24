@@ -1,3 +1,4 @@
+<!--  first version
 <nav>
 &nbsp;
 {% for item in site.data.navigation %}
@@ -8,3 +9,15 @@
     &nbsp;
   {% endfor %}
 </nav>
+-->
+
+<div id="nav">
+	<ul>
+	{% for item in site.data.navigation %}
+		<li><a href="{{ site.baseurl }}{{ item.link }}" 
+	{% if page.url == item.link %}class="current"{%else%} class="noncurrent"{% endif %}>
+	{{ item.name }}</a></li>
+  {% endfor %}
+	</ul>
+</div>
+

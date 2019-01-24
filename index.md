@@ -8,11 +8,11 @@ description: A tool for manual annotation of minirhizotron images
 <h1>COMING SOON</h1>
 <p></p>
 
-<span class="rhizoTrakClass">rhizoTrak</span>  
-- is an open source  tool for flexible and efficient manual annotation 
+<span class="rhizoTrakClass">rhizoTrak</span>  is
+- an open source  tool for flexible and efficient manual annotation 
 	of complex time-series minirhizotron images,
 - building on <a href="https://imagej.net/TrakEM2">TrakEM2</a>,
-- and is realized as a Fiji plugin available for Windows, Linux, and MacOS.
+- realized as a Fiji plugin available for Windows, Linux, and MacOS.
 
 
 
@@ -55,5 +55,5 @@ and export of annotations from/to [RSML format](http://rootsystemml.github.io/),
 	at the Institute of Computer Science, Martin Luther University Halle/Wittenberg, Germany   
 * in cooperation with the research group 
 	[Systematic Botany and Functional Biodiversity](https://biologie.lw.uni-leipzig.de/en/institut/ag/systematic-botany-and-functional-biodiversity/), 
-	Institute of Biology, University of Leipzig, Germany
+	Institute of Biology, Leipzig University, Germany
 

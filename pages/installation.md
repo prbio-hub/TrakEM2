@@ -4,7 +4,7 @@ title: Installation
 description: Installation of rhizoTrak
 ---
 
-To install there are two option
+To install there are two options
 
 1. Using Fiji and the MiToBo update site
 	* Download [Fiji](https://fiji.sc/) and follow the installation instructions of Fiji.
@@ -15,7 +15,7 @@ To install there are two option
 	* Find the update site MiToBo and check it active and click the button <code>Close</code>.
 	* Fiji will now display a message that there are some new files to install:  
 	click the button <code>Apply changes</code> to install the files, 
-	* restart Fiji and rhizoTrak will be available as a new plugin
+	* Restart Fiji and rhizoTrak will be available as a new plugin
 
 2. From source code
 

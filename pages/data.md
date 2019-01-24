@@ -1,18 +1,18 @@
 ---
 layout: page
-title: Sample Data
+title: Sample data
 description: sample data of rhizoTrak
 ---
 
 We supply a data set which is also used for experimental evaluation in the accompanying paper.
 It comprises five images from the Jena experiment. For details see the [rhizoTrak paper](cite.html).
 
-The data is available in two different variants as rhizoTrak projects
+The data are available in two different variants as rhizoTrak projects
 1. one [rhizoTrak project](../assets/exampleDataSet1/rhizoTrak_t23-blank.zip)  with the five images imported
 
    - download and unzip to a directory of your choide
    - open the project <code>rhizoTrak_t23-blank.xml</code> with rhizoTrak     
-      Note: This will also pop-up  a window stating  <code>TrakEM2 detected a crash</code>,
+      Note: This will also pop up  a window stating  <code>TrakEM2 detected a crash</code>,
 	The reason for this is that cached data are not included in the distributed zip file
 	to reduce the amout of data. 
 	If you close the project and re-open it this will be corrected.
