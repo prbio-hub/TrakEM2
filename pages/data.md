@@ -20,7 +20,7 @@ The data are available in two different variants as rhizoTrak projects
 	as used for evaluation     
 
    - download and unzip to a directory of your choide
-   - open the project <code>rhizoTrak_t23-blank.xml</code> with rhizoTrak.   
+   - open the project <code>rhizoTrak_t23.xml</code> with rhizoTrak.   
 	As above, a crash will be reported.
    - annotations were performed without diameter, i.e. root width
 
