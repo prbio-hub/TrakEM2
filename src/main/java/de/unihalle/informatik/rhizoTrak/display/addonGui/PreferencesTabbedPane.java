@@ -133,6 +133,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 	private final String NODES_DIAMETERLINES = "Show diameter lines";
 	private final String SEGMENTS_AS_POLYGON = "Show borders of segments";
 	private final String SEGMENTS_FILL = "Fill segments";
+	private final String DEBUG_OUPUT = "Enable error logs";
 
 	
 	// general members
@@ -507,6 +508,8 @@ public class PreferencesTabbedPane extends JTabbedPane
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isNodesDiameterLines(), NODES_DIAMETERLINES));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isSegmentsAsPolygon(), SEGMENTS_AS_POLYGON));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isSegmentsFill(), SEGMENTS_FILL));
+		configChoicesPanel.add( addChoice( Utils.rhizoTrakDebug, DEBUG_OUPUT));
+
 
 		configurePanel.add( configChoicesPanel);
 		this.addTab("Configuration", null, configurePanel, "Edit user-specific settings.");
@@ -776,6 +779,9 @@ public class PreferencesTabbedPane extends JTabbedPane
 			} else if ( actionCommand.equals( SEGMENTS_FILL)) {
 				rhizoMain.getProjectConfig().setSegmentsFill( source.isSelected());
 				Display.repaint();
+			} else if ( actionCommand.equals( DEBUG_OUPUT)) {
+				Utils.rhizoTrakDebug = source.isSelected();
+				if(Utils.rhizoTrakDebug) Utils.log("Logs enabled.");
 			} else {
 				Utils.showMessage( "rhizoTrak", "PrefrencesTabbedPane.configCheckAction: internal error, unkonwn actionCommand " + actionCommand);
 			}
