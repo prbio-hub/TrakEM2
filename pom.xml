@@ -602,7 +602,7 @@
       </activation>
       <properties>
         <mitobo.dep>mitobo</mitobo.dep>
-        <mitobo.dep.version>1.8.13.1</mitobo.dep.version>
+        <mitobo.dep.version>1.8.14-SNAPSHOT</mitobo.dep.version>
       </properties>
     </profile>
   </profiles>
