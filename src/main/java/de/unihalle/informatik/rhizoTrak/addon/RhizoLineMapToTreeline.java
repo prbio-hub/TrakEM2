@@ -188,10 +188,10 @@ public class RhizoLineMapToTreeline
 
 				if(p.getPredecessor() == -1)
     			{
-    				RadiusNode root = new RadiusNode((float) p.getX(), (float) p.getY(), currentLayer, (float) p.getRadius());
+    				RadiusNode root = new RadiusNode((float) p.getX(), (float) p.getY(), currentLayer, (float) p.getDiameter());
     				nodeIDmap.put(-1, root);
     			}
-    			RadiusNode currentNode = new RadiusNode((float) p.getX(), (float) p.getY(), currentLayer, (float) p.getRadius());
+    			RadiusNode currentNode = new RadiusNode((float) p.getX(), (float) p.getY(), currentLayer, (float) p.getDiameter());
     			nodeIDmap.put(pointId, currentNode);
 			}
 
