@@ -26,7 +26,7 @@ More detailed information on RSML can be found here:
 
 Contact: rhizoTrak@informatik.uni-halle.de
 
-More information about rhizoTrak can be found on its webpage: https://github.com/prbio-hub/rhizoTrak/wiki
+More information about rhizoTrak can be found on its webpage: https://prbio-hub.github.io/rhizoTrak
 
 For installation in ImageJ/Fiji simply activate its update site "rhizoTrak".
 

@@ -14,7 +14,7 @@
  * 
  * Fore more information on rhizoTrak, visit
  *
- *  https://github.com/prbio-hub/rhizoTrak/wiki
+ *  https://prbio-hub.github.io/rhizoTrak
  *
  * Both projects, TrakEM2 and rhizoTrak, are released under GPL. 
  * Please find below first the copyright notice of rhizoTrak, and further on
@@ -41,7 +41,7 @@
  *
  * Fore more information on rhizoTrak, visit
  *
- *    https://github.com/prbio-hub/rhizoTrak/wiki
+ *    https://prbio-hub.github.io/rhizoTrak
  *
  */
 
@@ -6824,7 +6824,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		    + "Martin Luther University Halle-Wittenberg<p>"
 		    + "Institute of Computer Science, Faculty of Natural Sciences III<p><p>"
 		    + "Email: rhizoTrak@informatik.uni-halle.de<p>"
-		    + "Internet: <i>https://github.com/prbio-hub/rhizoTrak/wiki</i><p>"
+		    + "Internet: <i>https://prbio-hub.github.io/rhizoTrak</i><p>"
 		    + "License: GPL 3.0, <i>http://www.gnu.org/licenses/gpl.html</i></html>";
 
 			JOptionPane.showOptionDialog(null, new JLabel(msg),

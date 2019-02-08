@@ -14,7 +14,7 @@
  * 
  * Fore more information on rhizoTrak, visit
  *
- *  https://github.com/prbio-hub/rhizoTrak/wiki
+ *  https://prbio-hub.github.io/rhizoTrak
  *
  * Both projects, TrakEM2 and rhizoTrak, are released under GPL. 
  * Please find below first the copyright notice of rhizoTrak, and further on
@@ -41,7 +41,7 @@
  *
  * Fore more information on rhizoTrak, visit
  *
- *    https://github.com/prbio-hub/rhizoTrak/wiki
+ *    https://prbio-hub.github.io/rhizoTrak
  *
  */
 
