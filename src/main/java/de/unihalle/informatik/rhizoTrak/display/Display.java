@@ -7902,14 +7902,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 								null, fullNames, fullNames[0]);
 						if( status != null )
 						{
-							try 
+							if(operator instanceof RootSegmentationOperator)
 							{
-								resultLineMap = (Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>>) 
-									operator.getParameter("resultLineMap");
-							} 
-							catch (ALDOperatorException e) 
-							{
-								IJError.print(e);
+								resultLineMap = ((RootSegmentationOperator) operator).getMap();
 							}
 							
 							/*
