@@ -84,7 +84,7 @@ your own class (through `this.resultLineMap`). It is of type `Map<Integer, Map<I
   * Additionally there are two more parameters `nx` and `ny` of type `double`
 			which are only used internally and can safely be ignored.<br><br>
   * There are three different constructors available for the class `Node`:<br><br>
-		  	- `Node(double x, double y)`, with predecessor = 0 and diameter = 0.0 <br>
+		  	- `Node(double x, double y)`, with predecessor = -1 and diameter = 0.0 <br>
 		 	- `Node(int predecessor, double x, double y)`, with diameter = 0.0<br>
 		 	- `Node(int predecessor, double x, double y, double diameter)`
 		 	
@@ -95,24 +95,24 @@ this.resultLineMap = new HashMap<Integer, Map<Integer, Node>>();
 
 //line id 1
 Map<Integer, Node> lineMap = new HashMap<Integer, Node>();
-lineMap.put(new Integer(-1), new Node(0.00, 2.80, 1.0));
-lineMap.put(new Integer(0), new Node(1.17, 3.40, 1.0));
-lineMap.put(new Integer(1), new Node(1.97, 4.63, 1.0));
-lineMap.put(new Integer(2), new Node(1.90, 5.53, 1.0));
-lineMap.put(new Integer(1), new Node(2.34, 2.80, 1.0));
-lineMap.put(new Integer(4), new Node(3.34, 2.0, 1.0));
+lineMap.put(new Integer(0), new Node(-1, 0.00, 2.80, 1.0));
+lineMap.put(new Integer(1), new Node(0, 1.17, 3.40, 1.0));
+lineMap.put(new Integer(2), new Node(1, 1.97, 4.63, 1.0));
+lineMap.put(new Integer(3), new Node(2, 1.90, 5.53, 1.0));
+lineMap.put(new Integer(4), new Node(1, 2.34, 2.80, 1.0));
+lineMap.put(new Integer(5), new Node(4, 3.34, 2.0, 1.0));
 this.resultLineMap.put(new Integer(1), lineMap);
 
 //line id 2
 lineMap = new HashMap<Integer, Node>();
-lineMap.put(new Integer(-1), new Node(0.00, 0.30, 1.0));
-lineMap.put(new Integer(0), new Node(1.10, 0.40, 1.0));
-lineMap.put(new Integer(1), new Node(2.20, 0.15, 1.0));
-lineMap.put(new Integer(2), new Node(3.30, 0.00, 1.0));
+lineMap.put(new Integer(1), new Node(-1, 0.00, 0.30, 1.0));
+lineMap.put(new Integer(20), new Node(1, 1.10, 0.40, 1.0));
+lineMap.put(new Integer(21), new Node(20, 2.20, 0.15, 1.0));
+lineMap.put(new Integer(34), new Node(21, 3.30, 0.00, 1.0));
 this.resultLineMap.put(new Integer(2), lineMap);
 ~~~~
-<br><br><br>
-
+Note that the node IDs not necessarily have to be consecutively numbered. Nevertheless, it is best practice to choose IDs which are greater than or equal to zero and assigning to the current node a larger number than to its predecessor.   
+<br>
 
 ## Template project for developing operators <a name="project"></a>
 
