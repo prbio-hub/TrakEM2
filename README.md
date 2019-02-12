@@ -3,16 +3,19 @@ rhizoTrak
 
 Copyright 2019 by Birgit Möller, Stefan Posch, Tino Schmidt, Axel Zieschank and others
 
-rhizoTrak is a tool for manual and semi-automated annotation of root images. 
+***rhizoTrak*** is a tool for manual and semi-automated annotation of root images. 
+
+* Webpage: https://prbio-hub.github.io/rhizoTrak
+* Contact: rhizoTrak@informatik.uni-halle.de
 
 The code of this project is substantially based on the [TrakEM2]( https://imagej.net/TrakEM2) plugin for ImageJ/Fiji. 
 Please find further information about the original TrakEM2 plugin at the end of this page. 
 
-rhizoTrak extends TrakEM2 towards root-specific functionality, e.g., adds support for importing and exporting annotation data in [RSML format]( https://rootsystemml.github.io/data), extends the connector concept from purely geometric to object-based links, and adds several additional configuration options.
+***rhizoTrak*** extends TrakEM2 towards root-specific functionality, e.g., adds support for importing and exporting annotation data in [RSML format]( https://rootsystemml.github.io/data), extends the connector concept from purely geometric to object-based links, and adds several additional configuration options.
 
-rhizoTrak is released under the [General Public License](https://www.gnu.org/licenses/gpl-3.0.en.html) in its latest version, please find the License file included.
+***rhizoTrak*** is released under the [General Public License](https://www.gnu.org/licenses/gpl-3.0.en.html) in its latest version, please find the License file included.
 
-Note that the rhizoTrak distribution re-distributes the RSML XML schema definition file "rsml.xsd".
+Note that the ***rhizoTrak*** distribution re-distributes the RSML XML schema definition file "rsml.xsd".
 The original file can be found here: https://github.com/RootSystemML/RSMLValidator/blob/master/rsml.xsd
 The file is released under the Apache License, Version 2.0, 
 for details on the license take a look in the included LICENSE.rsml_xsd file or visit
@@ -23,12 +26,7 @@ More detailed information on RSML can be found here:
 
    https://rootsystemml.github.io/
 
-
-Contact: rhizoTrak@informatik.uni-halle.de
-
-More information about rhizoTrak can be found on its webpage: https://prbio-hub.github.io/rhizoTrak
-
-For installation in ImageJ/Fiji simply activate the ["MiToBo" update site](https://sites.imagej.net/MiToBo/) which also distributes rhizoTrak.
+For installation in ImageJ/Fiji simply activate the ["MiToBo" update site](https://sites.imagej.net/MiToBo/) which also distributes ***rhizoTrak***.
 
 ---------
 ##### Original README information about TrakEM2:
