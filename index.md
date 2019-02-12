@@ -5,7 +5,6 @@ tagline: A tool for manual annotation of minirhizotron images
 description: A tool for manual annotation of minirhizotron images
 ---
 
-<h1>COMING SOON</h1>
 <p></p>
 
 <span class="rhizoTrakClass">rhizoTrak</span>  is
