@@ -14,10 +14,15 @@
     #
     #     https://github.com/trakem2/TrakEM2/wiki
     #
+    # The source code of the rhizoTrak project can be found at
+    #
+    #     https://github.com/prbio-hub/rhizoTrak
+    # 
     # Both projects are released under GPLv3.
     #
     # Contact: rhizoTrak@informatik.uni-halle.de
     # Web:     https://prbio-hub.github.io/rhizoTrak/
+    #
   -->
   
   <groupId>de.unihalle.informatik.rhizoTrak</groupId>
@@ -26,7 +31,7 @@
   <packaging>jar</packaging>
 
   <name>rhizoTrak</name>
-  <description>rhizoTrak - minirhizotron image segmentation and annotation in ImageJ/Fiji</description>
+  <description>rhizoTrak - Minirhizotron Image Segmentation and Annotation in ImageJ/Fiji</description>
   <url>http://informatik.uni-halle.de/arbeitsgruppen/mustererkennung/</url>
   <inceptionYear>2017</inceptionYear>
   <organization>
@@ -41,6 +46,17 @@
     </license>
   </licenses>
 
+  <properties>
+    <YEAR>2019</YEAR>
+    <license.licenseName>gpl_v3</license.licenseName>
+    <license.copyrightOwners>Stefan Posch, Birgit Moeller and others.</license.copyrightOwners>
+    <jython-shaded.version>2.7.0</jython-shaded.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <trakem2-transform.version>1.0.1</trakem2-transform.version>
+    <!-- MiToBo dependencies -->
+    <mitobo.xml.version>2.8</mitobo.xml.version>
+  </properties>
+
   <mailingLists>
     <mailingList>
       <name>Image.sc Forum</name>
@@ -49,6 +65,28 @@
   </mailingLists>
 
   <developers>
+    <developer>
+      <id>posch</id>
+      <email>stefan.posch@informatik.uni-halle.de</email>
+      <name>Stefan Posch</name>
+      <organization>Martin Luther University Halle-Wittenberg</organization>
+      <organizationUrl>http://www.informatik.uni-halle.de/posch</organizationUrl>
+      <roles>
+	<role>Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <id>moeller</id>
+      <email>birgit.moeller@informatik.uni-halle.de</email>
+      <name>Birgit Moeller</name>
+      <organization>Martin Luther University Halle-Wittenberg</organization>
+      <organizationUrl>http://www.informatik.uni-halle.de/moeller</organizationUrl>
+      <roles>
+	<role>Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
     <developer>
       <id>schmidt</id>
       <email>tino.schmidt@student.uni-halle.de</email>
@@ -69,112 +107,7 @@
       </roles>
       <timezone>+1</timezone>
     </developer>
-    <developer>
-      <id>moeller</id>
-      <email>birgit.moeller@informatik.uni-halle.de</email>
-      <name>Birgit Moeller</name>
-      <organization>Martin Luther University Halle-Wittenberg</organization>
-      <organizationUrl>http://www.informatik.uni-halle.de/moeller</organizationUrl>
-      <roles>
-	<role>Developer</role>
-      </roles>
-      <timezone>+1</timezone>
-    </developer>
-    <developer>
-      <id>posch</id>
-      <email>stefan.posch@informatik.uni-halle.de</email>
-      <name>Stefan Posch</name>
-      <organization>Martin Luther University Halle-Wittenberg</organization>
-      <organizationUrl>http://www.informatik.uni-halle.de/posch</organizationUrl>
-      <roles>
-	<role>Developer</role>
-      </roles>
-      <timezone>+1</timezone>
-    </developer>
-    <developer>
-      <id>acardona</id>
-      <name>Albert Cardona</name>
-      <url>http://imagej.net/User:Albertcardona</url>
-      <roles>
-	<role>founder</role>
-	<role>lead</role>
-	<role>support</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>axtimwalde</id>
-      <name>Stephan Saalfeld</name>
-      <url>http://imagej.net/User:Saalfeld</url>
-      <roles>
-	<role>lead</role>
-	<role>reviewer</role>
-	<role>maintainer</role>
-      </roles>
-    </developer>
-    <developer>
-      <id>ctrueden</id>
-      <name>Curtis Rueden</name>
-      <url>http://imagej.net/User:Rueden</url>
-      <roles>
-	<role>maintainer</role>
-      </roles>
-    </developer>
   </developers>
-  <contributors>
-    <contributor>
-      <name>Johannes Schindelin</name>
-      <url>http://imagej.net/User:Schindelin</url>
-    </contributor>
-    <contributor>
-      <name>Ignacio Arganda-Carreras</name>
-      <url>http://imagej.net/User:Iarganda</url>
-      <properties><id>iarganda</id></properties>
-    </contributor>
-    <contributor>
-      <name>John Bogovic</name>
-      <url>http://imagej.net/User:Bogovic</url>
-      <properties><id>bogovicj</id></properties>
-    </contributor>
-    <contributor>
-      <name>Rodney Douglas</name>
-    </contributor>
-    <contributor>
-      <name>Philipp Hanslovsky</name>
-      <properties><id>hanslovsky</id></properties>
-    </contributor>
-    <contributor>
-      <name>Verena Kaynig</name>
-      <url>http://imagej.net/User:Verena</url>
-      <properties><id>vkaynig</id></properties>
-    </contributor>
-    <contributor>
-      <name>Larry Lindsey</name>
-      <url>http://imagej.net/User:Lindsey</url>
-      <properties><id>larrylindsey</id></properties>
-    </contributor>
-    <contributor>
-      <name>Mark Longair</name>
-      <url>http://imagej.net/User:Mark</url>
-      <properties><id>mhl</id></properties>
-    </contributor>
-    <contributor>
-      <name>Jacques Pecreaux</name>
-    </contributor>
-    <contributor>
-      <name>Eric Perlman</name>
-      <properties><id>perlman</id></properties>
-    </contributor>
-    <contributor>
-      <name>Stephan Preibisch</name>
-      <url>http://imagej.net/User:StephanP</url>
-      <properties><id>StephanPreibisch</id></properties>
-    </contributor>
-    <contributor>
-      <name>Jean-Yves Tinevez</name>
-      <url>http://imagej.net/User:JeanYvesTinevez</url>
-      <properties><id>tinevez</id></properties>
-    </contributor>
-  </contributors>
 
   <scm>
     <connection>scm:git:git://github.com/prbio-hub/rhizoTrak</connection>
@@ -186,15 +119,6 @@
     <system>GitHub Issues</system>
     <url>https://github.com/prbio-hub/rhizoTrak/issues</url>
   </issueManagement>
-
-  <properties>
-    <YEAR>2019</YEAR>
-    <license.licenseName>gpl_v3</license.licenseName>
-    <license.copyrightOwners>Albert Cardona, Stephan Saalfeld and others.</license.copyrightOwners>
-    <jython-shaded.version>2.7.0</jython-shaded.version>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <trakem2-transform.version>1.0.1</trakem2-transform.version>
-  </properties>
 
   <build>
     <plugins>
@@ -450,7 +374,7 @@
     <dependency>
       <groupId>de.unihalle.informatik.MiToBo</groupId>
       <artifactId>mitobo-xml</artifactId>
-      <version>2.9-SNAPSHOT</version>
+      <version>${mitobo.xml.version}</version>
     </dependency>
     
     <dependency>
@@ -596,7 +520,7 @@
       </activation>
       <properties>
         <mitobo.dep>mitobo</mitobo.dep>
-        <mitobo.dep.version>1.8.15-SNAPSHOT</mitobo.dep.version>
+        <mitobo.dep.version>1.8.14</mitobo.dep.version>
       </properties>
     </profile>
   </profiles>
