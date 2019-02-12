@@ -1,7 +1,7 @@
 rhizoTrak
 ---------
 
-Copyright 2018 Birgit Möller, Stefan Posch, Tino Schmidt, Axel Zieschank
+Copyright 2019 by Birgit Möller, Stefan Posch, Tino Schmidt, Axel Zieschank and others
 
 rhizoTrak is a tool for manual and semi-automated annotation of root images. 
 
@@ -10,7 +10,7 @@ Please find further information about the original TrakEM2 plugin at the end of 
 
 rhizoTrak extends TrakEM2 towards root-specific functionality, e.g., adds support for importing and exporting annotation data in [RSML format]( https://rootsystemml.github.io/data), extends the connector concept from purely geometric to object-based links, and adds several additional configuration options.
 
-rhizoTrak is released under the General Public License in its latest version, please find the License file included.
+rhizoTrak is released under the [General Public License](https://www.gnu.org/licenses/gpl-3.0.en.html) in its latest version, please find the License file included.
 
 Note that the rhizoTrak distribution re-distributes the RSML XML schema definition file "rsml.xsd".
 The original file can be found here: https://github.com/RootSystemML/RSMLValidator/blob/master/rsml.xsd
@@ -28,12 +28,13 @@ Contact: rhizoTrak@informatik.uni-halle.de
 
 More information about rhizoTrak can be found on its webpage: https://prbio-hub.github.io/rhizoTrak
 
-For installation in ImageJ/Fiji simply activate its update site "rhizoTrak".
+For installation in ImageJ/Fiji simply activate the ["MiToBo" update site](https://sites.imagej.net/MiToBo/) which also distributes rhizoTrak.
 
 ---------
 ##### Original README information about TrakEM2:
 
 Copyright 2005-2014 Albert Cardona and Rodney Douglas.
+
 Copyright 2007-2014 Stephan Saalfeld, Stephan Preibisch, Ignacio Arganda, Verena Kaynig
 
 Released under the General Public License in its latest version.
