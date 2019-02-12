@@ -14,9 +14,9 @@ The format of the file is based on a template from [Keep a Changelog](http://kee
 
 ### Fixed
 
-## [1.0] - 2018-04-30
+## [1.0] - 2019-02-12
 Birgit Moeller - <birgit.moeller@informatik.uni-halle.de>
-- Released rhizoTrak 1.0
+- Initial release of rhizoTrak 1.0
 
 
 
