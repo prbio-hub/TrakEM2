@@ -5,9 +5,12 @@ description: sample data of rhizoTrak
 ---
 
 We supply a data set which is also used for experimental evaluation in the accompanying paper.
+<br>
 It comprises five images from the Jena experiment. For details see the [rhizoTrak paper](cite.html).
 
-The data are available in two different variants as rhizoTrak projects
+The images may be download from [this](../assets/exampleDataSet1/images-jena-experiment.zip) zip-file.
+
+In addition two different variants of a rhizoTrak project are available
 1. one [rhizoTrak project](../assets/exampleDataSet1/rhizoTrak_t23-blank.zip)  with the five images imported
 
    - download and unzip to a directory of your choide
