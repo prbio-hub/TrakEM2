@@ -2253,14 +2253,14 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				{
 					boolean vis = !treelinesVisibleToggle || !connectorsVisibleToggle;
 					
-					final Collection<Displayable> col1 = layer.getParent().setVisible("treeline", vis, true, Display.getFrontLayer());
-					final Collection<Displayable> col2 = layer.getParent().setVisible("connector", vis, true,  Display.getFrontLayer());
+					final Collection<Displayable> col1 = layer.getParent().setVisible("treeline", vis, true);
+					final Collection<Displayable> col2 = layer.getParent().setVisible("connector", vis, true);
 					Display.updateCheckboxes(col1, DisplayablePanel.VISIBILITY_STATE);
 					Display.updateCheckboxes(col2, DisplayablePanel.VISIBILITY_STATE);
 
 					treelinesVisibleToggle = vis;
 					connectorsVisibleToggle = vis;
-				}		
+				}
 				
 				break;
 			case KeyEvent.VK_D:

@@ -1090,14 +1090,14 @@ public final class LayerSet extends Displayable implements Bucketable { // Displ
 	}
 
 	/** Returns the hash set of objects whose visibility has changed. */
-	public HashSet<Displayable> setVisible(String type, final boolean visible, final boolean repaint, Layer activeLayer) {
+	public HashSet<Displayable> setVisible(String type, final boolean visible, final boolean repaint) {
 		type = type.toLowerCase();
 		final HashSet<Displayable> hs = new HashSet<Displayable>();
 		try {
 			project.getLoader().startLargeUpdate();
 			if (type.equals("connector") || type.equals("treeline") || type.equals("areatree") || type.equals("pipe") || type.equals("ball") || type.equals("arealist") || type.equals("polyline") || type.equals("stack") || type.equals("dissector")) {
 				for (ZDisplayable zd : al_zdispl) {
-					if (visible != zd.isVisible() && zd.getClass().getName().toLowerCase().endsWith(type) && (zd.getFirstLayer().equals(activeLayer) || type.equals("connector"))) { // endsWith, because DLabel is called as Label
+					if (visible != zd.isVisible() && zd.getClass().getName().toLowerCase().endsWith(type)) { // endsWith, because DLabel is called as Label
 						zd.setVisible(visible, false); // don't repaint
 						hs.add(zd);
 					}
@@ -1105,7 +1105,7 @@ public final class LayerSet extends Displayable implements Bucketable { // Displ
 			} else {
 				for (Layer layer : al_layers) {
 					hs.addAll(layer.setVisible(type, visible, false)); // don't repaint
-				}
+				} 
 			}
 		} catch (Exception e) {
 			IJError.print(e);
