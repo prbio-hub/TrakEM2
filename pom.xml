@@ -27,7 +27,7 @@
   
   <groupId>de.unihalle.informatik.rhizoTrak</groupId>
   <artifactId>rhizoTrak_</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.0.1</version>
   <packaging>jar</packaging>
 
   <name>rhizoTrak</name>
