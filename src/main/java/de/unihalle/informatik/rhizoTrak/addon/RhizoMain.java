@@ -67,6 +67,7 @@ public class RhizoMain
 	private RhizoMTBXML rMTBXML;
 	private RhizoRSML rRSML;
 	private RhizoLineMapToTreeline rLineMapToTreeline;
+	private RhizoROI rhizoRoi;
 	
 	private HashMap<Layer,RhizoLayerInfo> layerInfoMap = new HashMap<Layer,RhizoLayerInfo>();
 	
@@ -81,7 +82,7 @@ public class RhizoMain
 	 * The (mainly) project specific configuration
 	 */
 	private RhizoProjectConfig projectConfig = new RhizoProjectConfig();
-	
+
 	public RhizoMain(Project p)
 	{
 		this.p = p;
@@ -95,6 +96,8 @@ public class RhizoMain
 		rMTBXML = new RhizoMTBXML(this);
 		rRSML = new RhizoRSML( this);
 		rLineMapToTreeline = new RhizoLineMapToTreeline(this);
+		rhizoRoi = new RhizoROI( this);
+
 	}
 	
 	public RhizoAddons getRhizoAddons()
@@ -143,7 +146,11 @@ public class RhizoMain
 	{
 		return p;
 	}
-	
+
+	public RhizoROI getRhizoRoi() {
+		return rhizoRoi;
+	}
+
 	/** 
 	 * @param layer
 	 * @return the LayerInfo associated with this layer or null if unset

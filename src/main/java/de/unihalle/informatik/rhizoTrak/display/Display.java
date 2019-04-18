@@ -6771,6 +6771,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
                         ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
 			conflictManager.showConflicts();
 		}
+		else if(command.equals("getROI")){
+			Display.getFront().getProject().getRhizoMain().getRhizoRoi().getROI();
+		}
 		else if(command.equals("stat")){
 			Display.getFront().getProject().getRhizoMain().getRhizoStatistics().writeStatistics();
 		}
@@ -7764,6 +7767,13 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	conflicManagerButton.setEnabled(true);
     	group3.add(conflicManagerButton);
     	
+        JButton getRoiButton = new JButton("ROI");
+		getRoiButton.setToolTipText("get ROI.");
+		getRoiButton.setActionCommand("getROI");
+		getRoiButton.addActionListener(this);
+		getRoiButton.setEnabled(true);
+        group3.add(getRoiButton);
+
     	JButton loadImagesButton = new JButton("Load Images");
     	loadImagesButton.setToolTipText("Import one or more images as a stack.");
     	loadImagesButton.setActionCommand("Load images");
