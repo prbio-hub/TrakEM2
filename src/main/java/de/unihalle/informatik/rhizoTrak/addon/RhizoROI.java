@@ -73,26 +73,36 @@ package de.unihalle.informatik.rhizoTrak.addon;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
-import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.Polyline;
+import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
-import ij.ImagePlus;
 import ij.gui.Roi;
-import ij.plugin.frame.RoiManager;
-import ij.process.ImageProcessor;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static de.unihalle.informatik.rhizoTrak.display.Display.*;
 
 public class RhizoROI {
 
 	private RhizoMain rhizoMain;
+
+    /**
+     * a ROI previsously svaed
+     * Currently only one selection
+     */
 	private Roi currentRoi = null;
+
+    /**
+     * and the trakEM polyline representing it
+     */
+	private Polyline currentPolyline = null;
 
 	protected RhizoROI(RhizoMain rhizoMain) 	{
 		this.rhizoMain = rhizoMain;
@@ -100,9 +110,10 @@ public class RhizoROI {
 
     /** first version to create a ROI
      *
-     * Get the current selection, if it is a rectangle, store it as a closed polyline
+     * Get the current selection, if it is a rectangle, clear existing polyline beloe rootstacks
+     * and store the selection store it as a closed polyline (below a rootstack.
      */
-	public void getROI() {
+	public void setROI() {
         Roi roi = Display.getFront().getRoi();
 
         if (roi.getType() != Roi.RECTANGLE) {
@@ -121,11 +132,12 @@ public class RhizoROI {
         // find one rootstack
         // TODO: need to check it it is able to hold a polyline
         ProjectThing rootstackProjectThing = RhizoUtils.getOneRootstack(project);
-        if ( rootstackProjectThing == null ) {
-            Utils.showMessage( "RhizoRIOI.getROI: Create treeline: WARNING  can not find a rootstack in project tree");
+        if (rootstackProjectThing == null) {
+            Utils.showMessage("RhizoRIOI.getROI: Create treeline: WARNING  can not find a rootstack in project tree");
             return;
         }
 
+        clearROI();
         // make new closed polyline
         try {
             ProjectThing pt = rootstackProjectThing.createChild("polyline");
@@ -134,18 +146,40 @@ public class RhizoROI {
             Polyline pl = (Polyline) pt.getObject();
 
             int n;
-            for ( n = 0 ; n < roi.getPolygon().npoints ; n++ ) {
-                pl.insertPoint( n, roi.getPolygon().xpoints[n], roi.getPolygon().ypoints[n], Display.getFront().getLayer().getId());
+            for (n = 0; n < roi.getPolygon().npoints; n++) {
+                pl.insertPoint(n, roi.getPolygon().xpoints[n], roi.getPolygon().ypoints[n], Display.getFront().getLayer().getId());
             }
-            pl.insertPoint( n, roi.getPolygon().xpoints[0], roi.getPolygon().ypoints[0], Display.getFront().getLayer().getId());
+            pl.insertPoint(n, roi.getPolygon().xpoints[0], roi.getPolygon().ypoints[0], Display.getFront().getLayer().getId());
 
             // add new polyline to the project tree
             DefaultMutableTreeNode parentNode = DNDTree.findNode(rootstackProjectThing, currentTree);
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(pt);
             ((DefaultTreeModel) currentTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
-        } catch ( Exception e ) {
-            System.out.println( "Cannot create polyline");
+        } catch (Exception e) {
+            System.out.println("Cannot create polyline");
         }
+    }
 
-	}
+    /**
+     * clear the rectangular ROI. We assume that all polyline objects below a rootstack are ROIs
+     */
+
+    public void clearROI() {
+        System.out.println( "clearROI");
+        Project project = rhizoMain.getProject();
+        HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
+        Set<Displayable> deleteSet = new HashSet<Displayable>();
+        System.out.println( "clearROI start for look");
+
+        for ( ProjectThing rootstackThing :rootstackThings ) {
+            System.out.println("rootstack " + rootstackThing.getId());
+            for (ProjectThing pt : rootstackThing.findChildrenOfTypeR(Polyline.class)) {
+                Polyline pl = (Polyline) pt.getObject();
+                deleteSet.add( pl);
+                System.out.println( "found polyline " + pl.getId());
+            }
+            project.removeAll( deleteSet);
+        }
+    }
+
 }

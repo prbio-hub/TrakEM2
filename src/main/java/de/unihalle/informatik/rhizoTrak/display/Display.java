@@ -6771,8 +6771,11 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
                         ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
 			conflictManager.showConflicts();
 		}
-		else if(command.equals("getROI")){
-			Display.getFront().getProject().getRhizoMain().getRhizoRoi().getROI();
+		else if(command.equals("setRoi")){
+			Display.getFront().getProject().getRhizoMain().getRhizoRoi().setROI();
+		}
+		else if(command.equals("clearRoi")){
+			Display.getFront().getProject().getRhizoMain().getRhizoRoi().clearROI();
 		}
 		else if(command.equals("stat")){
 			Display.getFront().getProject().getRhizoMain().getRhizoStatistics().writeStatistics();
@@ -7767,20 +7770,28 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	conflicManagerButton.setEnabled(true);
     	group3.add(conflicManagerButton);
     	
-        JButton getRoiButton = new JButton("ROI");
-		getRoiButton.setToolTipText("get ROI.");
-		getRoiButton.setActionCommand("getROI");
-		getRoiButton.addActionListener(this);
-		getRoiButton.setEnabled(true);
-        group3.add(getRoiButton);
+        JButton setRoiButton = new JButton("set ROI");
+		setRoiButton.setToolTipText("set ROI.");
+		setRoiButton.setActionCommand("setRoi");
+		setRoiButton.addActionListener(this);
+		setRoiButton.setEnabled(true);
+        group3.add(setRoiButton);
 
     	JButton loadImagesButton = new JButton("Load Images");
     	loadImagesButton.setToolTipText("Import one or more images as a stack.");
     	loadImagesButton.setActionCommand("Load images");
     	loadImagesButton.addActionListener(this);
     	group4.add(loadImagesButton);
-    	
-    	// Get available operators
+
+		JButton clearRoiButton = new JButton("clear ROI");
+		clearRoiButton.setToolTipText("clear ROI.");
+		clearRoiButton.setActionCommand("clearRoi");
+		clearRoiButton.addActionListener(this);
+		clearRoiButton.setEnabled(true);
+		group4.add(clearRoiButton);
+
+
+		// Get available operators
     	JScrollPane scrollPane = getScrollableOperatorList();
     	boolean isOperatorAvailable = false;
     	if ( list.getModel().getSize() > 0 )
