@@ -104,9 +104,14 @@ public class RhizoROI {
      */
 	private Polyline currentPolyline = null;
 
-	protected RhizoROI(RhizoMain rhizoMain) 	{
-		this.rhizoMain = rhizoMain;
-	}
+    /**
+     * do we have to check project tree for polylines (after opening a project)?
+     */
+    private boolean firstGetCurrentPolyline = true;
+
+    protected RhizoROI(RhizoMain rhizoMain) 	{
+        this.rhizoMain = rhizoMain;
+    }
 
     /** first version to create a ROI
      *
@@ -143,13 +148,13 @@ public class RhizoROI {
             ProjectThing pt = rootstackProjectThing.createChild("polyline");
             pt.setTitle(pt.getUniqueIdentifier());
 
-            Polyline pl = (Polyline) pt.getObject();
+            currentPolyline = (Polyline) pt.getObject();
 
             int n;
             for (n = 0; n < roi.getPolygon().npoints; n++) {
-                pl.insertPoint(n, roi.getPolygon().xpoints[n], roi.getPolygon().ypoints[n], Display.getFront().getLayer().getId());
+                currentPolyline.insertPoint(n, roi.getPolygon().xpoints[n], roi.getPolygon().ypoints[n], Display.getFront().getLayer().getId());
             }
-            pl.insertPoint(n, roi.getPolygon().xpoints[0], roi.getPolygon().ypoints[0], Display.getFront().getLayer().getId());
+            currentPolyline.insertPoint(n, roi.getPolygon().xpoints[0], roi.getPolygon().ypoints[0], Display.getFront().getLayer().getId());
 
             // add new polyline to the project tree
             DefaultMutableTreeNode parentNode = DNDTree.findNode(rootstackProjectThing, currentTree);
@@ -178,8 +183,40 @@ public class RhizoROI {
                 deleteSet.add( pl);
                 System.out.println( "found polyline " + pl.getId());
             }
-            project.removeAll( deleteSet);
         }
+        project.removeAll( deleteSet);
     }
 
+    /** get the current ROI polyline
+     *
+     * @return
+     */
+    public Polyline getCurrentPolyline() {
+        if ( firstGetCurrentPolyline ) {
+            // we cannot get the polyline upon opening while instantiation of the RhizoROI object,
+            // as the project tree is not yet constructed
+            // so need to be done this way
+            try {
+                HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks(rhizoMain.getProject());
+                System.out.println("XX " + rhizoMain.getProject());
+
+                for (ProjectThing rootstackThing : rootstackThings) {
+                    if ( ! firstGetCurrentPolyline ) break;
+
+//                    System.out.println("rootstack " + rootstackThing.getId());
+                    for (ProjectThing pt : rootstackThing.findChildrenOfTypeR(Polyline.class)) {
+                        Polyline pl = (Polyline) pt.getObject();
+                        currentPolyline = pl;
+                        firstGetCurrentPolyline = false;
+                        break;
+                    }
+                }
+            } catch (Exception ex) {
+                System.out.println("error in getCurrentPolyline first of rhizoROI");
+            }
+            firstGetCurrentPolyline = false;
+        }
+
+        return currentPolyline;
+    }
 }
