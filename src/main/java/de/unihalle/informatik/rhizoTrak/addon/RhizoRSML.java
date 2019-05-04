@@ -296,7 +296,8 @@ public class RhizoRSML
 	private void writeLayer(File saveFile, Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified) {
 		Rsml rsml = null;
 		try {
-			rsml = createRSML( layer, rhizoLayerInfo, unified);
+			File saveFileDirectory = saveFile.getParentFile();
+			rsml = createRSML( layer, rhizoLayerInfo, unified, saveFileDirectory);
 		} catch (InternalError ex) {
 			Utils.showMessage( "cannot create RSML structure for layer " + String.valueOf( RhizoUtils.getTimepointForLayer( layer)));
 		}
@@ -322,12 +323,13 @@ public class RhizoRSML
 
 	/** Create a RSML data structure for the current layer.
      * 
-     * @param layer 
-	 * @param rhizoLayerInfo 
-	 * @param unified 
-     * @return the rsml data structure or null, if no rootstacks are found
+     * @param layer
+	 * @param rhizoLayerInfo
+	 * @param unified
+     * @param saveFileDirectory
+	 * @return the rsml data structure or null, if no rootstacks are found
      */
-    private Rsml createRSML(Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified) {
+    private Rsml createRSML(Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified, File saveFileDirectory) {
     	Project project = Display.getFront().getProject();
     	
 		// collect all treelines to write 
@@ -363,9 +365,9 @@ public class RhizoRSML
     	// --- meta data
     	Rsml.Metadata metadata;
     	if (rhizoLayerInfo == null || rhizoLayerInfo.getRsml() == null || rhizoLayerInfo.getRsml().getMetadata() == null) {
-    		metadata = createMetatdata( layer, rhizoLayerInfo, unified);
+    		metadata = createMetatdata( layer, rhizoLayerInfo, unified, saveFileDirectory);
     	} else {
-    		metadata = createMetatdata( layer, rhizoLayerInfo, unified);
+    		metadata = createMetatdata( layer, rhizoLayerInfo, unified, saveFileDirectory);
     	}
     	rsml.setMetadata( metadata);
 
@@ -405,11 +407,12 @@ public class RhizoRSML
      * Note: The RSML JAXB Object in <code>rhizoLayerInfo</code> may be modified
      * 
      * @param layer
-     * @param rhizoLayerInfo 
-     * @param unified 
-     * @return
+     * @param rhizoLayerInfo
+     * @param unified
+     * @param saveFileDirectory
+	 * @return
      */
-    private Rsml.Metadata createMetatdata( Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified) {
+    private Rsml.Metadata createMetatdata(Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified, File saveFileDirectory) {
     	Rsml.Metadata oldMetadata = null;
     	if ( rhizoLayerInfo != null && rhizoLayerInfo.getRsml() != null)
     		oldMetadata = rhizoLayerInfo.getRsml().getMetadata();
@@ -449,13 +452,14 @@ public class RhizoRSML
     			// get the first patch of the layer
     			Path imagePath = Paths.get( layer.getPatches( false).get(0).getImageFilePath());
 
-    			Path storageFolderPath = Paths.get( this.rhizoMain.getStorageFolder());
+//    			Path storageFolderPath = Paths.get( this.rhizoMain.getStorageFolder());
+				Path saveFileDirectoryPath = saveFileDirectory.toPath();
     			Path imageDirectory = imagePath.getParent();
 
-    			if ( imageDirectory.equals( storageFolderPath) ) {
+    			if ( imageDirectory.equals( saveFileDirectoryPath) ) {
     				imageMetaData.setName( imagePath.getFileName().toString());
-    			} else if ( imagePath.toString().startsWith(storageFolderPath.toString()) ) {
-    				Path relativPath = storageFolderPath.relativize( imagePath);
+    			} else if ( imagePath.toString().startsWith(saveFileDirectoryPath.toString()) ) {
+    				Path relativPath = saveFileDirectoryPath.relativize( imagePath);
     				imageMetaData.setName( relativPath.toString());
     			} else {
     				imageMetaData.setName( imagePath.toString());
