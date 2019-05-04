@@ -88,6 +88,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.dom.DOMResult;
 
+import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage;
+import de.unihalle.informatik.MiToBo.io.images.ImageWriterMTB;
+import de.unihalle.informatik.MiToBo.io.tools.FilePathManipulator;
+import ij.ImagePlus;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -318,7 +322,8 @@ public class RhizoRSML
 	private void writeLayer(File saveFile, Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified, de.unihalle.informatik.rhizoTrak.display.Polyline roi) {
 		Rsml rsml = null;
 		try {
-			rsml = createRSML( layer, rhizoLayerInfo, unified, roi);
+			File saveFileDirectory = saveFile.getParentFile();
+			rsml = createRSML( layer, rhizoLayerInfo, unified, saveFileDirectory, roi);
 		} catch (InternalError ex) {
 			Utils.showMessage( "cannot create RSML structure for layer " + String.valueOf( RhizoUtils.getTimepointForLayer( layer)));
 		}
@@ -348,9 +353,9 @@ public class RhizoRSML
 	 * @param rhizoLayerInfo
 	 * @param unified
 	 * @param roi
-     * @return the rsml data structure or null, if no rootstacks are found
+	 * @return the rsml data structure or null, if no rootstacks are found
      */
-    private Rsml createRSML(Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified, de.unihalle.informatik.rhizoTrak.display.Polyline roi) {
+    private Rsml createRSML(Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified, File saveFileDirectory, de.unihalle.informatik.rhizoTrak.display.Polyline roi) {
     	Project project = Display.getFront().getProject();
     	
 		// collect all treelines to write 
@@ -386,9 +391,9 @@ public class RhizoRSML
     	// --- meta data
     	Rsml.Metadata metadata;
     	if (rhizoLayerInfo == null || rhizoLayerInfo.getRsml() == null || rhizoLayerInfo.getRsml().getMetadata() == null) {
-    		metadata = createMetatdata( layer, rhizoLayerInfo, unified, roi);
+    		metadata = createMetatdata( layer, rhizoLayerInfo, unified, saveFileDirectory, roi);
     	} else {
-    		metadata = createMetatdata( layer, rhizoLayerInfo, unified, roi);
+    		metadata = createMetatdata( layer, rhizoLayerInfo, unified, saveFileDirectory, roi);
     	}
     	rsml.setMetadata( metadata);
 
@@ -441,10 +446,11 @@ public class RhizoRSML
      * @param layer
      * @param rhizoLayerInfo
      * @param unified
+     * @param saveFileDirectory
      * @param roi
 	 * @return
      */
-    private Rsml.Metadata createMetatdata(Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified, de.unihalle.informatik.rhizoTrak.display.Polyline roi) {
+    private Rsml.Metadata createMetatdata(Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified, File saveFileDirectory, de.unihalle.informatik.rhizoTrak.display.Polyline roi) {
     	Rsml.Metadata oldMetadata = null;
     	if ( rhizoLayerInfo != null && rhizoLayerInfo.getRsml() != null)
     		oldMetadata = rhizoLayerInfo.getRsml().getMetadata();
@@ -484,28 +490,51 @@ public class RhizoRSML
     			// get the first patch of the layer
     			Path imagePath = Paths.get( layer.getPatches( false).get(0).getImageFilePath());
 
-    			Path storageFolderPath = Paths.get( this.rhizoMain.getStorageFolder());
-    			Path imageDirectory = imagePath.getParent();
-
-    			if ( imageDirectory.equals( storageFolderPath) ) {
-    				imageMetaData.setName( imagePath.getFileName().toString());
-    			} else if ( imagePath.toString().startsWith(storageFolderPath.toString()) ) {
-    				Path relativPath = storageFolderPath.relativize( imagePath);
-    				imageMetaData.setName( relativPath.toString());
-    			} else {
-    				imageMetaData.setName( imagePath.toString());
-    			}
-
     			if ( roi != null ) {
-    				// TODO crop the image of this layer and write to disk
-					// set imagename in RSML accordingly
-				}
-    			// set sha256 code
-    			// TODO why is rhizoLayerInfo not always defined, where to get shacode from
-    			if ( rhizoLayerInfo != null )
-    				imageMetaData.setSha256( rhizoLayerInfo.getImageHash());
+    				// add cropping geometry to imagePath
+					int xOffset = (int) roi.getPerimeter().getBounds().getX();
+					int yOffset = (int) roi.getPerimeter().getBounds().getY();
+					int width = (int)roi.getPerimeter().getBounds().getWidth();
+					int height = (int)roi.getPerimeter().getBounds().getHeight();
 
-    			// TOOD is there a chance to get hold of capture time and set it??
+					String basename = FilePathManipulator.removeExtension( imagePath.toString());
+					String extension = FilePathManipulator.getExtension(  imagePath.toString());
+					String cropFilename = basename+"-"+width+"x"+height+"+"+xOffset+"+"+yOffset+"."+extension;
+					imagePath = new File( cropFilename).toPath();
+
+					// crop the image of this layer and write to disk
+					ImagePlus ip = Display.getFrontLayer().getPatches(true).get(0).getImagePlus();
+					MTBImage image = MTBImage.createMTBImage(ip);
+					MTBImage croppedImage = image.getImagePart( xOffset, yOffset, 0, 0, 0,
+							width, height, image.getSizeZ(), image.getSizeT(), image.getSizeC());
+					try {
+						ImageWriterMTB writer = new ImageWriterMTB(croppedImage, imagePath.toString());
+						writer.runOp( true);
+					} catch (final Exception ex) {
+						Utils.showMessage( "cannot write cropped image to  " + imagePath.toString());
+						ex.printStackTrace();
+
+					}
+				}
+
+				//    			Path storageFolderPath = Paths.get( this.rhizoMain.getStorageFolder());
+				Path saveFileDirectoryPath = saveFileDirectory.toPath();
+				Path imageDirectory = imagePath.getParent();
+
+				if ( imageDirectory.equals( saveFileDirectoryPath) ) {
+					imageMetaData.setName( imagePath.getFileName().toString());
+				} else if ( imagePath.toString().startsWith(saveFileDirectoryPath.toString()) ) {
+					Path relativPath = saveFileDirectoryPath.relativize( imagePath);
+					imageMetaData.setName( relativPath.toString());
+				} else {
+					imageMetaData.setName(imagePath.toString());
+				}
+				// set sha256 code
+				// TODO why is rhizoLayerInfo not always defined, where to get shacode from
+				if (rhizoLayerInfo != null)
+					imageMetaData.setSha256(rhizoLayerInfo.getImageHash());
+
+				// TOOD is there a chance to get hold of capture time and set it??
 
     			// set unit from calibration information, if available
     			if ( layer.getPatches( false).get(0) != null && layer.getPatches( false).get(0).getImagePlus() != null ) {
