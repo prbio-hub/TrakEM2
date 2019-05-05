@@ -105,36 +105,31 @@ public class RhizoUtils {
 	 * null if non are found
 	 */
 	public static HashSet<ProjectThing> getRootstacks( Project project) {
-		try {
-			ProjectTree projectTree = project.getProjectTree();
-		
-			ProjectThing projectTreeRoot = (ProjectThing)projectTree.getRoot().getUserObject();
-			HashSet<ProjectThing> rootstackProjectThings = projectTreeRoot.findChildrenOfTypeR( "rootstack");
-			
-			Iterator<ProjectThing> itr = rootstackProjectThings.iterator();
-			while ( itr.hasNext()) {
-				ProjectThing rootstackProjectThing = itr.next();
-				if ( ! ( rootstackProjectThing.canHaveAsChild( "treeline") && rootstackProjectThing.canHaveAsChild( "connector") ) ) {
-					rootstackProjectThings.remove(rootstackProjectThing);
-				}
+		ProjectTree projectTree = project.getProjectTree();
+		if ( projectTree == null) return  null;
+
+		ProjectThing projectTreeRoot = (ProjectThing)projectTree.getRoot().getUserObject();
+		HashSet<ProjectThing> rootstackProjectThings = projectTreeRoot.findChildrenOfTypeR( "rootstack");
+
+		Iterator<ProjectThing> itr = rootstackProjectThings.iterator();
+		while ( itr.hasNext()) {
+			ProjectThing rootstackProjectThing = itr.next();
+			if ( ! ( rootstackProjectThing.canHaveAsChild( "treeline") && rootstackProjectThing.canHaveAsChild( "connector") ) ) {
+				rootstackProjectThings.remove(rootstackProjectThing);
 			}
-			
-			if ( rootstackProjectThings.size() == 0) {
-				Utils.log( "RhizoUtils:getRootstacks Error can not find a rootstack in project tree");
-				return null;
-			}
-				
-			return rootstackProjectThings;
-		} catch ( Exception ex ) {
-			Utils.log( "RhizoUtils:getRootstacks Error can get root of project things");
+		}
+
+		if ( rootstackProjectThings.size() == 0) {
+			Utils.log( "RhizoUtils:getRootstacks Error can not find a rootstack in project tree");
 			return null;
 		}
 
+		return rootstackProjectThings;
 	}
 	
 	/** get all Connectors below any of the  rootstacks hashed by its Id
 	 * 
-	 * @param project
+	 * @param rootstackThings
 	 * @return hashmap of Id,connector
 	 */
 	public static HashMap<Long,Connector>  getConnectorsBelowRootstacks( HashSet<ProjectThing> rootstackThings) {
@@ -158,7 +153,7 @@ public class RhizoUtils {
 	
 	/** get all Treelines below any of the  rootstacks hashed by its Id
 	 * 
-	 * @param project
+	 * @param rootstackThings
 	 * @return hashmap of Id,connector
 	 */
 	public static HashMap<Long,Treeline>  getTreelinesBelowRootstacks( HashSet<ProjectThing> rootstackThings) {
@@ -260,7 +255,7 @@ public class RhizoUtils {
 
 
 	/** Code a string to conform to html convention
-		 * @param rel_path
+		 * @param s
 		 * @return
 		 */
 	   public static String htmlCode( String s) {
@@ -507,7 +502,7 @@ public class RhizoUtils {
 		
 		/**		 
 		 * calculate the sha-hash of the image on the layer
-		 * @param ip
+		 * @param pathString
 		 * @return
 		 */
 		public static String calculateSHA256(String pathString) {
@@ -554,7 +549,7 @@ public class RhizoUtils {
 		
 		/**
 		 * Checks if there is at least on treeline in the specified layer.
-		 * @param rootstackThings Set of rootstacks
+		 * @param rootstacks Set of rootstacks
 		 * @param layer Layer to be checked
 		 * @author Tino
 		 */
