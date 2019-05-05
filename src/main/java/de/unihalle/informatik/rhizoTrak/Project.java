@@ -616,7 +616,7 @@ public class Project extends DBObject {
 				template_root.addChild( new TemplateThing( "treeline"));
 				template_root.addChild( new TemplateThing( "connector"));
 				template_root.addChild( new TemplateThing( "polyline"));
-				
+
 				project = createNewProject(loader, false, template_root);
 				
 			} else {
