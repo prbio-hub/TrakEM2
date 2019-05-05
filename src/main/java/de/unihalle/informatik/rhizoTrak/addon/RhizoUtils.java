@@ -516,7 +516,6 @@ public class RhizoUtils {
 			} catch (NoSuchAlgorithmException | IOException e) {
 				Utils.log2("unable to create sha-256 code for path"+pathString);
 			}
-			System.out.println(result);
 			return result;
 		}
 
