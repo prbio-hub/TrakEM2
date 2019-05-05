@@ -50,6 +50,7 @@ package de.unihalle.informatik.rhizoTrak.addon;
 import java.awt.GridLayout;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -428,14 +429,30 @@ public class RhizoRSML
     	return rsml;
     }
 
-	/** Check if the treeline <code>tl</code> overlaps the <code>roi</code>
+	/** Check if the treeline <code>tl</code> overlaps the <code>roi</code>.
+	 * Overlap is defines as at least on node is inside the bounding box of the rectengular roi
 	 *
 	 * @param tl
 	 * @param roi
 	 * @return
 	 */
 	private boolean overlaps(Treeline tl, de.unihalle.informatik.rhizoTrak.display.Polyline roi) {
-		return tl.intersects( roi);
+		boolean doesOverlap = false;
+		Rectangle2D bbox = roi.getPerimeter().getBounds2D();
+		List<Node<Float>> treelineNodes = new ArrayList<Node<Float>>(tl.getNodesAt(tl.getFirstLayer()));
+
+		for(Node<Float> n: treelineNodes) {
+			Point2D point = tl.getAffineTransform().transform(new Point2D.Float(n.getX(), n.getY()), null);
+			if ( point.getX() >= bbox.getX() && point.getX() <= bbox.getMaxX() &&
+					point.getY() >= bbox.getY() && point.getY() <= bbox.getMaxY() ) {
+				doesOverlap = true;
+				break;
+			}
+
+		}
+
+		System.out.println( "overlaps " + tl.getId() + " " + doesOverlap);
+		return doesOverlap;
 	}
 
 
@@ -503,7 +520,7 @@ public class RhizoRSML
 					imagePath = new File( cropFilename).toPath();
 
 					// crop the image of this layer and write to disk
-					ImagePlus ip = Display.getFrontLayer().getPatches(true).get(0).getImagePlus();
+					ImagePlus ip = roi.getFirstLayer().getPatches(true).get(0).getImagePlus();
 					MTBImage image = MTBImage.createMTBImage(ip);
 					MTBImage croppedImage = image.getImagePart( xOffset, yOffset, 0, 0, 0,
 							width, height, image.getSizeZ(), image.getSizeT(), image.getSizeC());
