@@ -529,8 +529,8 @@ public class RhizoRSML
 					} catch (final Exception ex) {
 						Utils.showMessage( "cannot write cropped image to  " + imagePath.toString());
 						ex.printStackTrace();
-
 					}
+					imageMetaData.setSha256( RhizoUtils.calculateSHA256( imagePath.toString()));
 				}
 
 				//    			Path storageFolderPath = Paths.get( this.rhizoMain.getStorageFolder());
@@ -545,10 +545,12 @@ public class RhizoRSML
 				} else {
 					imageMetaData.setName(imagePath.toString());
 				}
+
 				// set sha256 code
-				// TODO why is rhizoLayerInfo not always defined, where to get shacode from
-				if (rhizoLayerInfo != null)
-					imageMetaData.setSha256(rhizoLayerInfo.getImageHash());
+				if ( roi == null  && rhizoLayerInfo != null) {
+					// TODO why is rhizoLayerInfo not always defined, where to get shacode from
+						imageMetaData.setSha256(rhizoLayerInfo.getImageHash());
+				}
 
 				// TOOD is there a chance to get hold of capture time and set it??
 
