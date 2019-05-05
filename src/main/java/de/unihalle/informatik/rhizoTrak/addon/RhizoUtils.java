@@ -131,7 +131,24 @@ public class RhizoUtils {
 		}
 
 	}
-	
+
+	/** return a projectthing of type rootstack which can hold polyline, or <code>null</code> if non exists
+	 *
+	 * @param project
+	 * @return
+	 */
+	public static ProjectThing getOneRootstackForPolyline( Project project) {
+		HashSet<ProjectThing> rootstackProjectThings = RhizoUtils.getRootstacks( project);
+		if ( rootstackProjectThings == null)
+			return null;
+
+		for ( ProjectThing pt : rootstackProjectThings) {
+			if ( pt.canHaveAsChild( "polyline"))
+				return pt;
+		}
+		return null;
+	}
+
 	/** get all Connectors below any of the  rootstacks hashed by its Id
 	 * 
 	 * @param project

@@ -451,7 +451,6 @@ public class RhizoRSML
 
 		}
 
-		System.out.println( "overlaps " + tl.getId() + " " + doesOverlap);
 		return doesOverlap;
 	}
 

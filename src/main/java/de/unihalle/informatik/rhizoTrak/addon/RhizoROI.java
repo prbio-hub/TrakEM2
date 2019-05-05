@@ -89,60 +89,64 @@ import java.util.Set;
 
 import static de.unihalle.informatik.rhizoTrak.display.Display.*;
 
+/**
+ * Rectangular ROI (currently) used to restrict export of RSML.
+ * One or none ROI is supported.
+ * <p>
+ * The ROI can be specified using the rectangle section of ImageJ and stored using the "set ROI" tab.
+ * It is stored as a <code>polyline</code> into one rootstack object in the project tree.
+ *
+ * </p>
+ */
 public class RhizoROI {
 
 	private RhizoMain rhizoMain;
 
     /**
-     * a ROI previsously svaed
-     * Currently only one selection
-     */
-	private Roi currentRoi = null;
-
-    /**
-     * and the trakEM polyline representing it
+     * The trakEM polyline representing the ROI (or null)
      */
 	private Polyline currentPolyline = null;
 
     /**
-     * do we have to check project tree for polylines (after opening a project)?
+     * do we still have to check the project tree for polylines (after opening a project)?
      */
     private boolean firstGetCurrentPolyline = true;
 
+    /**
+     *
+     * @param rhizoMain
+     */
     protected RhizoROI(RhizoMain rhizoMain) 	{
         this.rhizoMain = rhizoMain;
     }
 
-    /** first version to create a ROI
-     *
-     * Get the current selection, if it is a rectangle, clear existing polyline beloe rootstacks
-     * and store the selection store it as a closed polyline (below a rootstack.
+    /**
+     * Get the current ImageJ selection, if it is a rectangle, clear all existing polylines below rootstacks
+     * and store the selection it as a closed polyline (below a rootstack).
      */
 	public void setROI() {
         Roi roi = Display.getFront().getRoi();
 
-        if (roi.getType() != Roi.RECTANGLE) {
-            System.out.println("RhizoRIOI.getROI: no rectangle selected");
+        if ((roi == null) || (roi.getType() != Roi.RECTANGLE)) {
+            Utils.showMessage("RhizoRIOI.getROI: no rectangle selected");
             return;
         }
-        currentRoi = roi;
 
-        // get the relevant stuff
         Display display = Display.getFront();
-        // TODO do not know it we want to do this
         Display.clearSelection();
         Project project = display.getProject();
         ProjectTree currentTree = project.getProjectTree();
 
         // find one rootstack
         // TODO: need to check it it is able to hold a polyline
-        ProjectThing rootstackProjectThing = RhizoUtils.getOneRootstack(project);
+        ProjectThing rootstackProjectThing = RhizoUtils.getOneRootstackForPolyline(project);
         if (rootstackProjectThing == null) {
-            Utils.showMessage("RhizoRIOI.getROI: Create treeline: WARNING  can not find a rootstack in project tree");
+            Utils.showMessage("RhizoRIOI.getROI: Create treeline: WARNING  can not find a rootstack in project tree able to hold a polyline");
             return;
         }
 
         clearROI();
+
         // make new closed polyline
         try {
             ProjectThing pt = rootstackProjectThing.createChild("polyline");
@@ -160,13 +164,16 @@ public class RhizoROI {
             DefaultMutableTreeNode parentNode = DNDTree.findNode(rootstackProjectThing, currentTree);
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(pt);
             ((DefaultTreeModel) currentTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
+
+            Display.clearSelection();
         } catch (Exception e) {
-            System.out.println("Cannot create polyline");
+            Utils.showMessage("Cannot create polyline");
+            return;
         }
     }
 
     /**
-     * clear the rectangular ROI. We assume that all polyline objects below a rootstack are ROIs
+     * clear all rectangular ROIs. We assume that all <code>polyline</code> objects below a rootstack are ROIs
      */
 
     public void clearROI() {
@@ -193,17 +200,15 @@ public class RhizoROI {
      */
     public Polyline getCurrentPolyline() {
         if ( firstGetCurrentPolyline ) {
-            // we cannot get the polyline upon opening while instantiation of the RhizoROI object,
+            // we cannot get the polyline during opening the project and the  instantiation of the RhizoROI object,
             // as the project tree is not yet constructed
             // so need to be done this way
             try {
                 HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks(rhizoMain.getProject());
-                System.out.println("XX " + rhizoMain.getProject());
 
                 for (ProjectThing rootstackThing : rootstackThings) {
                     if ( ! firstGetCurrentPolyline ) break;
 
-//                    System.out.println("rootstack " + rootstackThing.getId());
                     for (ProjectThing pt : rootstackThing.findChildrenOfTypeR(Polyline.class)) {
                         Polyline pl = (Polyline) pt.getObject();
                         currentPolyline = pl;
