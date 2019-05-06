@@ -47,6 +47,14 @@
 
 package de.unihalle.informatik.rhizoTrak.addon;
 
+import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.display.*;
+import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
+import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
+import de.unihalle.informatik.rhizoTrak.utils.Utils;
+import ij.ImagePlus;
+
+import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
@@ -56,30 +64,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import javax.swing.tree.DefaultMutableTreeNode;
-
-import de.unihalle.informatik.rhizoTrak.Project;
-import de.unihalle.informatik.rhizoTrak.display.Connector;
-import de.unihalle.informatik.rhizoTrak.display.Displayable;
-import de.unihalle.informatik.rhizoTrak.display.Layer;
-import de.unihalle.informatik.rhizoTrak.display.LayerSet;
-import de.unihalle.informatik.rhizoTrak.display.Node;
-import de.unihalle.informatik.rhizoTrak.display.Patch;
-import de.unihalle.informatik.rhizoTrak.display.Treeline;
-import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
-import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
-import de.unihalle.informatik.rhizoTrak.utils.Utils;
-import ij.ImagePlus;
+import java.util.*;
 
 /**
  * some helper methods
@@ -505,7 +490,7 @@ public class RhizoUtils {
 					if(ip != null) return ip.getTitle();
 				}
 			}
-			
+
 			return null;
 		}
 		
@@ -529,7 +514,12 @@ public class RhizoUtils {
 				byte[] fileByteArray = Files.readAllBytes(path);
 				MessageDigest dige = MessageDigest.getInstance("SHA-256");
 				byte[] shaHash = dige.digest(fileByteArray);	
-				result=Base64.getEncoder().encodeToString(shaHash);
+				StringBuilder sb = new StringBuilder();
+				for (byte b : shaHash) {
+					sb.append(String.format("%02X", b));
+				}
+				result = sb.toString();
+
 			} catch (NoSuchAlgorithmException | IOException e) {
 				Utils.log2("unable to create sha-256 code for path"+pathString);
 			}
