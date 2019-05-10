@@ -192,6 +192,7 @@ public class RhizoROI {
             }
         }
         project.removeAll( deleteSet);
+        currentPolyline = null;
     }
 
     /** get the current ROI polyline

@@ -7777,20 +7777,19 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		setRoiButton.setEnabled(true);
         group3.add(setRoiButton);
 
-    	JButton loadImagesButton = new JButton("Load Images");
-    	loadImagesButton.setToolTipText("Import one or more images as a stack.");
-    	loadImagesButton.setActionCommand("Load images");
-    	loadImagesButton.addActionListener(this);
-    	group4.add(loadImagesButton);
-
 		JButton clearRoiButton = new JButton("clear ROI");
 		clearRoiButton.setToolTipText("clear ROI.");
 		clearRoiButton.setActionCommand("clearRoi");
 		clearRoiButton.addActionListener(this);
 		clearRoiButton.setEnabled(true);
-		group4.add(clearRoiButton);
+		group3.add(clearRoiButton);
 
-
+		JButton loadImagesButton = new JButton("Load Images");
+    	loadImagesButton.setToolTipText("Import one or more images as a stack.");
+    	loadImagesButton.setActionCommand("Load images");
+    	loadImagesButton.addActionListener(this);
+    	group4.add(loadImagesButton);
+    	
 		// Get available operators
     	JScrollPane scrollPane = getScrollableOperatorList();
     	boolean isOperatorAvailable = false;
