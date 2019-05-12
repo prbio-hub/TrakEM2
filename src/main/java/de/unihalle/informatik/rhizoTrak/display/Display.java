@@ -1038,6 +1038,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		this.scroll_filter_options = makeScrollPane(createExtendedOptionPanel(rm));
 //		this.scroll_filter_options.setHorizontalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		this.addTab("rhizoTrak Operations", this.scroll_filter_options, "Settings, tools and functions related to rhizoTrak.");
+		int rhizoTrakOperationstIndex = this.tabs.getTabCount()-1;
+
+		this.tabs.setSelectedIndex( rhizoTrakOperationstIndex);
 
 		this.ht_tabs = new Hashtable<Class<?>,RollingPanel>();
 		this.ht_tabs.put(Patch.class, panel_patches);
