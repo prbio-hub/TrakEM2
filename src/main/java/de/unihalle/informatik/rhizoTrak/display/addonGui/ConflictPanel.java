@@ -224,7 +224,7 @@ public class ConflictPanel extends JPanel implements ActionListener {
 			Conflict currentConflict = dataTable.get(selectedConflictString);
 			//case one: Treeline conflict
 			if(currentConflict.getClass().equals(TreelineConflict.class)){
-                Utils.log("currently solving a treelineConflict");
+                Utils.log("currently solving a treeline inconsistency");
 				TreelineConflict conflict = (TreelineConflict)currentConflict;
 				conflictManager.setCurrentSolvingConflict(conflict);
 				
@@ -243,7 +243,7 @@ public class ConflictPanel extends JPanel implements ActionListener {
 			}
 			//case two: Connector conflict
 			if(currentConflict.getClass().equals(ConnectorConflict.class)){
-                Utils.log("currently solving a connectorConflict");
+                Utils.log("currently solving a connector inconsistency");
 				ConnectorConflict conflict = (ConnectorConflict)currentConflict;
 				conflictManager.setCurrentSolvingConflict(conflict);
 				

@@ -128,7 +128,7 @@ public class RhizoIO {
 				loadProject(filenameWoExtension + "." + RHIZOTRAK_PROJECTFILE_EXTENSION , false);
 				Utils.log2("done");
 
-				Utils.log2("restoring conflicts...");
+				Utils.log2("restoring inconsistencies...");
 				rhizoMain.getRhizoAddons().getConflictManager().restorConflicts(project);
 				Utils.log2("done");
 
@@ -140,7 +140,7 @@ public class RhizoIO {
 				Utils.log2("done");
 
 
-				Utils.log2("restoring conflicts...");
+				Utils.log2("restoring inconsistencies...");
 				//TODO: have to be restored for every Project
 				rhizoMain.getRhizoAddons().getConflictManager().restorConflicts(project);
 				Utils.log2("done");
