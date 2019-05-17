@@ -7760,7 +7760,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	statButton.setEnabled(true);
     	group21.add(statButton);
     		
-    	JButton conflicManagerButton = new JButton("Inconsistency");
+    	JButton conflicManagerButton = new JButton("Inconsistencies");
     	conflicManagerButton.setToolTipText("Manage inconsistencies related to connectors.");
     	conflicManagerButton.setActionCommand("inconsistencyPanel");
     	conflicManagerButton.addActionListener(this);

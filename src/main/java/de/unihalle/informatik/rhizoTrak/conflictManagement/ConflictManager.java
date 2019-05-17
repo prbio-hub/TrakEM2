@@ -321,7 +321,7 @@ public class ConflictManager
     		HashSet<Connector> connectorSet = searchAllConnectors(initialConnectorSet);
     		//TODO: complain to the user if conectorSet > initialConnectorSet because of unsolved issues
     		if(connectorSet.size()>initialConnectorSet.size() || connectorSet.size()>2) {
-        		if(Utils.checkYN("It looks like your action interfere with current inconsistencies.\n It is highly advisable to solve current inconsistencies before continue. Abort?"))
+        		if(Utils.checkYN("It looks like your action interferes with current inconsistencies.\n It is highly advisable to solve current inconsistencies before continuing. Abort?"))
         		{
         			//abort
         			con[0].removeConTreeline(addTarget);
@@ -359,7 +359,7 @@ public class ConflictManager
     		HashSet<Connector> connectorSet = searchAllConnectors(initialConnectorSet);
     		//TODO: complain to the user if conectorSet > initialConnectorSet because of unsolved issues
     		if(connectorSet.size()>initialConnectorSet.size() || connectorSet.size()>2) {
-        		if(Utils.checkYN("It looks like your action interfere with current inconsistencies.\n It is highly advisable to solve current inconsistencies before continue. Abort?"))
+        		if(Utils.checkYN("It looks like your action interferes with current inconsistencies.\n It is highly advisable to solve current inconsistencies before continuing. Abort?"))
         		{
         			//abort
         			return 0;
@@ -749,7 +749,7 @@ public class ConflictManager
 		if(conflictPanel==null || conflictFrame==null)
 		{
 			conflictPanel = new ConflictPanel(this);
-			conflictFrame = new JFrame("Conflict Manager: "+ rhizoMain.getProject().getTitle());
+			conflictFrame = new JFrame("Inconsistency Assistant: "+ rhizoMain.getProject().getTitle());
 			conflictFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 			conflictFrame.add(conflictPanel);
 			conflictFrame.setVisible(true);
