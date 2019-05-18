@@ -127,7 +127,7 @@ public class RhizoWriteBinary {
 		/** list of status labels (as integers) which are to be drawn
 		 *
 		 */
-		ArrayList<Byte> statusLabelIntToWrite = new ArrayList<Byte>();
+		ArrayList<RhizoStatusLabel> statusLabelsToWrite = new ArrayList<RhizoStatusLabel>();
 
 		JPanel choicesPanel = new JPanel();
 		choicesPanel.setLayout(new GridLayout( 2, 1, 0, 10));
@@ -137,11 +137,11 @@ public class RhizoWriteBinary {
 		choicesPanel.add( layerCombo);
 
 		choicesPanel.add(new JLabel("Status labels "));
-		String[] statusLabelChoices = new String[rhizoMain.getProjectConfig().sizeStatusLabelMapping()];
+		HashSet<String> statusLabelChoices = new HashSet<String>();
 		for ( int i = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabelMapping() ; i++ ) {
-			statusLabelChoices[i] = i + "(" + rhizoMain.getProjectConfig().getStatusLabel(i).getName() + ")";
+			statusLabelChoices.add( rhizoMain.getProjectConfig().getStatusLabel(i).getName());
 		}
-		JList statusLabelCombo = new JList( statusLabelChoices);
+		JList statusLabelCombo = new JList( statusLabelChoices.toArray());
 		statusLabelCombo.setSelectedIndex( 0);
 		choicesPanel.add( statusLabelCombo);
 
@@ -152,8 +152,8 @@ public class RhizoWriteBinary {
 		}
 
 		String outputLayers = (String) layerCombo.getSelectedItem();
-		for ( int i : statusLabelCombo.getSelectedIndices() ) {
-			statusLabelIntToWrite.add( (byte) i);
+		for ( Object obj : statusLabelCombo.getSelectedValuesList() ) {
+			statusLabelsToWrite.add( rhizoMain.getProjectConfig().getStatusLabel( (String)obj));
 		}
 
 		boolean drawAnnotationsAllLayers = outputLayers.equals( ALL_STRING);
@@ -168,20 +168,20 @@ public class RhizoWriteBinary {
 
 		if ( drawAnnotationsAllLayers ) {
 			for ( Layer layer : rhizoMain.getProject().getRootLayerSet().getLayers() ) {
-				drawLayer( layer, rootstackThings, statusLabelIntToWrite);
+				drawLayer( layer, rootstackThings, statusLabelsToWrite);
 			}
 		} else {
-			drawLayer( Display.getFront().getLayer(), rootstackThings, statusLabelIntToWrite);
+			drawLayer( Display.getFront().getLayer(), rootstackThings, statusLabelsToWrite);
 		}
 
 	}
 
 	/** draw <code>layer</code> using all status labels in <code>statusLabelIntToWrite</code>
-	 *  @param layer
+	 * @param layer
 	 * @param rootstackThings
 	 * @param statusLabelIntToWrite
 	 */
-	private void drawLayer(Layer layer, HashSet<ProjectThing> rootstackThings, ArrayList<Byte> statusLabelIntToWrite) {
+	private void drawLayer(Layer layer, HashSet<ProjectThing> rootstackThings, ArrayList<RhizoStatusLabel> statusLabelIntToWrite) {
 		// create a suggestion for the image filename
 		Path imagePath = Paths.get( layer.getPatches( false).get(0).getImageFilePath());
 		String basename = FilePathManipulator.removeExtension( imagePath.toString());
@@ -203,10 +203,20 @@ public class RhizoWriteBinary {
 		File saveFile = fileChooser.getSelectedFile();
 		imagePath = saveFile.toPath();
 
+		if ( saveFile.exists() ) {
+			int result = JOptionPane.showConfirmDialog(null, "File " + saveFile.getAbsolutePath() +
+							" already exists, override?",
+					"write layer annotation to binary file", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+			if( result != JOptionPane.OK_OPTION) {
+				return;
+			}
+		}
+
 		ImagePlus ip = layer.getPatches(true).get(0).getImagePlus();
 		MTBImage image = MTBImage.createMTBImage(ip);
 
-		MTBImage binaryImage = MTBImage.createMTBImage( image.getSizeX(), image.getSizeY(), image.getSizeZ(), image.getSizeT(), image.getSizeC(), MTBImage.MTBImageType.MTB_BYTE);
+		MTBImage binaryImage = image.convertType( MTBImage.MTBImageType.MTB_BYTE, false);
+		binaryImage.fillBlack();
 
 		drawSegments( rhizoMain.getProject(), layer, binaryImage.getImagePlus(), rootstackThings, statusLabelIntToWrite);
 
@@ -224,9 +234,10 @@ public class RhizoWriteBinary {
 	 * @param currentLayer if null all layers are considered*
 	 * @param imp image processor of the binary image
 	 * @param rootstackThings
+	 * @param statusLabelsToWrite
 	 * @return list of all <code>Segment</code>s to write, null on failure
 	 */
-	private void drawSegments(Project project, Layer currentLayer, ImagePlus imp, HashSet<ProjectThing> rootstackThings, ArrayList<Byte> statusLabelIntToWrite) {
+	private void drawSegments(Project project, Layer currentLayer, ImagePlus imp, HashSet<ProjectThing> rootstackThings, ArrayList<RhizoStatusLabel> statusLabelsToWrite) {
 		// all treelines below a rootstack
 		LinkedList<Treeline> allTreelines = new LinkedList<Treeline>();
 
@@ -257,9 +268,9 @@ public class RhizoWriteBinary {
 				Collection<Node<Float>> allNodes = tl.getRoot().getSubtreeNodes();
 
 				for(Node<Float> node : allNodes) {
-					if( !node.equals(tl.getRoot()) && statusLabelIntToWrite.contains( node.getConfidence())) {
+					if( !node.equals(tl.getRoot()) && statusLabelsToWrite.contains( rhizoMain.getProjectConfig().getStatusLabel( node.getConfidence()))) {
 						if ( debug)	{
-							System.out.println( "    create segment for node " + node.getConfidence() +
+							System.out.println( "    draw segment for node with status label int " + node.getConfidence() +
 									" patch " + RhizoAddons.getPatch(tl));
 						}
 
@@ -288,7 +299,7 @@ public class RhizoWriteBinary {
 				}
 			}
 
-			if ( debug)	System.out.println( "created segments");
+			if ( debug)	System.out.println( "segments  drawn");
 		}
 
 		return ;
