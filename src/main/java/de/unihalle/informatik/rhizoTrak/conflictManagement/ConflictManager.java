@@ -321,7 +321,7 @@ public class ConflictManager
     		HashSet<Connector> connectorSet = searchAllConnectors(initialConnectorSet);
     		//TODO: complain to the user if conectorSet > initialConnectorSet because of unsolved issues
     		if(connectorSet.size()>initialConnectorSet.size() || connectorSet.size()>2) {
-        		if(Utils.checkYN("It looks like your action interfere with current conflicts.\n It is highly advisable to solve current conflicts before continue. Abort?"))
+        		if(Utils.checkYN("It looks like your action interferes with current inconsistencies.\n It is highly advisable to solve current inconsistencies before continuing. Abort?"))
         		{
         			//abort
         			con[0].removeConTreeline(addTarget);
@@ -359,7 +359,7 @@ public class ConflictManager
     		HashSet<Connector> connectorSet = searchAllConnectors(initialConnectorSet);
     		//TODO: complain to the user if conectorSet > initialConnectorSet because of unsolved issues
     		if(connectorSet.size()>initialConnectorSet.size() || connectorSet.size()>2) {
-        		if(Utils.checkYN("It looks like your action interfere with current conflicts.\n It is highly advisable to solve current conflicts before continue. Abort?"))
+        		if(Utils.checkYN("It looks like your action interferes with current inconsistencies.\n It is highly advisable to solve current inconsistencies before continuing. Abort?"))
         		{
         			//abort
         			return 0;
@@ -369,7 +369,7 @@ public class ConflictManager
     		int na = canBeCombinedNA(connectorSet,null);
     		if(na==1 || na==2)
     		{
-				String message = "Conflict was solved automatically. \n The following connectors were merged in this action: \n";
+				String message = "Inconsistency was solved automatically. \n The following connectors were merged in this action: \n";
 	            for(Iterator<Connector> conIt = connectorSet.iterator(); conIt.hasNext();)
 	            {
 	                    Connector cConnector = conIt.next();
@@ -386,9 +386,9 @@ public class ConflictManager
         
         private int userDialogNA(HashSet<Connector> connectorSet)
         {
-			if(Utils.checkYN("This action will cause new conflicts that can be auto-resolved. Continue?"))
+			if(Utils.checkYN("This action will cause new inconsistencies that can be auto-resolved. Continue?"))
 			{
-				String message = "To prevent conflicts the following connectors will be merged: \n";
+				String message = "To prevent inconsistencies the following connectors will be merged: \n";
 	            for(Iterator<Connector> conIt = connectorSet.iterator(); conIt.hasNext();)
 	            {
 	                    Connector cConnector = conIt.next();
@@ -414,7 +414,7 @@ public class ConflictManager
     		ArrayList<String> report = reportHowBad(connectorSet,target);
     		int conflictCount = Integer.parseInt(report.get(report.size()-1));
     		report.remove(report.size()-1);
-    		String message = "This action will cause " +conflictCount+ " new conflicts that can not be auto-resolved. Continue?"+ "\n" + "Multiple Treeline Conflict(s):" + "\n";
+    		String message = "This action will cause " +conflictCount+ " new inconsistencies that can not be auto-resolved. Continue?"+ "\n" + "Multiple Treeline inconsistencies:" + "\n";
     		for (String string : report) {
 				message = message + string;
 			}
@@ -749,7 +749,7 @@ public class ConflictManager
 		if(conflictPanel==null || conflictFrame==null)
 		{
 			conflictPanel = new ConflictPanel(this);
-			conflictFrame = new JFrame("Conflict Manager: "+ rhizoMain.getProject().getTitle());
+			conflictFrame = new JFrame("Consistency Assistant: "+ rhizoMain.getProject().getTitle());
 			conflictFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 			conflictFrame.add(conflictPanel);
 			conflictFrame.setVisible(true);
