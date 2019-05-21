@@ -749,7 +749,7 @@ public class ConflictManager
 		if(conflictPanel==null || conflictFrame==null)
 		{
 			conflictPanel = new ConflictPanel(this);
-			conflictFrame = new JFrame("Inconsistency Manager: "+ rhizoMain.getProject().getTitle());
+			conflictFrame = new JFrame("Consistency Assistant: "+ rhizoMain.getProject().getTitle());
 			conflictFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 			conflictFrame.add(conflictPanel);
 			conflictFrame.setVisible(true);
