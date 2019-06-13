@@ -61,6 +61,9 @@
     <mailingList>
       <name>Image.sc Forum</name>
       <archive>https://forum.image.sc/</archive>
+      <!-- once the rhizoTrak tag has been used the first time, we can use this link:
+	   <archive>https://forum.image.sc/tags/rhizoTrak</archive>
+	   -->
     </mailingList>
   </mailingLists>
 
@@ -336,8 +339,8 @@
   <repositories>
     <!-- NB: for project parent -->
     <repository>
-      <id>imagej.public</id>
-      <url>http://maven.imagej.net/content/groups/public</url>
+      <id>scijava.public</id>
+      <url>https://maven.scijava.org/content/groups/public</url>
     </repository>
     <repository>
       <id>snapshots-pub</id>
