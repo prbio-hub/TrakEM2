@@ -54,7 +54,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <trakem2-transform.version>1.0.1</trakem2-transform.version>
     <!-- MiToBo dependencies -->
-    <mitobo.xml.version>2.8</mitobo.xml.version>
+    <mitobo.xml.version>2.9</mitobo.xml.version>
   </properties>
 
   <mailingLists>
@@ -520,7 +520,7 @@
       </activation>
       <properties>
         <mitobo.dep>mitobo</mitobo.dep>
-        <mitobo.dep.version>1.8.14</mitobo.dep.version>
+        <mitobo.dep.version>1.8.15</mitobo.dep.version>
       </properties>
     </profile>
   </profiles>
