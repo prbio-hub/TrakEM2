@@ -77,6 +77,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.scijava.input.KeyCode;
 import org.scijava.java3d.Transform3D;
 import org.scijava.vecmath.AxisAngle4f;
 import org.scijava.vecmath.Color3f;
@@ -97,6 +98,7 @@ import ij.measure.ResultsTable;
 public class Treeline extends Tree<Float> {
 
 	static protected float last_radius = -1;
+	KeyEvent currentKeyEvent = null;
 
 	public Treeline(final Project project, final String title) {
 		super(project, title);
@@ -219,10 +221,12 @@ public class Treeline extends Tree<Float> {
 	@Override
 	public void mouseWheelMoved(final MouseWheelEvent mwe) {
 		final int modifiers = mwe.getModifiers();
-		
 		/**
 		 * aeekz
 		 * Shift + Alt = 9
+		 * actyc
+		 * shift + alt > radius
+		 * shift + alt + r > radius subtree
 		 */
 		if (modifiers == 9) {
 			final Object source = mwe.getSource();
@@ -236,11 +240,20 @@ public class Treeline extends Tree<Float> {
 			final float y = ((mwe.getY() / magnification) + srcRect.y);
 
 			final float inc = (rotation > 0 ? 1 : -1) * (1/magnification);
-			if (null != adjustNodeRadius(inc, x, y, la, dc)) {
-				Display.repaint(this);
-				mwe.consume();
-				return;
+			if(this.currentKeyEvent.getKeyCode() == KeyEvent.VK_R) {
+				if (null != adjustSubTreeRadius(inc, x, y, la, dc)) {
+					Display.repaint(this);
+					mwe.consume();
+					return;
+				}
+			} else {
+				if (null != adjustNodeRadius(inc, x, y, la, dc)) {
+					Display.repaint(this);
+					mwe.consume();
+					return;
+				}
 			}
+
 		}
 		/**
 		 * aeekz
@@ -291,6 +304,18 @@ public class Treeline extends Tree<Float> {
 			return null;
 		}
 		nearest.setData(nearest.getData() + inc);
+		return nearest;
+	}
+	
+	protected Node<Float> adjustSubTreeRadius(final float inc, final float x, final float y, final Layer layer, final DisplayCanvas dc) {
+		final Node<Float> nearest = findNodeNear(x, y, layer, dc);
+		if (null == nearest) {
+			Utils.log("Can't adjust radius: found more than 1 node within visible area!");
+			return null;
+		}
+		for(final Node<Float> node: new Node.NodeCollection<Float>(nearest, Node.BreadthFirstSubtreeIterator.class)) {
+			node.setData(node.getData() + inc);
+		}
 		return nearest;
 	}
 
@@ -1010,6 +1035,7 @@ public class Treeline extends Tree<Float> {
 
 	@Override
 	public void keyPressed(final KeyEvent ke) {
+		this.currentKeyEvent = ke;
 		if (isTagging()) {
 			super.keyPressed(ke);
 			return;
@@ -1039,6 +1065,11 @@ public class Treeline extends Tree<Float> {
 				super.keyPressed(ke);
 			}
 		}
+	}
+	
+	@Override
+	public void keyReleased(final KeyEvent ke) {
+		this.currentKeyEvent = null;
 	}
 
 	private boolean askAdjustRadius(final float x, final float y, final Layer layer, final double magnification) {

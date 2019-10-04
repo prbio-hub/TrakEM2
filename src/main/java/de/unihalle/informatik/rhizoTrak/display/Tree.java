@@ -4207,4 +4207,8 @@ public abstract class Tree<T> extends ZDisplayable implements VectorData {
 		TreeEvent te = new TreeEvent((Treeline) this,"drag",null,null);
 		treeAction(te);
         }
+
+		public void keyReleased(KeyEvent ke) {
+
+		}
 }
