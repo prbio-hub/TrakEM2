@@ -87,6 +87,7 @@ import org.scijava.vecmath.Vector3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.M;
 import de.unihalle.informatik.rhizoTrak.utils.ProjectToolbar;
@@ -240,12 +241,14 @@ public class Treeline extends Tree<Float> {
 			final float y = ((mwe.getY() / magnification) + srcRect.y);
 
 			final float inc = (rotation > 0 ? 1 : -1) * (1/magnification);
-			if(this.currentKeyEvent.getKeyCode() == KeyEvent.VK_R) {
+			if(this.currentKeyEvent!=null && this.currentKeyEvent.getKeyCode() == KeyEvent.VK_R) {
 				if (null != adjustSubTreeRadius(inc, x, y, la, dc)) {
 					Display.repaint(this);
 					mwe.consume();
+					this.currentKeyEvent=null;
 					return;
 				}
+				this.currentKeyEvent=null;
 			} else {
 				if (null != adjustNodeRadius(inc, x, y, la, dc)) {
 					Display.repaint(this);
@@ -288,8 +291,10 @@ public class Treeline extends Tree<Float> {
 			return null;
 		}
 		
+		nearest.setConfidence((byte) (nearest.getConfidence() + inc));
+		
 		for(final Node<Float> node: new Node.NodeCollection<Float>(nearest, Node.BreadthFirstSubtreeIterator.class)) {
-			node.setConfidence((byte) (node.getConfidence() +  inc));
+			node.setConfidence(nearest.getConfidence());
 		}
 		
 		project.getRhizoMain().getRhizoColVis().applyCorrespondingColor();
@@ -313,8 +318,9 @@ public class Treeline extends Tree<Float> {
 			Utils.log("Can't adjust radius: found more than 1 node within visible area!");
 			return null;
 		}
+		nearest.setData(nearest.getData() + inc);
 		for(final Node<Float> node: new Node.NodeCollection<Float>(nearest, Node.BreadthFirstSubtreeIterator.class)) {
-			node.setData(node.getData() + inc);
+			node.setData(nearest.getData());
 		}
 		return nearest;
 	}
