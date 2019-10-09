@@ -200,6 +200,10 @@ public class Treeline extends Tree<Float> {
 			final Node<Float> nd = getActive();
 			final float r = (float)Math.sqrt(Math.pow(xd - nd.x, 2) + Math.pow(yd - nd.y, 2));
 			nd.setData(r);
+			if(this.currentKeyEvent!=null && this.currentKeyEvent.getKeyCode() == KeyEvent.VK_R) {
+				adjustSubTreeRadius(nd);
+				this.currentKeyEvent=null;
+			}
 			last_radius = r;
 			repaint(true, la);
 			return;
@@ -323,6 +327,12 @@ public class Treeline extends Tree<Float> {
 			node.setData(nearest.getData());
 		}
 		return nearest;
+	}
+	
+	protected void adjustSubTreeRadius(Node<Float> node) {
+		for(final Node<Float> current_node: new Node.NodeCollection<Float>(node, Node.BreadthFirstSubtreeIterator.class)) {
+			current_node.setData(node.getData());
+		}
 	}
 
 	static public class RadiusNode extends Node<Float> {
