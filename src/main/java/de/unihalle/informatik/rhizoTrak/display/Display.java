@@ -205,6 +205,7 @@ import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.analysis.Graph;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
+import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.SplitDialog;
 import de.unihalle.informatik.rhizoTrak.display.inspect.InspectPatchTrianglesMode;
 import de.unihalle.informatik.rhizoTrak.imaging.Blending;
@@ -3071,6 +3072,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				item = new JMenuItem("Show tabular view"); item.addActionListener(this); popup.add(item);
 				item = new JMenuItem("Copy to next layer"); item.addActionListener(this); popup.add(item); // aeekz
 				item = new JMenuItem("Copy to specific layer" ); item.addActionListener(this); popup.add(item); // aeekz
+				item = new JMenuItem("Propagate node radii to next layer" ); item.addActionListener(this); popup.add(item); // moeller
 				final Collection<Tree> trees = selection.get(Tree.class);
 
 				//
@@ -5918,6 +5920,99 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				copyTreelineToLayer((Treeline) active, layer, layerSet);
 			}
 
+		} else if (command.equals("Propagate node radii to next layer")) {
+			
+			// propagate node radii to connected treelines in next layer
+			if (!(active instanceof Treeline)) {
+				Utils.showMessage("rhizoTrak", 
+					"Propagation of radii failed: no treeline selected.");
+				return;
+			}
+
+			// find connector(s) of selected treeline
+			Treeline sourceLine = (Treeline)active;
+			HashSet<Connector> connectorSet = new HashSet<>();
+			if ( sourceLine.getTreeEventListener() != null ) { 
+				for(TreeEventListener tel: sourceLine.getTreeEventListener()) { 
+					connectorSet.add(tel.getConnector());
+				}  
+			}			
+			if (connectorSet.isEmpty() || connectorSet.size() > 1) {
+				Utils.showMessage("rhizoTrak", 
+					"Propagation of radii failed: treeline not in connector.");
+				return;
+			}
+				
+			Display display = Display.getFront();
+			LayerSet currentLayerSet = display.getLayerSet();
+			Layer nextLayer = currentLayerSet.next(display.getLayer());			
+
+			if (nextLayer == null || nextLayer.getZ() == display.getLayer().getZ()) 
+			{
+				Utils.showMessage("rhizoTrak", 
+					"Propagation of radii failed: no subsequent layer.");
+				return;
+			}
+			// one connector found
+			Connector c = connectorSet.iterator().next();
+			// get list of connected treelines
+			ArrayList<Treeline> ctl = c.getConTreelines();
+
+			// search for treeline in next layer
+			Treeline targetLine = null;
+			Set<Node<Float>> targetNodes = null;
+			for (Treeline t : ctl) {
+				if (t.getFirstLayer().equals(nextLayer)) {
+					targetLine = t;
+					targetNodes = t.node_layer_map.get(nextLayer);
+					break;
+				}
+			}
+			if (targetNodes == null) return;
+			
+			float dist, minDist;
+			Node<Float> cNode = null;
+			Set<Node<Float>> sourceNodes = 
+					sourceLine.getNodesAt(sourceLine.getFirstLayer());
+						
+			float sx=0, sy=0, tx=0, ty=0;
+			for (Node<Float> sn: sourceNodes) {
+				// transform coordinates
+				if (!sourceLine.at.isIdentity()) {
+					final float[] dps = new float[]{sn.x, sn.y};
+					sourceLine.at.transform(dps, 0, dps, 0, 1);
+					sx = dps[0];
+					sy = dps[1];
+				}
+				else {
+					sx = sn.x;
+					sy = sn.y;
+				}
+				
+				// find for each node the closest one of treeline in next layer
+				minDist = Float.MAX_VALUE;
+				for (Node<Float> tn: targetNodes) {		
+					// transform coordinates
+					if (!targetLine.at.isIdentity()) {
+						final float[] dps = new float[]{tn.x, tn.y};
+						targetLine.at.transform(dps, 0, dps, 0, 1);
+						tx = dps[0];
+						ty = dps[1];
+					}
+					else {
+						tx = tn.x;
+						ty = tn.y;						
+					}
+			
+					dist = (sx-tx)*(sx-tx) + (sy-ty)*(sy-ty);
+					if (dist < minDist) {
+						minDist = dist;
+						cNode = tn;
+					}
+				cNode.setData(sn.getData());
+			}
+			// repaint all the nodes
+			Display.repaint(getLayerSet());
 		} else if (command.equals("Mark")) {
 			if (!(active instanceof Tree<?>)) return;
 			final Point p = canvas.consumeLastPopupPoint();
