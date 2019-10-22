@@ -1056,6 +1056,15 @@ public class Treeline extends Tree<Float> {
 			super.keyPressed(ke);
 			return;
 		}
+		
+		// key 'p' propagates radii of treeline nodes to connected treeline 
+		// in subsequent layer, if existing 
+		if (ke.getKeyCode() == KeyEvent.VK_P) {
+			Display display = Display.getFront();
+			display.propagateRadiiToNextLayer(this);
+			return;
+		}
+		
 		final int tool = ProjectToolbar.getToolId();
 		try {
 			if (ProjectToolbar.PEN == tool) {
