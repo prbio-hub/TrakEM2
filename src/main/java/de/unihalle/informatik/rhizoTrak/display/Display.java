@@ -5937,9 +5937,16 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					connectorSet.add(tel.getConnector());
 				}  
 			}			
-			if (connectorSet.isEmpty() || connectorSet.size() > 1) {
+			if (connectorSet.isEmpty()) {
 				Utils.showMessage("rhizoTrak", 
 					"Propagation of radii failed: treeline not in connector.");
+				return;
+			}
+			
+			if (connectorSet.size() > 1) {
+				Utils.showMessage("rhizoTrak", 
+					"Propagation of radii failed: " + 
+						"treeline with more than one connector, conflict!");
 				return;
 			}
 				
@@ -5977,6 +5984,10 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 						
 			float sx=0, sy=0, tx=0, ty=0;
 			for (Node<Float> sn: sourceNodes) {
+				
+				cNode = null;
+				sx = sn.x; sy = sn.y;
+				
 				// transform coordinates
 				if (!sourceLine.at.isIdentity()) {
 					final float[] dps = new float[]{sn.x, sn.y};
@@ -5984,14 +5995,13 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 					sx = dps[0];
 					sy = dps[1];
 				}
-				else {
-					sx = sn.x;
-					sy = sn.y;
-				}
-				
+
 				// find for each node the closest one of treeline in next layer
 				minDist = Float.MAX_VALUE;
 				for (Node<Float> tn: targetNodes) {		
+					
+					tx = tn.x; ty = tn.y;
+					
 					// transform coordinates
 					if (!targetLine.at.isIdentity()) {
 						final float[] dps = new float[]{tn.x, tn.y};
@@ -5999,17 +6009,17 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 						tx = dps[0];
 						ty = dps[1];
 					}
-					else {
-						tx = tn.x;
-						ty = tn.y;						
-					}
-			
+
+					// Euclidean distance
 					dist = (sx-tx)*(sx-tx) + (sy-ty)*(sy-ty);
 					if (dist < minDist) {
 						minDist = dist;
 						cNode = tn;
 					}
-				cNode.setData(sn.getData());
+				}				
+				// copy radius of closest node 
+				if (cNode != null)
+					cNode.setData(sn.getData());
 			}
 			// repaint all the nodes
 			Display.repaint(getLayerSet());
