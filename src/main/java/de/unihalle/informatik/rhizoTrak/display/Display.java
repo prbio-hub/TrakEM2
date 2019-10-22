@@ -5929,100 +5929,10 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 				return;
 			}
 
-			// find connector(s) of selected treeline
+			// get treeline with radii to propagate and do the job
 			Treeline sourceLine = (Treeline)active;
-			HashSet<Connector> connectorSet = new HashSet<>();
-			if ( sourceLine.getTreeEventListener() != null ) { 
-				for(TreeEventListener tel: sourceLine.getTreeEventListener()) { 
-					connectorSet.add(tel.getConnector());
-				}  
-			}			
-			if (connectorSet.isEmpty()) {
-				Utils.showMessage("rhizoTrak", 
-					"Propagation of radii failed: treeline not in connector.");
-				return;
-			}
+			propagateRadiiToNextLayer(sourceLine);
 			
-			if (connectorSet.size() > 1) {
-				Utils.showMessage("rhizoTrak", 
-					"Propagation of radii failed: " + 
-						"treeline with more than one connector, conflict!");
-				return;
-			}
-				
-			Display display = Display.getFront();
-			LayerSet currentLayerSet = display.getLayerSet();
-			Layer nextLayer = currentLayerSet.next(display.getLayer());			
-
-			if (nextLayer == null || nextLayer.getZ() == display.getLayer().getZ()) 
-			{
-				Utils.showMessage("rhizoTrak", 
-					"Propagation of radii failed: no subsequent layer.");
-				return;
-			}
-			// one connector found
-			Connector c = connectorSet.iterator().next();
-			// get list of connected treelines
-			ArrayList<Treeline> ctl = c.getConTreelines();
-
-			// search for treeline in next layer
-			Treeline targetLine = null;
-			Set<Node<Float>> targetNodes = null;
-			for (Treeline t : ctl) {
-				if (t.getFirstLayer().equals(nextLayer)) {
-					targetLine = t;
-					targetNodes = t.node_layer_map.get(nextLayer);
-					break;
-				}
-			}
-			if (targetNodes == null) return;
-			
-			float dist, minDist;
-			Node<Float> cNode = null;
-			Set<Node<Float>> sourceNodes = 
-					sourceLine.getNodesAt(sourceLine.getFirstLayer());
-						
-			float sx=0, sy=0, tx=0, ty=0;
-			for (Node<Float> sn: sourceNodes) {
-				
-				cNode = null;
-				sx = sn.x; sy = sn.y;
-				
-				// transform coordinates
-				if (!sourceLine.at.isIdentity()) {
-					final float[] dps = new float[]{sn.x, sn.y};
-					sourceLine.at.transform(dps, 0, dps, 0, 1);
-					sx = dps[0];
-					sy = dps[1];
-				}
-
-				// find for each node the closest one of treeline in next layer
-				minDist = Float.MAX_VALUE;
-				for (Node<Float> tn: targetNodes) {		
-					
-					tx = tn.x; ty = tn.y;
-					
-					// transform coordinates
-					if (!targetLine.at.isIdentity()) {
-						final float[] dps = new float[]{tn.x, tn.y};
-						targetLine.at.transform(dps, 0, dps, 0, 1);
-						tx = dps[0];
-						ty = dps[1];
-					}
-
-					// Euclidean distance
-					dist = (sx-tx)*(sx-tx) + (sy-ty)*(sy-ty);
-					if (dist < minDist) {
-						minDist = dist;
-						cNode = tn;
-					}
-				}				
-				// copy radius of closest node 
-				if (cNode != null)
-					cNode.setData(sn.getData());
-			}
-			// repaint all the nodes
-			Display.repaint(getLayerSet());
 		} else if (command.equals("Mark")) {
 			if (!(active instanceof Tree<?>)) return;
 			final Point p = canvas.consumeLastPopupPoint();
@@ -8749,4 +8659,118 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		}
 
 	}
+	
+	/**
+	 * Propagates the radii of treeline nodes to a connected treeline in the
+	 * subsequent layer.
+	 * <p>
+	 * For the given treeline first all connectors are gathered. If there is 
+	 * exactly one we search the set of connected treelines and find the one in 
+	 * the subsequent layer, if existing.<p>
+	 * Then for each node of the source treeline the closest node in the target 
+	 * treeline in terms of Euclidean distance is determined and the radius 
+	 * propagated to that node.<p>
+	 * The method fails if a treeline is member of no connector or more than one,
+	 * or if it is located in the last layer so that no subsequent layer exists.
+	 *  
+	 * @param sourceLine	Treeline from which to copy the radii.
+	 * @author moeller
+	 */
+	protected void propagateRadiiToNextLayer(Treeline sourceLine) {
+
+		// find connector(s) of selected treeline
+		HashSet<Connector> connectorSet = new HashSet<>();
+		if ( sourceLine.getTreeEventListener() != null ) { 
+			for(TreeEventListener tel: sourceLine.getTreeEventListener()) { 
+				connectorSet.add(tel.getConnector());
+			}  
+		}			
+		if (connectorSet.isEmpty()) {
+			Utils.showMessage("rhizoTrak", 
+				"Propagation of radii failed: treeline not in connector.");
+			return;
+		}
+		
+		if (connectorSet.size() > 1) {
+			Utils.showMessage("rhizoTrak", 
+				"Propagation of radii failed: " + 
+					"treeline with more than one connector, conflict!");
+			return;
+		}
+			
+		Display display = Display.getFront();
+		LayerSet currentLayerSet = display.getLayerSet();
+		Layer nextLayer = currentLayerSet.next(display.getLayer());			
+
+		if (nextLayer == null || nextLayer.getZ() == display.getLayer().getZ()) 
+		{
+			Utils.showMessage("rhizoTrak", 
+				"Propagation of radii failed: no subsequent layer.");
+			return;
+		}
+		// one connector found
+		Connector c = connectorSet.iterator().next();
+		// get list of connected treelines
+		ArrayList<Treeline> ctl = c.getConTreelines();
+
+		// search for treeline in next layer
+		Treeline targetLine = null;
+		Set<Node<Float>> targetNodes = null;
+		for (Treeline t : ctl) {
+			if (t.getFirstLayer().equals(nextLayer)) {
+				targetLine = t;
+				targetNodes = t.node_layer_map.get(nextLayer);
+				break;
+			}
+		}
+		if (targetNodes == null) return;
+		
+		float dist, minDist;
+		Node<Float> cNode = null;
+		Set<Node<Float>> sourceNodes = 
+				sourceLine.getNodesAt(sourceLine.getFirstLayer());
+					
+		float sx=0, sy=0, tx=0, ty=0;
+		for (Node<Float> sn: sourceNodes) {
+			
+			cNode = null;
+			sx = sn.x; sy = sn.y;
+			
+			// transform coordinates
+			if (!sourceLine.at.isIdentity()) {
+				final float[] dps = new float[]{sn.x, sn.y};
+				sourceLine.at.transform(dps, 0, dps, 0, 1);
+				sx = dps[0];
+				sy = dps[1];
+			}
+
+			// find for each node the closest one of treeline in next layer
+			minDist = Float.MAX_VALUE;
+			for (Node<Float> tn: targetNodes) {		
+				
+				tx = tn.x; ty = tn.y;
+				
+				// transform coordinates
+				if (!targetLine.at.isIdentity()) {
+					final float[] dps = new float[]{tn.x, tn.y};
+					targetLine.at.transform(dps, 0, dps, 0, 1);
+					tx = dps[0];
+					ty = dps[1];
+				}
+
+				// Euclidean distance
+				dist = (sx-tx)*(sx-tx) + (sy-ty)*(sy-ty);
+				if (dist < minDist) {
+					minDist = dist;
+					cNode = tn;
+				}
+			}				
+			// copy radius of closest node 
+			if (cNode != null)
+				cNode.setData(sn.getData());
+		}
+		// repaint all the nodes
+		Display.repaint(getLayerSet());
+	}
+	
 }
