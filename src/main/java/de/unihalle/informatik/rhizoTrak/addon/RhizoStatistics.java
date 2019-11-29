@@ -87,6 +87,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -321,7 +322,7 @@ public class RhizoStatistics {
 
 			} else {
 				// write header
-				bw.write("experiment" + sep + "tube" + sep + "timepoint" + sep + "date" + sep + "rootID" + sep + "layerID" +sep + "segmentID" +  
+				bw.write("experiment" + sep + "tube" + sep + "timepoint" + sep + "date" + sep + "rootID" + sep + "layerID" +sep + "segmentID" + sep + "parentID" + 
 						sep + "x_start_pixel" + sep + "y_start_pixel" + sep + "x_end_pixel" + sep + "y_end_pixel" +
 						sep + "length_" + this.outputUnit + sep + "startDiameter_" + this.outputUnit + sep + "endDiameter_" + this.outputUnit +
 						sep + "surfaceArea_" + this.outputUnit + "^2" + sep + "volume_" + this.outputUnit + "^3" + sep + "children" + sep + "status" + sep + "statusName" + "\n");
@@ -394,6 +395,10 @@ public class RhizoStatistics {
 		StringBuilder msg = new StringBuilder();
 		try {
 			for ( Treeline tl : allTreelines)  {
+				
+				List<Segment> currentSegments = new ArrayList<Segment>();
+				Map<RadiusNode, Integer> parents = new HashMap<RadiusNode, Integer>();
+				
 				if ( debug)	System.out.println( "segment to write " + tl.getId());
 				HashSet<Connector> connectorSet = new HashSet<>();
 				if ( tl.getTreeEventListener() != null ) { 
@@ -427,14 +432,28 @@ public class RhizoStatistics {
 								System.out.println( "    create segment for node " + node.getConfidence() +
 										" patch " + RhizoAddons.getPatch(tl));
 							}
+							RadiusNode radiusNode = (RadiusNode) node;
+							RadiusNode radiusParentNode = (RadiusNode) node.getParent();
+
 							Segment currentSegment = new Segment(rhizoMain, tl, treelineID, 
-									segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), this.outputUnit, (int) node.getConfidence());
+									segmentID, radiusNode, radiusParentNode, this.outputUnit, (int) node.getConfidence());
+							
+							currentSegments.add(currentSegment);
+							parents.put(radiusNode, segmentID);
+							
 							segmentID++;
 
 							if(currentSegment.cohenSutherlandLineClipping()) 
 								allSegments.add(currentSegment);
 						}
 					}
+					
+					for(Segment s: currentSegments){
+						
+						s.setParentID(null == parents.get(s.getParentNode()) ? -1 : parents.get(s.getParentNode()));
+					}
+					
+					
 				}
 
 				if ( debug)	System.out.println( "created segments");
@@ -700,6 +719,7 @@ public class RhizoStatistics {
 		private String imageName, experiment, tube, timepoint, date;
 		private double length, surfaceArea, volume;
 		private int segmentID, numberOfChildren;
+		private int parentID;
 
 		private int status;
 
@@ -729,7 +749,7 @@ public class RhizoStatistics {
 		 * @param outputUnit
 		 * @param status
 		 */
-		public Segment(RhizoMain rhizoMain, Treeline t, long treeID, int segmentID, 
+		public Segment(RhizoMain rhizoMain, Treeline t, long treeID, int segmentID,
 				RadiusNode child, RadiusNode parent, String outputUnit, int status) throws ExceptionInInitializerError{
 
 			this.t = t;
@@ -795,6 +815,14 @@ public class RhizoStatistics {
 			calculate();
 		}
 
+		public Object getParentNode() {
+			return parent;
+		}
+
+		public void setParentID(int parentID) {
+			this.parentID = parentID;
+		}
+
 		/**
 		 * calculate length and so forth, also no of children
 		 */
@@ -815,6 +843,7 @@ public class RhizoStatistics {
 			String result = experiment + sep + tube + sep + timepoint + sep + date + sep + Long.toString(treeID) +
 					sep + this.layerIndex  +
 					sep + Integer.toString(segmentID) +
+					sep + Integer.toString(parentID) +
 					sep + xStart + sep + yStart + sep + xEnd + sep + yEnd +
 					sep + Double.toString(length) + sep + Double.toString(2*radiusParent) + sep + Double.toString(2*radiusChild) +
 					sep + Double.toString(surfaceArea) + sep + Double.toString(volume) + 
