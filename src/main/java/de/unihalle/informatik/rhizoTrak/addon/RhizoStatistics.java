@@ -237,6 +237,7 @@ public class RhizoStatistics {
 		if ( allSegments == null) {
 			try {
 				bw.close();
+				saveFile.delete();
 			} catch (IOException e) {
 			}
 			return;
@@ -547,13 +548,63 @@ public class RhizoStatistics {
 								(myAllCalibInfos.get(i).isValid() ? "(valid): " : "(invalid): ") +
 								myAllCalibInfos.get(i).toString() + "\n");
 					}
-					msg.append( " \nUse pixel units and proceed?\n");
+					msg.append( " \nUse pixel units and proceed or edit calibration information?\n");
 
-					if ( Utils.checkYN( new String( msg)) ) {
-						this.outputUnit = "pixel";
-					} else {
-						return null;
+					Object[] options = {"Ok", "Edit calibration", "Cancel"};
+					int n = JOptionPane.showOptionDialog(null, new String( msg),
+							"",
+							JOptionPane.YES_NO_CANCEL_OPTION,
+							JOptionPane.QUESTION_MESSAGE,
+							null,
+							options,
+							null);
+
+					if(n == 1)
+					{
+						CalibrationPanel editCalibrationPanel = new CalibrationPanel(zValues, myAllCalibInfos);
+						int result = JOptionPane.showConfirmDialog(null, editCalibrationPanel, "Edit calibration information", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+						if(result == JOptionPane.OK_OPTION)
+						{
+							Map<Integer, JTextField> textFields = editCalibrationPanel.getTextFields();
+							Map<Integer, JComboBox> comboBoxes = editCalibrationPanel.getComboBoxes();
+
+							for(int i: zValues)
+							{
+								ImagePlusCalibrationInfo calibInfo = myAllCalibInfos.get(i);
+								JTextField tf = textFields.get(i);
+								JComboBox comboBox = comboBoxes.get(i);
+
+								String pixelSize = tf.getText();
+								String unit = (String) comboBox.getSelectedItem();
+
+								if(null != pixelSize && !pixelSize.equals(""))
+								{
+									calibInfo.setPixelWidth(Double.parseDouble(pixelSize));
+									calibInfo.setPixelHeight(Double.parseDouble(pixelSize));
+								}
+
+								if(null != unit && !unit.equals(""))
+								{
+									if(unit.equals("DPI") && Double.parseDouble(pixelSize) != 0)
+									{
+										calibInfo.setPixelWidth(1.0 / Double.parseDouble(pixelSize));
+										calibInfo.setPixelHeight(1.0 / Double.parseDouble(pixelSize));
+										calibInfo.setXUnit("inch");
+										calibInfo.setYUnit("inch");
+									}
+									else
+									{
+										calibInfo.setXUnit(unit);
+										calibInfo.setYUnit(unit);
+									}
+								}
+							}
+						}
+						else return null;
 					}
+					else if(n == 2 || n == JOptionPane.CLOSED_OPTION) return null;
+
 				} else {
 					if ( rhizoMain.getProjectConfig().isShowCalibrationInfo() ) {
 						StringBuilder msg = new StringBuilder( "Calibrations for all layers\n");
@@ -563,7 +614,7 @@ public class RhizoStatistics {
 									myAllCalibInfos.get(i).toString() + "\n");
 						}
 
-						Object[] options = {"Ok", "Edit calibration"};
+						Object[] options = {"Ok", "Edit calibration", "Cancel"};
 						int n = JOptionPane.showOptionDialog(null, new String( msg),
 								"",
 								JOptionPane.YES_NO_CANCEL_OPTION,
@@ -616,6 +667,7 @@ public class RhizoStatistics {
 							}
 							else return null;
 						}
+						else if(n == 2 || n == JOptionPane.CLOSED_OPTION) return null;
 					}
 				}
 			}
