@@ -95,8 +95,10 @@
 package de.unihalle.informatik.rhizoTrak.display.addonGui;
 
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.sql.rowset.spi.SyncResolver;
 import javax.swing.KeyStroke;
 
 public class RhizoShortcutManager {
@@ -168,7 +170,7 @@ public class RhizoShortcutManager {
     FULLGUI_TRANSFORM_ENTER_NODE_NONLINEAR
   }
 
-  private static RhizoShortcutManager getInstance() {
+  private static synchronized RhizoShortcutManager getInstance() {
     if (instance == null) {
       instance = new RhizoShortcutManager();
     }
@@ -343,11 +345,17 @@ public class RhizoShortcutManager {
         "Enter non-linear transform mode"));
   }
 
-  public static KeyStroke getShortcut(RhizoCommand rc) {
+  public static synchronized KeyStroke getShortcut(RhizoCommand rc) {
     return getInstance().commandMap.get(rc).getStroke();    
   }
 
-  public static String getDescriptorString(RhizoCommand rc) {
+  public static synchronized void setShortcut(RhizoCommand rc, KeyStroke ks){
+    RhizoShortcutManager rsm = getInstance();
+    RhizoCommandConfig rcc =  rsm.commandMap.get(rc);
+    rcc.setStroke(ks);
+  }
+
+  public static synchronized String getDescriptorString(RhizoCommand rc) {
     return getInstance().commandMap.get(rc).getDescription();    
   }
 
@@ -361,10 +369,14 @@ public class RhizoShortcutManager {
     return doesCommandMatchStroke(rc, ks);
   }
 
-  public static boolean doesCommandMatchStroke(RhizoCommand rc, KeyStroke ks) {
+  public static synchronized boolean doesCommandMatchStroke(RhizoCommand rc, KeyStroke ks) {
     if (getInstance().commandMap.get(rc) == null)
       return false;
     return getInstance().commandMap.get(rc).getStroke().equals(ks);
+  }
+
+  public static synchronized ArrayList<RhizoCommand> getCommands(){
+    return new ArrayList<RhizoCommand>(getInstance().commandMap.keySet());
   }
 
   private class RhizoCommandConfig {
@@ -380,6 +392,10 @@ public class RhizoShortcutManager {
 
     public KeyStroke getStroke() {
       return this.ks;
+    }
+
+    public void setStroke(KeyStroke ks){
+      this.ks = ks;
     }
 
     public String getDescription() {
