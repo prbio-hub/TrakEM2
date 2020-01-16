@@ -97,8 +97,6 @@ package de.unihalle.informatik.rhizoTrak.display.addonGui;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import javax.sql.rowset.spi.SyncResolver;
 import javax.swing.KeyStroke;
 
 public class RhizoShortcutManager {
@@ -180,107 +178,107 @@ public class RhizoShortcutManager {
   private RhizoShortcutManager() {
     this.commandMap = new HashMap<>();
     this.commandMap.put(RhizoCommand.GENERIC_DESELECT_ALL,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, true),
         "Deselect all"));
 //    this.commandMap.put(RhizoCommand.GENERIC_DESELECT, Shift-Click);
     this.commandMap.put(RhizoCommand.GENERIC_LAYER_SCROLL_DOWN,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, 0, true),
         "Scroll down to next layer"));
     this.commandMap.put(RhizoCommand.GENERIC_LAYER_SCROLL_UP,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_COLON, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_COLON, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_COLON, 0, true),
         "Scroll up to next layer"));
     this.commandMap.put(RhizoCommand.GENERIC_REDO,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_MASK | KeyEvent.SHIFT_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_MASK | KeyEvent.SHIFT_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_MASK | KeyEvent.SHIFT_DOWN_MASK, true),
         "Redo"));
     this.commandMap.put(RhizoCommand.GENERIC_SELECT_ALL_VISIBLE, 
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK, true),
         "Select all visible"));
     this.commandMap.put(RhizoCommand.GENERIC_SELECT_NODE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_G, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_G, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_G, 0, true),
         "Select node"));
     this.commandMap.put(RhizoCommand.GENERIC_TOGGLE_NODE_TAGS_HIDE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK, true),
         "Hide/unhide node tags"));
     this.commandMap.put(RhizoCommand.GENERIC_TOGGLE_TREELINES_ARROWHEAD,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.ALT_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.ALT_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.ALT_DOWN_MASK, true),
         "Hide/unhide treeline arrowheads"));
     this.commandMap.put(RhizoCommand.GENERIC_TOGGLE_TREELINES_CURRENT_LAYER_HIDE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0, true),
         "Hide/unhide all treelines in the current layer"));
     this.commandMap.put(RhizoCommand.GENERIC_TOOL_CONNECTOR,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0, true),
         "Connector tool"));
     this.commandMap.put(RhizoCommand.GENERIC_TOOL_HAND,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F6, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F6, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_F6, 0, true),
         "Hand tool"));
     this.commandMap.put(RhizoCommand.GENERIC_TOOL_LINE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0, true),
         "Line tool"));
     this.commandMap.put(RhizoCommand.GENERIC_TOOL_PEN,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F11, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F11, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_F11, 0, true),
         "Pen tool"));
     this.commandMap.put(RhizoCommand.GENERIC_TOOL_PENCIL,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F10, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F10, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_F10, 0, true),
         "Pencil tool"));
     this.commandMap.put(RhizoCommand.GENERIC_TOOL_SELECT,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0, true),
         "Select tool"));
     this.commandMap.put(RhizoCommand.GENERIC_TOOL_TEXT,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0, true),
         "Text tool"));
     this.commandMap.put(RhizoCommand.GENERIC_TOOL_ZOOM,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0, true),
         "Zoom tool"));
     this.commandMap.put(RhizoCommand.GENERIC_TREELINE_CREATE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_A, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_A, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_A, 0, true),
         "Create new treeline"));
     this.commandMap.put(RhizoCommand.GENERIC_UNDO,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK, true),
         "Undo"));
     this.commandMap.put(RhizoCommand.GENERIC_ZOOM_IN,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_PLUS, 0, true),
         "Zoom in"));
     this.commandMap.put(RhizoCommand.GENERIC_ZOOM_OUT,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, 0, true),
         "Zoom out"));
     this.commandMap.put(RhizoCommand.DISPLAYABLE_ALL_UNHIDE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.ALT_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.ALT_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.ALT_DOWN_MASK, true),
         "Unhide all"));
     this.commandMap.put(RhizoCommand.DISPLAYABLE_DESELECTED_HIDE_EXCEPT_IMAGES,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.ALT_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.ALT_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.ALT_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK, true),
         "Hide deselected except images"));
     this.commandMap.put(RhizoCommand.DISPLAYABLE_DESELECTED_HIDE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.SHIFT_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.SHIFT_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_H, KeyEvent.SHIFT_DOWN_MASK, true),
         "Hide deselected"));
     this.commandMap.put(RhizoCommand.DISPLAYABLE_GOTO_ZSPACE_BOTTOM,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_END, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_END, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_END, 0, true),
         "Move to bottom in Z space or patches panel"));
     this.commandMap.put(RhizoCommand.DISPLAYABLE_GOTO_ZSPACE_DOWN,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0, true),
         "Move down in Z space or patches panel"));
     this.commandMap.put(RhizoCommand.DISPLAYABLE_GOTO_ZSPACE_TOP,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_HOME, 0, true),
         "Move to top in Z space or patches panel"));
     this.commandMap.put(RhizoCommand.DISPLAYABLE_GOTO_ZSPACE_UP,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, KeyEvent.CTRL_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, KeyEvent.CTRL_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, KeyEvent.CTRL_DOWN_MASK, true),
         "Move up in Z space or patches panel"));
     this.commandMap.put(RhizoCommand.DISPLAYABLE_OPEN_ADJUST_CONTRAST,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_J, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_J, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_J, 0, true),
         "Open adjust contrast"));
     this.commandMap.put(RhizoCommand.DISPLAYABLE_OPEN_MEASUREMENT_TABLE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_M, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_M, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_M, 0, true),
         "Open measurement table"));
     this.commandMap.put(RhizoCommand.DISPLAYABLE_SELECTED_DELETE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0, true),
         "Delete selected"));
     this.commandMap.put(RhizoCommand.DISPLAYABLE_SELECTED_HIDE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_H, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_H, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_H, 0, true),
         "Hide selected"));
     this.commandMap.put(RhizoCommand.DISPLAYABLE_TOGGLE_STATUS_LABEL_HIDE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_F, 0, true),
         "Hide/unhide status labels"));
     this.commandMap.put(RhizoCommand.IMAGES_WINDOW_DUPLICATE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_D, KeyEvent.CTRL_DOWN_MASK, true),
         "Open duplicate in Fiji window"));
 //    this.commandMap.put(NODE_ADD_NODE_ON_EDGE, Shift+Click);
 //    this.commandMap.put(NODE_ADJUST_DIAMETER_OF_SUBTREE, Shift + Alt + r + SW)
@@ -290,69 +288,81 @@ public class RhizoShortcutManager {
 //    this.commandMap.put(NODE_DELETE_SUBTREE, Shift + Ctrl + Alt + Click)
 //    this.commandMap.put(NODE_DELETE, Shift + Ctrl + Click)
     this.commandMap.put(RhizoCommand.NODE_GOTO_BASE_NODE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_R, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_R, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_R, 0, true),
         "Go to base node"));
     this.commandMap.put(RhizoCommand.NODE_GOTO_LAST_ADDED_NODE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_L, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_L, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_L, 0, true),
         "Go to last added node"));
     this.commandMap.put(RhizoCommand.NODE_GOTO_LAST_EDITED_NODE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_E, 0, true),
         "Go to last edited node"));
     this.commandMap.put(RhizoCommand.NODE_GOTO_NEXT_NODE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_N, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_N, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_N, 0, true),
         "Go to next branch node or end"));
     this.commandMap.put(RhizoCommand.NODE_GOTO_PREVIOUS_NODE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_B, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_B, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_B, 0, true),
         "Go to previous branch node or start"));
     this.commandMap.put(RhizoCommand.NODE_OPEN_DIAMETER_ADJUSTMENT,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_O, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_O, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_O, 0, true),
         "Open diameter adjustment"));
     this.commandMap.put(RhizoCommand.NODE_PROPAGATE_RADII_TO_NEXT_LAYER,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_P, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_P, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_P, 0, true),
         "Propagate node radii of treeline to connected treeline in next layer"));
     this.commandMap.put(RhizoCommand.NODE_TAG_ADD,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_T, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_T, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_T, 0, true),
         "Add tag to node"));
     this.commandMap.put(RhizoCommand.NODE_TAG_REMOVE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.SHIFT_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.SHIFT_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.SHIFT_DOWN_MASK, true),
         "Remove tag from node"));
     this.commandMap.put(RhizoCommand.NODE_TREELINE_REROOT,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_D, 0, true),
         "Reroot the treeline"));
     this.commandMap.put(RhizoCommand.FULLGUI_IMAGE_IMPORT_NEXT,
-      new RhizoCommandConfig(  KeyStroke.getKeyStroke(KeyEvent.VK_I, KeyEvent.ALT_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_I, KeyEvent.ALT_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_I, KeyEvent.ALT_DOWN_MASK, true),
         "Import next image in image directory into current layer"));
     this.commandMap.put(RhizoCommand.FULLGUI_IMAGE_IMPORT,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_I, KeyEvent.ALT_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_I, KeyEvent.ALT_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_I, KeyEvent.ALT_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK, true),
         "Import image into current layer"));
     this.commandMap.put(RhizoCommand.FULLGUI_OPEN_COLOR_ADJUSTMENT,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.SHIFT_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.SHIFT_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.SHIFT_DOWN_MASK, true),
         "Open color adjustment"));
     this.commandMap.put(RhizoCommand.FULLGUI_SEARCH,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK, true),
         "Search"));
     this.commandMap.put(RhizoCommand.FULLGUI_TRANSFORM_APPLY,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, true),
         "Apply transformation (in transform mode)"));
     this.commandMap.put(RhizoCommand.FULLGUI_TRANSFORM_CANCEL,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0, true),
         "Cancel transformation (in transform mode)"));
     this.commandMap.put(RhizoCommand.FULLGUI_TRANSFORM_ENTER_NODE_AFFINE,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_T, 0, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_T, 0, true), KeyStroke.getKeyStroke(KeyEvent.VK_T, 0, true),
         "Enter affine transform mode"));
     this.commandMap.put(RhizoCommand.FULLGUI_TRANSFORM_ENTER_NODE_NONLINEAR,
-      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.SHIFT_DOWN_MASK, true),
+      new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.SHIFT_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_T, KeyEvent.SHIFT_DOWN_MASK, true),
         "Enter non-linear transform mode"));
+  }
+  
+  // todo: currently KeyStrokes don't have to be unique for one RhizoCommand
+  public static synchronized RhizoCommand getRhizoCommandFromShortcut(KeyStroke keyStroke) {
+    for(RhizoCommand rhizoCommand: getInstance().commandMap.keySet()) {
+      if(doesCommandMatchStroke(rhizoCommand, keyStroke)) return rhizoCommand;
+    }
+    return null;
+  }
+  
+  public static synchronized KeyStroke getOriginalShortcut(RhizoCommand rc) {
+    return getInstance().commandMap.get(rc).getOriginalKeyStroke();
   }
 
   public static synchronized KeyStroke getShortcut(RhizoCommand rc) {
-    return getInstance().commandMap.get(rc).getStroke();    
+    return getInstance().commandMap.get(rc).getCurrentKeyStroke();    
   }
 
   public static synchronized void setShortcut(RhizoCommand rc, KeyStroke ks){
     RhizoShortcutManager rsm = getInstance();
     RhizoCommandConfig rcc =  rsm.commandMap.get(rc);
-    rcc.setStroke(ks);
+    rcc.setCurrentKeyStroke(ks);
   }
 
   public static synchronized String getDescriptorString(RhizoCommand rc) {
@@ -372,30 +382,45 @@ public class RhizoShortcutManager {
   public static synchronized boolean doesCommandMatchStroke(RhizoCommand rc, KeyStroke ks) {
     if (getInstance().commandMap.get(rc) == null)
       return false;
-    return getInstance().commandMap.get(rc).getStroke().equals(ks);
+    return getInstance().commandMap.get(rc).getCurrentKeyStroke().equals(ks);
   }
 
   public static synchronized ArrayList<RhizoCommand> getCommands(){
     return new ArrayList<RhizoCommand>(getInstance().commandMap.keySet());
   }
+  
+  public static KeyEvent transformKeyEvent(KeyEvent keyEvent) {
+    KeyStroke keyStroke = KeyStroke.getKeyStroke(keyEvent.getKeyChar(), keyEvent.getModifiers(), true);
+    
+    RhizoCommand rhizoCommand = getRhizoCommandFromShortcut(keyStroke); // what action is the keyStroke supposed to to do currently
+    KeyStroke currentKeyStroke = null == rhizoCommand ? keyStroke : getOriginalShortcut(rhizoCommand); // what was the original shortcut for that action
+
+    return new KeyEvent(keyEvent.getComponent(), keyEvent.getID(), keyEvent.getWhen(), currentKeyStroke.getModifiers(), currentKeyStroke.getKeyCode(), currentKeyStroke.getKeyChar());
+  }
 
   private class RhizoCommandConfig {
 
-    private KeyStroke ks;
+    private KeyStroke originalKeyStroke;
+    private KeyStroke currentKeyStroke;
 
     private String description;
 
-    public RhizoCommandConfig(KeyStroke k, String d) {
-      this.ks = k;
+    public RhizoCommandConfig(KeyStroke original, KeyStroke k, String d) {
+      this.originalKeyStroke = original;
+      this.currentKeyStroke = k;
       this.description = d;
     }
-
-    public KeyStroke getStroke() {
-      return this.ks;
+    
+    public KeyStroke getOriginalKeyStroke() {
+      return this.originalKeyStroke;
     }
 
-    public void setStroke(KeyStroke ks){
-      this.ks = ks;
+    public KeyStroke getCurrentKeyStroke() {
+      return this.currentKeyStroke;
+    }
+
+    public void setCurrentKeyStroke(KeyStroke keyStroke){
+      this.currentKeyStroke = keyStroke;
     }
 
     public String getDescription() {
