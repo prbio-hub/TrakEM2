@@ -351,6 +351,13 @@ public class RhizoShortcutManager {
     return null;
   }
   
+  public static synchronized RhizoCommand getRhizoCommandFromOriginalShortcut(KeyStroke keyStroke) {
+    for(RhizoCommand rhizoCommand: getInstance().commandMap.keySet()) {
+      if(getInstance().commandMap.get(rhizoCommand).getOriginalKeyStroke().equals(keyStroke)) return rhizoCommand;
+    }
+    return null;
+  }
+  
   public static synchronized KeyStroke getOriginalShortcut(RhizoCommand rc) {
     return getInstance().commandMap.get(rc).getOriginalKeyStroke();
   }
@@ -390,12 +397,16 @@ public class RhizoShortcutManager {
   }
   
   public static KeyEvent transformKeyEvent(KeyEvent keyEvent) {
-    KeyStroke keyStroke = KeyStroke.getKeyStroke(keyEvent.getKeyChar(), keyEvent.getModifiers(), true);
+    KeyStroke keyStroke = KeyStroke.getKeyStroke(keyEvent.getKeyCode(), keyEvent.getModifiers(), true);
     
-    RhizoCommand rhizoCommand = getRhizoCommandFromShortcut(keyStroke); // what action is the keyStroke supposed to to do currently
-    KeyStroke currentKeyStroke = null == rhizoCommand ? keyStroke : getOriginalShortcut(rhizoCommand); // what was the original shortcut for that action
-
-    return new KeyEvent(keyEvent.getComponent(), keyEvent.getID(), keyEvent.getWhen(), currentKeyStroke.getModifiers(), currentKeyStroke.getKeyCode(), currentKeyStroke.getKeyChar());
+    RhizoCommand originalRhizoCommand = getRhizoCommandFromOriginalShortcut(keyStroke); // what action is the keyStroke supposed to to do originally
+    RhizoCommand currentRhizoCommand = getRhizoCommandFromShortcut(keyStroke); // what action is the keyStroke supposed to to do currently
+    KeyStroke currentKeyStroke = null == currentRhizoCommand ? keyStroke : getOriginalShortcut(currentRhizoCommand); // what was the original shortcut for that action
+    
+    KeyEvent modifiedKeyEvent = (null == currentRhizoCommand && null != originalRhizoCommand) ? null : // Key is currently unassigned but used to be a shortcut
+            new KeyEvent(keyEvent.getComponent(), keyEvent.getID(), keyEvent.getWhen(), currentKeyStroke.getModifiers(), currentKeyStroke.getKeyCode(), currentKeyStroke.getKeyChar());
+    
+    return modifiedKeyEvent;
   }
 
   private class RhizoCommandConfig {
