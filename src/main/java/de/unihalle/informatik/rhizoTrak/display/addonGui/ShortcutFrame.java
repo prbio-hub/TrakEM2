@@ -102,7 +102,7 @@ public class ShortcutFrame extends JFrame {
         String key = KeyEvent.getKeyText(e.getKeyCode());
         getInstance().tableModel.setValueAt(mod + " " + key, getInstance().row, getInstance().col);
         RhizoCommand current_command = getInstance().command_list.get(getInstance().row);
-        KeyStroke current_key_stroke = KeyStroke.getKeyStroke(e.getKeyCode(), e.getModifiers());
+        KeyStroke current_key_stroke = KeyStroke.getKeyStroke(e.getKeyCode(), e.getModifiers(),true);
         RhizoShortcutManager.setShortcut(current_command, current_key_stroke);
     }
 
