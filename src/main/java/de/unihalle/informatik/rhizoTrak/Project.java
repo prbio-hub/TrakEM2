@@ -576,7 +576,8 @@ public class Project extends DBObject {
 				fileChooser.setFileFilter(filter);
 				fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				fileChooser.setDialogTitle("Name and location of new project");
-				int returnVal = fileChooser.showOpenDialog(null);
+				//int returnVal = fileChooser.showOpenDialog(null);
+				int returnVal = fileChooser.showSaveDialog(null);
 
 				if (returnVal != JFileChooser.APPROVE_OPTION)
 					return null; // user cancelled dialog
