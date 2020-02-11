@@ -60,12 +60,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import javax.swing.*;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.display.addonGui.RhizoShortcutManager;
 import de.unihalle.informatik.rhizoTrak.xsd.config.Config;
 import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings;
 import de.unihalle.informatik.rhizoTrak.xsd.config.Config.StatusList.Status;
@@ -77,6 +79,8 @@ import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProject;
 import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProject.*;
 import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProject.ConnectorLinksList.ConnectorLink;
 import de.unihalle.informatik.rhizoTrak.xsd.config.RhizoTrakProjectConfig;
+import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.ShortCutHashMap;
+import de.unihalle.informatik.rhizoTrak.xsd.config.GlobalSettings.ShortCutHashMap.ShortCutMapping;
 import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
@@ -85,6 +89,7 @@ import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
+import org.python.modules._systemrestart;
 
 public class RhizoIO {
 	public static final String RHIZOTRAK_PROJECTFILE_EXTENSION = "rtk";
@@ -172,6 +177,8 @@ public class RhizoIO {
 			Unmarshaller um = context.createUnmarshaller();
 
 			GlobalSettings gs = (GlobalSettings) um.unmarshal(userSettingsFile);
+
+			// get global status list
 			for ( GlobalStatus status : gs.getGlobalStatusList().getGlobalStatus() ) {
 				// we have no abbreviation in user settings, however only status labels in project.cfg will be used
 				String abbrev;
@@ -189,14 +196,16 @@ public class RhizoIO {
 						new Color( status.getRed().intValue(), status.getGreen().intValue(), status.getBlue().intValue()),
 								status.getAlpha().intValue(), status.isSelectable());
 			}
-			
+
+			// get color for high lighting
 			if(null != gs.getHighlightcolorList() || null != gs.getHighlightcolorList().getColor() ) {
 				if ( gs.getHighlightcolorList().getColor().size() > 0)
 					rhizoMain.getProjectConfig().setHighlightColor1(settingsToColor( gs.getHighlightcolorList().getColor().get( 0) ));
 				if ( gs.getHighlightcolorList().getColor().size() > 1)
 					rhizoMain.getProjectConfig().setHighlightColor2(settingsToColor( gs.getHighlightcolorList().getColor().get( 1) ));
 			}
-			
+
+			// get color for receiver node
 			if ( null != gs.getReceiverNodeColor() ) {
 				rhizoMain.getProjectConfig().setReceiverNodeColor(
 						new Color( gs.getReceiverNodeColor().getRed().intValue(), 
@@ -206,7 +215,24 @@ public class RhizoIO {
 				// set the default color from Node
 				rhizoMain.getProjectConfig().setReceiverNodeColor( Node.getReceiverColor());
 			}
-		
+
+			// get short cut mapping
+			if ( gs.getShortCutHashMap() != null ) {
+				for (ShortCutMapping shortCutMapping : gs.getShortCutHashMap().getShortCutMapping()) {
+					// try catch in case there are invalid mappings
+					try {
+						RhizoShortcutManager.RhizoCommand cmd = RhizoShortcutManager.RhizoCommand.valueOf(shortCutMapping.getKey());
+						KeyStroke ks = KeyStroke.getKeyStroke(shortCutMapping.getValue());
+
+						RhizoShortcutManager.setShortcut(cmd, ks);
+					} catch (Exception ex) {
+						Utils.showMessage( "Warning: loading user settings found invalid short cut map " +
+								shortCutMapping.getKey() + " --> " + shortCutMapping.getValue());
+					}
+				}
+			}
+
+			// get various flags
 			if ( gs.getAskMergeTreelines() != null)
 				rhizoMain.getProjectConfig().setAskMergeTreelines( gs.getAskMergeTreelines());
 			if ( gs.getAskSplitTreeline() != null)
@@ -744,11 +770,22 @@ public class RhizoIO {
 	        receiverColor.setGreen(BigInteger.valueOf( rhizoMain.getProjectConfig().getReceiverNodeColor().getGreen()));
 	        receiverColor.setBlue(BigInteger.valueOf( rhizoMain.getProjectConfig().getReceiverNodeColor().getBlue()));
 
+	        // short cut mapping
+			ShortCutHashMap schm = new ShortCutHashMap();
+			for ( RhizoShortcutManager.RhizoCommand cmd : RhizoShortcutManager.getCommands()) {
+				ShortCutMapping scm = new ShortCutMapping();
+				scm.setKey( cmd.name());
+				scm.setValue( RhizoShortcutManager.getShortcut( cmd).toString());
+
+				schm.getShortCutMapping().add( scm);
+			}
+
 	        // compile the parts of global settings
 	        GlobalSettings gs = new GlobalSettings();
 	        gs.setGlobalStatusList(gsl);
 	        gs.setHighlightcolorList(hlc);
 	        gs.setReceiverNodeColor(receiverColor);
+	        gs.setShortCutHashMap( schm);
 	        gs.setAskMergeTreelines( rhizoMain.getProjectConfig().isAskMergeTreelines());
 	        gs.setAskSplitTreeline( rhizoMain.getProjectConfig().isAskSplitTreeline());
 	        gs.setFullGUI( rhizoMain.getProjectConfig().isFullGUI());
