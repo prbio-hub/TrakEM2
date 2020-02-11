@@ -2060,7 +2060,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 					Display.repaint(display.getLayer(), display.getSelection().getBox(), 0);
 					ke.consume();
 					break; // INSIDE the 'if' block, so that it can bleed to the default block which forwards to active!
-				} else if((active != null && active instanceof Tree) || active == null ) { //actyc short-cut to add new treline
+				} else if((active != null && (active instanceof Tree || active instanceof Patch)) || active == null ) { //actyc short-cut to add new treline
 					
 						if(addTreelineEnabled.compareAndSet(true, false)) RhizoAddons.newTreelineShortcut();
 				} else if (null != active) {

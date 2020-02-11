@@ -54,13 +54,16 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <trakem2-transform.version>1.0.1</trakem2-transform.version>
     <!-- MiToBo dependencies -->
-    <mitobo.xml.version>2.8</mitobo.xml.version>
+    <mitobo.xml.version>2.9</mitobo.xml.version>
   </properties>
 
   <mailingLists>
     <mailingList>
       <name>Image.sc Forum</name>
       <archive>https://forum.image.sc/</archive>
+      <!-- once the rhizoTrak tag has been used the first time, we can use this link:
+	   <archive>https://forum.image.sc/tags/rhizoTrak</archive>
+	   -->
     </mailingList>
   </mailingLists>
 
@@ -336,13 +339,19 @@
   <repositories>
     <!-- NB: for project parent -->
     <repository>
-      <id>imagej.public</id>
-      <url>http://maven.imagej.net/content/groups/public</url>
+      <id>scijava.public</id>
+      <url>https://maven.scijava.org/content/groups/public</url>
     </repository>
     <repository>
       <id>snapshots-pub</id>
       <name>Archiva Public Snapshot Repository on 'moon'</name>
       <url>https://moon.informatik.uni-halle.de/archiva/repository/snapshots-pub/</url>
+      <layout>default</layout>
+    </repository>
+    <repository>
+      <id>snapshots</id>
+      <name>Archiva Public Snapshot Repository on 'moon'</name>
+      <url>https://moon.informatik.uni-halle.de/archiva/repository/snapshots/</url>
       <layout>default</layout>
     </repository>
     <repository>
@@ -358,8 +367,8 @@
     <dependencies>
       <dependency>
 	<groupId>sc.fiji</groupId>
-	<artifactId>pom-trakem2</artifactId>
-	<version>2.0.2-SNAPSHOT</version>
+	<artifactId>TrakEM2_</artifactId>
+	<version>1.3.2</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -367,6 +376,20 @@
   </dependencyManagement>
 
   <dependencies>
+
+    <!-- API, java.xml.bind module -->
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>2.3.2</version>
+    </dependency>
+    <!-- Runtime, com.sun.xml.bind module -->
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>2.3.2</version>
+    </dependency>
+    
     <dependency>
       <groupId>gov.nist.math</groupId>
       <artifactId>jama</artifactId>
@@ -500,6 +523,20 @@
       <version>${mitobo.dep.version}</version>
     </dependency>
 
+    <!-- API, java.xml.bind module -->
+    <dependency>
+      <groupId>jakarta.xml.bind</groupId>
+      <artifactId>jakarta.xml.bind-api</artifactId>
+      <version>2.3.2</version>
+    </dependency>
+
+    <!-- Runtime, com.sun.xml.bind module -->
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>2.3.2</version>
+    </dependency>
+
   </dependencies>
 
   <profiles>
@@ -520,7 +557,7 @@
       </activation>
       <properties>
         <mitobo.dep>mitobo</mitobo.dep>
-        <mitobo.dep.version>1.8.14</mitobo.dep.version>
+        <mitobo.dep.version>1.8.15</mitobo.dep.version>
       </properties>
     </profile>
   </profiles>

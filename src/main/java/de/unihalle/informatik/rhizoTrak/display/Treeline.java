@@ -77,6 +77,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.scijava.input.KeyCode;
 import org.scijava.java3d.Transform3D;
 import org.scijava.vecmath.AxisAngle4f;
 import org.scijava.vecmath.Color3f;
@@ -86,6 +87,7 @@ import org.scijava.vecmath.Vector3f;
 
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.M;
 import de.unihalle.informatik.rhizoTrak.utils.ProjectToolbar;
@@ -97,6 +99,7 @@ import ij.measure.ResultsTable;
 public class Treeline extends Tree<Float> {
 
 	static protected float last_radius = -1;
+	KeyEvent currentKeyEvent = null;
 
 	public Treeline(final Project project, final String title) {
 		super(project, title);
@@ -197,6 +200,10 @@ public class Treeline extends Tree<Float> {
 			final Node<Float> nd = getActive();
 			final float r = (float)Math.sqrt(Math.pow(xd - nd.x, 2) + Math.pow(yd - nd.y, 2));
 			nd.setData(r);
+			if(this.currentKeyEvent!=null && this.currentKeyEvent.getKeyCode() == KeyEvent.VK_R) {
+				adjustSubTreeRadius(nd);
+				this.currentKeyEvent=null;
+			}
 			last_radius = r;
 			repaint(true, la);
 			return;
@@ -219,10 +226,12 @@ public class Treeline extends Tree<Float> {
 	@Override
 	public void mouseWheelMoved(final MouseWheelEvent mwe) {
 		final int modifiers = mwe.getModifiers();
-		
 		/**
 		 * aeekz
 		 * Shift + Alt = 9
+		 * actyc
+		 * shift + alt > radius
+		 * shift + alt + r > radius subtree
 		 */
 		if (modifiers == 9) {
 			final Object source = mwe.getSource();
@@ -236,11 +245,22 @@ public class Treeline extends Tree<Float> {
 			final float y = ((mwe.getY() / magnification) + srcRect.y);
 
 			final float inc = (rotation > 0 ? 1 : -1) * (1/magnification);
-			if (null != adjustNodeRadius(inc, x, y, la, dc)) {
-				Display.repaint(this);
-				mwe.consume();
-				return;
+			if(this.currentKeyEvent!=null && this.currentKeyEvent.getKeyCode() == KeyEvent.VK_R) {
+				if (null != adjustSubTreeRadius(inc, x, y, la, dc)) {
+					Display.repaint(this);
+					mwe.consume();
+					this.currentKeyEvent=null;
+					return;
+				}
+				this.currentKeyEvent=null;
+			} else {
+				if (null != adjustNodeRadius(inc, x, y, la, dc)) {
+					Display.repaint(this);
+					mwe.consume();
+					return;
+				}
 			}
+
 		}
 		/**
 		 * aeekz
@@ -275,8 +295,10 @@ public class Treeline extends Tree<Float> {
 			return null;
 		}
 		
+		nearest.setConfidence((byte) (nearest.getConfidence() + inc));
+		
 		for(final Node<Float> node: new Node.NodeCollection<Float>(nearest, Node.BreadthFirstSubtreeIterator.class)) {
-			node.setConfidence((byte) (node.getConfidence() +  inc));
+			node.setConfidence(nearest.getConfidence());
 		}
 		
 		project.getRhizoMain().getRhizoColVis().applyCorrespondingColor();
@@ -292,6 +314,25 @@ public class Treeline extends Tree<Float> {
 		}
 		nearest.setData(nearest.getData() + inc);
 		return nearest;
+	}
+	
+	protected Node<Float> adjustSubTreeRadius(final float inc, final float x, final float y, final Layer layer, final DisplayCanvas dc) {
+		final Node<Float> nearest = findNodeNear(x, y, layer, dc);
+		if (null == nearest) {
+			Utils.log("Can't adjust radius: found more than 1 node within visible area!");
+			return null;
+		}
+		nearest.setData(nearest.getData() + inc);
+		for(final Node<Float> node: new Node.NodeCollection<Float>(nearest, Node.BreadthFirstSubtreeIterator.class)) {
+			node.setData(nearest.getData());
+		}
+		return nearest;
+	}
+	
+	protected void adjustSubTreeRadius(Node<Float> node) {
+		for(final Node<Float> current_node: new Node.NodeCollection<Float>(node, Node.BreadthFirstSubtreeIterator.class)) {
+			current_node.setData(node.getData());
+		}
 	}
 
 	static public class RadiusNode extends Node<Float> {
@@ -1010,10 +1051,20 @@ public class Treeline extends Tree<Float> {
 
 	@Override
 	public void keyPressed(final KeyEvent ke) {
+		this.currentKeyEvent = ke;
 		if (isTagging()) {
 			super.keyPressed(ke);
 			return;
 		}
+		
+		// key 'p' propagates radii of treeline nodes to connected treeline 
+		// in subsequent layer, if existing 
+		if (ke.getKeyCode() == KeyEvent.VK_P) {
+			Display display = Display.getFront();
+			display.propagateRadiiToNextLayer(this);
+			return;
+		}
+		
 		final int tool = ProjectToolbar.getToolId();
 		try {
 			if (ProjectToolbar.PEN == tool) {
@@ -1039,6 +1090,11 @@ public class Treeline extends Tree<Float> {
 				super.keyPressed(ke);
 			}
 		}
+	}
+	
+	@Override
+	public void keyReleased(final KeyEvent ke) {
+		this.currentKeyEvent = null;
 	}
 
 	private boolean askAdjustRadius(final float x, final float y, final Layer layer, final double magnification) {
