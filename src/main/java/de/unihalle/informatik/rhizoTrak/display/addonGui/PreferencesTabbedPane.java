@@ -78,6 +78,7 @@ import javax.swing.JSeparator;
 import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
@@ -789,13 +790,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 			} else if ( actionCommand.equals( DEBUG_OUPUT)) {
 				Utils.rhizoTrakDebug = source.isSelected();
 				if(Utils.rhizoTrakDebug) Utils.log("Logs enabled.");
-			} else if ( actionCommand.equals(OPEN_SHORTCUT_MANAGER)) {
-				Utils.log("open shortcut manager");
-				ShortcutFrame shortcutFrame = ShortcutFrame.getInstance();
-				if(!shortcutFrame.isVisible()){
-					shortcutFrame.setVisible(true);
-				}
-			} else {
+			}  else {
 				Utils.showMessage( "rhizoTrak", "PrefrencesTabbedPane.configCheckAction: internal error, unkonwn actionCommand " + actionCommand);
 			}
 		}
@@ -807,12 +802,14 @@ public class PreferencesTabbedPane extends JTabbedPane
 	Action buttonAction = new AbstractAction( "buttonAction") {
 
 		public void actionPerformed(ActionEvent e) {
-			//JButton source = (JButton) e.getSource();
+			JButton source = (JButton) e.getSource();
+			PreferencesTabbedPane currentTabbedPane = (PreferencesTabbedPane) SwingUtilities.getAncestorOfClass(PreferencesTabbedPane.class, source);
 			String actionCommand = e.getActionCommand();
 
 			if ( actionCommand.equals(OPEN_SHORTCUT_MANAGER)) {
 				Utils.log("open shortcut manager");
 				ShortcutFrame shortcutFrame = ShortcutFrame.getInstance();
+				shortcutFrame.setRhizoMain(currentTabbedPane.rhizoMain);
 				if(!shortcutFrame.isVisible()){
 					shortcutFrame.setVisible(true);
 				}
