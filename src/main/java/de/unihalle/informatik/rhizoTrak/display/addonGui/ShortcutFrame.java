@@ -63,6 +63,7 @@ import javax.swing.KeyStroke;
 import javax.swing.event.MouseInputAdapter;
 import javax.swing.table.DefaultTableModel;
 
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.RhizoShortcutManager.RhizoCommand;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
@@ -73,6 +74,7 @@ public class ShortcutFrame extends JFrame {
 
     private int row=0;
     private int col=0;
+    private RhizoMain rhizoMain = null;
     JTable table=null;
     DefaultTableModel tableModel=null;
     KeyEvent last_key_event = null;
@@ -87,8 +89,8 @@ public class ShortcutFrame extends JFrame {
 
     private ShortcutFrame() {
         this.setSize(420, 480);
-        this.setVisible(true);
         makeTable();
+        this.setVisible(true);
     }
 
     public static void setActivePair(int row, int col){
@@ -98,12 +100,32 @@ public class ShortcutFrame extends JFrame {
 
     public static void changeShortcut(){
         KeyEvent e = getInstance().last_key_event;
-        String mod = KeyEvent.getKeyModifiersText(e.getModifiers());
-        String key = KeyEvent.getKeyText(e.getKeyCode());
-        getInstance().tableModel.setValueAt(mod + " " + key, getInstance().row, getInstance().col);
-        RhizoCommand current_command = getInstance().command_list.get(getInstance().row);
         KeyStroke current_key_stroke = KeyStroke.getKeyStroke(e.getKeyCode(), e.getModifiers(),true);
-        RhizoShortcutManager.setShortcut(current_command, current_key_stroke);
+        RhizoCommand current_command = getInstance().command_list.get(getInstance().row);
+        Utils.log("new short cut "+ current_key_stroke.toString());
+        if(ShortcutFrame.is_duplicated(current_key_stroke,current_command)){
+            //duplicates are forbidden
+            Utils.log("is duplicate");
+            Utils.showMessage("shortcut already assigned");
+        } else {
+            Utils.log("is not duplicate");
+            String mod = KeyEvent.getKeyModifiersText(e.getModifiers());
+            String key = KeyEvent.getKeyText(e.getKeyCode());
+            getInstance().tableModel.setValueAt(mod + " " + key, getInstance().row, getInstance().col);
+            if(getInstance().rhizoMain!=null){
+                getInstance().rhizoMain.getProjectConfig().setUserSettingsChanged();
+            }
+            RhizoShortcutManager.setShortcut(current_command, current_key_stroke);
+        }
+        
+    }
+
+    private static boolean is_duplicated(KeyStroke input,RhizoCommand currentCommand){
+        RhizoCommand input_command = RhizoShortcutManager.getRhizoCommandFromShortcut(input);
+        if(input_command!=null && input_command!=currentCommand){
+            return true;
+        }
+        return false;
     }
 
     public static  void addKeys(KeyEvent e){
@@ -174,7 +196,9 @@ public class ShortcutFrame extends JFrame {
                     key_press_dialog.setSize(200, 100);
                     key_press_dialog.setModalityType(ModalityType.APPLICATION_MODAL);
                     key_press_dialog.addKeyListener(key_listener);
+                    key_press_dialog.setLocationRelativeTo(ShortcutFrame.getInstance());
                     key_press_dialog.setVisible(true);
+                    
                 }
             }
         });
@@ -199,6 +223,14 @@ public class ShortcutFrame extends JFrame {
         }
 
         
+    }
+
+    public RhizoMain getRhizoMain() {
+        return rhizoMain;
+    }
+
+    public void setRhizoMain(RhizoMain rhizoMain) {
+        this.rhizoMain = rhizoMain;
     }
   
 
