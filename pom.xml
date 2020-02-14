@@ -557,7 +557,7 @@
       </activation>
       <properties>
         <mitobo.dep>mitobo</mitobo.dep>
-        <mitobo.dep.version>1.8.15</mitobo.dep.version>
+        <mitobo.dep.version>1.8.16</mitobo.dep.version>
       </properties>
     </profile>
   </profiles>
