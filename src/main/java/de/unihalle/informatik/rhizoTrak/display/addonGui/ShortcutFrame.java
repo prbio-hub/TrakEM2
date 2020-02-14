@@ -66,6 +66,7 @@ import javax.swing.table.DefaultTableModel;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.RhizoShortcutManager.RhizoCommand;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
+import javafx.scene.input.KeyCode;
 
 @SuppressWarnings("serial")
 public class ShortcutFrame extends JFrame {
@@ -119,6 +120,15 @@ public class ShortcutFrame extends JFrame {
         }
         
     }
+    
+    private static boolean keyPressedIsModifier(KeyEvent e){
+        if(e.getKeyCode() == KeyEvent.VK_SHIFT ||
+            e.getKeyCode() == KeyEvent.VK_ALT ||
+            e.getKeyCode() == KeyEvent.VK_CONTROL || 
+            e.getKeyCode() == KeyEvent.VK_ALT_GRAPH) return true;
+        
+        return false;
+    }
 
     private static boolean is_duplicated(KeyStroke input,RhizoCommand currentCommand){
         RhizoCommand input_command = RhizoShortcutManager.getRhizoCommandFromShortcut(input);
@@ -170,14 +180,16 @@ public class ShortcutFrame extends JFrame {
 
             @Override
             public void keyPressed(java.awt.event.KeyEvent e) {
-                    ShortcutFrame.addKeys(e);
+                    if(!keyPressedIsModifier(e)) ShortcutFrame.addKeys(e);
             }
 
             @Override
             public void keyReleased(java.awt.event.KeyEvent e) {
-                ShortcutFrame.changeShortcut();
-                JDialog dialog = (JDialog) e.getSource();
-                dialog.setVisible(false);
+                if(!keyPressedIsModifier(e)){
+                    ShortcutFrame.changeShortcut();
+                    JDialog dialog = (JDialog) e.getSource();
+                    dialog.setVisible(false); 
+                }
             }
 
         };
@@ -233,7 +245,7 @@ public class ShortcutFrame extends JFrame {
         this.rhizoMain = rhizoMain;
     }
   
-
+    
     
 }
 
