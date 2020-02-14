@@ -109,7 +109,7 @@ public class ShortcutFrame extends JFrame {
             Utils.showMessage("shortcut already assigned");
         } else {
             Utils.log("is not duplicate");
-            String mod = KeyEvent.getKeyModifiersText(e.getModifiers());
+            String mod = KeyEvent.getKeyModifiersText(current_key_stroke.getModifiers());
             String key = KeyEvent.getKeyText(e.getKeyCode());
             getInstance().tableModel.setValueAt(mod + " " + key, getInstance().row, getInstance().col);
             if(getInstance().rhizoMain!=null){
