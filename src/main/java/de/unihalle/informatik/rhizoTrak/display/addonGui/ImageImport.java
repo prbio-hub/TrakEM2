@@ -50,7 +50,6 @@
 package de.unihalle.informatik.rhizoTrak.display.addonGui;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
@@ -62,6 +61,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.DefaultListModel;
@@ -154,7 +154,9 @@ public class ImageImport extends JPanel {
 						
 						if (indices.length == 0) return;
 						
-						for(int index: indices) listModel.remove( index );
+						
+						for(int i = indices[indices.length - 1]; i >= indices[0]; i--) listModel.remove(i);
+						jImageNameList.clearSelection();
 					}
 				} );
 		jButtonClearSelection.setText("Clear");
@@ -170,7 +172,7 @@ public class ImageImport extends JPanel {
 
 		jPanelFilenames = new JPanel();
 		jPanelFilenames.setLayout( new BorderLayout());
-		jPanelFilenames.add(jScrollPane1, BorderLayout.NORTH);
+		jPanelFilenames.add(jScrollPane1, BorderLayout.CENTER);
 		jPanelFilenames.add( jPanelRemoveClear, BorderLayout.SOUTH);
 		
 		jButtonSelectImage.setText("Select Images");
@@ -423,69 +425,136 @@ public class ImageImport extends JPanel {
 	}
 }
 
-class ListTransferHandler extends TransferHandler
+class ListTransferHandler extends StringTransferHandler
 {
-	private int selectedindex = -1;
-
-	public boolean canImport(TransferHandler.TransferSupport support)
+	private int[] indices = null;
+	private int addIndex = -1;
+	private int addCount = 0;
+	
+	@Override
+	protected String exportString(JComponent c)
 	{
-		return support.isDataFlavorSupported(DataFlavor.stringFlavor);
+		Utils.log("@exportString");
+		JList list = (JList) c;
+		indices = list.getSelectedIndices();
+		List<String> values = list.getSelectedValuesList();
+		
+		StringBuffer buffer = new StringBuffer();
+		for(int i = 0; i < values.size(); i++)
+		{
+			buffer.append(null == values.get(i) ? "" : values.get(i));
+			if(i != values.size() - 1) buffer.append("\n");
+		}
+		
+		return buffer.toString();
 	}
-
-	protected Transferable createTransferable(JComponent comp)
+	
+	@Override
+	protected void importString(JComponent c, String s)
 	{
-		JList<String> list = (JList<String>) comp;
-		selectedindex = list.getSelectedIndex();
-		String value = list.getSelectedValue();
-		return new StringSelection(value);
-	}
+		Utils.log("@importString");
+		JList list = (JList) c;
+		DefaultListModel listModel = (DefaultListModel) list.getModel();
+		int index = list.getDropLocation().getIndex();
+		Utils.log("huhu1");
+		Utils.log(Arrays.toString(indices));
+		Utils.log("index " + index);
+		Utils.log("are you nuts" + (indices[0] - 1));
+		if(null != indices && index > indices[0] - 1 && index <= indices[indices.length - 1])
+		{
+			indices = null;
+			return;
+		}
+		Utils.log("huhu2");
+		
+		int max = listModel.getSize();
+		if(index < 0 || index > max) index = max;
 
+		Utils.log("huhu3" + " " + index);
+		Utils.log("\n" + s);
+		
+		addIndex = index;
+		String[] values = s.split("\n");
+		addCount = values.length;
+		for(int i = values.length - 1; i >= 0 ; i--)
+		{
+			listModel.add(index, values[i]);
+		}
+	}
+	
+	@Override
+	protected void cleanup(JComponent c, boolean remove)
+	{		
+		Utils.log("@cleanup");
+		
+		if(remove && null != indices)
+		{
+			JList list = (JList) c;
+			DefaultListModel listModel = (DefaultListModel) list.getModel();
+			
+			if(addCount > 0)
+			{
+				for(int i = 0; i < indices.length; i++)
+				{
+					if(indices[i] > addIndex) indices[i] += addCount;
+				}
+			}
+			
+			for(int i = indices.length - 1; i >= 0; i--)
+			{
+				listModel.remove(indices[i]);
+			}
+		}
+	}
+}
+
+abstract class StringTransferHandler extends TransferHandler
+{
+	protected abstract String exportString(JComponent c);
+	protected abstract void importString(JComponent c, String str);
+	protected abstract void cleanup(JComponent c, boolean remove);
+	
+	protected Transferable createTransferable(JComponent c)
+	{
+		return new StringSelection((exportString(c)));
+	}
+	
 	public int getSourceActions(JComponent c)
 	{
-		return TransferHandler.MOVE;
+		return MOVE;
 	}
-
-	public boolean importData(TransferHandler.TransferSupport support)
+	
+	public boolean importData(JComponent c, Transferable t)
 	{
-		if (!support.isDrop())
+		if(canImport(c, t.getTransferDataFlavors()))
 		{
-			return false;
+			try
+			{
+				String s = (String) t.getTransferData(DataFlavor.stringFlavor);
+				importString(c, s);
+				return true;
+			}
+			catch(UnsupportedFlavorException | IOException e)
+			{
+				e.printStackTrace();
+			}
 		}
-		JList<String> list = (JList<String>) support.getComponent();
-		DefaultListModel<String> listModel = (DefaultListModel<String>) list.getModel();
-		JList.DropLocation dl = list.getDropLocation();
 		
-		int index = dl.getIndex();
-		
-		// string that dropped
-		Transferable t = support.getTransferable();
-		String data;
-		try
-		{
-			data = (String) t.getTransferData(DataFlavor.stringFlavor);
-		} catch (UnsupportedFlavorException | IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		}
-
-		listModel.insertElementAt(data, index);
-		if (index < selectedindex)
-		{
-			selectedindex++;
-		}
-
-		return true;
+		return false;
 	}
-
-	public void exportDone(JComponent comp, Transferable trans, int action)
+	
+	protected void exportDone(JComponent c, Transferable data, int action)
 	{
-		JList list = (JList) comp;
-		DefaultListModel listModel = (DefaultListModel) list.getModel();
-		if (action == MOVE)
+		cleanup(c, action == MOVE);
+	}
+	
+	public boolean canImport(JComponent c, DataFlavor[] flavors)
+	{
+		for(int i = 0; i < flavors.length; i++)
 		{
-			listModel.remove((selectedindex));
+			if(DataFlavor.stringFlavor.equals(flavors[i])) return true;
 		}
+		
+		return false;
 	}
 }
