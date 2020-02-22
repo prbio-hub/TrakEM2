@@ -434,7 +434,6 @@ class ListTransferHandler extends StringTransferHandler
 	@Override
 	protected String exportString(JComponent c)
 	{
-		Utils.log("@exportString");
 		JList list = (JList) c;
 		indices = list.getSelectedIndices();
 		List<String> values = list.getSelectedValuesList();
@@ -452,26 +451,18 @@ class ListTransferHandler extends StringTransferHandler
 	@Override
 	protected void importString(JComponent c, String s)
 	{
-		Utils.log("@importString");
 		JList list = (JList) c;
 		DefaultListModel listModel = (DefaultListModel) list.getModel();
 		int index = list.getDropLocation().getIndex();
-		Utils.log("huhu1");
 		Utils.log(Arrays.toString(indices));
-		Utils.log("index " + index);
-		Utils.log("are you nuts" + (indices[0] - 1));
 		if(null != indices && index > indices[0] - 1 && index <= indices[indices.length - 1])
 		{
 			indices = null;
 			return;
 		}
-		Utils.log("huhu2");
 		
 		int max = listModel.getSize();
 		if(index < 0 || index > max) index = max;
-
-		Utils.log("huhu3" + " " + index);
-		Utils.log("\n" + s);
 		
 		addIndex = index;
 		String[] values = s.split("\n");
@@ -484,9 +475,7 @@ class ListTransferHandler extends StringTransferHandler
 	
 	@Override
 	protected void cleanup(JComponent c, boolean remove)
-	{		
-		Utils.log("@cleanup");
-		
+	{
 		if(remove && null != indices)
 		{
 			JList list = (JList) c;
