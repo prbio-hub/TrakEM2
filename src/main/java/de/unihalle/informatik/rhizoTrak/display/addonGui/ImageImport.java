@@ -142,7 +142,7 @@ public class ImageImport extends JPanel {
 		jImageNameList.setTransferHandler(new ListTransferHandler());
 		jImageNameList.setDragEnabled(true);
 		jImageNameList.setDropMode(DropMode.INSERT);
-		jImageNameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		jImageNameList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 				
 		jScrollPane1.setViewportView(jImageNameList);
 
@@ -150,10 +150,11 @@ public class ImageImport extends JPanel {
 		jButtonDeleteImage.addActionListener(
 				new ActionListener() {
 					@Override public void actionPerformed( ActionEvent e ) {
-						int index = jImageNameList.getSelectedIndex();
-						if ( index == -1 )
-							return;
-						listModel.remove( index );
+						int[] indices = jImageNameList.getSelectedIndices();
+						
+						if (indices.length == 0) return;
+						
+						for(int index: indices) listModel.remove( index );
 					}
 				} );
 		jButtonClearSelection.setText("Clear");
@@ -237,9 +238,9 @@ public class ImageImport extends JPanel {
 		chooser.setMultiSelectionEnabled(true);
 		chooser.setCurrentDirectory(rhizoMain.getProjectConfig().getImageSearchDir());
 
-		Component frame = null;
-
-		chooser.showOpenDialog(frame);
+		int ans = chooser.showOpenDialog(null);
+		if(ans == JFileChooser.CANCEL_OPTION) return;
+		
 		File[] files = chooser.getSelectedFiles();
 		for (File file : files) {
 			// file.getName();
