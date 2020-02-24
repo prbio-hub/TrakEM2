@@ -340,18 +340,19 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	 */
 	private JList<String> list;
 	
+	@Deprecated
 	private MTBOperatorCollection<RootSegmentationOperator> operatorCollection;
 	
+	@Deprecated
 	private ALDOperatorCollectionElement operator;
 
+	@Deprecated
 	private JButton runButton;
 
 	/**
-	 * Collection of available image segmentation operators.
+	 * Manager to handle collection of available image segmentation operators.
 	 */
 	private RhizoRootImageSegmentationManager imageSegmentationManager;
-
-	private JButton runImageSegmentationOpButton;
 
 	/** Keep track of all existing Display objects. */
 	static private Set<Display> al_displays = new HashSet<Display>();
@@ -6778,19 +6779,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			runButton.setEnabled(false);
 			runOperator();
 		}
-		// commands for image segmentation
-		else if(command.equals("configureImageSegmentationOperator")){
-			Display.this.imageSegmentationManager.configureImageSegmentationOperator();
-		}
-		else if(command.equals("runImageSegmentationOperator")) {
-			if (!(active instanceof Treeline)) {
-				Utils.showMessage("rhizoTrak", 
-					"Image segmentation failed: no treeline(s) selected, but required!");
-				return;
-			}
-			ArrayList<Displayable> selObj = selection.getSelected(Treeline.class);
-			Display.this.imageSegmentationManager.runImageSegmentationOperator(selObj);
-		}
 		else if(command.equals("preferences")){
 			Display.getFront().getProject().getRhizoMain().getRhizoColVis().createPreferencesFrame();;
 		}
@@ -7739,10 +7727,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	JPanel group5  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for operators
     	JPanel group51 = new JPanel(new GridLayout(0, 1, 5, 1)); // Choose operator from list
     	JPanel group52 = new JPanel(new GridLayout(0, 2, 5, 1)); // Configure and run chosen operator
-			// GUI panels for annotation enhancement
-			JPanel groupImageSegmentOpsLabel  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for annotation enhancement section
-    	JPanel groupImageSegmentOpsSelection = new JPanel(new GridLayout(0, 1, 5, 1)); // Choose operator from list
-    	JPanel groupImageSegmentOpsRunConfig = new JPanel(new GridLayout(0, 2, 5, 1)); // Configure and run chosen operator
     	JPanel group6  = new JPanel(new GridLayout(0, 2, 5, 1)); // RhizoTrak miscellaneous
     	group11.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group21.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -7842,31 +7826,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	configureButton.addActionListener(this);
     	group52.add(configureButton);
     	
-			// get available operators for image segmentation
-    	this.runImageSegmentationOpButton = new JButton("Run");
-			this.imageSegmentationManager = new RhizoRootImageSegmentationManager(
-				this.runImageSegmentationOpButton);
-    	scrollPane = this.imageSegmentationManager.getScrollableAnnotationEnhancerList();
-    	boolean isImageSegmentationOperatorAvailable = false;
-    	if ( this.imageSegmentationManager.getNumberOfAvailableOperators() > 0 ) {
-    		isImageSegmentationOperatorAvailable = true;
-    	}
-    	
-    	labelOperators = new JLabel("Available Image Segmentation Operators:", JLabel.LEFT);
-    	groupImageSegmentOpsLabel.add(labelOperators);
-			groupImageSegmentOpsSelection.add(scrollPane);
-    	
-    	this.runImageSegmentationOpButton.setToolTipText("Runs the selected image segmentation operator.");
-    	this.runImageSegmentationOpButton.setActionCommand("runImageSegmentationOperator");
-    	this.runImageSegmentationOpButton.addActionListener(this);
-    	groupImageSegmentOpsRunConfig.add(this.runImageSegmentationOpButton);
+			// init the manager for handling available operators for image segmentation
+			this.imageSegmentationManager = new RhizoRootImageSegmentationManager(this);
 		
-    	JButton configureEnhancerButton = new JButton("Configure");
-    	configureEnhancerButton.setToolTipText("Opens a new window to configure the selected operator.");
-    	configureEnhancerButton.setActionCommand("configureImageSegmentationOperator");
-    	configureEnhancerButton.addActionListener(this);
-    	groupImageSegmentOpsRunConfig.add(configureEnhancerButton);
-    	
     	JButton preferencesButton = new JButton("Preferences");
     	preferencesButton.setToolTipText("Edit treelines display options and other user settings.");
     	preferencesButton.setActionCommand("preferences");
@@ -7920,11 +7882,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     		panel.add(new JSeparator(JSeparator.HORIZONTAL));
     	}
     	// optionally add panel for image segmentation operators
-    	if ( isImageSegmentationOperatorAvailable ) {
-    		panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
-    		panel.add(groupImageSegmentOpsLabel);
-    		panel.add(groupImageSegmentOpsSelection);
-    		panel.add(groupImageSegmentOpsRunConfig);
+    	if (this.imageSegmentationManager.getNumberOfAvailableOperators() > 0) {
+    		panel.add(this.imageSegmentationManager.getSegmentationOpsPanel());
     		panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     		panel.add(new JSeparator(JSeparator.HORIZONTAL));
     	}

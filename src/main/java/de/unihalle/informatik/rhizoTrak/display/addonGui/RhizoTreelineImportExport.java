@@ -154,11 +154,10 @@ public class RhizoTreelineImportExport {
 		}
 	}
 
-	public void importMTBRootTreesReplace(Vector<MTBRootTree> rootTrees, List<Displayable> treelineList) {
+	public void importMTBRootTreesReplace(int layerZ, Layer layer, Vector<MTBRootTree> rootTrees, 
+			ArrayList<Displayable> treelineList) {
 
-		Display display = Display.getFront();	
-		Layer currentLayer = display.getLayer();
-		this.convertRootTreesToTreelines(rootTrees, treelineList, currentLayer);
+				this.convertRootTreesToTreelines(rootTrees, treelineList, layer);
 	}
 
 	public void importMTBRootTreesAddToCurrentLayer(Vector<MTBRootTree> treelines) {
@@ -227,8 +226,8 @@ public class RhizoTreelineImportExport {
 		RhizoUtils.repaintTreelineList(treelineList);
 	}
 
-	protected void convertRootTreesToTreelines(Vector<MTBRootTree> rootTrees, List<Displayable> treelineList, 
-			Layer targetLayer) {
+	protected void convertRootTreesToTreelines(Vector<MTBRootTree> rootTrees, 
+			List<Displayable> treelineList, Layer targetLayer) {
 
 		AffineTransform at;
 		MTBTreeNode root;
@@ -236,6 +235,7 @@ public class RhizoTreelineImportExport {
 		RadiusNode nn;
 		Treeline treeline;
 		int treelineIndex = 0;
+
 		for (int j=0; j<rootTrees.size(); ++j) {
 
 			rootTree = rootTrees.elementAt(j);
@@ -274,8 +274,8 @@ public class RhizoTreelineImportExport {
 
 			nn = new RadiusNode((float)((MTBRootTreeNodeData)root.getData()).getXPos() - xmin, 
 				(float)((MTBRootTreeNodeData)root.getData()).getYPos() - ymin, targetLayer, (float)0.0);
-			treeline.addNode(null, nn, (byte)0, true);
 			treeline.setRoot(nn);
+			treeline.addNode(null, nn, (byte)0, true);
 
 			this.rootTreeToTreeline(root, treeline, nn, targetLayer, xmin, ymin);
 
@@ -285,7 +285,8 @@ public class RhizoTreelineImportExport {
 		}
 	}
 
-	protected void rootTreeToTreeline(MTBTreeNode rootTreeNode, Treeline targetTreeLine, Node<Float> n, Layer layer, float xmin, float ymin) {
+	protected void rootTreeToTreeline(MTBTreeNode rootTreeNode, Treeline targetTreeLine, 
+			Node<Float> n, Layer layer, float xmin, float ymin) {
 		for (MTBTreeNode tnn: rootTreeNode.getChilds()) {
 			RadiusNode nn = new RadiusNode(
 				(float)((MTBRootTreeNodeData)tnn.getData()).getXPos() - xmin, 
