@@ -58,6 +58,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -95,6 +97,7 @@ import de.unihalle.informatik.Alida.operator.ALDOperatorCollectionElement;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEventListener;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent.ALDOperatorCollectionEventType;
+import de.unihalle.informatik.Alida.workflows.events.ALDWorkflowRunFailureInfo;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.datatypes.MTBRootTree;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.datatypes.MTBRootTreeNodeData;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootImageSegmentationOperator;
@@ -614,18 +617,44 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 				 
 					
 		}	else if ( event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED ) {
+			// print stack trace
+			ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			failureInfo.getException().printStackTrace(pw);
+			Utils.log(sw.toString()); 
+			// show error message
 			JOptionPane.showMessageDialog(null, "Operator not completely configured.", 
 				"Configure operator", JOptionPane.ERROR_MESSAGE);
 		} else if ( event.getEventType() == ALDOperatorCollectionEventType.RUN_FAILURE ) {
+			// print stack trace
+			ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			failureInfo.getException().printStackTrace(pw);
+			Utils.log(sw.toString()); 
+			// show error message
 			JOptionPane.showMessageDialog(null, 
 			 	"Something went wrong during execution of the operator.", 
 					"Run failure", JOptionPane.ERROR_MESSAGE);
 	 } else if ( event.getEventType() == ALDOperatorCollectionEventType.INIT_FAILURE )	{
+			// print stack trace
+			ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			failureInfo.getException().printStackTrace(pw);
+			Utils.log(sw.toString()); 
+			// show error message
 			JOptionPane.showMessageDialog(null, 
 				"Operator is not well initialized.", 
 					"Initialization failure", JOptionPane.ERROR_MESSAGE);
 		} else { // ALDOperatorCollectionEventType.UNKNOWN
-			// do nothing
+			// print stack trace
+			ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			failureInfo.getException().printStackTrace(pw);
+			Utils.log(sw.toString()); 
 	 	}
  	}
 // } catch (InstantiationException | ALDOperatorException e) {
