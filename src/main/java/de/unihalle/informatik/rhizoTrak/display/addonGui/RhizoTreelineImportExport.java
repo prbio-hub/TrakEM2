@@ -254,8 +254,9 @@ public class RhizoTreelineImportExport {
 
 			// get treeline (now existing)
 			treeline = (Treeline) treelineList.get(treelineIndex);
-			// clear treeline by removing all nodes
-			treeline.removeNode(treeline.getRoot());
+			// clear treeline by removing all nodes, if there are any
+			if (treeline.getRoot() != null)
+				treeline.removeNode(treeline.getRoot());
 			treeline.setAffineTransform(at);
 			treeline.setLayer(targetLayer);
 					
