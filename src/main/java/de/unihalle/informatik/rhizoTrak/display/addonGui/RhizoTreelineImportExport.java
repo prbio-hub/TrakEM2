@@ -47,32 +47,11 @@
 
 package de.unihalle.informatik.rhizoTrak.display.addonGui;
 
-import java.awt.GridLayout;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
-import java.awt.geom.Point2D;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
 
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
@@ -80,16 +59,13 @@ import de.unihalle.informatik.MiToBo.apps.minirhizotron.datatypes.MTBRootTree;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.datatypes.MTBRootTreeNodeData;
 import de.unihalle.informatik.MiToBo.core.datatypes.MTBTreeNode;
 import de.unihalle.informatik.rhizoTrak.Project;
-import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
-import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Node;
-import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.TreeEventListener;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
@@ -99,17 +75,37 @@ import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
+/**
+ * Support methods to simplify import/export and conversion of treelines from rhizoTrak projects
+ * to root tree objects in MiToBo and vice versa.
+ * 
+ * @author Birgit Moeller
+ */
 public class RhizoTreelineImportExport {	
 
+	/**
+	 * Default constructor.
+	 */
 	public RhizoTreelineImportExport() {
+		// nothing to do here
 	}
 
+	/**
+	 * Converts a rhizoTrak {@link Treeline} to a {@link MTBRootTree} object.
+	 * <p>
+	 * This methods works in a recursive fashion on the tree, i.e., recursively
+	 * calls {@link #convertSubtreelineToMTBRootTree(AffineTransform, Node, MTBTreeNode)}.}
+	 * 
+	 * @param treeline	Treeline to convert.
+	 * @return	Resulting root tree object.
+	 */
 	public MTBRootTree exportTreelineToMTBRootTree(Treeline treeline) {
 
 		RadiusNode treelineRoot = (RadiusNode)treeline.getRoot();
 
 		if (treeline.getAffineTransform().getType() != AffineTransform.TYPE_TRANSLATION)
-			System.out.println("Affine transformation does more than a pure translation, cannot deal with that.");
+			System.out.println("Affine transformation does more than a pure translation, " 
+				+ "cannot deal with that.... ignoring!");
 
 		// transform coordinates relative to absolute coordinates
 		double sx, sy;
@@ -133,7 +129,17 @@ public class RhizoTreelineImportExport {
 		return rootTree;
 	}
 
-	protected void convertSubtreelineToMTBRootTree(AffineTransform at, Node<Float> treelineRootNode, MTBTreeNode rootTreeRootNode) {
+	/**
+	 * Converts a rhizoTrak {@link Treeline} subtree to a {@link MTBRootTree} object.
+	 * <p>
+	 * This method works in a recursive fashion on the given trees.
+	 * 
+	 * @param at	Affine transformation to be applied to the tree coordinates.
+	 * @param treelineRootNode	Root node of the rhizoTrak treeline to be converted.
+	 * @param rootTreeRootNode	Root node of the target MTBRootTree.
+	 */
+	protected void convertSubtreelineToMTBRootTree(AffineTransform at, 
+			Node<Float> treelineRootNode, MTBTreeNode rootTreeRootNode) {
 		double sx, sy;
 		for (Node<Float> n: treelineRootNode.getChildrenNodes()) {
 			// transform coordinates relative to absolute coordinates
@@ -154,18 +160,40 @@ public class RhizoTreelineImportExport {
 		}
 	}
 
+	/**
+	 * Imports an root trees into the given layer replacing the old treelines
+	 * associated with these trees.
+	 * 
+	 * @param layerZ				Target layer ID where to insert the treeline.
+	 * @param layer					Target layer itself.
+	 * @param rootTrees			Set of {@link MTBRootTree} to import.
+	 * @param treelineList	List of treelines to be replaced with given root trees.
+	 */
 	public void importMTBRootTreesReplace(int layerZ, Layer layer, Vector<MTBRootTree> rootTrees, 
 			ArrayList<Displayable> treelineList) {
 		this.convertRootTreesToTreelines(rootTrees, treelineList, layer, null);
 	}
 
-	public void importMTBRootTreesAddToCurrentLayer(Vector<MTBRootTree> treelines, 
+	/**
+	 * Imports root trees into the currently active layer.
+	 * 
+	 * @param rootTrees			Set of {@link MTBRootTree} to import.
+	 * @param targetStatus	Target status the new segments should get.
+	 */
+	public void importMTBRootTreesAddToCurrentLayer(Vector<MTBRootTree> rootTrees, 
 			String targetStatus) {
 		Display display = Display.getFront();	
 		Layer currentLayer = display.getLayer();
-		this.importMTBRootTreesAddToLayer(this.getLayerIndex(currentLayer), treelines, targetStatus);
+		this.importMTBRootTreesAddToLayer(this.getLayerIndex(currentLayer), rootTrees, targetStatus);
 	}
 
+	/**
+	 * Imports root trees into the specified layer.
+	 * 
+	 * @param layerZ				Layer ID of target layer.
+	 * @param rootTrees			Set of {@link MTBRootTree} to import.
+	 * @param targetStatus	Target status the new segments should get.
+	 */
 	public void importMTBRootTreesAddToLayer(int layerZ, Vector<MTBRootTree> rootTrees,
 			String targetStatus) {
 
@@ -227,6 +255,16 @@ public class RhizoTreelineImportExport {
 		RhizoUtils.repaintTreelineList(treelineList);
 	}
 
+	/**
+	 * Converts the set of root trees into corresponding treelines.
+	 * <p>
+	 * Old data potentially existing in treeline objects will be deleted.
+	 * 
+	 * @param rootTrees			List of root trees to be converted.
+	 * @param treelineList	Target list of treelines to be replaced.
+	 * @param targetLayer		Target layer to which the treelines should be added.
+	 * @param targetStatus	Target status for the treelines.
+	 */
 	protected void convertRootTreesToTreelines(Vector<MTBRootTree> rootTrees, 
 			List<Displayable> treelineList, Layer targetLayer, String targetStatus) {
 
@@ -283,7 +321,7 @@ public class RhizoTreelineImportExport {
 			treeline.setRoot(nn);
 			treeline.addNode(null, nn, (byte)s, true);
 
-			this.rootTreeToTreeline(root, treeline, nn, targetLayer, xmin, ymin, s);
+			this.convertRootTreeToTreeline(root, treeline, nn, targetLayer, xmin, ymin, s);
 
 			// display treeline
 			treeline.updateCache();
@@ -291,17 +329,33 @@ public class RhizoTreelineImportExport {
 		}
 	}
 
-	protected void rootTreeToTreeline(MTBTreeNode rootTreeNode, Treeline targetTreeLine, 
+	/**
+	 * Recursively converts a single root tree into a treeline.
+	 * 
+	 * @param rootTreeNode		Root node of the root tree to convert.
+	 * @param targetTreeLine	Target treeline.
+	 * @param n								Target node in result treeline.
+	 * @param layer						Target layer of the treeline.
+	 * @param xmin						Left boundary of bounding box for affine transformation.
+	 * @param ymin						Upper boundary of bounding box for affine transformation.
+	 * @param status					Target status of the treeline nodes.
+	 */
+	protected void convertRootTreeToTreeline(MTBTreeNode rootTreeNode, Treeline targetTreeLine, 
 			Node<Float> n, Layer layer, float xmin, float ymin, byte status) {
 		for (MTBTreeNode tnn: rootTreeNode.getChilds()) {
 			RadiusNode nn = new RadiusNode(
 				(float)((MTBRootTreeNodeData)tnn.getData()).getXPos() - xmin, 
 				(float)((MTBRootTreeNodeData)tnn.getData()).getYPos() - ymin, layer, (float) 0.0);
 			targetTreeLine.addNode(n, nn, (byte)status, true);
-			this.rootTreeToTreeline(tnn, targetTreeLine, nn, layer, xmin, ymin, status);
+			this.convertRootTreeToTreeline(tnn, targetTreeLine, nn, layer, xmin, ymin, status);
 		}
 	}
 
+	/**
+	 * Get the index of a given layer.
+	 * @param queryLayer	Layer for which index is to be retrieved.
+	 * @return	The index of the layer.
+	 */
 	private int getLayerIndex(Layer queryLayer) {
 		Display display = Display.getFront();	
 		LayerSet layerSet = display.getLayerSet();  
@@ -317,6 +371,12 @@ public class RhizoTreelineImportExport {
 		return -1;
 	}
 
+	/**
+	 * Get the IDs of all connectors a treeline is associated with.
+	 * 
+	 * @param treeline	Treeline for which connector IDs should be retrieved.
+	 * @return	List of connector IDs, usually just containing one element.
+	 */
 	private long[] getConnectorIDs(Treeline treeline) {
 		// find connector(s) of selected treeline
 		long[] connectorIDs = null;
