@@ -319,7 +319,7 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 				this.projectLayers.add(currentLayerSet.getLayer(z));
 			}
 
-			int prevLayerID = prevLayers - 1;
+			int prevLayerID = prevLayers > 0 ? prevLayers - 1 : prevLayers;
 			int activeLayerID = prevLayers;
 			int nextLayerID = activeLayerID + 1;
 
