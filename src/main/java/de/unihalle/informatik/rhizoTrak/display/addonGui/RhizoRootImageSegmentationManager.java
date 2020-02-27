@@ -51,35 +51,22 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
-import java.awt.geom.Point2D;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -88,9 +75,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.ListSelectionModel;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
 
 import de.unihalle.informatik.Alida.exceptions.ALDOperatorException;
 import de.unihalle.informatik.Alida.operator.ALDOperatorCollectionElement;
@@ -99,31 +83,19 @@ import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEventLi
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent.ALDOperatorCollectionEventType;
 import de.unihalle.informatik.Alida.workflows.events.ALDWorkflowRunFailureInfo;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.datatypes.MTBRootTree;
-import de.unihalle.informatik.MiToBo.apps.minirhizotron.datatypes.MTBRootTreeNodeData;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootImageSegmentationOperator;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootImageSegmentationOperator.LayerSubset;
-import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootImageSegmentationOperator.OpWorkingMode;
-import de.unihalle.informatik.MiToBo.core.datatypes.MTBTreeNode;
 import de.unihalle.informatik.MiToBo.core.operator.MTBOperatorCollection;
-import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
-import de.unihalle.informatik.rhizoTrak.display.Connector;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Node;
-import de.unihalle.informatik.rhizoTrak.display.Patch;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Selection;
-import de.unihalle.informatik.rhizoTrak.display.TreeEventListener;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
-import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
-import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
-import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
-import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
-import de.unihalle.informatik.rhizoTrak.utils.IJError;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.ImagePlus;
 
@@ -140,8 +112,14 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 	 */
 	private JPanel segOpPanel = null;
 
+	/**
+	 * Button in segmentation panel to run operator.
+	 */
 	private JButton operatorRunButton;
 
+	/**
+	 * Button in segmentation panel to configure operator.
+	 */
 	private JButton operatorConfigButton;
 
 	/**
@@ -174,6 +152,10 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 	 */
 	private LinkedList<Layer> projectLayers;
 
+	/**
+	 * Default constructor.
+	 * @param d		Display of corresponding rhizoTrak project.
+	 */
 	public RhizoRootImageSegmentationManager(Display d) {
 		this.rhizoDisplay = d;
 		try {
@@ -518,6 +500,8 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 	@Override
 	public void handleALDOperatorCollectionEvent(ALDOperatorCollectionEvent event) {
 
+		RhizoMain rhizoMain = this.rhizoDisplay.getProject().getRhizoMain();
+
  		if ( event.getEventType() == ALDOperatorCollectionEventType.RESULTS_AVAILABLE ) {
  		 	this.operatorRunButton.setEnabled(true);
 			 
@@ -526,31 +510,74 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
  			// get results from operator
 			HashMap<Integer, Vector<MTBRootTree>> resultTreelines = segOp.getAllResultTreelines();
 			 
+			// dialog to inform user about treeline import
+			JDialog d = new JDialog();
+			Thread showDialog = new Thread() {
+				public void run() {
+					JLabel l = new JLabel("Transfer of result treelines in progress ... please wait!", 
+						JLabel.CENTER); 
+					l.setVerticalAlignment(JLabel.CENTER);
+					d.add(l);
+					d.setTitle("Transfer to treelines");
+					d.setSize(600,200);
+					d.setModal(true);
+					d.setVisible(true);
+				}
+			};
+
 			switch(segOp.getOperatorWorkingMode())
 			{
 				case SEGMENTATION_CREATE:
+				{
+					int sizeStatusLabel = rhizoMain.getProjectConfig().sizeStatusLabelMapping();
+					String[] fullNames = new String[sizeStatusLabel+1];
+					for ( int i = 0; i < sizeStatusLabel; i++) {
+						fullNames[i] = rhizoMain.getProjectConfig().getStatusLabel(i).getName();
+					}
+					fullNames[sizeStatusLabel] = "STATUS_UNDEFINED";
+
+					final String status = (String) JOptionPane.showInputDialog(null,
+						"Which status should the treeline nodes have?\n"
+							+ "If you then press \'OK\', "
+								+ "the treelines will be imported in the image.",
+									"Choose status", JOptionPane.PLAIN_MESSAGE,
+										null, fullNames, fullNames[0]);
+					if( status != null ) {
+					
+						/*
+						 *  starts two threads: first one to transfer the polylines to treelines, second on to freeze the GUI through
+					 	 *  	a modal window. The window is then closed by the first thread if the transfer has been finished.
+					 	 */
+						Thread transferTreelines = new Thread() {
+							public void run() {
+
+								RhizoTreelineImportExport converter = new RhizoTreelineImportExport();
+
+								Set<Integer> layerIDs = resultTreelines.keySet();
+								for (Integer id: layerIDs) {
+	
+									converter.importMTBRootTreesAddToLayer(
+										id.intValue(), resultTreelines.get(id), status);
+
+	 		  					RhizoUtils.repaintTreelineList(
+										RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
+
+								}
+								d.setVisible(false);
+								d.dispose(); 
+							}
+						};
+						showDialog.start();
+						transferTreelines.start();
+					}
+					break;
+				}
 				case SEGMENTATION_UPDATE:
 				{
-					JDialog d = new JDialog();
-
-					System.out.println("Here we are...");
-
 		 			/*
  					 *  starts two threads: first one to transfer the polylines to treelines, second on to freeze the GUI through
  			 		 *  	a modal window. The window is then closed by the first thread if the transfer has been finished.
 			 		 */
-					Thread showDialog = new Thread() {
-						public void run() {
-							JLabel l = new JLabel("Transfer of result treelines in progress ... please wait!", 
-								JLabel.CENTER); 
-							l.setVerticalAlignment(JLabel.CENTER);
-							d.add(l);
-							d.setTitle("Transfer to treelines");
-							d.setSize(600,200);
-							d.setModal(true);
-							d.setVisible(true);
-						}
-					};
 					showDialog.start();
 
 					// transfer the modified treelines back into the corresponding layers
@@ -590,74 +617,59 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 					break;
 				}
 				case SEGMENTATION_CREATE_AND_UPDATE:
-			}
-// // 					// Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>> resultLineMap = null;
-			 
-// // 					// 	int sizeStatusLabel = getProject().getRhizoMain().getProjectConfig().sizeStatusLabelMapping();
-// // 					// 	String[] fullNames = new String[sizeStatusLabel+1];
-// // 					// 	for ( int i = 0; i < sizeStatusLabel; i++) 
-// // 					// 	{
-// // 					// 		fullNames[i] = getProject().getRhizoMain().getProjectConfig().getStatusLabel(i).getName();
-// // 					// 	}
-// // 					// 	fullNames[sizeStatusLabel] = "STATUS_UNDEFINED";
+				{
+					System.out.println("Not yet supported...");
 
-// // 					// 	final String status = (String) JOptionPane.showInputDialog(null,
-// // 					// 			"Which status should the treeline nodes have?\n"
-// // 					// 			+ "If you then press \'OK\', "
-// // 					// 			+ "the treelines will be imported in the image.",
-// // 					// 			"Choose status", JOptionPane.PLAIN_MESSAGE,
-// // 					// 			null, fullNames, fullNames[0]);
-// // 					// 	if( status != null )
-// // 					// 	{
-// // 					// 		if(operator instanceof RootSegmentationOperator)
-// // 					// 		{
-// // 					// 			resultLineMap = ((RootSegmentationOperator) operator).getMap();
-// // 					// 		}
-				 
-				 
-					
+					break;
+				}
+			}
 		}	else if ( event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED ) {
 			// print stack trace
-			ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			failureInfo.getException().printStackTrace(pw);
-			Utils.log(sw.toString()); 
+			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
+				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				failureInfo.getException().printStackTrace(pw);
+				Utils.log(sw.toString()); 
+			}
 			// show error message
 			JOptionPane.showMessageDialog(null, "Operator not completely configured.", 
 				"Configure operator", JOptionPane.ERROR_MESSAGE);
 		} else if ( event.getEventType() == ALDOperatorCollectionEventType.RUN_FAILURE ) {
 			// print stack trace
-			ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			failureInfo.getException().printStackTrace(pw);
-			Utils.log(sw.toString()); 
+			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
+				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				failureInfo.getException().printStackTrace(pw);
+				Utils.log(sw.toString()); 
+			}
 			// show error message
 			JOptionPane.showMessageDialog(null, 
 			 	"Something went wrong during execution of the operator.", 
 					"Run failure", JOptionPane.ERROR_MESSAGE);
-	 } else if ( event.getEventType() == ALDOperatorCollectionEventType.INIT_FAILURE )	{
+		} else if ( event.getEventType() == ALDOperatorCollectionEventType.INIT_FAILURE )	{
 			// print stack trace
-			ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			failureInfo.getException().printStackTrace(pw);
-			Utils.log(sw.toString()); 
+			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
+				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				failureInfo.getException().printStackTrace(pw);
+				Utils.log(sw.toString()); 
+			}
 			// show error message
 			JOptionPane.showMessageDialog(null, 
 				"Operator is not well initialized.", 
 					"Initialization failure", JOptionPane.ERROR_MESSAGE);
 		} else { // ALDOperatorCollectionEventType.UNKNOWN
 			// print stack trace
-			ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			failureInfo.getException().printStackTrace(pw);
-			Utils.log(sw.toString()); 
+			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
+				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				failureInfo.getException().printStackTrace(pw);
+				Utils.log(sw.toString()); 
+			}
 	 	}
  	}
-// } catch (InstantiationException | ALDOperatorException e) {
-// 	// TODO Auto-generated catch block
-// 	e.printStackTrace();
 }

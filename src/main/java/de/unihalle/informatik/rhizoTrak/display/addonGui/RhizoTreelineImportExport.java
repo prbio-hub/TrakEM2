@@ -156,17 +156,18 @@ public class RhizoTreelineImportExport {
 
 	public void importMTBRootTreesReplace(int layerZ, Layer layer, Vector<MTBRootTree> rootTrees, 
 			ArrayList<Displayable> treelineList) {
-
-				this.convertRootTreesToTreelines(rootTrees, treelineList, layer);
+		this.convertRootTreesToTreelines(rootTrees, treelineList, layer, null);
 	}
 
-	public void importMTBRootTreesAddToCurrentLayer(Vector<MTBRootTree> treelines) {
+	public void importMTBRootTreesAddToCurrentLayer(Vector<MTBRootTree> treelines, 
+			String targetStatus) {
 		Display display = Display.getFront();	
 		Layer currentLayer = display.getLayer();
-		this.importMTBRootTreesAddToLayer(treelines, this.getLayerIndex(currentLayer));
+		this.importMTBRootTreesAddToLayer(this.getLayerIndex(currentLayer), treelines, targetStatus);
 	}
 
-	public void importMTBRootTreesAddToLayer(Vector<MTBRootTree> rootTrees, int layerIndex) {
+	public void importMTBRootTreesAddToLayer(int layerZ, Vector<MTBRootTree> rootTrees,
+			String targetStatus) {
 
 		Display display = Display.getFront();	
 		Project project = display.getProject();
@@ -193,7 +194,7 @@ public class RhizoTreelineImportExport {
 		// }
 				
 		// get target layer				
-		Layer targetLayer = layers.get(layerIndex); // order of rootsets has to correspond to the layer if we don't care about image names
+		Layer targetLayer = layers.get(layerZ); // order of rootsets has to correspond to the layer if we don't care about image names
 			
 		// check if rootstack exists, otherwise create it
 		ProjectThing possibleParent = RhizoAddons.findParentAllowing("treeline", project);
@@ -221,13 +222,13 @@ public class RhizoTreelineImportExport {
 		//create new list of empty treelines
 		List<Displayable> treelineList = RhizoUtils.addDisplayableToProject(project, "treeline", rootTrees.size());
 
-		this.convertRootTreesToTreelines(rootTrees, treelineList, targetLayer);
+		this.convertRootTreesToTreelines(rootTrees, treelineList, targetLayer, targetStatus);
 
 		RhizoUtils.repaintTreelineList(treelineList);
 	}
 
 	protected void convertRootTreesToTreelines(Vector<MTBRootTree> rootTrees, 
-			List<Displayable> treelineList, Layer targetLayer) {
+			List<Displayable> treelineList, Layer targetLayer, String targetStatus) {
 
 		AffineTransform at;
 		MTBTreeNode root;
@@ -265,20 +266,24 @@ public class RhizoTreelineImportExport {
 						
 			// assuming that default status is defined
 			byte s = (byte) RhizoProjectConfig.STATUS_UNDEFINED;
-			//if ( status != null && !(status.equals("STATUS_UNDEFINED") || status.equals("UNDEFINED")) )
-					// 	{
-					// 		if ( status.equals("LIVING") ) 			s = (byte) 0;
-					// 		else if ( status.equals("DEAD") ) 		s = (byte) 1;
-					// 		else if ( status.equals("DECAYED") )	s = (byte) 2;
-					// 		else if ( status.equals("GAP") )		s = (byte) 3;
-					// 	}
+			if (     targetStatus != null 
+					&& !(targetStatus.equals("STATUS_UNDEFINED") || targetStatus.equals("UNDEFINED"))) {
+				if ( targetStatus.equals("LIVING") ) 			
+					s = (byte) 0;
+				else if ( targetStatus.equals("DEAD") ) 		
+					s = (byte) 1;
+				else if ( targetStatus.equals("DECAYED") )	
+					s = (byte) 2;
+				else if ( targetStatus.equals("GAP") )		
+					s = (byte) 3;
+			}
 
 			nn = new RadiusNode((float)((MTBRootTreeNodeData)root.getData()).getXPos() - xmin, 
 				(float)((MTBRootTreeNodeData)root.getData()).getYPos() - ymin, targetLayer, (float)0.0);
 			treeline.setRoot(nn);
-			treeline.addNode(null, nn, (byte)0, true);
+			treeline.addNode(null, nn, (byte)s, true);
 
-			this.rootTreeToTreeline(root, treeline, nn, targetLayer, xmin, ymin);
+			this.rootTreeToTreeline(root, treeline, nn, targetLayer, xmin, ymin, s);
 
 			// display treeline
 			treeline.updateCache();
@@ -287,13 +292,13 @@ public class RhizoTreelineImportExport {
 	}
 
 	protected void rootTreeToTreeline(MTBTreeNode rootTreeNode, Treeline targetTreeLine, 
-			Node<Float> n, Layer layer, float xmin, float ymin) {
+			Node<Float> n, Layer layer, float xmin, float ymin, byte status) {
 		for (MTBTreeNode tnn: rootTreeNode.getChilds()) {
 			RadiusNode nn = new RadiusNode(
 				(float)((MTBRootTreeNodeData)tnn.getData()).getXPos() - xmin, 
 				(float)((MTBRootTreeNodeData)tnn.getData()).getYPos() - ymin, layer, (float) 0.0);
-			targetTreeLine.addNode(n, nn, (byte)0, true);
-			this.rootTreeToTreeline(tnn, targetTreeLine, nn, layer, xmin, ymin);
+			targetTreeLine.addNode(n, nn, (byte)status, true);
+			this.rootTreeToTreeline(tnn, targetTreeLine, nn, layer, xmin, ymin, status);
 		}
 	}
 
