@@ -425,7 +425,7 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 			}
 		}
 		else {
-			tlines = layer.getDisplayables(Treeline.class);
+			tlines = new ArrayList<>(RhizoUtils.getTreelinesBelowRootstacks(Display.getFront().getProject(), layer));
 		}
 
 		Vector<MTBRootTree> tset = new Vector<>();
