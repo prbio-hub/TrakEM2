@@ -279,7 +279,8 @@ public class RhizoTreelineImportExport {
 			}
 
 			nn = new RadiusNode((float)((MTBRootTreeNodeData)root.getData()).getXPos() - xmin, 
-				(float)((MTBRootTreeNodeData)root.getData()).getYPos() - ymin, targetLayer, (float)0.0);
+				(float)((MTBRootTreeNodeData)root.getData()).getYPos() - ymin, targetLayer, 
+				(float)((MTBRootTreeNodeData) root.getData()).getRadius());
 			treeline.setRoot(nn);
 			treeline.addNode(null, nn, (byte)s, true);
 
@@ -296,7 +297,8 @@ public class RhizoTreelineImportExport {
 		for (MTBTreeNode tnn: rootTreeNode.getChilds()) {
 			RadiusNode nn = new RadiusNode(
 				(float)((MTBRootTreeNodeData)tnn.getData()).getXPos() - xmin, 
-				(float)((MTBRootTreeNodeData)tnn.getData()).getYPos() - ymin, layer, (float) 0.0);
+				(float)((MTBRootTreeNodeData)tnn.getData()).getYPos() - ymin, layer, 
+				(float)((MTBRootTreeNodeData) tnn.getData()).getRadius());
 			targetTreeLine.addNode(n, nn, (byte)status, true);
 			this.rootTreeToTreeline(tnn, targetTreeLine, nn, layer, xmin, ymin, status);
 		}
