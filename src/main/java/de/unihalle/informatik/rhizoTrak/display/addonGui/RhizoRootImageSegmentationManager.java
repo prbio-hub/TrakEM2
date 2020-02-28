@@ -449,21 +449,6 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
  			// get results from operator
 			HashMap<Integer, Vector<MTBRootTree>> resultTreelines = segOp.getAllResultTreelines();
 			 
-			// dialog to inform user about treeline import
-			JDialog d = new JDialog();
-			Thread showDialog = new Thread() {
-				public void run() {
-					JLabel l = new JLabel("Transfer of result treelines in progress ... please wait!", 
-						JLabel.CENTER); 
-					l.setVerticalAlignment(JLabel.CENTER);
-					d.add(l);
-					d.setTitle("Transfer to treelines");
-					d.setSize(600,200);
-					d.setModal(true);
-					d.setVisible(true);
-				}
-			};
-
 			switch(segOp.getOperatorWorkingMode())
 			{
 				/*
@@ -486,6 +471,21 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 										null, fullNames, fullNames[0]);
 					if( status != null ) {
 					
+						// dialog to inform user about treeline import
+						JDialog d = new JDialog();
+						Thread showDialog = new Thread() {
+							public void run() {
+								JLabel l = new JLabel("Transfer of result treelines in progress ... please wait!", 
+									JLabel.CENTER); 
+								l.setVerticalAlignment(JLabel.CENTER);
+								d.add(l);
+								d.setTitle("Transfer to treelines");
+								d.setSize(600,200);
+								d.setModal(true);
+								d.setVisible(true);
+							}
+						};
+
 						/*
 						 *  starts two threads: first one to transfer the polylines to treelines, second on to freeze the GUI through
 					 	 *  	a modal window. The window is then closed by the first thread if the transfer has been finished.
@@ -519,46 +519,61 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 				 */
 				case SEGMENTATION_UPDATE:
 				{
-		 			/*
- 					 *  starts two threads: first one to transfer the polylines to treelines, second on to freeze the GUI through
- 			 		 *  	a modal window. The window is then closed by the first thread if the transfer has been finished.
-			 		 */
-					showDialog.start();
-
-					// transfer the modified treelines back into the corresponding layers
-		 			Thread transferTreelines = new Thread() {
-		 				public void run()	{
-
-							Set<Integer> layerIDs = resultTreelines.keySet();
-							for (Integer id: layerIDs) {
-
-								System.out.println(RhizoRootImageSegmentationManager.this.projectLayers.get(id));
-
-								// make a copy of the old treelines
-								List<Treeline> formerTreelines = new LinkedList<>();
-								ArrayList<Displayable> treelines = 
-									RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id);
- 					  		for (Displayable t: treelines)
- 		  						formerTreelines.add((Treeline)t.clone());
-
- 		 						RhizoTreelineImportExport converter = new RhizoTreelineImportExport();
-								converter.importMTBRootTreesReplace(id.intValue(), 
-									RhizoRootImageSegmentationManager.this.projectLayers.get(id), 
-										resultTreelines.get(id),
-											RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
-
-			 					// transfer status, radius and connector information from old to new treeline
-//						 		this.transferTreelineProperties(formerTreelines, this.treelinesUnderProcessing);	
-
- 		  					RhizoUtils.repaintTreelineList(
-									RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
+					// ask the user if the data should be imported
+					if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(null,
+						"Do you wish to import the updated annotations?",
+							"Import annotations?", JOptionPane.YES_NO_OPTION,
+								JOptionPane.QUESTION_MESSAGE, null)) {
+			
+						// dialog to inform user about treeline import
+						JDialog d = new JDialog();
+						Thread showDialog = new Thread() {
+							public void run() {
+								JLabel l = new JLabel("Transfer of result treelines in progress ... please wait!", 
+									JLabel.CENTER); 
+								l.setVerticalAlignment(JLabel.CENTER);
+								d.add(l);
+								d.setTitle("Transfer to treelines");
+								d.setSize(600,200);
+								d.setModal(true);
+								d.setVisible(true);
 							}
-							d.setVisible(false);
-							d.dispose(); 
-						}
- 		 			};
-					transferTreelines.start();
-						
+						};
+ 						showDialog.start();
+
+						// transfer the modified treelines back into the corresponding layers
+ 			 			Thread transferTreelines = new Thread() {
+ 			 				public void run()	{
+
+ 								Set<Integer> layerIDs = resultTreelines.keySet();
+ 								for (Integer id: layerIDs) {
+
+ 									// make a copy of the old treelines
+ 									List<Treeline> formerTreelines = new LinkedList<>();
+ 									ArrayList<Displayable> treelines = 
+ 										RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id);
+ 						  		for (Displayable t: treelines)
+ 		  							formerTreelines.add((Treeline)t.clone());
+
+ 		 							RhizoTreelineImportExport converter = new RhizoTreelineImportExport();
+ 									converter.importMTBRootTreesReplace(id.intValue(), 
+ 										RhizoRootImageSegmentationManager.this.projectLayers.get(id), 
+ 											resultTreelines.get(id),
+ 												RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
+
+	 			 					// transfer status, radius and connector information from old to new treeline
+ //						 		this.transferTreelineProperties(formerTreelines, this.treelinesUnderProcessing);	
+
+ 	 		  					RhizoUtils.repaintTreelineList(
+ 										RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
+	 							}
+	 							d.setVisible(false);
+ 								d.dispose(); 
+ 							}
+ 	 					};
+ 						transferTreelines.start();
+					}
+
 					break;
 				}
 				/*
