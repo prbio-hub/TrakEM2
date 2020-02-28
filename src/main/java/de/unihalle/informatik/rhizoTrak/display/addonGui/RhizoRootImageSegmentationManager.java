@@ -436,6 +436,191 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 		rootTrees.put(layerID, tset);
 	}
 
+	@Override
+	public void handleALDOperatorCollectionEvent(ALDOperatorCollectionEvent event) {
+
+		RhizoMain rhizoMain = this.rhizoDisplay.getProject().getRhizoMain();
+
+ 		if ( event.getEventType() == ALDOperatorCollectionEventType.RESULTS_AVAILABLE ) {
+ 		 	this.operatorRunButton.setEnabled(true);
+			 
+			RootImageSegmentationOperator segOp = (RootImageSegmentationOperator)this.selectedSegOp;
+
+ 			// get results from operator
+			HashMap<Integer, Vector<MTBRootTree>> resultTreelines = segOp.getAllResultTreelines();
+			 
+			// dialog to inform user about treeline import
+			JDialog d = new JDialog();
+			Thread showDialog = new Thread() {
+				public void run() {
+					JLabel l = new JLabel("Transfer of result treelines in progress ... please wait!", 
+						JLabel.CENTER); 
+					l.setVerticalAlignment(JLabel.CENTER);
+					d.add(l);
+					d.setTitle("Transfer to treelines");
+					d.setSize(600,200);
+					d.setModal(true);
+					d.setVisible(true);
+				}
+			};
+
+			switch(segOp.getOperatorWorkingMode())
+			{
+				/*
+				 * Adds a set of new treeline annotations to the specified layer(s).
+				 */
+				case SEGMENTATION_CREATE:
+				{
+					int sizeStatusLabel = rhizoMain.getProjectConfig().sizeStatusLabelMapping();
+					String[] fullNames = new String[sizeStatusLabel+1];
+					for ( int i = 0; i < sizeStatusLabel; i++) {
+						fullNames[i] = rhizoMain.getProjectConfig().getStatusLabel(i).getName();
+					}
+					fullNames[sizeStatusLabel] = "STATUS_UNDEFINED";
+
+					final String status = (String) JOptionPane.showInputDialog(null,
+						"Which status should the treeline nodes have?\n"
+							+ "If you then press \'OK\', "
+								+ "the treelines will be imported in the image.",
+									"Choose status", JOptionPane.PLAIN_MESSAGE,
+										null, fullNames, fullNames[0]);
+					if( status != null ) {
+					
+						/*
+						 *  starts two threads: first one to transfer the polylines to treelines, second on to freeze the GUI through
+					 	 *  	a modal window. The window is then closed by the first thread if the transfer has been finished.
+					 	 */
+						Thread transferTreelines = new Thread() {
+							public void run() {
+
+								RhizoTreelineImportExport converter = new RhizoTreelineImportExport();
+
+								Set<Integer> layerIDs = resultTreelines.keySet();
+								for (Integer id: layerIDs) {
+	
+									converter.importMTBRootTreesAddToLayer(
+										id.intValue(), resultTreelines.get(id), status);
+
+	 		  					RhizoUtils.repaintTreelineList(
+										RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
+
+								}
+								d.setVisible(false);
+								d.dispose(); 
+							}
+						};
+						showDialog.start();
+						transferTreelines.start();
+					}
+					break;
+				}
+				/*
+				 * Replaces a given set of treelines with the new ones.
+				 */
+				case SEGMENTATION_UPDATE:
+				{
+		 			/*
+ 					 *  starts two threads: first one to transfer the polylines to treelines, second on to freeze the GUI through
+ 			 		 *  	a modal window. The window is then closed by the first thread if the transfer has been finished.
+			 		 */
+					showDialog.start();
+
+					// transfer the modified treelines back into the corresponding layers
+		 			Thread transferTreelines = new Thread() {
+		 				public void run()	{
+
+							Set<Integer> layerIDs = resultTreelines.keySet();
+							for (Integer id: layerIDs) {
+
+								System.out.println(RhizoRootImageSegmentationManager.this.projectLayers.get(id));
+
+								// make a copy of the old treelines
+								List<Treeline> formerTreelines = new LinkedList<>();
+								ArrayList<Displayable> treelines = 
+									RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id);
+ 					  		for (Displayable t: treelines)
+ 		  						formerTreelines.add((Treeline)t.clone());
+
+ 		 						RhizoTreelineImportExport converter = new RhizoTreelineImportExport();
+								converter.importMTBRootTreesReplace(id.intValue(), 
+									RhizoRootImageSegmentationManager.this.projectLayers.get(id), 
+										resultTreelines.get(id),
+											RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
+
+			 					// transfer status, radius and connector information from old to new treeline
+//						 		this.transferTreelineProperties(formerTreelines, this.treelinesUnderProcessing);	
+
+ 		  					RhizoUtils.repaintTreelineList(
+									RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
+							}
+							d.setVisible(false);
+							d.dispose(); 
+						}
+ 		 			};
+					transferTreelines.start();
+						
+					break;
+				}
+				/*
+				 * Replaces the given treelines with the new ones and also adds additional treelines.
+				 */
+				case SEGMENTATION_CREATE_AND_UPDATE:
+				{
+					System.out.println("Not yet supported...");
+
+					break;
+				}
+			}
+		}	else if ( event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED ) {
+			// print stack trace
+			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
+				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				failureInfo.getException().printStackTrace(pw);
+				Utils.log(sw.toString()); 
+			}
+			// show error message
+			JOptionPane.showMessageDialog(null, "Operator not completely configured.", 
+				"Configure operator", JOptionPane.ERROR_MESSAGE);
+		} else if ( event.getEventType() == ALDOperatorCollectionEventType.RUN_FAILURE ) {
+			// print stack trace
+			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
+				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				failureInfo.getException().printStackTrace(pw);
+				Utils.log(sw.toString()); 
+			}
+			// show error message
+			JOptionPane.showMessageDialog(null, 
+			 	"Something went wrong during execution of the operator.", 
+					"Run failure", JOptionPane.ERROR_MESSAGE);
+		} else if ( event.getEventType() == ALDOperatorCollectionEventType.INIT_FAILURE )	{
+			// print stack trace
+			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
+				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				failureInfo.getException().printStackTrace(pw);
+				Utils.log(sw.toString()); 
+			}
+			// show error message
+			JOptionPane.showMessageDialog(null, 
+				"Operator is not well initialized.", 
+					"Initialization failure", JOptionPane.ERROR_MESSAGE);
+		} else { // ALDOperatorCollectionEventType.UNKNOWN
+			// print stack trace
+			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
+				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				failureInfo.getException().printStackTrace(pw);
+				Utils.log(sw.toString()); 
+			}
+	 	}
+	}
+	 
 	/**
 	 * 
 	 * Note: connectors should hopefully have survived...
@@ -496,180 +681,4 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 			}
 		}
 	}
-
-	@Override
-	public void handleALDOperatorCollectionEvent(ALDOperatorCollectionEvent event) {
-
-		RhizoMain rhizoMain = this.rhizoDisplay.getProject().getRhizoMain();
-
- 		if ( event.getEventType() == ALDOperatorCollectionEventType.RESULTS_AVAILABLE ) {
- 		 	this.operatorRunButton.setEnabled(true);
-			 
-			RootImageSegmentationOperator segOp = (RootImageSegmentationOperator)this.selectedSegOp;
-
- 			// get results from operator
-			HashMap<Integer, Vector<MTBRootTree>> resultTreelines = segOp.getAllResultTreelines();
-			 
-			// dialog to inform user about treeline import
-			JDialog d = new JDialog();
-			Thread showDialog = new Thread() {
-				public void run() {
-					JLabel l = new JLabel("Transfer of result treelines in progress ... please wait!", 
-						JLabel.CENTER); 
-					l.setVerticalAlignment(JLabel.CENTER);
-					d.add(l);
-					d.setTitle("Transfer to treelines");
-					d.setSize(600,200);
-					d.setModal(true);
-					d.setVisible(true);
-				}
-			};
-
-			switch(segOp.getOperatorWorkingMode())
-			{
-				case SEGMENTATION_CREATE:
-				{
-					int sizeStatusLabel = rhizoMain.getProjectConfig().sizeStatusLabelMapping();
-					String[] fullNames = new String[sizeStatusLabel+1];
-					for ( int i = 0; i < sizeStatusLabel; i++) {
-						fullNames[i] = rhizoMain.getProjectConfig().getStatusLabel(i).getName();
-					}
-					fullNames[sizeStatusLabel] = "STATUS_UNDEFINED";
-
-					final String status = (String) JOptionPane.showInputDialog(null,
-						"Which status should the treeline nodes have?\n"
-							+ "If you then press \'OK\', "
-								+ "the treelines will be imported in the image.",
-									"Choose status", JOptionPane.PLAIN_MESSAGE,
-										null, fullNames, fullNames[0]);
-					if( status != null ) {
-					
-						/*
-						 *  starts two threads: first one to transfer the polylines to treelines, second on to freeze the GUI through
-					 	 *  	a modal window. The window is then closed by the first thread if the transfer has been finished.
-					 	 */
-						Thread transferTreelines = new Thread() {
-							public void run() {
-
-								RhizoTreelineImportExport converter = new RhizoTreelineImportExport();
-
-								Set<Integer> layerIDs = resultTreelines.keySet();
-								for (Integer id: layerIDs) {
-	
-									converter.importMTBRootTreesAddToLayer(
-										id.intValue(), resultTreelines.get(id), status);
-
-	 		  					RhizoUtils.repaintTreelineList(
-										RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
-
-								}
-								d.setVisible(false);
-								d.dispose(); 
-							}
-						};
-						showDialog.start();
-						transferTreelines.start();
-					}
-					break;
-				}
-				case SEGMENTATION_UPDATE:
-				{
-		 			/*
- 					 *  starts two threads: first one to transfer the polylines to treelines, second on to freeze the GUI through
- 			 		 *  	a modal window. The window is then closed by the first thread if the transfer has been finished.
-			 		 */
-					showDialog.start();
-
-					// transfer the modified treelines back into the corresponding layers
-		 			Thread transferTreelines = new Thread() {
-		 				public void run()	{
-
-							Set<Integer> layerIDs = resultTreelines.keySet();
-							for (Integer id: layerIDs) {
-
-								System.out.println(RhizoRootImageSegmentationManager.this.projectLayers.get(id));
-
-								// make a copy of the old treelines
-								List<Treeline> formerTreelines = new LinkedList<>();
-								ArrayList<Displayable> treelines = 
-									RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id);
- 					  		for (Displayable t: treelines)
- 		  						formerTreelines.add((Treeline)t.clone());
-
- 		 						RhizoTreelineImportExport converter = new RhizoTreelineImportExport();
-								converter.importMTBRootTreesReplace(id.intValue(), 
-									RhizoRootImageSegmentationManager.this.projectLayers.get(id), 
-										resultTreelines.get(id),
-											RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
-
-			 					// transfer status, radius and connector information from old to new treeline
-//						 		this.transferTreelineProperties(formerTreelines, this.treelinesUnderProcessing);	
-
- 		  					RhizoUtils.repaintTreelineList(
-									RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
-							}
-							d.setVisible(false);
-							d.dispose(); 
-						}
- 		 			};
-					transferTreelines.start();
-						
-					break;
-				}
-				case SEGMENTATION_CREATE_AND_UPDATE:
-				{
-					System.out.println("Not yet supported...");
-
-					break;
-				}
-			}
-		}	else if ( event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED ) {
-			// print stack trace
-			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
-				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				failureInfo.getException().printStackTrace(pw);
-				Utils.log(sw.toString()); 
-			}
-			// show error message
-			JOptionPane.showMessageDialog(null, "Operator not completely configured.", 
-				"Configure operator", JOptionPane.ERROR_MESSAGE);
-		} else if ( event.getEventType() == ALDOperatorCollectionEventType.RUN_FAILURE ) {
-			// print stack trace
-			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
-				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				failureInfo.getException().printStackTrace(pw);
-				Utils.log(sw.toString()); 
-			}
-			// show error message
-			JOptionPane.showMessageDialog(null, 
-			 	"Something went wrong during execution of the operator.", 
-					"Run failure", JOptionPane.ERROR_MESSAGE);
-		} else if ( event.getEventType() == ALDOperatorCollectionEventType.INIT_FAILURE )	{
-			// print stack trace
-			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
-				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				failureInfo.getException().printStackTrace(pw);
-				Utils.log(sw.toString()); 
-			}
-			// show error message
-			JOptionPane.showMessageDialog(null, 
-				"Operator is not well initialized.", 
-					"Initialization failure", JOptionPane.ERROR_MESSAGE);
-		} else { // ALDOperatorCollectionEventType.UNKNOWN
-			// print stack trace
-			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
-				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				failureInfo.getException().printStackTrace(pw);
-				Utils.log(sw.toString()); 
-			}
-	 	}
- 	}
 }
