@@ -321,7 +321,7 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 
 			int prevLayerID = prevLayers > 0 ? prevLayers - 1 : prevLayers;
 			int activeLayerID = prevLayers;
-			int nextLayerID = activeLayerID + 1;
+			int nextLayerID = activeLayerID < projectLayers.size() - 1? activeLayerID + 1 : activeLayerID;
 
 			// System.out.println("Prev = " + prevLayerID);
 			// System.out.println("Act = " + activeLayerID);
