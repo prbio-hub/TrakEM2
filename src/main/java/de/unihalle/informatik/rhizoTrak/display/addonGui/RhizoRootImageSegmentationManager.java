@@ -319,9 +319,9 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 				this.projectLayers.add(currentLayerSet.getLayer(z));
 			}
 
-			int prevLayerID = prevLayers - 1;
+			int prevLayerID = prevLayers > 0 ? prevLayers - 1 : prevLayers;
 			int activeLayerID = prevLayers;
-			int nextLayerID = activeLayerID + 1;
+			int nextLayerID = activeLayerID < projectLayers.size() - 1? activeLayerID + 1 : activeLayerID;
 
 			// System.out.println("Prev = " + prevLayerID);
 			// System.out.println("Act = " + activeLayerID);
@@ -425,7 +425,7 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 			}
 		}
 		else {
-			tlines = layer.getDisplayables(Treeline.class);
+			tlines = new ArrayList<>(RhizoUtils.getTreelinesBelowRootstacks(Display.getFront().getProject(), layer));
 		}
 
 		Vector<MTBRootTree> tset = new Vector<>();
