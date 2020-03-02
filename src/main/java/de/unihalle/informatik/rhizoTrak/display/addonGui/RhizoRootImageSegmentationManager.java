@@ -56,6 +56,7 @@ import java.awt.event.ComponentListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.event.WindowStateListener;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -161,13 +162,14 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 
 	/**
 	 * Default constructor.
-	 * @param d		Display of corresponding rhizoTrak project.
+	 * 
+	 * @param d Display of corresponding rhizoTrak project.
 	 */
 	public RhizoRootImageSegmentationManager(Display d) {
 		this.rhizoDisplay = d;
 		try {
 			this.segOperatorCollection = new MTBOperatorCollection<RootImageSegmentationOperator>(
-				RootImageSegmentationOperator.class);
+					RootImageSegmentationOperator.class);
 			// allows to restart the operator with the same parameter values
 			this.segOperatorCollection.setRerunFlags(true);
 			this.segOperatorCollection.addALDOperatorCollectionEventListener(this);
@@ -178,7 +180,7 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 	}
 
 	public int getNumberOfAvailableOperators() {
-		if (this.segOperatorCollection != null) 
+		if (this.segOperatorCollection != null)
 			return this.segOperatorCollection.getAvailableClasses().size();
 		return 0;
 	}
@@ -195,17 +197,17 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 
 		this.segOpPanel = new JPanel();
 		this.segOpPanel.setLayout(new BoxLayout(this.segOpPanel, BoxLayout.Y_AXIS));
-		JScrollPane	scrollPane = this.getScrollableSegmentationOperatorList();
+		JScrollPane scrollPane = this.getScrollableSegmentationOperatorList();
 		JLabel labelOperators = new JLabel("Available Segmentation Operators:", JLabel.LEFT);
 		groupImageSegmentOpsLabel.add(labelOperators);
 		groupImageSegmentOpsSelection.add(scrollPane);
-					
+
 		this.operatorRunButton = new JButton("Run");
 		this.operatorRunButton.setToolTipText("Runs the selected image segmentation operator.");
 		this.operatorRunButton.setActionCommand("runOperator");
 		this.operatorRunButton.addActionListener(this);
 		groupImageSegmentOpsRunConfig.add(this.operatorRunButton);
-				
+
 		this.operatorConfigButton = new JButton("Configure");
 		this.operatorConfigButton.setToolTipText("Opens a new window to configure the selected operator.");
 		this.operatorConfigButton.setActionCommand("configureOperator");
@@ -226,10 +228,11 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 
 	/**
 	 * Collect all operators available for image segmentation.
+	 * 
 	 * @return Scroll pane with available operators.
 	 */
-	private JScrollPane getScrollableSegmentationOperatorList() {	
-		
+	private JScrollPane getScrollableSegmentationOperatorList() {
+
 		Vector<String> operatorList = new Vector<String>();
 
 		Collection<String> uniqueOpIDs = this.segOperatorCollection.getUniqueClassIDs();
@@ -242,7 +245,7 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 		this.operatorDisplayList.setSelectedIndex(0);
 		// only as high as needed for all found operators
 		this.operatorDisplayList.setVisibleRowCount(operatorList.size());
-				
+
 		JScrollPane scroll = new JScrollPane(this.operatorDisplayList);
 		scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		return scroll;
@@ -253,53 +256,50 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 
 		final String command = ae.getActionCommand();
 
-		if(command.equals("configureOperator")){
+		if (command.equals("configureOperator")) {
 			this.configureImageSegmentationOperator();
-		}
-		else if(command.equals("runOperator")) {
+		} else if (command.equals("runOperator")) {
 			this.runImageSegmentationOperator();
 		}
 	}
 
-
-		/**
+	/**
 	 * Configure the annotation enhancer operators.
 	 */
 	public void configureImageSegmentationOperator() {
 		String selectedOperatorName = this.operatorDisplayList.getSelectedValue();
-		if ( selectedOperatorName != null ) {
+		if (selectedOperatorName != null) {
 			// Checks if the window is already open
 			boolean isConfigFrameOpen = false;
-			for ( Display display : Display.getDisplays() ) {
+			for (Display display : Display.getDisplays()) {
 				JFrame frame = display.getFrame();
-				if ( frame.getTitle().contains("ALDOperatorConfigurationFrame:") && frame.isShowing() ) {
+				if (frame.getTitle().contains("ALDOperatorConfigurationFrame:") && frame.isShowing()) {
 					isConfigFrameOpen = true;
 				}
 			}
-			if ( !isConfigFrameOpen ) {
+			if (!isConfigFrameOpen) {
 				this.segOperatorCollection.openOperatorConfigWindow(selectedOperatorName);
-			} 
-		}
-		else {
-			JOptionPane.showMessageDialog(null, "Please choose an operator to configure.", 
-				"Choose operator", JOptionPane.ERROR_MESSAGE);
+			}
+		} else {
+			JOptionPane.showMessageDialog(null, "Please choose an operator to configure.", "Choose operator",
+					JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
 	/**
 	 * Execute the selected segmentation operator.
-	 */ 
+	 */
 	public void runImageSegmentationOperator() {
 
 		// get the currently selected operator
 		String selectedSegOpName = this.operatorDisplayList.getSelectedValue();
 		this.selectedSegOp = this.segOperatorCollection.getOperator(selectedSegOpName);
 
-		if( this.selectedSegOp != null ) {
+		if (this.selectedSegOp != null) {
 			this.operatorRunButton.setEnabled(false);
 
-			RootImageSegmentationOperator imSegOp = (RootImageSegmentationOperator)this.selectedSegOp;
-					
+			RootImageSegmentationOperator imSegOp = (RootImageSegmentationOperator) this.selectedSegOp;
+
 			// ask the operator which data to process
 			EnumSet<LayerSubset> requestedImages = imSegOp.getLayerSubsetForInputImages();
 			EnumSet<LayerSubset> requestedTreelines = imSegOp.getLayerSubsetForInputTreelines();
@@ -311,9 +311,9 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 			this.projectLayers = new LinkedList<>();
 
 			// add layers up to previous
-			int z=0;
+			int z = 0;
 			int prevLayers = 0;
-			for (z=0; z<activeLayer.getZ(); ++z) {
+			for (z = 0; z < activeLayer.getZ(); ++z) {
 				projectLayers.add(currentLayerSet.getLayer(z));
 				++prevLayers;
 			}
@@ -322,13 +322,13 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 			this.projectLayers.add(activeLayer);
 
 			// add layers up to the end
-			for (z = z+1; z<currentLayerSet.size(); ++z) {
+			for (z = z + 1; z < currentLayerSet.size(); ++z) {
 				this.projectLayers.add(currentLayerSet.getLayer(z));
 			}
 
 			int prevLayerID = prevLayers > 0 ? prevLayers - 1 : prevLayers;
 			int activeLayerID = prevLayers;
-			int nextLayerID = activeLayerID < projectLayers.size() - 1? activeLayerID + 1 : activeLayerID;
+			int nextLayerID = activeLayerID < projectLayers.size() - 1 ? activeLayerID + 1 : activeLayerID;
 
 			// System.out.println("Prev = " + prevLayerID);
 			// System.out.println("Act = " + activeLayerID);
@@ -336,68 +336,53 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 
 			// fill image map
 			HashMap<Integer, ImagePlus> inputImages = new HashMap<>();
-			if (		requestedImages.contains(LayerSubset.FIRST_TO_PREVIOUS)
-					|| 	requestedImages.contains(LayerSubset.ALL)) {
-				for (int i=0; i<prevLayerID; ++i)
-					inputImages.put(i, 
-						this.projectLayers.get(i).getPatches(true).get(0).getImagePlus());
+			if (requestedImages.contains(LayerSubset.FIRST_TO_PREVIOUS) || requestedImages.contains(LayerSubset.ALL)) {
+				for (int i = 0; i < prevLayerID; ++i)
+					inputImages.put(i, this.projectLayers.get(i).getPatches(true).get(0).getImagePlus());
 			}
-			if (		requestedImages.contains(LayerSubset.PREVIOUS)
-					|| 	requestedImages.contains(LayerSubset.ALL)) {
-				inputImages.put(prevLayerID, 
-					this.projectLayers.get(prevLayerID).getPatches(true).get(0).getImagePlus());	
+			if (requestedImages.contains(LayerSubset.PREVIOUS) || requestedImages.contains(LayerSubset.ALL)) {
+				inputImages.put(prevLayerID, this.projectLayers.get(prevLayerID).getPatches(true).get(0).getImagePlus());
 			}
-			if (		requestedImages.contains(LayerSubset.ACTIVE)
-					|| 	requestedImages.contains(LayerSubset.ALL)) {
-				inputImages.put(activeLayerID, 
-					this.projectLayers.get(activeLayerID).getPatches(true).get(0).getImagePlus());	
+			if (requestedImages.contains(LayerSubset.ACTIVE) || requestedImages.contains(LayerSubset.ALL)) {
+				inputImages.put(activeLayerID, this.projectLayers.get(activeLayerID).getPatches(true).get(0).getImagePlus());
 			}
-			if (		requestedImages.contains(LayerSubset.NEXT)
-					|| 	requestedImages.contains(LayerSubset.ALL)) {
-				inputImages.put(nextLayerID, 
-					this.projectLayers.get(nextLayerID).getPatches(true).get(0).getImagePlus());	
+			if (requestedImages.contains(LayerSubset.NEXT) || requestedImages.contains(LayerSubset.ALL)) {
+				inputImages.put(nextLayerID, this.projectLayers.get(nextLayerID).getPatches(true).get(0).getImagePlus());
 			}
-			if (		requestedImages.contains(LayerSubset.NEXT_TO_LAST)
-					|| 	requestedImages.contains(LayerSubset.ALL)) {
-				for (int i=nextLayerID+1; i<this.projectLayers.size(); ++i)
-					inputImages.put(i, 
-						this.projectLayers.get(i).getPatches(true).get(0).getImagePlus());	
+			if (requestedImages.contains(LayerSubset.NEXT_TO_LAST) || requestedImages.contains(LayerSubset.ALL)) {
+				for (int i = nextLayerID + 1; i < this.projectLayers.size(); ++i)
+					inputImages.put(i, this.projectLayers.get(i).getPatches(true).get(0).getImagePlus());
 			}
-		
+
 			// fill treelines map(s)
 			this.treelinesUnderProcessing = new HashMap<>();
 			HashMap<Integer, Vector<MTBRootTree>> inputTreelines = new HashMap<>();
 			boolean onlySelected = imSegOp.getOnlySelectedTreelines();
-			if (		requestedTreelines.contains(LayerSubset.FIRST_TO_PREVIOUS)
-					|| 	requestedTreelines.contains(LayerSubset.ALL)) {
-				for (int i=0; i<prevLayerID; ++i) {
-					this.getTreelinesFromLayer(i, this.projectLayers.get(i), onlySelected,
-						this.treelinesUnderProcessing, inputTreelines);
+			if (requestedTreelines.contains(LayerSubset.FIRST_TO_PREVIOUS) || requestedTreelines.contains(LayerSubset.ALL)) {
+				for (int i = 0; i < prevLayerID; ++i) {
+					this.getTreelinesFromLayer(i, this.projectLayers.get(i), onlySelected, this.treelinesUnderProcessing,
+							inputTreelines);
 				}
 			}
-			if (		requestedTreelines.contains(LayerSubset.PREVIOUS)
-					|| 	requestedTreelines.contains(LayerSubset.ALL)) {
+			if (requestedTreelines.contains(LayerSubset.PREVIOUS) || requestedTreelines.contains(LayerSubset.ALL)) {
 				this.getTreelinesFromLayer(prevLayerID, this.projectLayers.get(prevLayerID), onlySelected,
-					this.treelinesUnderProcessing, inputTreelines);
-			}
-			if (		requestedTreelines.contains(LayerSubset.ACTIVE)
-					|| 	requestedTreelines.contains(LayerSubset.ALL)) {
-				this.getTreelinesFromLayer(activeLayerID, this.projectLayers.get(activeLayerID), onlySelected,
-					this.treelinesUnderProcessing, inputTreelines);
-			}
-			if (		requestedTreelines.contains(LayerSubset.NEXT)
-					|| 	requestedTreelines.contains(LayerSubset.ALL)) {
-				this.getTreelinesFromLayer(nextLayerID, this.projectLayers.get(nextLayerID), onlySelected,
-					this.treelinesUnderProcessing, inputTreelines);
-			}
-			if (		requestedTreelines.contains(LayerSubset.NEXT_TO_LAST)
-					|| 	requestedTreelines.contains(LayerSubset.ALL)) {
-				for (int i=nextLayerID+1; i<this.projectLayers.size(); ++i) {
-					this.getTreelinesFromLayer(i, this.projectLayers.get(i), onlySelected,
 						this.treelinesUnderProcessing, inputTreelines);
+			}
+			if (requestedTreelines.contains(LayerSubset.ACTIVE) || requestedTreelines.contains(LayerSubset.ALL)) {
+				this.getTreelinesFromLayer(activeLayerID, this.projectLayers.get(activeLayerID), onlySelected,
+						this.treelinesUnderProcessing, inputTreelines);
+			}
+			if (requestedTreelines.contains(LayerSubset.NEXT) || requestedTreelines.contains(LayerSubset.ALL)) {
+				this.getTreelinesFromLayer(nextLayerID, this.projectLayers.get(nextLayerID), onlySelected,
+						this.treelinesUnderProcessing, inputTreelines);
+			}
+			if (requestedTreelines.contains(LayerSubset.NEXT_TO_LAST) || requestedTreelines.contains(LayerSubset.ALL)) {
+				for (int i = nextLayerID + 1; i < this.projectLayers.size(); ++i) {
+					this.getTreelinesFromLayer(i, this.projectLayers.get(i), onlySelected, this.treelinesUnderProcessing,
+							inputTreelines);
 				}
 			}
-		
+
 			// configure operator
 			((RootImageSegmentationOperator)this.selectedSegOp).setInputImages(inputImages);
 			((RootImageSegmentationOperator)this.selectedSegOp).setInputTreelines(inputTreelines);
@@ -435,12 +420,14 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 			tlines = new ArrayList<>(RhizoUtils.getTreelinesBelowRootstacks(Display.getFront().getProject(), layer));
 		}
 
-		Vector<MTBRootTree> tset = new Vector<>();
-		for (Displayable tl: tlines)
-			tset.add(converter.exportTreelineToMTBRootTree((Treeline)tl));
+		if (!tlines.isEmpty()) {
+			Vector<MTBRootTree> tset = new Vector<>();
+			for (Displayable tl: tlines)
+				tset.add(converter.exportTreelineToMTBRootTree((Treeline)tl));
 
-		treelines.put(layerID, tlines);
-		rootTrees.put(layerID, tset);
+			treelines.put(layerID, tlines);
+			rootTrees.put(layerID, tset);
+		}
 	}
 
 	@Override
@@ -566,7 +553,8 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 	  			 			Thread transferTreelines = new Thread() {
 					 				public void run()	{
 
-	  								Set<Integer> layerIDs = resultTreelines.keySet();
+										Set<Integer> layerIDs = resultTreelines.keySet();
+
 	  								for (Integer id: layerIDs) {
 
 	  									// make a copy of the old treelines
