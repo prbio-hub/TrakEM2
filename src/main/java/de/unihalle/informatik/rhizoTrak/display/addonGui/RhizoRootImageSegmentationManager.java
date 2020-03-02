@@ -553,28 +553,29 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 	  			 			Thread transferTreelines = new Thread() {
 					 				public void run()	{
 
+										RhizoRootImageSegmentationManager manager = 
+											RhizoRootImageSegmentationManager.this;
+
 										Set<Integer> layerIDs = resultTreelines.keySet();
 
 	  								for (Integer id: layerIDs) {
 
 	  									// make a copy of the old treelines
-	  									List<Treeline> formerTreelines = new LinkedList<>();
-	  									ArrayList<Displayable> treelines = 
-	  										RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id);
+	  									ArrayList<Displayable> formerTreelines = new ArrayList<>();
+	  									ArrayList<Displayable> treelines = manager.treelinesUnderProcessing.get(id);
 	  						  		for (Displayable t: treelines)
 	  		  							formerTreelines.add((Treeline)t.clone());
 
 	  		 							RhizoTreelineImportExport converter = new RhizoTreelineImportExport();
 	  									converter.importMTBRootTreesReplace(id.intValue(), 
-	  										RhizoRootImageSegmentationManager.this.projectLayers.get(id), 
-	  											resultTreelines.get(id),
-		 												RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
+	  										manager.projectLayers.get(id), resultTreelines.get(id),
+		 											manager.treelinesUnderProcessing.get(id));
 
-// 	 			 					// transfer status, radius and connector information from old to new treeline
-//  //						 		this.transferTreelineProperties(formerTreelines, this.treelinesUnderProcessing);	
+		 	 			 					// transfer status, radius and connector information from old to new treelines
+											manager.transferTreelineProperties(formerTreelines, 
+												manager.treelinesUnderProcessing.get(id), manager.projectLayers.get(id));	
 
-	  	 		  					RhizoUtils.repaintTreelineList(
-	  										RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
+	  	 		  					RhizoUtils.repaintTreelineList(manager.treelinesUnderProcessing.get(id));
 	 	 								}
  			 							d.setVisible(false);
 	  								d.dispose(); 
@@ -648,13 +649,15 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 	}
 	 
 	/**
+	 * Transfers radius and status information from source to target treelines.
+	 * <p>
+	 * For connector information it is assumed that connector IDs did not change.
 	 * 
-	 * Note: connectors should hopefully have survived...
-	 * 
-	 * @param sourceTreelines
-	 * @param targetTreelines
+	 * @param sourceTreelines		Source treelines from where to transfer information.
+	 * @param targetTreelines		Target treelines onto which to transfer information.
 	 */
-	private void transferTreelineProperties(List<Treeline> sourceTreelines, List<Displayable> targetTreelines) {
+	private void transferTreelineProperties(ArrayList<Displayable> sourceTreelines, 
+			ArrayList<Displayable> targetTreelines, Layer layer) {
 
 		Node<Float> minNode;
 	 	float dist, minDist, sx=0, sy=0, tx=0, ty=0;
@@ -665,8 +668,9 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 
 			// iterate over nodes of new treeline and for each node search
 			// for closest one in old treeline to copy properties
-			Set<Node<Float>> sourceNodes = sourceTreeline.getNodesAt(this.activeLayer);
-			Set<Node<Float>> targetNodes = RhizoAddons.getTreeLineNodeInstancesInLayer(targetTreeline, this.activeLayer);
+			Set<Node<Float>> sourceNodes = sourceTreeline.getNodesAt(layer);
+			Set<Node<Float>> targetNodes = 
+				RhizoAddons.getTreeLineNodeInstancesInLayer(targetTreeline, layer);
 			for (Node<Float> tn : targetNodes) {
 				tx = tn.getX(); 
 				ty = tn.getY();
@@ -701,7 +705,9 @@ public class RhizoRootImageSegmentationManager implements ActionListener, ALDOpe
 				}
 				// copy data
 				if (minNode != null) {
+					// radius
 					tn.setData(minNode.getData());
+					// status
 					tn.setConfidence(minNode.getConfidence());
 				}
 			}
