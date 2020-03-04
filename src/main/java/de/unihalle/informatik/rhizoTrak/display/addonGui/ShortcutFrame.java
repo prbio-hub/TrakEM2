@@ -66,7 +66,6 @@ import javax.swing.table.DefaultTableModel;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.RhizoShortcutManager.RhizoCommand;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
-import javafx.scene.input.KeyCode;
 
 @SuppressWarnings("serial")
 public class ShortcutFrame extends JFrame {

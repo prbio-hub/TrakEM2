@@ -216,6 +216,12 @@ public class RhizoStatistics {
 			return; // user cancelled dialog
 
 		File saveFile = fileChooser.getSelectedFile();
+		
+		if(saveFile.exists())
+		{
+			int ans = JOptionPane.showConfirmDialog(null, saveFile.getName() + " already exists.\nDo you want to replace it?", "Confirm Save", JOptionPane.YES_NO_OPTION);
+			if(ans == JOptionPane.NO_OPTION) return;
+		}
 
 		BufferedWriter bw = null;
 		try {
@@ -282,7 +288,7 @@ public class RhizoStatistics {
 				}
 
 				// write header and one line per layer
-				bw.write( "experiment" + sep + "tube" + sep + "timepoint" + sep + "timepoint" + sep + "layerID" +
+				bw.write( "experiment" + sep + "tube" + sep + "timepoint" + sep + "date" + sep + "layerID" +
 						sep + "length_" + this.outputUnit + sep + "surfaceArea_" + this.outputUnit + "^2" + sep + "volume_" + this.outputUnit + "^3" +
 						sep + "status" + sep + "statusName" + sep + "ImageWidth" + sep + "ImageHeight");
 

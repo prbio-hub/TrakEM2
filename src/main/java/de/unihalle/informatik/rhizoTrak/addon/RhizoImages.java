@@ -99,7 +99,8 @@ public class RhizoImages
 			imageLoaderFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 			JPanel temp = new ImageImport(rhizoMain);
 			imageLoaderFrame.add(temp);
-			imageLoaderFrame.pack();
+			imageLoaderFrame.setSize(700, 250);
+//			imageLoaderFrame.pack();
 			imageLoaderFrame.setVisible(true);
 		}
 
