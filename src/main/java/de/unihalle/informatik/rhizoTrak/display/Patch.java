@@ -909,12 +909,9 @@ public final class Patch extends Displayable implements ImageData {
 				rel_path = title; // at least some clue for recovery
 			} else {
 				rel_path = path2;
-				//actyc: convert path2 to relativ path; it appears the path is not relativ if the image is in another directory than the xml
 				rel_path = project.getRhizoMain().getRhizoImages().convertToRelativPath(path2);
 			}
 		}
-
-		//Utils.log("Patch path is: " + rel_path);
 
 		super.exportXML(sb_body, in, options);
 		final String[] RGB = Utils.getHexRGBColor(color);
