@@ -6769,7 +6769,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("writeRSML")){
 			Display.getFront().getProject().getRhizoMain().getRhizoRSML().writeRSML();
 		}
-		else if(command.equals("conflictPanel")){
+		else if(command.equals("inconsistencyPanel")){
                         RhizoMain rhizoMain = Display.getFront().getProject().getRhizoMain();
                         ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
 			conflictManager.showConflicts();
@@ -7766,9 +7766,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	statButton.setEnabled(true);
     	group21.add(statButton);
     		
-    	JButton conflicManagerButton = new JButton("Conflicts");
-    	conflicManagerButton.setToolTipText("Manage conflicts related to connectors.");
-    	conflicManagerButton.setActionCommand("conflictPanel");
+    	JButton conflicManagerButton = new JButton("Inconsistencies");
+    	conflicManagerButton.setToolTipText("Manage inconsistencies related to connectors.");
+    	conflicManagerButton.setActionCommand("inconsistencyPanel");
     	conflicManagerButton.addActionListener(this);
     	conflicManagerButton.setEnabled(true);
     	group3.add(conflicManagerButton);

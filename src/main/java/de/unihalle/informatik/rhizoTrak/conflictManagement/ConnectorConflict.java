@@ -117,7 +117,7 @@ public class ConnectorConflict extends Conflict{
 
 	@Override 
 	public String toString(){
-		return "Multiple Connector Conflict on Treeline: "+ conflictTree.getId() + getConnectorAsString();
+		return "Multiple Connector inconsistency on Treeline: "+ conflictTree.getId() + getConnectorAsString();
 	}
 	
 	private boolean stillExists()

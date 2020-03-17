@@ -128,7 +128,7 @@ public class TreelineConflict extends Conflict {
 	
 	@Override 
 	public String toString(){
-		return "Multiple Treeline Conflict on Connector: "+ treeConKey.getConnector().getId() + " " + getTreelinesAsString();
+		return "Multiple Treeline inconsistency on Connector: "+ treeConKey.getConnector().getId() + " " + getTreelinesAsString();
 	}
         
         public boolean equalsConflict(TreelineConflict tc2){
