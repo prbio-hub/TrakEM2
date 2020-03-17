@@ -99,7 +99,8 @@ public class RhizoImages
 			imageLoaderFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 			JPanel temp = new ImageImport(rhizoMain);
 			imageLoaderFrame.add(temp);
-			imageLoaderFrame.pack();
+			imageLoaderFrame.setSize(700, 250);
+//			imageLoaderFrame.pack();
 			imageLoaderFrame.setVisible(true);
 		}
 
@@ -111,15 +112,10 @@ public class RhizoImages
 	 * @return String representing the relative patches directory
 	 */
 	public String convertToRelativPath(String currentPathString){
-		if(currentPathString.contains(File.separator) && !currentPathString.contains(".")){
-			Path currentPath = Paths.get(currentPathString);
-			Path base = Paths.get(rhizoMain.getProjectConfig().getImageSearchDir().getAbsolutePath());
-			Path relativPath = base.relativize(currentPath);
-			//Utils.log("convert path from: "+currentPathString+" to: "+relativPath.toString());
-			return relativPath.toString();
-		}
-		return currentPathString;
-
+		Path currentPath = Paths.get(currentPathString);
+		Path base = Paths.get(rhizoMain.getStorageFolder());
+		Path relativPath = base.relativize(currentPath);
+		return relativPath.toString();
 	}
 	
 	public static void addLayerAndImage(File[] files) {

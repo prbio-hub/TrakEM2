@@ -1519,6 +1519,7 @@ public class RhizoRSML
 		Treeline treeline = (Treeline) treelineThing.getObject();
 		treeline.setLayer( layer);
 		fillTreelineFromRoot( root, treeline, null, layer);
+		treeline.repaint(true, layer);
 		return treeline;
 	}
 	
@@ -1561,7 +1562,7 @@ public class RhizoRSML
 			previousnode = createRhizoTrakNode( firstPoint, getRadiusFromRsml( diameters, pointIndex), treeline, layer);
 			if ( debug )
 				System.out.println("First rt node " + RhizoUtils.getAbsoluteTreelineCoordinates( previousnode.getX(), previousnode.getY(), treeline));
-			treeline.addNode( null, previousnode, (byte) 0);
+			treeline.addNode( null, previousnode, (byte) 0, true);
 			treelineNodes.put( pointIndex, previousnode);
 			treeline.setRoot( previousnode);
 			
@@ -1635,7 +1636,7 @@ public class RhizoRSML
 			previousnode = createRhizoTrakNode( firstPoint, getRadiusFromRsml( diameters, pointIndex), treeline, layer);
 			if ( debug )
 				System.out.println("First rt node " + RhizoUtils.getAbsoluteTreelineCoordinates( previousnode.getX(), previousnode.getY(), treeline));
-			treeline.addNode( parentNode, previousnode, statuslabel);
+			treeline.addNode( parentNode, previousnode, statuslabel, true);
 			treelineNodes.put( pointIndex, previousnode);
 			
 			pointIndex++;
@@ -1650,7 +1651,7 @@ public class RhizoRSML
 			byte statuslabel = getStatuslabelFromRsml( statuslabels, pointIndex);
 			
 			// TODO do we need to check for VIRTUAL and VIRTUAL_RSML status labels ?????
-			treeline.addNode(previousnode, node, statuslabel);
+			treeline.addNode(previousnode, node, statuslabel,true);
 			treelineNodes.put( pointIndex, node);
 			previousnode = node;
 			pointIndex++;

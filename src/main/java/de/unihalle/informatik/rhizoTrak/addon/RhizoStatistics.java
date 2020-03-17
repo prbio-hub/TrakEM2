@@ -1,25 +1,25 @@
-/* 
+/*
  * This file is part of the rhizoTrak project.
- * 
- * Note that rhizoTrak extends TrakEM2, hence, its code base substantially 
- * relies on the source code of the TrakEM2 project and the corresponding Fiji 
- * plugin, initiated by A. Cardona in 2005. Large portions of rhizoTrak's code 
+ *
+ * Note that rhizoTrak extends TrakEM2, hence, its code base substantially
+ * relies on the source code of the TrakEM2 project and the corresponding Fiji
+ * plugin, initiated by A. Cardona in 2005. Large portions of rhizoTrak's code
  * are directly derived/copied from the source code of TrakEM2.
- * 
+ *
  * For more information on TrakEM2 please visit its websites:
- * 
+ *
  *  https://imagej.net/TrakEM2
- * 
+ *
  *  https://github.com/trakem2/TrakEM2/wiki
- * 
+ *
  * Fore more information on rhizoTrak, visit
  *
  *  https://prbio-hub.github.io/rhizoTrak
  *
- * Both projects, TrakEM2 and rhizoTrak, are released under GPL. 
+ * Both projects, TrakEM2 and rhizoTrak, are released under GPL.
  * Please find below first the copyright notice of rhizoTrak, and further on
  * (in case that this file was part of the original TrakEM2 source code base
- * and contained a TrakEM2 file header) the original file header with the 
+ * and contained a TrakEM2 file header) the original file header with the
  * TrakEM2 license note.
  */
 
@@ -48,29 +48,31 @@
 /*
  * The Cohen-Sutherland line clipping algorithm implemented in the internal
  * Segment class has been inspired by
- * 
+ *
  * //
- *  * CohenSutherland.java 
- *  * -------------------- 
- *  * (c) 2007 by Intevation GmbH 
- *  * 
+ *  * CohenSutherland.java
+ *  * --------------------
+ *  * (c) 2007 by Intevation GmbH
+ *  *
  *  * @author Sascha L. Teichmann (teichmann@intevation.de)
  *  * @author Ludwig Reiter       (ludwig@intevation.de)
- *  * 
- *  * This program is free software under the LGPL (>=v2.1) 
- *  * Read the file LICENSE.txt coming with the sources for details. 
+ *  *
+ *  * This program is free software under the LGPL (>=v2.1)
+ *  * Read the file LICENSE.txt coming with the sources for details.
  *  //
- *  
- *  originally released under LGPL (>=v2.1). The original source file can, 
+ *
+ *  originally released under LGPL (>=v2.1). The original source file can,
  *  e.g., be found on Github:
- *  
+ *
  *  https://github.com/tabulapdf/tabula-java/blob/master/src/main/java/technology/tabula/CohenSutherlandClipping.java
- *  
+ *
  */
 
 package de.unihalle.informatik.rhizoTrak.addon;
 
-import java.awt.GridLayout;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
@@ -78,21 +80,16 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
 
+import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import de.unihalle.informatik.rhizoTrak.Project;
@@ -110,7 +107,7 @@ import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.ImagePlus;
 
-public class RhizoStatistics {	
+public class RhizoStatistics {
 	final static double inchToMM = 25.4;
 
 	/**
@@ -118,36 +115,36 @@ public class RhizoStatistics {
 	 */
 	private final static HashSet<String>  IMAGEJ_UNITS  = new HashSet<String>();
 	{ IMAGEJ_UNITS.add( "inch");
-	  IMAGEJ_UNITS.add( "mm");
+		IMAGEJ_UNITS.add( "mm");
 	}
-	
-	
+
+
 	private final String AGGREGATED = "Aggregated";
 	private final String SEGMENTS = "Segments";
 	private final String ONLY_STRING = "Current layer only";
 	private final String ALL_STRING = "All layers";
 	private RhizoMain rhizoMain;
-	
+
 	private boolean debug = false;
-	
-	private String outputUnit; 
-	
+
+	private String outputUnit;
+
 	// Hash of all layers with treeline(s) to write to
 	// set in computeStatistics
 	private HashSet<Layer> allLayers = null;
-	
+
 	/**
-	 * Calibration info from imageplus for each layer 
+	 * Calibration info from imageplus for each layer
 	 */
 	HashMap<Integer,ImagePlusCalibrationInfo> allCalibInfos;
-	
+
 
 	public RhizoStatistics(RhizoMain rhizoMain) 	{
 		this.rhizoMain = rhizoMain;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 */
 	public void writeStatistics()
 	{
@@ -156,12 +153,12 @@ public class RhizoStatistics {
 		String[] choices2 = {ALL_STRING, ONLY_STRING};
 		String[] choices3 = {"pixel", "inch", "mm"};
 		String[] choicesType = { SEGMENTS, AGGREGATED};
-		
+
 		JComboBox<String> combo1 = new JComboBox<String>(choices1);
 		JComboBox<String> combo2 = new JComboBox<String>(choices2);
 		JComboBox<String> combo3 = new JComboBox<String>(choices3);
 		JComboBox<String> comboType = new JComboBox<String>( choicesType);
-		
+
 		JPanel statChoicesPanel = new JPanel();
 		statChoicesPanel.setLayout(new GridLayout( 4, 2, 0, 10));
 		statChoicesPanel.add(new JLabel("Output type "));
@@ -178,7 +175,7 @@ public class RhizoStatistics {
 		if(result != JOptionPane.OK_OPTION) {
 			return;
 		}
-		
+
 		String sep = "";
 		String outputLayers = "";
 		this.outputUnit = "";
@@ -192,23 +189,23 @@ public class RhizoStatistics {
 		} else {
 			aggregatedStatistics = false;
 		}
-		
+
 		if(sep.equals("") || outputLayers.equals("") || this.outputUnit.equals("")) {
 			Utils.showMessage( "rhizoTrak", "illegal choice of options for Write csv file");
 			return;
 		}
-		
+
 		// Select and open and output file
 		String basefilename = rhizoMain.getXmlName().replaceFirst(".xml\\z", "");
 
 		String folder;
 		if  ( rhizoMain.getStorageFolder() == null )
 			folder = System.getProperty("user.home");
-		else 
+		else
 			folder = rhizoMain.getStorageFolder();
 
 		JFileChooser fileChooser = new JFileChooser();
-		FileNameExtensionFilter filter = new FileNameExtensionFilter( "File for wrting experimental data", "csv"); 
+		FileNameExtensionFilter filter = new FileNameExtensionFilter( "File for wrting experimental data", "csv");
 		fileChooser.setFileFilter(filter);
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		fileChooser.setDialogTitle("File to write experimental to");
@@ -219,14 +216,20 @@ public class RhizoStatistics {
 			return; // user cancelled dialog
 
 		File saveFile = fileChooser.getSelectedFile();
+		
+		if(saveFile.exists())
+		{
+			int ans = JOptionPane.showConfirmDialog(null, saveFile.getName() + " already exists.\nDo you want to replace it?", "Confirm Save", JOptionPane.YES_NO_OPTION);
+			if(ans == JOptionPane.NO_OPTION) return;
+		}
 
 		BufferedWriter bw = null;
-		try { 
+		try {
 			bw = new BufferedWriter(new FileWriter(saveFile));
 		} catch (IOException e) {
 			Utils.showMessage( "WriteStatistics can not open " + saveFile.getAbsolutePath());
 			return;
-		}	 
+		}
 
 		// compile all segments to write
 		boolean statForAllLayers = outputLayers.equals( ALL_STRING);
@@ -236,32 +239,33 @@ public class RhizoStatistics {
 		} else {
 			allSegments = computeStatistics( Display.getFront().getProject(), Display.getFront().getLayer());
 		}
-		
+
 		if ( allSegments == null) {
 			try {
 				bw.close();
+				saveFile.delete();
 			} catch (IOException e) {
 			}
 			return;
 		}
-		
+
 		// write
-		try {	
+		try {
 			if ( aggregatedStatistics ) {
-	
-				RhizoProjectConfig config = rhizoMain.getProjectConfig(); 
-				
+
+				RhizoProjectConfig config = rhizoMain.getProjectConfig();
+
 				// create arrays with lines for layers and columns for status labels
 				HashMap<Integer,Double[]> aggregatedLength = new HashMap<Integer, Double[]>();
 				HashMap<Integer,Double[]> aggregatedSurface = new HashMap<Integer, Double[]>();
 				HashMap<Integer,Double[]> aggregatedVolume = new HashMap<Integer, Double[]>();
-				
+
 				for ( Layer layer : this.allLayers) {
 					Double[] stats = new Double[config.sizeStatusLabelMapping()];
 					for ( int i = 0 ; i < stats.length ; i++ )
 						stats[i] = 0.0;
 					aggregatedLength.put( layer.getParent().indexOf(layer) + 1, stats);
-					
+
 					stats = new Double[config.sizeStatusLabelMapping()];
 					for ( int i = 0 ; i < stats.length ; i++ )
 						stats[i] = 0.0;
@@ -273,7 +277,7 @@ public class RhizoStatistics {
 					aggregatedVolume.put( layer.getParent().indexOf(layer) + 1, stats);
 
 				}
-				 
+
 				// iterate over all segments and aggregate the segment length
 				for (Segment segment : allSegments) {
 					int layerID = segment.layerIndex;
@@ -282,14 +286,14 @@ public class RhizoStatistics {
 					aggregatedSurface.get( layerID)[ status] += segment.surfaceArea;
 					aggregatedVolume.get( layerID)[ status] += segment.volume;
 				}
-				
+
 				// write header and one line per layer
-				bw.write( "experiment" + sep + "tube" + sep + "timepoint" + sep + "timepoint" + sep + "layerID" +  
+				bw.write( "experiment" + sep + "tube" + sep + "timepoint" + sep + "date" + sep + "layerID" +
 						sep + "length_" + this.outputUnit + sep + "surfaceArea_" + this.outputUnit + "^2" + sep + "volume_" + this.outputUnit + "^3" +
 						sep + "status" + sep + "statusName" + sep + "ImageWidth" + sep + "ImageHeight");
-				
+
 				bw.newLine();
-				
+
 				List<Integer> sortedLayerIDs = new LinkedList<Integer>(aggregatedLength.keySet());
 				Collections.sort( sortedLayerIDs);
 				for ( int layerID : sortedLayerIDs) {
@@ -300,17 +304,17 @@ public class RhizoStatistics {
 					String timepoint = RhizoUtils.getICAPTimepoint(imageName);
 					String date = RhizoUtils.getICAPDate(imageName);
 					String width = RhizoUtils.NA_String;
-					String height =  RhizoUtils.NA_String; 
-				
+					String height =  RhizoUtils.NA_String;
+
 					if ( calibInfo != null && calibInfo.ip != null ) {
 						width = String.valueOf( calibInfo.ip.getWidth());
 						height = String.valueOf( calibInfo.ip.getHeight());
 					}
-					
+
 					for ( int s = 0 ; s < config.sizeStatusLabelMapping(); s++ ) {
 						bw.write( experiment + sep + tube + sep + timepoint + sep + date + sep + Integer.toString( layerID) +
-								sep + aggregatedLength.get(layerID)[s] + 
-								sep + aggregatedSurface.get(layerID)[s] + 
+								sep + aggregatedLength.get(layerID)[s] +
+								sep + aggregatedSurface.get(layerID)[s] +
 								sep + aggregatedVolume.get(layerID)[s] +
 								sep + s + sep + config.getStatusLabel( s).getName() +
 								sep + width + sep + height);
@@ -321,7 +325,7 @@ public class RhizoStatistics {
 
 			} else {
 				// write header
-				bw.write("experiment" + sep + "tube" + sep + "timepoint" + sep + "date" + sep + "rootID" + sep + "layerID" +sep + "segmentID" +  
+				bw.write("experiment" + sep + "tube" + sep + "timepoint" + sep + "date" + sep + "rootID" + sep + "layerID" +sep + "segmentID" + sep + "parentID" +
 						sep + "x_start_pixel" + sep + "y_start_pixel" + sep + "x_end_pixel" + sep + "y_end_pixel" +
 						sep + "length_" + this.outputUnit + sep + "startDiameter_" + this.outputUnit + sep + "endDiameter_" + this.outputUnit +
 						sep + "surfaceArea_" + this.outputUnit + "^2" + sep + "volume_" + this.outputUnit + "^3" + sep + "children" + sep + "status" + sep + "statusName" + "\n");
@@ -330,17 +334,17 @@ public class RhizoStatistics {
 					bw.newLine();
 				}
 			}
-			
+
 			bw.close();
 		} catch (IOException e) {
 			Utils.showMessage( "WriteStatistics cannot write to " + saveFile.getAbsolutePath());
-		}	
+		}
 	}
-	
+
 	/**
 	 * @param project
-	 * @param currentLayer if null all layers are considered 
-	 * 
+	 * @param currentLayer if null all layers are considered
+	 *
 	 * @return list of all <code>Segment</code>s to write, null on failure
 	 */
 	private List<Segment> computeStatistics( Project project, Layer currentLayer) {
@@ -360,7 +364,7 @@ public class RhizoStatistics {
 
 		// and collect treelines and connectors below all rootstacks
 		this.allLayers = new HashSet<Layer>(); // all layers we have a treeline in to write
-		
+
 		for ( ProjectThing rootstackThing :rootstackThings ) {
 			if ( debug)	System.out.println("rootstack " + rootstackThing.getId());
 			for ( ProjectThing pt : rootstackThing.findChildrenOfTypeR( Treeline.class)) {
@@ -369,7 +373,7 @@ public class RhizoStatistics {
 				if ( debug)	System.out.println( "    treeline " + tl.getId());
 
 				if ( tl.getClass().equals( Treeline.class)) {
-					if ( tl.getFirstLayer() != null && 
+					if ( tl.getFirstLayer() != null &&
 							( currentLayer == null || currentLayer.equals( tl.getFirstLayer())) ) {
 						if ( debug)	System.out.println( "           as treeline");
 						allTreelines.add(tl);
@@ -388,18 +392,22 @@ public class RhizoStatistics {
 		allCalibInfos = getCalibrationInfo( allLayers);
 		if ( allCalibInfos == null)
 			return null;
-		
+
 		// create all segments for these treelines to write to the csv file
 		// consider image bounds if patch has an associated image
 		StringBuilder msg = new StringBuilder();
 		try {
 			for ( Treeline tl : allTreelines)  {
+
+				List<Segment> currentSegments = new ArrayList<Segment>();
+				Map<RadiusNode, Integer> parents = new HashMap<RadiusNode, Integer>();
+
 				if ( debug)	System.out.println( "segment to write " + tl.getId());
 				HashSet<Connector> connectorSet = new HashSet<>();
-				if ( tl.getTreeEventListener() != null ) { 
-					for(TreeEventListener tel: tl.getTreeEventListener()) { 
+				if ( tl.getTreeEventListener() != null ) {
+					for(TreeEventListener tel: tl.getTreeEventListener()) {
 						connectorSet.add(tel.getConnector());
-					}  
+					}
 				}
 
 				if ( debug)	System.out.println( "got connset" + connectorSet);
@@ -427,14 +435,28 @@ public class RhizoStatistics {
 								System.out.println( "    create segment for node " + node.getConfidence() +
 										" patch " + RhizoAddons.getPatch(tl));
 							}
-							Segment currentSegment = new Segment(rhizoMain, tl, treelineID, 
-									segmentID, (RadiusNode) node, (RadiusNode) node.getParent(), this.outputUnit, (int) node.getConfidence());
+							RadiusNode radiusNode = (RadiusNode) node;
+							RadiusNode radiusParentNode = (RadiusNode) node.getParent();
+
+							Segment currentSegment = new Segment(rhizoMain, tl, treelineID,
+									segmentID, radiusNode, radiusParentNode, this.outputUnit, (int) node.getConfidence());
+
+							currentSegments.add(currentSegment);
+							parents.put(radiusNode, segmentID);
+
 							segmentID++;
 
-							if(currentSegment.cohenSutherlandLineClipping()) 
+							if(currentSegment.cohenSutherlandLineClipping())
 								allSegments.add(currentSegment);
 						}
 					}
+
+					for(Segment s: currentSegments){
+
+						s.setParentID(null == parents.get(s.getParentNode()) ? -1 : parents.get(s.getParentNode()));
+					}
+
+
 				}
 
 				if ( debug)	System.out.println( "created segments");
@@ -450,8 +472,8 @@ public class RhizoStatistics {
 		}
 
 		return allSegments;
-	}	
-	
+	}
+
 	/** get the calibration info for each layer from the ImageJ ImapePlus
 	 * @param allLayers
 	 * @return
@@ -471,7 +493,7 @@ public class RhizoStatistics {
 
 		for ( Layer layer : allLayers) {
 			if ( layer == null ) continue;
-			
+
 			int layerIndex = layer.getParent().indexOf(layer) + 1;
 			LayerSet layerSet = layer.getParent();
 			List<Patch> patches = layerSet.getAll(Patch.class);
@@ -485,7 +507,7 @@ public class RhizoStatistics {
 						myAllCalibInfos.put( layerIndex, new ImagePlusCalibrationInfo(ip));
 						found = true;
 						break;
-					} 
+					}
 				}
 			}
 			if ( ! found) {
@@ -528,34 +550,137 @@ public class RhizoStatistics {
 					StringBuilder msg = new StringBuilder("Warning: Could not find valid calibration for all layers\n");
 
 					for ( int i : zValues ) {
-						msg.append(  "layer " + i + 
+						msg.append(  "layer " + i +
 								(myAllCalibInfos.get(i).isValid() ? "(valid): " : "(invalid): ") +
 								myAllCalibInfos.get(i).toString() + "\n");
 					}
-					msg.append( " \nUse pixel units and proceed?\n");
+					msg.append( " \nUse pixel units and proceed or edit calibration information?\n");
 
-					if ( Utils.checkYN( new String( msg)) ) {
-						this.outputUnit = "pixel";
-					} else {
-						return null;
+					Object[] options = {"Ok", "Edit calibration", "Cancel"};
+					int n = JOptionPane.showOptionDialog(null, new String( msg),
+							"",
+							JOptionPane.YES_NO_CANCEL_OPTION,
+							JOptionPane.QUESTION_MESSAGE,
+							null,
+							options,
+							null);
+
+					if(n == 1)
+					{
+						CalibrationPanel editCalibrationPanel = new CalibrationPanel(zValues, myAllCalibInfos);
+						int result = JOptionPane.showConfirmDialog(null, editCalibrationPanel, "Edit calibration information", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+						if(result == JOptionPane.OK_OPTION)
+						{
+							Map<Integer, JTextField> textFields = editCalibrationPanel.getTextFields();
+							Map<Integer, JComboBox> comboBoxes = editCalibrationPanel.getComboBoxes();
+
+							for(int i: zValues)
+							{
+								ImagePlusCalibrationInfo calibInfo = myAllCalibInfos.get(i);
+								JTextField tf = textFields.get(i);
+								JComboBox comboBox = comboBoxes.get(i);
+
+								String pixelSize = tf.getText();
+								String unit = (String) comboBox.getSelectedItem();
+
+								if(null != pixelSize && !pixelSize.equals(""))
+								{
+									calibInfo.setPixelWidth(Double.parseDouble(pixelSize));
+									calibInfo.setPixelHeight(Double.parseDouble(pixelSize));
+								}
+
+								if(null != unit && !unit.equals(""))
+								{
+									if(unit.equals("DPI") && Double.parseDouble(pixelSize) != 0)
+									{
+										calibInfo.setPixelWidth(1.0 / Double.parseDouble(pixelSize));
+										calibInfo.setPixelHeight(1.0 / Double.parseDouble(pixelSize));
+										calibInfo.setXUnit("inch");
+										calibInfo.setYUnit("inch");
+									}
+									else
+									{
+										calibInfo.setXUnit(unit);
+										calibInfo.setYUnit(unit);
+									}
+								}
+							}
+						}
+						else return null;
 					}
+					else if(n == 2 || n == JOptionPane.CLOSED_OPTION) return null;
+
 				} else {
 					if ( rhizoMain.getProjectConfig().isShowCalibrationInfo() ) {
 						StringBuilder msg = new StringBuilder( "Calibrations for all layers\n");
 						for ( int i : zValues ) {
-							msg.append(  "layer " + i + 
+							msg.append(  "layer " + i +
 									(myAllCalibInfos.get(i).isValid() ? " (valid): " : " (invalid): ") +
 									myAllCalibInfos.get(i).toString() + "\n");
 						}
 
-						Utils.showMessage( new String( msg));
+						Object[] options = {"Ok", "Edit calibration", "Cancel"};
+						int n = JOptionPane.showOptionDialog(null, new String( msg),
+								"",
+								JOptionPane.YES_NO_CANCEL_OPTION,
+								JOptionPane.QUESTION_MESSAGE,
+								null,
+								options,
+								null);
+
+						if(n == 1)
+						{
+							CalibrationPanel editCalibrationPanel = new CalibrationPanel(zValues, myAllCalibInfos);
+							int result = JOptionPane.showConfirmDialog(null, editCalibrationPanel, "Edit calibration information", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+							if(result == JOptionPane.OK_OPTION)
+							{
+								Map<Integer, JTextField> textFields = editCalibrationPanel.getTextFields();
+								Map<Integer, JComboBox> comboBoxes = editCalibrationPanel.getComboBoxes();
+								
+ 								for(int i: zValues)
+								{
+									ImagePlusCalibrationInfo calibInfo = myAllCalibInfos.get(i);
+									JTextField tf = textFields.get(i);
+									JComboBox comboBox = comboBoxes.get(i);
+									
+									String pixelSize = tf.getText();
+									String unit = (String) comboBox.getSelectedItem();
+
+									if(null != pixelSize && !pixelSize.equals(""))
+									{
+										calibInfo.setPixelWidth(Double.parseDouble(pixelSize));
+										calibInfo.setPixelHeight(Double.parseDouble(pixelSize));
+									}
+									
+									if(null != unit && !unit.equals(""))
+									{
+										if(unit.equals("DPI") && Double.parseDouble(pixelSize) != 0)
+										{
+											calibInfo.setPixelWidth(1.0 / Double.parseDouble(pixelSize));
+											calibInfo.setPixelHeight(1.0 / Double.parseDouble(pixelSize));
+											calibInfo.setXUnit("inch");
+											calibInfo.setYUnit("inch");
+										}
+										else
+										{
+											calibInfo.setXUnit(unit);
+											calibInfo.setYUnit(unit);
+										}
+									}
+								}
+							}
+							else return null;
+						}
+						else if(n == 2 || n == JOptionPane.CLOSED_OPTION) return null;
 					}
 				}
 			}
 		}
 		return myAllCalibInfos;
 	}
-	
+
 	class ImagePlusCalibrationInfo {
 		ImagePlus ip;
 		String imagename;
@@ -563,7 +688,7 @@ public class RhizoStatistics {
 		String yUnit;
 		double pixelWidth;
 		double pixelHeight;
-		
+
 		ImagePlusCalibrationInfo( ImagePlus ip) {
 			this.ip = ip;
 			this.imagename = ip.getTitle();
@@ -572,7 +697,7 @@ public class RhizoStatistics {
 			this.pixelWidth = ip.getCalibration().pixelWidth;
 			this.pixelHeight = ip.getCalibration().pixelHeight;
 		}
-		
+
 		public ImagePlusCalibrationInfo() {
 			this.ip = null;
 			this.imagename = "";
@@ -581,10 +706,9 @@ public class RhizoStatistics {
 			this.pixelWidth = -1.0;
 			this.pixelHeight = -1.0;
 		}
-	
+
 		/** return the pixel width in mm
-		 * @param ip
-		 * @return return the pixel width in mm, 
+		 * @return return the pixel width in mm,
 		 * a negative value, if the image plus has no calibration information
 		 */
 		double getPixelWidhtMM() {
@@ -592,60 +716,60 @@ public class RhizoStatistics {
 				return this.pixelWidth;
 			} else if ( this.xUnit.equals( "inch") ) {
 				return this.pixelWidth * inchToMM;
-			}	
-			
+			}
+
 			return -1.0;
 		}
-		
+
 		/** return the pixel height  in mm
-		 * 
-		 * @return return the pixel width in mm, 
+		 *
+		 * @return return the pixel width in mm,
 		 * a negative value, if the image plus has no calibration information
 		 */
-		 double getPixelHeightMM() {
+		double getPixelHeightMM() {
 			if ( this.yUnit.equals("mm")) {
 				return this.pixelHeight;
 			} else if ( this.yUnit.equals( "inch") ) {
 				return this.pixelHeight * inchToMM;
-			}	
-			
+			}
+
 			return -1.0;
 		}
-		 
-		 /** return the DPI for square pixels
+
+		/** return the DPI for square pixels
 		 * @returnDPI for square pixels, return a negative value for non square pixels or in
 		 * case of not sufficient calibration information
 		 */
 		int getDPI() {
-			 if ( this.isValid()) {
-				 return (int) Math.round( inchToMM / this.getPixelWidhtMM());
-			 } else {
-				 return -1;
-			 }
-		 }
-		 
-		 public String toString() {
-			 return new String( this.imagename + ": DPI =" + fmtd( this.getDPI()) + 
-					 " (pixelwidth [mm] = " + fmt( this.getPixelWidhtMM()) + ", pixelheight[mm] = " + fmt( this.getPixelHeightMM()) +
-					 ", xunit = " + this.xUnit + ", yunit = " + this.yUnit +
-					 ", pixelwidth [xunit] = " + fmt( this.pixelWidth) + ", pixelheight[yunit] = " + fmt( this.pixelHeight) + ")");
-		 }
-		 
-		 private String fmt( double value) {
-			 if ( value > 0 ) 
-				 return String.format("%.4f", value);
-			 else 
-				 return RhizoUtils.NA_String;
-		 }
-		 
-		 private String fmtd( int value) {
-			 if ( value > 0 ) 
-				 return String.format("%d", value);
-			 else 
-				 return RhizoUtils.NA_String;
-		 }
-		 
-		 /** Valid if xunit and yunit are supported to convert and if the pixels are square
+			if ( this.isValid()) {
+				return (int) Math.round( inchToMM / this.getPixelWidhtMM());
+			} else {
+				return -1;
+			}
+		}
+
+		public String toString() {
+			return new String( this.imagename + ": DPI =" + fmtd( this.getDPI()) +
+					" (pixelwidth [mm] = " + fmt( this.getPixelWidhtMM()) + ", pixelheight[mm] = " + fmt( this.getPixelHeightMM()) +
+					", xunit = " + this.xUnit + ", yunit = " + this.yUnit +
+					", pixelwidth [xunit] = " + fmt( this.pixelWidth) + ", pixelheight[yunit] = " + fmt( this.pixelHeight) + ")");
+		}
+
+		private String fmt( double value) {
+			if ( value > 0 )
+				return String.format("%.4f", value);
+			else
+				return RhizoUtils.NA_String;
+		}
+
+		private String fmtd( int value) {
+			if ( value > 0 )
+				return String.format("%d", value);
+			else
+				return RhizoUtils.NA_String;
+		}
+
+		/** Valid if xunit and yunit are supported to convert and if the pixels are square
 		 * @return
 		 */
 		boolean isValid() {
@@ -656,27 +780,63 @@ public class RhizoStatistics {
 				return false;
 			}
 		}
+
+		public String getImageName() {
+			return imagename;
+		}
+
+		public double getPixelWidth() {
+			return pixelWidth;
+		}
+
+		public double getPixelHeight() {
+			return pixelHeight;
+		}
+
+		public void setPixelWidth(double pixelWidth) {
+			this.pixelWidth = pixelWidth;
+		}
+
+		public void setPixelHeight(double pixelHeight) {
+			this.pixelHeight = pixelHeight;
+		}
+		
+		public String getXUnit() {
+			return xUnit;
+		}
+		
+		public String getYUnit() {
+			return yUnit;
+		}
+		
+		public void setXUnit(String xUnit) {
+			this.xUnit = xUnit;
+		}
+		
+		public void setYUnit(String yUnit) {
+			this.yUnit = yUnit;
+		}
 	}
 
 	/**
 	 * Segment class for writing statistics.
 	 * @author Axel, Tino
 	 *
-	 * Note that the Cohen-Sutherland line clipping algorithm implemented in this 
+	 * Note that the Cohen-Sutherland line clipping algorithm implemented in this
 	 * class has been inspired by
-	 * 
+	 *
 	 * //
-	 *  * CohenSutherland.java 
-	 *  * -------------------- 
-	 *  * (c) 2007 by Intevation GmbH 
-	 *  * 
+	 *  * CohenSutherland.java
+	 *  * --------------------
+	 *  * (c) 2007 by Intevation GmbH
+	 *  *
 	 *  * @author Sascha L. Teichmann (teichmann@intevation.de)
 	 *  * @author Ludwig Reiter       (ludwig@intevation.de)
-	 *  * 
-	 *  * This program is free software under the LGPL (>=v2.1) 
-	 *  * Read the file LICENSE.txt coming with the sources for details. 
+	 *  *
+	 *  * This program is free software under the LGPL (>=v2.1)
+	 *  * Read the file LICENSE.txt coming with the sources for details.
 	 *  //
-	 *  
+	 *
 	 *  The original source file can, e.g., be found on Github:
 	 *  https://github.com/tabulapdf/tabula-java/blob/master/src/main/java/technology/tabula/CohenSutherlandClipping.java
 	 *
@@ -700,6 +860,7 @@ public class RhizoStatistics {
 		private String imageName, experiment, tube, timepoint, date;
 		private double length, surfaceArea, volume;
 		private int segmentID, numberOfChildren;
+		private int parentID;
 
 		private int status;
 
@@ -719,7 +880,7 @@ public class RhizoStatistics {
 		private RhizoMain rhizoMain;
 
 		/** if <code>p != null</code> assume that a valid calibration info is available for the layer
-		 * 
+		 *
 		 * @param rhizoMain
 		 * @param t
 		 * @param treeID
@@ -729,8 +890,8 @@ public class RhizoStatistics {
 		 * @param outputUnit
 		 * @param status
 		 */
-		public Segment(RhizoMain rhizoMain, Treeline t, long treeID, int segmentID, 
-				RadiusNode child, RadiusNode parent, String outputUnit, int status) throws ExceptionInInitializerError{
+		public Segment(RhizoMain rhizoMain, Treeline t, long treeID, int segmentID,
+					   RadiusNode child, RadiusNode parent, String outputUnit, int status) throws ExceptionInInitializerError{
 
 			this.t = t;
 			this.child = child;
@@ -738,7 +899,7 @@ public class RhizoStatistics {
 			this.layer = child.getLayer();
 //			this.layerIndex = (int) layer.getZ() + 1;
 			this.layerIndex = layer.getParent().indexOf(layer) + 1;
-			
+
 			AffineTransform at = t.getAffineTransform();
 			Point2D p1 = at.transform(new Point2D.Float(parent.getX(), parent.getY()), null);
 			Point2D p2 = at.transform(new Point2D.Float(child.getX(), child.getY()), null);
@@ -775,10 +936,10 @@ public class RhizoStatistics {
 					throw new ExceptionInInitializerError("output Unit " + outputUnit + " but invalid calibration inImagePlusfo");
 				}
 			}
-		
+
 			if(parent.getData() > minRadius)
 				this.radiusParent = parent.getData() * scale;
-			if(child.getData() > minRadius) 
+			if(child.getData() > minRadius)
 				this.radiusChild = child.getData() * scale;
 
 			this.imageName = calibInfo.imagename;
@@ -793,6 +954,14 @@ public class RhizoStatistics {
 			this.rhizoMain = rhizoMain;
 
 			calculate();
+		}
+
+		public Object getParentNode() {
+			return parent;
+		}
+
+		public void setParentID(int parentID) {
+			this.parentID = parentID;
 		}
 
 		/**
@@ -815,9 +984,10 @@ public class RhizoStatistics {
 			String result = experiment + sep + tube + sep + timepoint + sep + date + sep + Long.toString(treeID) +
 					sep + this.layerIndex  +
 					sep + Integer.toString(segmentID) +
+					sep + Integer.toString(parentID) +
 					sep + xStart + sep + yStart + sep + xEnd + sep + yEnd +
 					sep + Double.toString(length) + sep + Double.toString(2*radiusParent) + sep + Double.toString(2*radiusChild) +
-					sep + Double.toString(surfaceArea) + sep + Double.toString(volume) + 
+					sep + Double.toString(surfaceArea) + sep + Double.toString(volume) +
 					sep + Integer.toString(numberOfChildren) + sep + status + sep + rhizoMain.getProjectConfig().getStatusLabel(status).getName();
 
 			return result;
@@ -826,32 +996,32 @@ public class RhizoStatistics {
 		/**
 		 * Cohen-Sutherland line clipping algorithm.
 		 * <p>
-		 * The code of this algorithm has been inspired by 
-		 * 
+		 * The code of this algorithm has been inspired by
+		 *
 		 * //
-		 *  * CohenSutherland.java 
-		 *  * -------------------- 
-		 *  * (c) 2007 by Intevation GmbH 
-		 *  * 
+		 *  * CohenSutherland.java
+		 *  * --------------------
+		 *  * (c) 2007 by Intevation GmbH
+		 *  *
 		 *  * @author Sascha L. Teichmann (teichmann@intevation.de)
 		 *  * @author Ludwig Reiter       (ludwig@intevation.de)
-		 *  * 
-		 *  * This program is free software under the LGPL (>=v2.1) 
-		 *  * Read the file LICENSE.txt coming with the sources for details. 
+		 *  *
+		 *  * This program is free software under the LGPL (>=v2.1)
+		 *  * Read the file LICENSE.txt coming with the sources for details.
 		 *  //
-		 *  
+		 *
 		 *  The original source file can, e.g., be found on Github:
 		 *  https://github.com/tabulapdf/tabula-java/blob/master/src/main/java/technology/tabula/CohenSutherlandClipping.java
-		 *  
+		 *
 		 * If imageplus is null (i.e. no image associated) no clipping is done.
-		 * 
-		 * @return true - if both nodes are inside the image or if at least one 
+		 *
+		 * @return true - if both nodes are inside the image or if at least one
 		 * 								node is outside and the line is clipped with the image
-		 * 		  		false - if both nodes are outside and the line does not 
+		 * 		  		false - if both nodes are outside and the line does not
 		 * 									intersect with the image
 		 */
 		public boolean cohenSutherlandLineClipping() {
-			
+
 			ImagePlusCalibrationInfo calibInfo = allCalibInfos.get( this.layerIndex);
 			if ( calibInfo == null )
 				throw new ExceptionInInitializerError( "can not find calibration information");
@@ -859,7 +1029,7 @@ public class RhizoStatistics {
 			// we have no image extent and cannot clip therefore
 			if ( calibInfo.ip == null)
 				return true;
-			
+
 			double xMin = 0;
 			double yMin = 0;
 			double xMax = calibInfo.ip.getWidth() - 1;
@@ -885,39 +1055,39 @@ public class RhizoStatistics {
 
 			if(c1 == INSIDE && c2 == INSIDE) return true; // both nodes inside - no need to calculate new radii
 
-			while(c1 != INSIDE || c2 != INSIDE) 
+			while(c1 != INSIDE || c2 != INSIDE)
 			{
 				if ((c1 & c2) != INSIDE) return false; // both nodes outside and on the same side
 
 				int c = c1 == INSIDE ? c2 : c1;
 
-				if ((c & LEFT) != INSIDE) 
+				if ((c & LEFT) != INSIDE)
 				{
 					qx = xMin;
 					qy = (qx-p1.getX())*slope + p1.getY();
 				}
-				else if ((c & RIGHT) != INSIDE) 
+				else if ((c & RIGHT) != INSIDE)
 				{
 					qx = xMax;
 					qy = (qx-p1.getX())*slope + p1.getY();
 				}
-				else if ((c & BOTTOM) != INSIDE) 
+				else if ((c & BOTTOM) != INSIDE)
 				{
 					qy = yMin;
 					qx = vertical ? p1.getX() : (qy-p1.getY())/slope + p1.getX();
 				}
-				else if ((c & TOP) != INSIDE) 
+				else if ((c & TOP) != INSIDE)
 				{
 					qy = yMax;
 					qx = vertical ? p1.getX() : (qy-p1.getY())/slope + p1.getX();
 				}
 
-				if (c == c1) 
+				if (c == c1)
 				{
 					p1.setLocation(qx, qy);
 					c1  = regionCode(p1.getX(), p1.getY(), xMin, yMin, xMax, yMax);
 				}
-				else 
+				else
 				{
 					p2.setLocation(qx, qy);
 					c2 = regionCode(p2.getX(), p2.getY(), xMin, yMin, xMax, yMax);
@@ -974,12 +1144,57 @@ public class RhizoStatistics {
 			return true;
 		}
 
-		private final int regionCode(double x, double y, double xMin, double yMin, double xMax, double yMax) 
+		private final int regionCode(double x, double y, double xMin, double yMin, double xMax, double yMax)
 		{
 			int code = x < xMin ? LEFT : x > xMax ? RIGHT : INSIDE;
 			if (y < yMin) code |= BOTTOM;
 			else if (y > yMax) code |= TOP;
 			return code;
+		}
+	}
+	
+	class CalibrationPanel extends JPanel
+	{
+		public Map<Integer, JTextField> textFields;
+		public Map<Integer, JComboBox> comboBoxes;
+ 	
+		public CalibrationPanel(List<Integer> zValues, Map<Integer, ImagePlusCalibrationInfo> myAllCalibInfos)
+		{
+			this.textFields = new HashMap<Integer, JTextField>();
+			this.comboBoxes = new HashMap<Integer, JComboBox>();
+			
+//			this.setLayout(new GridLayout(0, 4, 5, 0));
+			this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+			
+			String[] unitChoices = {"inch", "mm", "DPI"};
+			
+			for(int i: zValues )
+			{
+				RhizoStatistics.ImagePlusCalibrationInfo calibInfo = myAllCalibInfos.get(i);
+				JLabel label = new JLabel("layer " + i + (calibInfo.isValid() ? " (valid) - " : " (invalid) - ") + calibInfo.getImageName() + ": ");
+				JTextField pixelSizeTf = new JTextField(Double.toString(calibInfo.getPixelWidth()));
+				JComboBox<String> comboBox = new JComboBox<String>(unitChoices);
+
+				JPanel flowPanel = new JPanel(new FlowLayout());
+				flowPanel.add(label);
+				flowPanel.add(new JLabel("pixelsize"));
+				flowPanel.add(pixelSizeTf);
+				flowPanel.add(comboBox);
+				this.add(flowPanel);
+				
+				textFields.put(i, pixelSizeTf);
+				comboBoxes.put(i, comboBox);
+			}
+		}
+		
+		public Map<Integer, JTextField> getTextFields()
+		{
+			return this.textFields;
+		}
+		
+		public Map<Integer, JComboBox> getComboBoxes()
+		{
+			return this.comboBoxes;
 		}
 	}
 }

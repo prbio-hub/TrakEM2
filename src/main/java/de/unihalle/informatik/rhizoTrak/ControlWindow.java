@@ -173,7 +173,7 @@ public class ControlWindow {
 
 	static public void setLookAndFeel() {
 		try {
-			if (ij.IJ.isLinux()) {
+			if (ij.IJ.isLinux() || ij.IJ.isMacOSX()) {
 				// Nimbus looks great but it's unstable: after a while, swing components stop repainting, throwing all sort of exceptions.
 				//UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
 				UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");

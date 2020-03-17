@@ -121,6 +121,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import de.unihalle.informatik.rhizoTrak.display.addonGui.RhizoShortcutManager;
 import org.scijava.vecmath.Point2f;
 import org.scijava.vecmath.Vector2f;
 import org.scijava.vecmath.Vector3d;
@@ -1849,7 +1850,9 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 	private boolean tagging = false;
 
 	@Override
-	public void keyPressed(final KeyEvent ke) {
+	public void keyPressed(KeyEvent ke) {
+		ke = RhizoShortcutManager.transformKeyEvent(ke);
+		if(null == ke) return;
 		
 		final Displayable active = display.getActive();
 		
@@ -2060,7 +2063,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 					Display.repaint(display.getLayer(), display.getSelection().getBox(), 0);
 					ke.consume();
 					break; // INSIDE the 'if' block, so that it can bleed to the default block which forwards to active!
-				} else if((active != null && active instanceof Tree) || active == null ) { //actyc short-cut to add new treline
+				} else if((active != null && (active instanceof Tree || active instanceof Patch)) || active == null ) { //actyc short-cut to add new treline
 					
 						if(addTreelineEnabled.compareAndSet(true, false)) RhizoAddons.newTreelineShortcut();
 				} else if (null != active) {
