@@ -145,7 +145,7 @@ public class RhizoWriteBinary {
 		statusLabelCombo.setSelectedIndex( 0);
 		choicesPanel.add( statusLabelCombo);
 
-		int result = JOptionPane.showConfirmDialog(null, choicesPanel, "csv Output Options", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+		int result = JOptionPane.showConfirmDialog(null, choicesPanel, "Output Options", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 
 		if(result != JOptionPane.OK_OPTION) {
 			return;
@@ -190,10 +190,11 @@ public class RhizoWriteBinary {
 
 		// ask for the image name
 		JFileChooser fileChooser = new JFileChooser();
-		FileNameExtensionFilter filter = new FileNameExtensionFilter( "File for writing annotations a binary image", "tif");
+		String dialogTitle = "File for annotations of layer " + RhizoUtils.getTimepointForLayer( layer)+ " as binary image";
+		FileNameExtensionFilter filter = new FileNameExtensionFilter( dialogTitle, "tif");
 		fileChooser.setFileFilter(filter);
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		fileChooser.setDialogTitle("File to write binary annotation to");
+		fileChooser.setDialogTitle(dialogTitle);
 		fileChooser.setSelectedFile(new File( filenameProposal));
 		int returnVal = fileChooser.showOpenDialog(null);
 
@@ -219,7 +220,7 @@ public class RhizoWriteBinary {
 		binaryImage.fillBlack();
 
 		drawSegments( rhizoMain.getProject(), layer, binaryImage.getImagePlus(), rootstackThings, statusLabelIntToWrite);
-
+		
 		try {
 			ImageWriterMTB writer = new ImageWriterMTB(binaryImage, imagePath.toString());
 			writer.runOp( true);
