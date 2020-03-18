@@ -612,6 +612,7 @@ public class RhizoRootImageSegmentationManager
 								public void run() {
 
 									RhizoRootImageSegmentationManager manager = RhizoRootImageSegmentationManager.this;
+									RhizoTreelineImportExport converter = new RhizoTreelineImportExport();
 
 									manager.rhizoDisplay.getCanvas().setReceivesInput(false);
 
@@ -620,32 +621,32 @@ public class RhizoRootImageSegmentationManager
 									for (Integer id : layerIDs) {
 
 										// make a copy of the old treelines
+										int formerTreelineNumber = 0;
 										ArrayList<Displayable> formerTreelines = new ArrayList<>();
 										ArrayList<Displayable> treelines = manager.treelinesUnderProcessing.get(id);
-										for (Displayable t : treelines)
-											formerTreelines.add((Treeline) t.clone());
+										if (treelines != null) {
+											for (Displayable t : treelines)
+												formerTreelines.add((Treeline) t.clone());
 
-										int formerTreelineNumber = treelines.size();
-										Vector<MTBRootTree> treesForReplace = new Vector<MTBRootTree>(); 
-										for (int i=0; i<formerTreelineNumber; ++i)
+											formerTreelineNumber = treelines.size();
+											Vector<MTBRootTree> treesForReplace = new Vector<MTBRootTree>(); 
+											for (int i=0; i<formerTreelineNumber; ++i)
 												treesForReplace.add(resultTreelines.get(id).get(i));
 										
-										RhizoTreelineImportExport converter = new RhizoTreelineImportExport();
-										converter.importMTBRootTreesReplace(id.intValue(), manager.projectLayers.get(id),
+											converter.importMTBRootTreesReplace(id.intValue(), manager.projectLayers.get(id),
 												treesForReplace, manager.treelinesUnderProcessing.get(id));
 
-										// transfer status, radius and connector information from old to new treelines
-										manager.transferTreelineProperties(formerTreelines, 
+											// transfer status, radius and connector information from old to new treelines
+											manager.transferTreelineProperties(formerTreelines, 
 												manager.treelinesUnderProcessing.get(id), manager.projectLayers.get(id));
-										RhizoUtils.repaintTreelineList(manager.treelinesUnderProcessing.get(id));
+											RhizoUtils.repaintTreelineList(manager.treelinesUnderProcessing.get(id));
+										}
 
 										// add remaining treelines if there are any
 										Vector<MTBRootTree> newTrees = new Vector<MTBRootTree>(); 
 										for (int i=formerTreelineNumber; i<resultTreelines.get(id).size(); ++i)
 											newTrees.add(resultTreelines.get(id).get(i));
 										converter.importMTBRootTreesAddToLayer(id.intValue(), newTrees, "GAP");
-										RhizoUtils.repaintTreelineList(
-												RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
 									}
 									showDialog.killMe();
 
