@@ -112,10 +112,14 @@ public class RhizoImages
 	 * @return String representing the relative patches directory
 	 */
 	public String convertToRelativPath(String currentPathString){
+		
 		Path currentPath = Paths.get(currentPathString);
-		Path base = Paths.get(rhizoMain.getStorageFolder());
-		Path relativPath = base.relativize(currentPath);
-		return relativPath.toString();
+		if(currentPath.isAbsolute()){
+			Path base = Paths.get(rhizoMain.getStorageFolder());
+			Path relativPath = base.relativize(currentPath);
+			return relativPath.toString();
+		}
+		return currentPath.toString();
 	}
 	
 	public static void addLayerAndImage(File[] files) {
