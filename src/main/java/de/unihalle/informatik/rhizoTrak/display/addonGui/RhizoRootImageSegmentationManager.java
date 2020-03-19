@@ -490,8 +490,6 @@ public class RhizoRootImageSegmentationManager
 
 								converter.importMTBRootTreesAddToLayer(id.intValue(), resultTreelines.get(id), status);
 
-								RhizoUtils.repaintTreelineList(RhizoRootImageSegmentationManager.this.treelinesUnderProcessing.get(id));
-
 							}
 							d.setVisible(false);
 							d.dispose();
