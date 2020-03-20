@@ -452,7 +452,6 @@ public class RhizoRootImageSegmentationManager
 		RhizoMain rhizoMain = this.rhizoDisplay.getProject().getRhizoMain();
 
 		if (event.getEventType() == ALDOperatorCollectionEventType.RESULTS_AVAILABLE) {
-			this.operatorRunButton.setEnabled(true);
 
 			RootImageSegmentationOperator segOp = (RootImageSegmentationOperator)this.selectedSegOp;
 
@@ -731,6 +730,10 @@ public class RhizoRootImageSegmentationManager
 				Utils.log(sw.toString());
 			}
 		}
+
+		// enable the run button again
+		this.operatorRunButton.setEnabled(true);
+
 	}
 
 	/**
