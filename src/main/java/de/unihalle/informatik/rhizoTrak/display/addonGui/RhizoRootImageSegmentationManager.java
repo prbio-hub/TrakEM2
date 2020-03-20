@@ -498,10 +498,15 @@ public class RhizoRootImageSegmentationManager
 					Thread transferTreelines = new Thread() {
 						public void run() {
 
+							RhizoRootImageSegmentationManager manager = RhizoRootImageSegmentationManager.this;
 							RhizoTreelineImportExport converter = new RhizoTreelineImportExport();
 
 							Set<Integer> layerIDs = resultTreelines.keySet();
 							for (Integer id : layerIDs) {
+
+								// safety check: check if target layer really exists
+								if (manager.projectLayers.get(id) == null)
+									continue;
 
 								converter.importMTBRootTreesAddToLayer(id.intValue(), resultTreelines.get(id), status);
 
