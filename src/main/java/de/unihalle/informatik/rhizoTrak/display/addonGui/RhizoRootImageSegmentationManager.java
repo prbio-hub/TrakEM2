@@ -61,7 +61,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
@@ -337,21 +336,28 @@ public class RhizoRootImageSegmentationManager
 			// fill image map
 			HashMap<Integer, ImagePlus> inputImages = new HashMap<>();
 			if (requestedImages.contains(LayerSubset.FIRST_TO_PREVIOUS) || requestedImages.contains(LayerSubset.ALL)) {
-				for (int i = 0; i < prevLayerID; ++i)
-					inputImages.put(i, this.projectLayers.get(i).getPatches(true).get(0).getImagePlus());
+				for (int i = 0; i < prevLayerID; ++i) {
+					if (this.projectLayers.get(i) != null)
+						inputImages.put(i, this.projectLayers.get(i).getPatches(true).get(0).getImagePlus());
+				}
 			}
 			if (requestedImages.contains(LayerSubset.PREVIOUS) || requestedImages.contains(LayerSubset.ALL)) {
-				inputImages.put(prevLayerID, this.projectLayers.get(prevLayerID).getPatches(true).get(0).getImagePlus());
+				if (this.projectLayers.get(prevLayerID) != null)
+					inputImages.put(prevLayerID, this.projectLayers.get(prevLayerID).getPatches(true).get(0).getImagePlus());
 			}
 			if (requestedImages.contains(LayerSubset.ACTIVE) || requestedImages.contains(LayerSubset.ALL)) {
-				inputImages.put(activeLayerID, this.projectLayers.get(activeLayerID).getPatches(true).get(0).getImagePlus());
+				if (this.projectLayers.get(activeLayerID) != null)
+					inputImages.put(activeLayerID, this.projectLayers.get(activeLayerID).getPatches(true).get(0).getImagePlus());
 			}
 			if (requestedImages.contains(LayerSubset.NEXT) || requestedImages.contains(LayerSubset.ALL)) {
-				inputImages.put(nextLayerID, this.projectLayers.get(nextLayerID).getPatches(true).get(0).getImagePlus());
+				if (this.projectLayers.get(nextLayerID) != null)
+					inputImages.put(nextLayerID, this.projectLayers.get(nextLayerID).getPatches(true).get(0).getImagePlus());
 			}
 			if (requestedImages.contains(LayerSubset.NEXT_TO_LAST) || requestedImages.contains(LayerSubset.ALL)) {
-				for (int i = nextLayerID + 1; i < this.projectLayers.size(); ++i)
-					inputImages.put(i, this.projectLayers.get(i).getPatches(true).get(0).getImagePlus());
+				for (int i = nextLayerID + 1; i < this.projectLayers.size(); ++i) {
+					if (this.projectLayers.get(i) != null)
+						inputImages.put(i, this.projectLayers.get(i).getPatches(true).get(0).getImagePlus());
+				}
 			}
 
 			// fill treelines map(s)
@@ -360,26 +366,31 @@ public class RhizoRootImageSegmentationManager
 			boolean onlySelected = imSegOp.getOnlySelectedTreelines();
 			if (requestedTreelines.contains(LayerSubset.FIRST_TO_PREVIOUS) || requestedTreelines.contains(LayerSubset.ALL)) {
 				for (int i = 0; i < prevLayerID; ++i) {
-					this.getTreelinesFromLayer(i, this.projectLayers.get(i), onlySelected, this.treelinesUnderProcessing,
-							inputTreelines);
+					if (this.projectLayers.get(i) != null)
+						this.getTreelinesFromLayer(i, this.projectLayers.get(i), onlySelected, 
+							this.treelinesUnderProcessing, inputTreelines);
 				}
 			}
 			if (requestedTreelines.contains(LayerSubset.PREVIOUS) || requestedTreelines.contains(LayerSubset.ALL)) {
-				this.getTreelinesFromLayer(prevLayerID, this.projectLayers.get(prevLayerID), onlySelected,
+				if (this.projectLayers.get(prevLayerID) != null)
+					this.getTreelinesFromLayer(prevLayerID, this.projectLayers.get(prevLayerID), onlySelected,
 						this.treelinesUnderProcessing, inputTreelines);
 			}
 			if (requestedTreelines.contains(LayerSubset.ACTIVE) || requestedTreelines.contains(LayerSubset.ALL)) {
-				this.getTreelinesFromLayer(activeLayerID, this.projectLayers.get(activeLayerID), onlySelected,
+				if (this.projectLayers.get(activeLayerID) != null)
+					this.getTreelinesFromLayer(activeLayerID, this.projectLayers.get(activeLayerID), onlySelected,
 						this.treelinesUnderProcessing, inputTreelines);
 			}
 			if (requestedTreelines.contains(LayerSubset.NEXT) || requestedTreelines.contains(LayerSubset.ALL)) {
-				this.getTreelinesFromLayer(nextLayerID, this.projectLayers.get(nextLayerID), onlySelected,
+				if (this.projectLayers.get(nextLayerID) != null)
+					this.getTreelinesFromLayer(nextLayerID, this.projectLayers.get(nextLayerID), onlySelected,
 						this.treelinesUnderProcessing, inputTreelines);
 			}
 			if (requestedTreelines.contains(LayerSubset.NEXT_TO_LAST) || requestedTreelines.contains(LayerSubset.ALL)) {
 				for (int i = nextLayerID + 1; i < this.projectLayers.size(); ++i) {
-					this.getTreelinesFromLayer(i, this.projectLayers.get(i), onlySelected, this.treelinesUnderProcessing,
-							inputTreelines);
+					if (this.projectLayers.get(i) != null)
+						this.getTreelinesFromLayer(i, this.projectLayers.get(i), onlySelected, 
+							this.treelinesUnderProcessing, inputTreelines);
 				}
 			}
 
@@ -542,7 +553,11 @@ public class RhizoRootImageSegmentationManager
 									Set<Integer> layerIDs = resultTreelines.keySet();
 
 									for (Integer id : layerIDs) {
-
+										
+										// safety check: check if target layer really exists
+										if (manager.projectLayers.get(id) == null)
+											continue;
+										
 										// make a copy of the old treelines
 										ArrayList<Displayable> formerTreelines = new ArrayList<>();
 										ArrayList<Displayable> treelines = manager.treelinesUnderProcessing.get(id);
@@ -617,6 +632,10 @@ public class RhizoRootImageSegmentationManager
 									Set<Integer> layerIDs = resultTreelines.keySet();
 
 									for (Integer id : layerIDs) {
+
+										// safety check: check if target layer really exists
+										if (manager.projectLayers.get(id) == null)
+											continue;
 
 										// make a copy of the old treelines
 										int formerTreelineNumber = 0;
