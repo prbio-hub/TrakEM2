@@ -337,25 +337,30 @@ public class RhizoRootImageSegmentationManager
 			HashMap<Integer, ImagePlus> inputImages = new HashMap<>();
 			if (requestedImages.contains(LayerSubset.FIRST_TO_PREVIOUS) || requestedImages.contains(LayerSubset.ALL)) {
 				for (int i = 0; i < prevLayerID; ++i) {
-					if (this.projectLayers.get(i) != null)
+					if (    this.projectLayers.get(i) != null 
+							&& !this.projectLayers.get(i).getPatches(true).isEmpty())
 						inputImages.put(i, this.projectLayers.get(i).getPatches(true).get(0).getImagePlus());
 				}
 			}
 			if (requestedImages.contains(LayerSubset.PREVIOUS) || requestedImages.contains(LayerSubset.ALL)) {
-				if (this.projectLayers.get(prevLayerID) != null)
+				if (    this.projectLayers.get(prevLayerID) != null  
+						&& !this.projectLayers.get(prevLayerID).getPatches(true).isEmpty())
 					inputImages.put(prevLayerID, this.projectLayers.get(prevLayerID).getPatches(true).get(0).getImagePlus());
 			}
 			if (requestedImages.contains(LayerSubset.ACTIVE) || requestedImages.contains(LayerSubset.ALL)) {
-				if (this.projectLayers.get(activeLayerID) != null)
+				if (    this.projectLayers.get(activeLayerID) != null
+						&& !this.projectLayers.get(activeLayerID).getPatches(true).isEmpty())
 					inputImages.put(activeLayerID, this.projectLayers.get(activeLayerID).getPatches(true).get(0).getImagePlus());
 			}
 			if (requestedImages.contains(LayerSubset.NEXT) || requestedImages.contains(LayerSubset.ALL)) {
-				if (this.projectLayers.get(nextLayerID) != null)
+				if (    this.projectLayers.get(nextLayerID) != null
+						&& !this.projectLayers.get(nextLayerID).getPatches(true).isEmpty())
 					inputImages.put(nextLayerID, this.projectLayers.get(nextLayerID).getPatches(true).get(0).getImagePlus());
 			}
 			if (requestedImages.contains(LayerSubset.NEXT_TO_LAST) || requestedImages.contains(LayerSubset.ALL)) {
 				for (int i = nextLayerID + 1; i < this.projectLayers.size(); ++i) {
-					if (this.projectLayers.get(i) != null)
+					if (    this.projectLayers.get(i) != null
+							&& !this.projectLayers.get(i).getPatches(true).isEmpty())
 						inputImages.put(i, this.projectLayers.get(i).getPatches(true).get(0).getImagePlus());
 				}
 			}
