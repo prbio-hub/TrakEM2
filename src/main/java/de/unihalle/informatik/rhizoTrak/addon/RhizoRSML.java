@@ -195,13 +195,13 @@ public class RhizoRSML
 	public void writeRSML() {
 		projectName = rhizoMain.getXmlName().replaceFirst(".xml\\z", "");
 
-		de.unihalle.informatik.rhizoTrak.display.Polyline roi = rhizoMain.getRhizoRoi().getCurrentPolyline();
+//		de.unihalle.informatik.rhizoTrak.display.Polyline roi = rhizoMain.getRhizoRoi().getCurrentPolyline();
 
 		// query output options
 		String[] choicesLayers;
-		if ( roi == null )
-			choicesLayers= new String[]{ALL_STRING, ONLY_STRING};
-		else
+//		if ( roi == null )
+//			choicesLayers= new String[]{ALL_STRING, ONLY_STRING};
+//		else
 			choicesLayers= new String[]{ALL_STRING, ONLY_STRING, ROI_STRING};
 
 		JComboBox<String> comboLayers = new JComboBox<String>(choicesLayers);
@@ -276,7 +276,7 @@ public class RhizoRSML
 		} else {
 			Layer layer = null;
 			if ( writeROI) {
-				layer = roi.getFirstLayer();
+//				layer = roi.getFirstLayer();
 			} else {
 				// Select and open output file
 				layer = Display.getFront().getLayer();
@@ -301,7 +301,7 @@ public class RhizoRSML
 			}
 			
 			// write the layer
-			writeLayer( selectedFile, layer, this.rhizoMain.getLayerInfo( layer), unified, roi);
+//			writeLayer( selectedFile, layer, this.rhizoMain.getLayerInfo( layer), unified, roi);
 		}	
 	}
 
