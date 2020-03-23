@@ -6790,10 +6790,16 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			conflictManager.showConflicts();
 		}
 		else if(command.equals("setRoi")){
-			Display.getFront().getProject().getRhizoMain().getRhizoRoi().setROI();
+			Display.getFront().getProject().getRhizoMain().getRhizoROIManager().setROI();
 		}
 		else if(command.equals("clearRoi")){
-			Display.getFront().getProject().getRhizoMain().getRhizoRoi().clearROI();
+			Display.getFront().getProject().getRhizoMain().getRhizoROIManager().clearROI();
+		}
+		else if(command.equals("propagateRoi")){
+			Display.getFront().getProject().getRhizoMain().getRhizoROIManager().propagateROI();
+		}
+		else if(command.equals("propagateRoi")){
+			Display.getFront().getProject().getRhizoMain().getRhizoROIManager().clearROIsAll();
 		}
 		else if(command.equals("stat")){
 			Display.getFront().getProject().getRhizoMain().getRhizoStatistics().writeStatistics();
@@ -7717,6 +7723,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	JPanel group21 = new JPanel(new GridLayout(0, 2, 5, 1)); // Read and write operations
     	JPanel group3  = new JPanel(new GridLayout(0, 2, 5, 1)); // Connector related operations
     	JPanel group4  = new JPanel(new GridLayout(0, 2, 5, 1)); // Image related operations
+    	JPanel groupROILabel  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for treelines
+    	JPanel groupROI = new JPanel(new GridLayout(2, 2, 5, 1)); // ROI related operations
     	JPanel group5  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for operators
     	JPanel group51 = new JPanel(new GridLayout(0, 1, 5, 1)); // Choose operator from list
     	JPanel group52 = new JPanel(new GridLayout(0, 2, 5, 1)); // Configure and run chosen operator
@@ -7725,6 +7733,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	group21.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group3.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group4.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	groupROI.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group52.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group6.setBorder(new EmptyBorder(5, 5, 5, 5));
     	
@@ -7788,26 +7797,44 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	conflicManagerButton.setEnabled(true);
     	group3.add(conflicManagerButton);
     	
-        JButton setRoiButton = new JButton("set ROI");
-		setRoiButton.setToolTipText("set ROI.");
-		setRoiButton.setActionCommand("setRoi");
-		setRoiButton.addActionListener(this);
-		setRoiButton.setEnabled(true);
-        group3.add(setRoiButton);
-
-		JButton clearRoiButton = new JButton("clear ROI");
-		clearRoiButton.setToolTipText("clear ROI.");
-		clearRoiButton.setActionCommand("clearRoi");
-		clearRoiButton.addActionListener(this);
-		clearRoiButton.setEnabled(true);
-		group3.add(clearRoiButton);
-
-		JButton loadImagesButton = new JButton("Load Images");
+    	JButton loadImagesButton = new JButton("Load Images");
     	loadImagesButton.setToolTipText("Import one or more images as a stack.");
     	loadImagesButton.setActionCommand("Load images");
     	loadImagesButton.addActionListener(this);
     	group4.add(loadImagesButton);
-    	
+
+    	// ROI related stuff
+    	JLabel labelROIs = new JLabel("ROIs:", JLabel.LEFT);
+    	groupROILabel.add(labelROIs);
+
+      JButton setRoiButton = new JButton("Set");
+      setRoiButton.setToolTipText("Set ROI for active layer.");
+      setRoiButton.setActionCommand("setRoi");
+      setRoiButton.addActionListener(this);
+      setRoiButton.setEnabled(true);
+      groupROI.add(setRoiButton);
+
+      JButton clearRoiButton = new JButton("Clear");
+      clearRoiButton.setToolTipText("Clear ROI for active layer.");
+      clearRoiButton.setActionCommand("clearRoi");
+      clearRoiButton.addActionListener(this);
+      clearRoiButton.setEnabled(true);
+      groupROI.add(clearRoiButton);
+      
+      JButton propagateRoiButton = new JButton("Propagate");
+      propagateRoiButton.setToolTipText("Propagate ROI to all layers.");
+      propagateRoiButton.setActionCommand("propagateRoi");
+      propagateRoiButton.addActionListener(this);
+      propagateRoiButton.setEnabled(true);
+      groupROI.add(propagateRoiButton);
+
+      JButton clearAllButton = new JButton("Clear All");
+      clearAllButton.setToolTipText("Clear all ROIs.");
+      clearAllButton.setActionCommand("clearRoiAll");
+      clearAllButton.addActionListener(this);
+      clearAllButton.setEnabled(true);
+      groupROI.add(clearAllButton);
+
 		// Get available operators
     	JScrollPane scrollPane = getScrollableOperatorList();
     	boolean isOperatorAvailable = false;
@@ -7873,6 +7900,11 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	panel.add(new JSeparator(JSeparator.HORIZONTAL));
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     	panel.add(group4);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(groupROILabel);
+    	panel.add(groupROI);
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     	panel.add(new JSeparator(JSeparator.HORIZONTAL));
     	// Only display panel if there is at least one available operator

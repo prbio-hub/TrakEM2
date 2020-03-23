@@ -616,7 +616,12 @@ public class Project extends DBObject {
 				template_root = new TemplateThing( "rootstack");
 				template_root.addChild( new TemplateThing( "treeline"));
 				template_root.addChild( new TemplateThing( "connector"));
-				template_root.addChild( new TemplateThing( "polyline"));
+				TemplateThing template_roi = new TemplateThing("roi");
+				template_root.addChild(template_roi);
+				template_roi.addChild( new TemplateThing( "polyline"));
+				TemplateThing template_gravdir = new TemplateThing("gravitationalDirection");
+				template_root.addChild(template_gravdir);
+				template_gravdir.addChild( new TemplateThing( "polyline"));
 
 				project = createNewProject(loader, false, template_root);
 				
@@ -653,10 +658,19 @@ public class Project extends DBObject {
 					ProjectThing rootNode = null;
 					rootNode = (ProjectThing) projectTree.getRoot().getUserObject();
 					if ( rootNode != null ) {
+						// rootstack
 						ProjectThing rootstackThing = rootNode.createChild("rootstack");
 						DefaultMutableTreeNode node = new DefaultMutableTreeNode(rootstackThing);
 						DefaultMutableTreeNode parentNode = DNDTree.findNode(rootNode, projectTree);
 						((DefaultTreeModel) projectTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
+						// roi
+						ProjectThing roiThing = rootstackThing.createChild("roi");
+						DefaultMutableTreeNode roiNode = new DefaultMutableTreeNode(roiThing);
+						((DefaultTreeModel) projectTree.getModel()).insertNodeInto(roiNode, node, node.getChildCount());
+						// gravitational direction
+						ProjectThing dirThing = rootstackThing.createChild("gravitationalDirection");
+						DefaultMutableTreeNode dirNode = new DefaultMutableTreeNode(dirThing);
+						((DefaultTreeModel) projectTree.getModel()).insertNodeInto(dirNode, node, node.getChildCount());
 					} else {
 						Utils.log( "@Project: can not add rootstack");
 					}

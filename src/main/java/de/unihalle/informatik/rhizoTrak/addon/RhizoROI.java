@@ -74,7 +74,6 @@ import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Polyline;
-import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
@@ -87,11 +86,11 @@ import javax.swing.tree.DefaultTreeModel;
 import java.util.HashSet;
 import java.util.Set;
 
-import static de.unihalle.informatik.rhizoTrak.display.Display.*;
-
 /**
- * Rectangular ROI (currently) used to restrict export of RSML.
- * One or none ROI is supported.
+ * Class defining polyline ROIs for individual layers.
+ * <p>
+ * ROIs can be used to restrict processing of a layer to a specific region or 
+ * to restrict export of RSML. Each layer may have one or none ROI.
  * <p>
  * The ROI can be specified using the rectangle section of ImageJ and stored using the "set ROI" tab.
  * It is stored as a <code>polyline</code> into one rootstack object in the project tree.
@@ -100,129 +99,64 @@ import static de.unihalle.informatik.rhizoTrak.display.Display.*;
  */
 public class RhizoROI {
 
+	/**
+	 * Reference to the rhizoTrak project.
+	 */
 	private RhizoMain rhizoMain;
 
-    /**
-     * The trakEM polyline representing the ROI (or null)
-     */
-	private Polyline currentPolyline = null;
+	/**
+	 * The trakEM polyline representing the ROI (or null)
+	 */
+	private Polyline polyline = null;
 
-    /**
-     * do we still have to check the project tree for polylines (after opening a project)?
-     */
-    private boolean firstGetCurrentPolyline = true;
+	/**
+	 * Flag indicating if we have a rectangle or not.
+	 */
+	private boolean isRectangle = false;
+	
+	/**
+	 * do we still have to check the project tree for polylines (after opening a project)?
+	 */
+	private boolean firstGetCurrentPolyline = true;
 
-    /**
-     *
-     * @param rhizoMain
-     */
-    protected RhizoROI(RhizoMain rhizoMain) 	{
-        this.rhizoMain = rhizoMain;
-    }
-
-    /**
-     * Get the current ImageJ selection, if it is a rectangle, clear all existing polylines below rootstacks
-     * and store the selection it as a closed polyline (below a rootstack).
-     */
-	public void setROI() {
-        Roi roi = Display.getFront().getRoi();
-
-        if ((roi == null) || (roi.getType() != Roi.RECTANGLE)) {
-            Utils.showMessage("RhizoRIOI.getROI: no rectangle selected");
-            return;
-        }
-
-        Display display = Display.getFront();
-        Display.clearSelection();
-        Project project = display.getProject();
-        ProjectTree currentTree = project.getProjectTree();
-
-        // find one rootstack
-        // TODO: need to check it it is able to hold a polyline
-        ProjectThing rootstackProjectThing = RhizoUtils.getOneRootstackForPolyline(project);
-        if (rootstackProjectThing == null) {
-            Utils.showMessage("RhizoRIOI.getROI: Create treeline: WARNING  can not find a rootstack in project tree able to hold a polyline");
-            return;
-        }
-
-        clearROI();
-
-        // make new closed polyline
-        try {
-            ProjectThing pt = rootstackProjectThing.createChild("polyline");
-            pt.setTitle(pt.getUniqueIdentifier());
-
-            currentPolyline = (Polyline) pt.getObject();
-
-            int n;
-            for (n = 0; n < roi.getPolygon().npoints; n++) {
-                currentPolyline.insertPoint(n, roi.getPolygon().xpoints[n], roi.getPolygon().ypoints[n], Display.getFront().getLayer().getId());
-            }
-            currentPolyline.insertPoint(n, roi.getPolygon().xpoints[0], roi.getPolygon().ypoints[0], Display.getFront().getLayer().getId());
-
-            // add new polyline to the project tree
-            DefaultMutableTreeNode parentNode = DNDTree.findNode(rootstackProjectThing, currentTree);
-            DefaultMutableTreeNode node = new DefaultMutableTreeNode(pt);
-            ((DefaultTreeModel) currentTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
-
-            Display.clearSelection();
-        } catch (Exception e) {
-            Utils.showMessage("Cannot create polyline");
-            return;
-        }
-    }
-
-    /**
-     * clear all rectangular ROIs. We assume that all <code>polyline</code> objects below a rootstack are ROIs
-     */
-
-    public void clearROI() {
-        System.out.println( "clearROI");
-        Project project = rhizoMain.getProject();
-        HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks( project);
-        Set<Displayable> deleteSet = new HashSet<Displayable>();
-        System.out.println( "clearROI start for look");
-
-        for ( ProjectThing rootstackThing :rootstackThings ) {
-            System.out.println("rootstack " + rootstackThing.getId());
-            for (ProjectThing pt : rootstackThing.findChildrenOfTypeR(Polyline.class)) {
-                Polyline pl = (Polyline) pt.getObject();
-                deleteSet.add( pl);
-                System.out.println( "found polyline " + pl.getId());
-            }
-        }
-        project.removeAll( deleteSet);
-        currentPolyline = null;
-    }
+	/**
+	 *
+	 * @param rhizoMain
+	 */
+	protected RhizoROI(RhizoMain rhizoMain, Polyline line, boolean rectangle) 	{
+		this.rhizoMain = rhizoMain;
+		this.polyline = line;
+		this.isRectangle = rectangle;
+	}
 
     /** get the current ROI polyline
      *
      * @return
      */
-    public Polyline getCurrentPolyline() {
-        if ( firstGetCurrentPolyline ) {
-            // we cannot get the polyline during opening the project and the  instantiation of the RhizoROI object,
-            // as the project tree is not yet constructed
-            // so need to be done this way
-            try {
-                HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks(rhizoMain.getProject());
-
-                for (ProjectThing rootstackThing : rootstackThings) {
-                    if ( ! firstGetCurrentPolyline ) break;
-
-                    for (ProjectThing pt : rootstackThing.findChildrenOfTypeR(Polyline.class)) {
-                        Polyline pl = (Polyline) pt.getObject();
-                        currentPolyline = pl;
-                        firstGetCurrentPolyline = false;
-                        break;
-                    }
-                }
-            } catch (Exception ex) {
-                System.out.println("error in getCurrentPolyline first of rhizoROI");
-            }
-            firstGetCurrentPolyline = false;
-        }
-
-        return currentPolyline;
-    }
+//    public Polyline getCurrentPolyline() {
+//        if ( firstGetCurrentPolyline ) {
+//            // we cannot get the polyline during opening the project and the  instantiation of the RhizoROI object,
+//            // as the project tree is not yet constructed
+//            // so need to be done this way
+//            try {
+//                HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks(rhizoMain.getProject());
+//
+//                for (ProjectThing rootstackThing : rootstackThings) {
+//                    if ( ! firstGetCurrentPolyline ) break;
+//
+//                    for (ProjectThing pt : rootstackThing.findChildrenOfTypeR(Polyline.class)) {
+//                        Polyline pl = (Polyline) pt.getObject();
+//                        currentPolyline = pl;
+//                        firstGetCurrentPolyline = false;
+//                        break;
+//                    }
+//                }
+//            } catch (Exception ex) {
+//                System.out.println("error in getCurrentPolyline first of rhizoROI");
+//            }
+//            firstGetCurrentPolyline = false;
+//        }
+//
+//        return currentPolyline;
+//    }
 }

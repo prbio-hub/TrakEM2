@@ -55,7 +55,6 @@ import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.persistence.FSLoader;
 import de.unihalle.informatik.rhizoTrak.persistence.Loader;
-import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml;
 
 public class RhizoMain
 {
@@ -67,7 +66,7 @@ public class RhizoMain
 	private RhizoMTBXML rMTBXML;
 	private RhizoRSML rRSML;
 	private RhizoLineMapToTreeline rLineMapToTreeline;
-	private RhizoROI rhizoRoi;
+	private RhizoROIManager rROIManager;
 	
 	private HashMap<Layer,RhizoLayerInfo> layerInfoMap = new HashMap<Layer,RhizoLayerInfo>();
 	
@@ -96,8 +95,7 @@ public class RhizoMain
 		rMTBXML = new RhizoMTBXML(this);
 		rRSML = new RhizoRSML( this);
 		rLineMapToTreeline = new RhizoLineMapToTreeline(this);
-		rhizoRoi = new RhizoROI( this);
-
+		rROIManager = new RhizoROIManager(this);
 	}
 	
 	public RhizoAddons getRhizoAddons()
@@ -142,13 +140,14 @@ public class RhizoMain
 		return rLineMapToTreeline;
 	}
 	
+	public RhizoROIManager getRhizoROIManager() 
+	{
+		return this.rROIManager;
+	}
+	
 	public Project getProject()
 	{
 		return p;
-	}
-
-	public RhizoROI getRhizoRoi() {
-		return rhizoRoi;
 	}
 
 	/** 

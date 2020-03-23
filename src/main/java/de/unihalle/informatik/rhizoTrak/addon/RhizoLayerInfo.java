@@ -79,6 +79,11 @@ public class RhizoLayerInfo {
 	String imageHash;
 	
 	/**
+	 * ROI associated with the layer, maybe null.
+	 */
+	RhizoROI roi = null;
+	
+	/**
 	 * map the treelines generated to the source RSML (top level) roots
 	 */
 	HashMap<Treeline,RootType> treelineRootMap = new HashMap<Treeline,RootType>();
@@ -110,6 +115,22 @@ public class RhizoLayerInfo {
 		return rootPlantMap.get( root);
 	}
 
+	/**
+	 * Set ROI for this layer.
+	 * @param r	ROI object.
+	 */
+	public void setROI(RhizoROI r) {
+		this.roi = r;
+	}
+	 
+	/**
+	 * Get ROI for layer.
+	 * @return	ROI object.
+	 */
+	public RhizoROI getROI() {
+		return this.roi;
+	}
+	
 	/**
 	 * @return the rsml
 	 */
