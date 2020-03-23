@@ -82,7 +82,6 @@ import de.unihalle.informatik.Alida.operator.ALDOperatorCollectionElement;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEventListener;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent.ALDOperatorCollectionEventType;
-import de.unihalle.informatik.Alida.workflows.events.ALDWorkflowRunFailureInfo;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.datatypes.MTBRootTree;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootImageSegmentationOperator;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootImageSegmentationOperator.LayerSubset;
@@ -690,55 +689,56 @@ public class RhizoRootImageSegmentationManager
 			}
 			} // end of switch 
 		} else if (event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED) {
-			// print stack trace
-			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
-				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				failureInfo.getException().printStackTrace(pw);
-				Utils.log(sw.toString());
-			}
+			// print error message
+			Utils.log("Error! Operator not properly configured!");
+			Utils.log(event.getEventMessage());
 			// show error message
-			JOptionPane.showMessageDialog(null, "Operator not completely configured.", "Configure operator",
-					JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, "Operator not completely configured. " 
+				+ event.getEventMessage(), "Configure operator", JOptionPane.ERROR_MESSAGE);
 		} else if (event.getEventType() == ALDOperatorCollectionEventType.RUN_FAILURE) {
 			// print stack trace
-			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
-				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				failureInfo.getException().printStackTrace(pw);
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			if (event.getInfo().getException() != null) {
+				event.getInfo().getException().printStackTrace(pw);
+				Utils.log("Operator execution failed!");
 				Utils.log(sw.toString());
 			}
 			// show error message
-			JOptionPane.showMessageDialog(null, "Something went wrong during execution of the operator.",
-				"Run failure", JOptionPane.ERROR_MESSAGE);
+//			JOptionPane pane = new JOptionPane("Something went wrong during execution of the operator.\n" 
+//					+ sw.toString(), JOptionPane.ERROR_MESSAGE, JOptionPane.DEFAULT_OPTION);
+//			JDialog dialog = pane.createDialog(null, "Run failure!");
+//			dialog.setModal(false); // this says not to block background components
+//			dialog.setVisible(true);
+			// show error message
+			JOptionPane.showMessageDialog(null, "Something went wrong during execution of the operator.\n"
+					+ sw.toString(), "Run failure", JOptionPane.ERROR_MESSAGE);
 		} else if (event.getEventType() == ALDOperatorCollectionEventType.INIT_FAILURE) {
 			// print stack trace
-			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
-				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				failureInfo.getException().printStackTrace(pw);
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			if (event.getInfo().getException() != null) {
+				event.getInfo().getException().printStackTrace(pw);
+				Utils.log("Operator initialization failed!");
 				Utils.log(sw.toString());
 			}
 			// show error message
-			JOptionPane.showMessageDialog(null, "Operator is not well initialized.", "Initialization failure",
-					JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, "Operator is not well initialized. \n" 
+					+ sw.toString(), "Initialization failure", JOptionPane.ERROR_MESSAGE);
 		} else { // ALDOperatorCollectionEventType.UNKNOWN
-			// print stack trace
-			if (event.getInfo() instanceof ALDWorkflowRunFailureInfo) {
-				ALDWorkflowRunFailureInfo failureInfo = (ALDWorkflowRunFailureInfo) event.getInfo();
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				failureInfo.getException().printStackTrace(pw);
-				Utils.log(sw.toString());
-			}
+			// print error message
+			Utils.log("Unknown error during operator execution!");
+			Utils.log(event.getEventMessage());
+			// show error message
+//			JOptionPane pane = new JOptionPane("Unknown error during operator execution! \n" 
+//					+ event.getEventMessage(), JOptionPane.ERROR_MESSAGE, JOptionPane.DEFAULT_OPTION);
+//			JDialog dialog = pane.createDialog(null, "Unknown error!");
+//			dialog.setModal(false); // this says not to block background components
+//			dialog.setVisible(true);
 		}
 
 		// enable the run button again
 		this.operatorRunButton.setEnabled(true);
-
 	}
 
 	/**
