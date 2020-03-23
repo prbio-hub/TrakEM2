@@ -88,8 +88,11 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -129,21 +132,29 @@ public class RhizoWriteBinary {
 		 */
 		ArrayList<RhizoStatusLabel> statusLabelsToWrite = new ArrayList<RhizoStatusLabel>();
 
-		JPanel choicesPanel = new JPanel();
-		choicesPanel.setLayout(new GridLayout( 2, 1, 0, 10));
-
-		choicesPanel.add(new JLabel("Layers "));
+		JPanel choicesPanelTop = new JPanel();
+		choicesPanelTop.setLayout(new GridLayout( 1, 2, 0, 10));
+		choicesPanelTop.add(new JLabel("Layers "));
 		JComboBox<String> layerCombo = new JComboBox<String>(choices2);
-		choicesPanel.add( layerCombo);
+		choicesPanelTop.add( layerCombo);
 
-		choicesPanel.add(new JLabel("Status labels "));
+		JPanel choicesPanelBottom = new JPanel();
+		choicesPanelBottom.setLayout(new GridLayout( 1, 2, 0, 10));
+
+		choicesPanelBottom.add(new JLabel("Status labels "));
 		HashSet<String> statusLabelChoices = new HashSet<String>();
 		for ( int i = 0 ; i < rhizoMain.getProjectConfig().sizeStatusLabelMapping() ; i++ ) {
 			statusLabelChoices.add( rhizoMain.getProjectConfig().getStatusLabel(i).getName());
 		}
 		JList statusLabelCombo = new JList( statusLabelChoices.toArray());
 		statusLabelCombo.setSelectedIndex( 0);
-		choicesPanel.add( statusLabelCombo);
+		choicesPanelBottom.add( statusLabelCombo);
+
+		JPanel choicesPanel = new JPanel();
+		choicesPanel.setLayout(new BoxLayout( choicesPanel, BoxLayout.Y_AXIS));
+		choicesPanel.add( choicesPanelTop);
+		choicesPanel.add(Box.createVerticalStrut(10));
+		choicesPanel.add( choicesPanelBottom);
 
 		int result = JOptionPane.showConfirmDialog(null, choicesPanel, "Output Options", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 
@@ -220,11 +231,29 @@ public class RhizoWriteBinary {
 		binaryImage.fillBlack();
 
 		drawSegments( rhizoMain.getProject(), layer, binaryImage.getImagePlus(), rootstackThings, statusLabelIntToWrite);
-		
+
 		try {
-			ImageWriterMTB writer = new ImageWriterMTB(binaryImage, imagePath.toString());
+			String filename = imagePath.toString();
+
+			// if we have to write tif format, force to use ome.tif: write to a temp file and rename
+			boolean haveTif = false;
+			extension = FilePathManipulator.getExtension(  filename);
+
+			if ( extension.equalsIgnoreCase( "tif") || extension.equalsIgnoreCase( "tiff" ))
+				haveTif = true;
+
+			if ( haveTif) {
+				File tmpFile = File.createTempFile("rhizo", ".ome.tif");
+				filename = tmpFile.getAbsolutePath();
+			}
+
+			ImageWriterMTB writer = new ImageWriterMTB(binaryImage, filename);
 			writer.runOp( true);
-		} catch (final ALDOperatorException | ALDProcessingDAGException ex) {
+
+			if ( haveTif ) {
+				Files.move( Paths.get(filename), imagePath, StandardCopyOption.REPLACE_EXISTING);
+			}
+		} catch (final Exception  ex ) {
 			Utils.showMessage( "cannot write binary annotation image to  " + imagePath.toString());
 			ex.printStackTrace();
 		}
