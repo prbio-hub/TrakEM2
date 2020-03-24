@@ -138,35 +138,8 @@ public class RhizoROI {
 	public Roi getRoi() {
 		return this.roi;
 	}
-	
-    /** get the current ROI polyline
-     *
-     * @return
-     */
-//    public Polyline getCurrentPolyline() {
-//        if ( firstGetCurrentPolyline ) {
-//            // we cannot get the polyline during opening the project and the  instantiation of the RhizoROI object,
-//            // as the project tree is not yet constructed
-//            // so need to be done this way
-//            try {
-//                HashSet<ProjectThing> rootstackThings = RhizoUtils.getRootstacks(rhizoMain.getProject());
-//
-//                for (ProjectThing rootstackThing : rootstackThings) {
-//                    if ( ! firstGetCurrentPolyline ) break;
-//
-//                    for (ProjectThing pt : rootstackThing.findChildrenOfTypeR(Polyline.class)) {
-//                        Polyline pl = (Polyline) pt.getObject();
-//                        currentPolyline = pl;
-//                        firstGetCurrentPolyline = false;
-//                        break;
-//                    }
-//                }
-//            } catch (Exception ex) {
-//                System.out.println("error in getCurrentPolyline first of rhizoROI");
-//            }
-//            firstGetCurrentPolyline = false;
-//        }
-//
-//        return currentPolyline;
-//    }
+
+	public Polyline getPolyline() {
+		return this.polyline;
+	}
 }
