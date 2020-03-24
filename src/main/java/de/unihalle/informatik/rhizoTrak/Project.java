@@ -658,7 +658,6 @@ public class Project extends DBObject {
 					ProjectThing rootNode = null;
 					rootNode = (ProjectThing) projectTree.getRoot().getUserObject();
 					if ( rootNode != null ) {
-						// rootstack
 						ProjectThing rootstackThing = rootNode.createChild("rootstack");
 						DefaultMutableTreeNode node = new DefaultMutableTreeNode(rootstackThing);
 						DefaultMutableTreeNode parentNode = DNDTree.findNode(rootNode, projectTree);
@@ -671,6 +670,10 @@ public class Project extends DBObject {
 						ProjectThing dirThing = rootstackThing.createChild("gravitationalDirection");
 						DefaultMutableTreeNode dirNode = new DefaultMutableTreeNode(dirThing);
 						((DefaultTreeModel) projectTree.getModel()).insertNodeInto(dirNode, node, node.getChildCount());
+						// make sure that new rootstack is visible
+						TreePath treePath = new TreePath(dirNode.getPath());
+						projectTree.scrollPathToVisible(treePath);
+						projectTree.setSelectionPath(treePath);
 					} else {
 						Utils.log( "@Project: can not add rootstack");
 					}
