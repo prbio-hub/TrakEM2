@@ -656,6 +656,10 @@ public class Project extends DBObject {
 						DefaultMutableTreeNode node = new DefaultMutableTreeNode(rootstackThing);
 						DefaultMutableTreeNode parentNode = DNDTree.findNode(rootNode, projectTree);
 						((DefaultTreeModel) projectTree.getModel()).insertNodeInto(node, parentNode, parentNode.getChildCount());
+						// make sure that new rootstack is visible
+						TreePath treePath = new TreePath(node.getPath());
+						projectTree.scrollPathToVisible(treePath);
+						projectTree.setSelectionPath(treePath);
 					} else {
 						Utils.log( "@Project: can not add rootstack");
 					}
