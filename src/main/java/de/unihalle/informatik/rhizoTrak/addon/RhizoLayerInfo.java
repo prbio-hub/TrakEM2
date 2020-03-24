@@ -84,6 +84,11 @@ public class RhizoLayerInfo {
 	RhizoROI roi = null;
 	
 	/**
+	 * Gravitational direction in image of layer.
+	 */
+	RhizoGravitationalDirection gravDir = null;
+	
+	/**
 	 * map the treelines generated to the source RSML (top level) roots
 	 */
 	HashMap<Treeline,RootType> treelineRootMap = new HashMap<Treeline,RootType>();
@@ -129,6 +134,14 @@ public class RhizoLayerInfo {
 	 */
 	public RhizoROI getROI() {
 		return this.roi;
+	}
+	
+	public void setGravitationalDirection(RhizoGravitationalDirection gd) {
+		this.gravDir = gd;
+	}
+	
+	public RhizoGravitationalDirection getGravitationalDirection() {
+		return this.gravDir;
 	}
 	
 	/**
