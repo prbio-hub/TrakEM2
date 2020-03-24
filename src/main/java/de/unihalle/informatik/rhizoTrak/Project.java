@@ -619,7 +619,7 @@ public class Project extends DBObject {
 				TemplateThing template_roi = new TemplateThing("roi");
 				template_root.addChild(template_roi);
 				template_roi.addChild( new TemplateThing( "polyline"));
-				TemplateThing template_gravdir = new TemplateThing("gravitationalDirection");
+				TemplateThing template_gravdir = new TemplateThing("gravitationaldirection");
 				template_root.addChild(template_gravdir);
 				template_gravdir.addChild( new TemplateThing( "polyline"));
 
@@ -667,7 +667,7 @@ public class Project extends DBObject {
 						DefaultMutableTreeNode roiNode = new DefaultMutableTreeNode(roiThing);
 						((DefaultTreeModel) projectTree.getModel()).insertNodeInto(roiNode, node, node.getChildCount());
 						// gravitational direction
-						ProjectThing dirThing = rootstackThing.createChild("gravitationalDirection");
+						ProjectThing dirThing = rootstackThing.createChild("gravitationaldirection");
 						DefaultMutableTreeNode dirNode = new DefaultMutableTreeNode(dirThing);
 						((DefaultTreeModel) projectTree.getModel()).insertNodeInto(dirNode, node, node.getChildCount());
 						// make sure that new rootstack is visible

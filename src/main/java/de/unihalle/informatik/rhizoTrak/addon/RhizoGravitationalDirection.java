@@ -97,10 +97,12 @@ public class RhizoGravitationalDirection {
 	/**
 	 * Default constructor.
 	 * @param rhizoMain		Reference to rhizoTrak main project instance.
+	 * @param p						Polyline.
 	 * @param dir					Gravitational direction.
 	 */
-	protected RhizoGravitationalDirection(RhizoMain rhizoMain, double dir) 	{
+	public RhizoGravitationalDirection(RhizoMain rhizoMain, Polyline p, double dir) 	{
 		this.rhizoMain = rhizoMain;
+		this.polyline = p;
 		this.direction = dir;
 	}
 
