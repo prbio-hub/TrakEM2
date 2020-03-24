@@ -62,8 +62,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
@@ -79,6 +79,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.ListSelectionModel;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 
 import de.unihalle.informatik.Alida.exceptions.ALDOperatorException;
 import de.unihalle.informatik.Alida.operator.ALDOperatorCollectionElement;
@@ -89,9 +92,11 @@ import de.unihalle.informatik.MiToBo.apps.minirhizotron.datatypes.MTBRootTree;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RhizoProjectLayerMetadataContainer;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootImageSegmentationOperator;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootImageSegmentationOperator.LayerSubset;
+import de.unihalle.informatik.MiToBo.core.datatypes.MTBLineSegment2D;
 import de.unihalle.informatik.MiToBo.core.datatypes.MTBPolygon2D;
 import de.unihalle.informatik.MiToBo.core.operator.MTBOperatorCollection;
 import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoGravitationalDirection;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoLayerInfo;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoROI;
@@ -105,6 +110,11 @@ import de.unihalle.informatik.rhizoTrak.display.Polyline;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Selection;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
+import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
+import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
+import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
+import de.unihalle.informatik.rhizoTrak.tree.TemplateThing;
+import de.unihalle.informatik.rhizoTrak.tree.TemplateTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.ImagePlus;
 import ij.gui.Roi;
@@ -424,6 +434,11 @@ public class RhizoRootImageSegmentationManager
 			double x, y;
 			RhizoProjectLayerMetadataContainer container;
 			for (int i = 0; i < this.projectLayers.size(); ++i) {
+				// store container in hashmap
+				container = new RhizoProjectLayerMetadataContainer(i);
+				mData.put(i, container);
+
+				// add information on ROIs
 				lInfo = rm.getLayerInfo(this.projectLayers.get(i));
 				roi = lInfo.getROI();
 				if (roi == null) {
@@ -442,9 +457,7 @@ public class RhizoRootImageSegmentationManager
 				}
 				// create polygon
 				polygon = new MTBPolygon2D(points, true);
-				container = new RhizoProjectLayerMetadataContainer(i);
 				container.setROI(polygon);
-				mData.put(i, container);
 			}
 			
 			// configure operator
@@ -506,6 +519,7 @@ public class RhizoRootImageSegmentationManager
 
 			// get results from operator
 			HashMap<Integer, Vector<MTBRootTree>> resultTreelines = segOp.getAllResultTreelines();
+			HashMap<Integer, RhizoProjectLayerMetadataContainer> layerMetadata = segOp.getAllLayerMetadata();
 
 			switch (segOp.getOperatorWorkingMode()) {
 			/*
@@ -738,6 +752,152 @@ public class RhizoRootImageSegmentationManager
 				break;
 			}
 			} // end of switch 
+			
+			/*
+			 * Handle metadata... 
+			 */
+			
+			// ask the user if the data should be imported
+			JOptionPane pane = new JOptionPane("Do you wish to import available metadata?",
+					JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION);
+			JDialog dialog = pane.createDialog(null, "Import metadata?");
+			dialog.setModal(false); // this says not to block background components
+			dialog.setVisible(true);
+
+			// add event listener to notice when window is closed
+			dialog.addComponentListener(new ComponentListener() {
+
+				public void componentMoved(ComponentEvent e) {
+				};
+
+				public void componentResized(ComponentEvent e) {
+				};
+
+				public void componentShown(ComponentEvent e) {
+				};
+
+				public void componentHidden(ComponentEvent e) {
+
+					if ((int) pane.getValue() == JOptionPane.YES_OPTION) {
+
+						// transfer the modified treelines back into the corresponding layers
+						Thread transferTreelines = new Thread() {
+							public void run() {
+								
+								// check if we have metadata to import
+								RhizoRootImageSegmentationManager manager = RhizoRootImageSegmentationManager.this;
+								LayerSet layers = manager.rhizoDisplay.getLayerSet();
+								Set<Integer> keys = layerMetadata.keySet();
+								boolean metadataGiven = false;
+								for (Integer key: keys) {
+									if (	!Double.isNaN(layerMetadata.get(key).getGravitationalDirection())
+											|| layerMetadata.get(key).getGravitationalDirectionRefSegment() != null) {
+										metadataGiven = true;
+									}
+								}
+								// if there is no metadata we are done
+								if (!metadataGiven)
+									return;
+								
+								// ensure consistent project structure
+								Project project = manager.rhizoDisplay.getProject();
+						    ProjectTree projectTree = project.getProjectTree();
+						    ProjectThing parentThing = 
+						    		RhizoUtils.getParentThingForChild(project, "gravitationaldirection");
+						    if (parentThing == null) {		    	
+						    	// search for a rootstack object
+						    	ProjectThing rootstack = RhizoUtils.getRootstacks(project).iterator().next();
+						    	if (rootstack == null) {
+						    		Utils.showMessage("rhizoTrak - cannot find a rootstack in project tree!");
+						    		return;
+						    	}
+						    	// add ROI things
+						    	TemplateTree templateTree = project.getTemplateTree();
+						    	TemplateThing template_root = project.getTemplateThing("rootstack");
+						    	TemplateThing template_roi = 
+						    			templateTree.addNewChildType(template_root, "gravitationaldirection");
+						    	templateTree.addNewChildType(template_roi, "polyline");
+
+						    	// add ROI instance
+						    	parentThing = rootstack.createChild("gravitationaldirection");
+						    	//add it to the tree
+									if (parentThing != null) {
+										DefaultMutableTreeNode parentNode = DNDTree.findNode(rootstack, projectTree);
+										DefaultMutableTreeNode new_node = new DefaultMutableTreeNode(parentThing);
+										((DefaultTreeModel)projectTree.getModel()).insertNodeInto(
+												new_node, parentNode, parentNode.getChildCount());
+										TreePath treePath = new TreePath(new_node.getPath());
+										projectTree.scrollPathToVisible(treePath);
+										projectTree.setSelectionPath(treePath);
+									}
+						    }
+
+						    // iterate over all layers and check for actual metadata
+								for (Integer key: keys) {
+									
+									// search for corresponding layer
+									Layer layer = null;
+									for (int i=0; i<layers.size(); ++i) {
+										if (layers.getLayer(i).getZ() == key) {
+											layer = layers.getLayer(i);
+											// leave the loop
+											i = layers.size();
+										}
+									}
+										
+									// add new polyline to project
+									Polyline newPolyline = null;
+									if (layerMetadata.get(key).getGravitationalDirectionRefSegment() != null) {
+
+										// delete old direction if present
+									 	Set<Displayable> deleteSet = new HashSet<Displayable>();
+
+								  	for (ProjectThing ptc : parentThing.findChildrenOfTypeR(Polyline.class)) {
+								  		Polyline pl = (Polyline) ptc.getObject();
+								  		if (layer == null || pl.getFirstLayer().getId() == layer.getId()) {
+								  			deleteSet.add(pl);
+								  		}
+								  	}
+
+								  	if (!deleteSet.isEmpty()) {
+								  		project.removeAll(deleteSet);
+								  	}
+								  	
+								  	// add the new one
+										MTBLineSegment2D seg = 
+											layerMetadata.get(key).getGravitationalDirectionRefSegment();
+
+										// make new polyline for gravitational direction in current layer
+										ProjectThing pt = parentThing.createChild("polyline");
+										newPolyline = (Polyline) pt.getObject();
+
+										newPolyline.insertPoint(0, (int)seg.x1, (int)seg.y1, layer.getId());
+										newPolyline.insertPoint(1, (int)seg.x2, (int)seg.y2, layer.getId());
+
+										// add new polyline to the project tree
+										ProjectTree currentTree = project.getProjectTree();
+										DefaultMutableTreeNode parentNode = DNDTree.findNode(parentThing, currentTree);
+										DefaultMutableTreeNode node = new DefaultMutableTreeNode(pt);
+										((DefaultTreeModel) currentTree.getModel()).insertNodeInto(node, parentNode, 
+												parentNode.getChildCount());
+
+										newPolyline.setVisible(true, true);
+										pt.setVisible(true);
+										// BM: not sure why, but this seems to be essential here to ensure that the ROI is visible
+										newPolyline.repaint(true, layer);
+										Display.repaint();
+									}
+									// store directional data
+									RhizoGravitationalDirection rgd = new RhizoGravitationalDirection(rhizoMain, 
+											newPolyline, layerMetadata.get(key).getGravitationalDirection());
+									rhizoMain.getLayerInfo(layer).setGravitationalDirection(rgd);
+								} // end of loop over all layers
+							} // end of run()
+						}; // end of thread definition
+						transferTreelines.start();
+					}
+				} // end of componentHidden() {...}
+			});
 		} else if (event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED) {
 			// print error message
 			Utils.log("Error! Operator not properly configured!");
