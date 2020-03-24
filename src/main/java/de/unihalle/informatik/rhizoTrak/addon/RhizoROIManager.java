@@ -154,7 +154,7 @@ public class RhizoROIManager {
     
     Project project = display.getProject();
     ProjectTree projectTree = project.getProjectTree();
-    ProjectThing roiParentThing = RhizoUtils.getOneRoiParentForROIs(project);
+    ProjectThing roiParentThing = RhizoUtils.getParentThingForChild(project, "roi");
     if (roiParentThing == null) {
 
     	// search for a rootstack object
@@ -210,7 +210,7 @@ public class RhizoROIManager {
     Layer activeLayer = Display.getFrontLayer(); 
 
     // find roi child of rootstack
-    ProjectThing roiProjectThing = RhizoUtils.getOneRoiParentForROIs(project);
+    ProjectThing roiProjectThing = RhizoUtils.getParentThingForChild(project, "roi");
     if (roiProjectThing == null) {
     	return;
     }
@@ -227,7 +227,7 @@ public class RhizoROIManager {
     Project project = display.getProject();
 
     // find roi child of rootstack
-    ProjectThing roiProjectThing = RhizoUtils.getOneRoiParentForROIs(project);
+    ProjectThing roiProjectThing = RhizoUtils.getParentThingForChild(project, "roi");
     if (roiProjectThing == null) {
     	return;
     }
@@ -253,7 +253,7 @@ public class RhizoROIManager {
     }
 
     // find roi child of rootstack
-    ProjectThing roiProjectThing = RhizoUtils.getOneRoiParentForROIs(project);
+    ProjectThing roiProjectThing = RhizoUtils.getParentThingForChild(project, "roi");
     if (roiProjectThing == null) {
   		Utils.showMessage("rhizoTrak - propagate ROI: no ROI found!");
     	return;

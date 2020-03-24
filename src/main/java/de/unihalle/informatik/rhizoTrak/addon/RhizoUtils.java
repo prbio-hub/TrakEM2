@@ -118,25 +118,25 @@ public class RhizoUtils {
 	 * @param project
 	 * @return
 	 */
-	public static ProjectThing getOneRoiParentForROIs( Project project) {
+	public static ProjectThing getParentThingForChild(Project project, String childType) {
 		HashSet<ProjectThing> rootstackProjectThings = RhizoUtils.getRootstacks( project);
 		if (rootstackProjectThings == null)
 			return null;
 
 		for ( ProjectThing pt : rootstackProjectThings) {
 			if ( pt.hasChildren()) {
-				ArrayList<ProjectThing> rois = pt.findChildrenOfType("roi");
-				if (rois.isEmpty())
+				ArrayList<ProjectThing> childs = pt.findChildrenOfType(childType);
+				if (childs.isEmpty())
 					return null;
-				return rois.get(0);
+				return childs.get(0);
 			}
 		}
 		
 		// no roi child found so far, create one
 		ProjectThing pt = rootstackProjectThings.iterator().next();
-		ProjectThing roiChild = pt.createChild("roi");
-    roiChild.setTitle(pt.getUniqueIdentifier());
-		return roiChild;
+		ProjectThing newChild = pt.createChild(childType);
+    newChild.setTitle(pt.getUniqueIdentifier());
+		return newChild;
 	}
 
 	/** get all Connectors below any of the  rootstacks hashed by its Id
