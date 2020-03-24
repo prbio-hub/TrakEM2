@@ -101,17 +101,18 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
-import de.unihalle.informatik.rhizoTrak.ControlWindow;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
+import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Polyline;
 import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.tree.TemplateThing;
 import de.unihalle.informatik.rhizoTrak.tree.TemplateTree;
+import de.unihalle.informatik.rhizoTrak.utils.ProjectToolbar;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.gui.Roi;
 
@@ -132,8 +133,6 @@ public class RhizoROIManager {
         Utils.showMessage("SetROI: no selection given!");
         return;
     }
-
-    Display.clearSelection();
 
     // delete current ROI for active layer if there is any
     this.clearROI();
@@ -173,38 +172,18 @@ public class RhizoROIManager {
 			}
     }
     
-    // make new closed polyline
+    // make new closed polyline as ROI and add to current layer
     try {
-        ProjectThing pt = roiParentThing.createChild("polyline");
-        pt.setTitle(pt.getUniqueIdentifier());
-
-        Polyline newPolyline = (Polyline) pt.getObject();
-
-        int n;
-        for (n = 0; n < roi.getPolygon().npoints; n++) {
-            newPolyline.insertPoint(n, roi.getPolygon().xpoints[n], roi.getPolygon().ypoints[n], 
-            		Display.getFrontLayer().getId());
-        }
-        newPolyline.insertPoint(n, roi.getPolygon().xpoints[0], roi.getPolygon().ypoints[0], 
-        		Display.getFrontLayer().getId());
-
-        // add new polyline to the project tree
-        ProjectTree currentTree = project.getProjectTree();
-        DefaultMutableTreeNode parentNode = DNDTree.findNode(roiParentThing, currentTree);
-        DefaultMutableTreeNode node = new DefaultMutableTreeNode(pt);
-        ((DefaultTreeModel) currentTree.getModel()).insertNodeInto(node, parentNode, 
-        		parentNode.getChildCount());
-        Display.clearSelection();
-        
-        // remember ROI
-        Layer activeLayer = Display.getFrontLayer();
-        this.rMain.getLayerInfo(activeLayer).setROI(new RhizoROI(this.rMain, newPolyline, 
-        		roi.getType() == Roi.RECTANGLE));
+    	this.addROI(project, roiParentThing, Display.getFrontLayer(), roi);
     } catch (Exception e) {
     		e.printStackTrace();
         Utils.showMessage("Cannot create polyline");
         return;
     }
+		ProjectToolbar.setTool(ProjectToolbar.SELECT);
+		// select nothing
+		Display.clearSelection();
+		Display.repaint();
   }
   
   public void clearROI() {
@@ -229,14 +208,73 @@ public class RhizoROIManager {
     // find roi child of rootstack
     ProjectThing roiProjectThing = RhizoUtils.getOneRoiParentForROIs(project);
     if (roiProjectThing == null) {
-        Utils.showMessage("RhizoROI.getROI: Create treeline: WARNING  can not find a rootstack in project tree able to hold a polyline");
-        return;
+    	return;
     }
 
     // delete current ROI for all layers if there is any
     this.clearROI(roiProjectThing, null);
   }
 
+  public void propagateROI() {
+  	
+  	// get ROI of active layer
+  	Display display = Display.getFront();
+    Project project = display.getProject();
+    Layer activeLayer = Display.getFrontLayer(); 
+    RhizoROI activeROI = this.rMain.getLayerInfo(activeLayer).getROI();
+
+    // find roi child of rootstack
+    ProjectThing roiProjectThing = RhizoUtils.getOneRoiParentForROIs(project);
+    if (roiProjectThing == null) {
+    	return;
+    }
+
+  	// process each layer
+    Layer layer;
+  	LayerSet currentLayerSet = display.getLayerSet();
+  	for (int z=0; z<currentLayerSet.size(); ++z) {
+  		// skip active layer
+  		if (z == activeLayer.getZ())
+  			continue;
+  		layer = currentLayerSet.getLayer(z);
+  		this.clearROI(roiProjectThing, layer);
+  		this.addROI(project, roiProjectThing, layer, (Roi)activeROI.getRoi().clone());
+  	}
+		ProjectToolbar.setTool(ProjectToolbar.SELECT);
+		// select nothing
+		Display.clearSelection();
+		Display.repaint();
+  }
+
+  private void addROI(Project project, ProjectThing parentThing, Layer layer, Roi roi) {
+    ProjectThing pt = parentThing.createChild("polyline");
+    Polyline newPolyline = (Polyline) pt.getObject();
+
+    int n;
+    for (n = 0; n < roi.getPolygon().npoints; n++) {
+        newPolyline.insertPoint(n, roi.getPolygon().xpoints[n], roi.getPolygon().ypoints[n], 
+        		layer.getId());
+    }
+    newPolyline.insertPoint(n, roi.getPolygon().xpoints[0], roi.getPolygon().ypoints[0], 
+    		layer.getId());
+
+    // add new polyline to the project tree
+    ProjectTree currentTree = project.getProjectTree();
+    DefaultMutableTreeNode parentNode = DNDTree.findNode(parentThing, currentTree);
+    DefaultMutableTreeNode node = new DefaultMutableTreeNode(pt);
+    ((DefaultTreeModel) currentTree.getModel()).insertNodeInto(node, parentNode, 
+    		parentNode.getChildCount());
+    
+    newPolyline.setVisible(true, true);
+    pt.setVisible(true);
+    newPolyline.repaint(true, layer);
+    Display.repaint();
+
+    // store ROI
+    this.rMain.getLayerInfo(layer).setROI(new RhizoROI(this.rMain, roi, newPolyline, 
+    		roi.getType() == Roi.RECTANGLE));
+  }
+  
   private void clearROI(ProjectThing pt, Layer layer) {
   	Set<Displayable> deleteSet = new HashSet<Displayable>();
 
@@ -253,7 +291,4 @@ public class RhizoROIManager {
   	}
   }
 
-  public void propagateROI() {
-  	
-  }
 }	
