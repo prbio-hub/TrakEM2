@@ -116,14 +116,29 @@ import de.unihalle.informatik.rhizoTrak.utils.ProjectToolbar;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.gui.Roi;
 
+/**
+ * Manager class to handle all actions related to ROIs.
+ * 
+ * @author Birgit Moeller
+ */
 public class RhizoROIManager {
 
+	/**
+	 * Reference to the corresponding rhizoTrak project.
+	 */
 	protected RhizoMain rMain;
 	
+  /**
+   * Default constructor.
+   * @param rm	Reference to project handle.
+   */
   protected RhizoROIManager(RhizoMain rm) {
   	this.rMain = rm;
   }
   
+  /**
+   * Set ROI for active layer from given (closed) polyline selection.
+   */
   public void setROI() {
   	
   	// gets the currently drawn ROI from the GUI
@@ -186,6 +201,9 @@ public class RhizoROIManager {
 		Display.repaint();
   }
   
+  /**
+   * Delete ROI for currently active layer if there is any.
+   */
   public void clearROI() {
     Display display = Display.getFront();
     Project project = display.getProject();
@@ -201,6 +219,9 @@ public class RhizoROIManager {
     this.clearROI(roiProjectThing, activeLayer);
   }
   
+  /**
+   * Delete ROIs of all layers in project.
+   */
   public void clearROIsAll() {
     Display display = Display.getFront();
     Project project = display.getProject();
@@ -215,6 +236,9 @@ public class RhizoROIManager {
     this.clearROI(roiProjectThing, null);
   }
 
+  /**
+   * Propagates the ROI from the current layer to all others.
+   */
   public void propagateROI() {
   	
   	// get ROI of active layer
@@ -222,10 +246,16 @@ public class RhizoROIManager {
     Project project = display.getProject();
     Layer activeLayer = Display.getFrontLayer(); 
     RhizoROI activeROI = this.rMain.getLayerInfo(activeLayer).getROI();
+    
+    if (activeROI == null) {
+  		Utils.showMessage("rhizoTrak - propagate ROI: active layer has no ROI!");
+    	return;
+    }
 
     // find roi child of rootstack
     ProjectThing roiProjectThing = RhizoUtils.getOneRoiParentForROIs(project);
     if (roiProjectThing == null) {
+  		Utils.showMessage("rhizoTrak - propagate ROI: no ROI found!");
     	return;
     }
 
@@ -246,6 +276,13 @@ public class RhizoROIManager {
 		Display.repaint();
   }
 
+  /**
+   * Adds a ROI to the given project and layer.
+   * @param project				Target project.
+   * @param parentThing		Parent node under which to add the ROI in the project tree.
+   * @param layer					Target layer.
+   * @param roi						The ROI to add.
+   */
   private void addROI(Project project, ProjectThing parentThing, Layer layer, Roi roi) {
     ProjectThing pt = parentThing.createChild("polyline");
     Polyline newPolyline = (Polyline) pt.getObject();
@@ -267,14 +304,19 @@ public class RhizoROIManager {
     
     newPolyline.setVisible(true, true);
     pt.setVisible(true);
+    // BM: not sure why, but this seems to be essential here to ensure that the ROI is visible
     newPolyline.repaint(true, layer);
-    Display.repaint();
 
     // store ROI
     this.rMain.getLayerInfo(layer).setROI(new RhizoROI(this.rMain, roi, newPolyline, 
     		roi.getType() == Roi.RECTANGLE));
   }
   
+  /**
+   * Deletes the ROI of the given layer.
+   * @param pt			Project thing under which to delete the ROI(s).
+   * @param layer		Target layer where to delete the ROIs.
+   */
   private void clearROI(ProjectThing pt, Layer layer) {
   	Set<Displayable> deleteSet = new HashSet<Displayable>();
 
@@ -289,6 +331,9 @@ public class RhizoROIManager {
   		Project project = rMain.getProject();
   		project.removeAll(deleteSet);
   	}
+  	
+  	// delete from layer info object as well
+  	this.rMain.getLayerInfo(layer).setROI(null);
   }
 
 }	
