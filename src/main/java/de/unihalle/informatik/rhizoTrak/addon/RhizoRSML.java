@@ -50,6 +50,7 @@ package de.unihalle.informatik.rhizoTrak.addon;
 import java.awt.GridLayout;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -88,6 +89,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.dom.DOMResult;
 
+import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage;
+import de.unihalle.informatik.MiToBo.io.images.ImageWriterMTB;
+import de.unihalle.informatik.MiToBo.io.tools.FilePathManipulator;
+import ij.ImagePlus;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -167,6 +172,7 @@ public class RhizoRSML
 	private boolean deleteTreelinesBeforeImport = false;
 	
 	private static final String ONLY_STRING = "Current layer only";
+	private static final String ROI_STRING = "ROI only";
 	private static final String ALL_STRING = "All layers";
 	private static final String UNIFIED_STRING = "Unified";
 	private static final String NOTUNIFIED_STRING = "Not unified";
@@ -188,9 +194,16 @@ public class RhizoRSML
 	 */
 	public void writeRSML() {
 		projectName = rhizoMain.getXmlName().replaceFirst(".xml\\z", "");
-		
+
+//		de.unihalle.informatik.rhizoTrak.display.Polyline roi = rhizoMain.getRhizoRoi().getCurrentPolyline();
+
 		// query output options
-		String[] choicesLayers = {ALL_STRING, ONLY_STRING};
+		String[] choicesLayers;
+//		if ( roi == null )
+//			choicesLayers= new String[]{ALL_STRING, ONLY_STRING};
+//		else
+			choicesLayers= new String[]{ALL_STRING, ONLY_STRING, ROI_STRING};
+
 		JComboBox<String> comboLayers = new JComboBox<String>(choicesLayers);
 		
 		String[] choicesUnified = {UNIFIED_STRING, NOTUNIFIED_STRING};
@@ -211,6 +224,7 @@ public class RhizoRSML
 		}
 
 		boolean writeAllLAyers  = ((String) comboLayers.getSelectedItem()).equals( ALL_STRING);
+		boolean writeROI  = ((String) comboLayers.getSelectedItem()).equals( ROI_STRING);
 		boolean unified = ((String) comboUnified.getSelectedItem()).equals( UNIFIED_STRING);
 
 		// query output files
@@ -260,8 +274,13 @@ public class RhizoRSML
 			}
 
 		} else {
-			// Select and open output file
-			Layer layer = Display.getFront().getLayer();
+			Layer layer = null;
+			if ( writeROI) {
+//				layer = roi.getFirstLayer();
+			} else {
+				// Select and open output file
+				layer = Display.getFront().getLayer();
+			}
 
 			fileChooser.setDialogTitle("File to write RSML to");
 			fileChooser.setSelectedFile(new File( folder + projectName + "-" + String.valueOf( RhizoUtils.getTimepointForLayer( layer)) + ".rsml"));
@@ -282,22 +301,34 @@ public class RhizoRSML
 			}
 			
 			// write the layer
-			writeLayer( selectedFile, layer, this.rhizoMain.getLayerInfo( layer), unified);
+//			writeLayer( selectedFile, layer, this.rhizoMain.getLayerInfo( layer), unified, roi);
 		}	
 	}
-    
+
+	/** Write the <code>layer</code> as an RSML to <code>saveFile</code>.
+	 *
+	 * @param file
+	 * @param layer
+	 * @param layerInfo
+	 * @param unified
+	 */
+	private void writeLayer(File file, Layer layer, RhizoLayerInfo layerInfo, boolean unified) {
+		writeLayer( file, layer, layerInfo, unified, null);
+	}
+
 	/** Write the <code>layer</code> as an RSML to <code>saveFile</code>.
 	 * 
 	 * @param saveFile
 	 * @param layer
 	 * @param rhizoLayerInfo 
-	 * @param unified 
+	 * @param unified
+	 * @param  roi
 	 */
-	private void writeLayer(File saveFile, Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified) {
+	private void writeLayer(File saveFile, Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified, de.unihalle.informatik.rhizoTrak.display.Polyline roi) {
 		Rsml rsml = null;
 		try {
 			File saveFileDirectory = saveFile.getParentFile();
-			rsml = createRSML( layer, rhizoLayerInfo, unified, saveFileDirectory);
+			rsml = createRSML( layer, rhizoLayerInfo, unified, saveFileDirectory, roi);
 		} catch (InternalError ex) {
 			Utils.showMessage( "cannot create RSML structure for layer " + String.valueOf( RhizoUtils.getTimepointForLayer( layer)));
 		}
@@ -326,10 +357,10 @@ public class RhizoRSML
      * @param layer
 	 * @param rhizoLayerInfo
 	 * @param unified
-     * @param saveFileDirectory
+	 * @param roi
 	 * @return the rsml data structure or null, if no rootstacks are found
      */
-    private Rsml createRSML(Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified, File saveFileDirectory) {
+    private Rsml createRSML(Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified, File saveFileDirectory, de.unihalle.informatik.rhizoTrak.display.Polyline roi) {
     	Project project = Display.getFront().getProject();
     	
 		// collect all treelines to write 
@@ -365,9 +396,9 @@ public class RhizoRSML
     	// --- meta data
     	Rsml.Metadata metadata;
     	if (rhizoLayerInfo == null || rhizoLayerInfo.getRsml() == null || rhizoLayerInfo.getRsml().getMetadata() == null) {
-    		metadata = createMetatdata( layer, rhizoLayerInfo, unified, saveFileDirectory);
+    		metadata = createMetatdata( layer, rhizoLayerInfo, unified, saveFileDirectory, roi);
     	} else {
-    		metadata = createMetatdata( layer, rhizoLayerInfo, unified, saveFileDirectory);
+    		metadata = createMetatdata( layer, rhizoLayerInfo, unified, saveFileDirectory, roi);
     	}
     	rsml.setMetadata( metadata);
 
@@ -390,19 +421,45 @@ public class RhizoRSML
 
     	// now create the roots
     	for ( Treeline tl : allTreelinesInLayer ) {
-    		Plant plant = createPlantForTreeline( tl, rhizoLayerInfo, treelineConnectorMap.get( tl), unified);
-    		if ( plant != null && ! scene.getPlant().contains( plant)) {
-    			scene.getPlant().add( plant);
-    		}
-    	}
-
+			if ((roi == null) || overlaps(tl, roi)) {
+				Plant plant = createPlantForTreeline(tl, rhizoLayerInfo, treelineConnectorMap.get(tl), unified, roi);
+				if (plant != null && !scene.getPlant().contains(plant)) {
+					scene.getPlant().add(plant);
+				}
+			}
+		}
     	rsml.setScene( scene);
 
     	return rsml;
     }
-   
-    
-    /** Create a RSML metadata object with rhizoTrak specific information/content.
+
+	/** Check if the treeline <code>tl</code> overlaps the <code>roi</code>.
+	 * Overlap is defines as at least on node is inside the bounding box of the rectengular roi
+	 *
+	 * @param tl
+	 * @param roi
+	 * @return
+	 */
+	private boolean overlaps(Treeline tl, de.unihalle.informatik.rhizoTrak.display.Polyline roi) {
+		boolean doesOverlap = false;
+		Rectangle2D bbox = roi.getPerimeter().getBounds2D();
+		List<Node<Float>> treelineNodes = new ArrayList<Node<Float>>(tl.getNodesAt(tl.getFirstLayer()));
+
+		for(Node<Float> n: treelineNodes) {
+			Point2D point = tl.getAffineTransform().transform(new Point2D.Float(n.getX(), n.getY()), null);
+			if ( point.getX() >= bbox.getX() && point.getX() <= bbox.getMaxX() &&
+					point.getY() >= bbox.getY() && point.getY() <= bbox.getMaxY() ) {
+				doesOverlap = true;
+				break;
+			}
+
+		}
+
+		return doesOverlap;
+	}
+
+
+	/** Create a RSML metadata object with rhizoTrak specific information/content.
      * <p>
      * Note: The RSML JAXB Object in <code>rhizoLayerInfo</code> may be modified
      * 
@@ -410,9 +467,10 @@ public class RhizoRSML
      * @param rhizoLayerInfo
      * @param unified
      * @param saveFileDirectory
+     * @param roi
 	 * @return
      */
-    private Rsml.Metadata createMetatdata(Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified, File saveFileDirectory) {
+    private Rsml.Metadata createMetatdata(Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified, File saveFileDirectory, de.unihalle.informatik.rhizoTrak.display.Polyline roi) {
     	Rsml.Metadata oldMetadata = null;
     	if ( rhizoLayerInfo != null && rhizoLayerInfo.getRsml() != null)
     		oldMetadata = rhizoLayerInfo.getRsml().getMetadata();
@@ -447,30 +505,58 @@ public class RhizoRSML
     	// -----------------------------------------------------------------------------
     	// meta data related to the image
     	Image imageMetaData = new Image();
-    	if ( oldMetadata == null || oldMetadata.getImage() == null ) { 
+    	if ( oldMetadata == null || oldMetadata.getImage() == null || roi != null) {
     		if ( layer.getPatches( false).size() > 0 ) {
     			// get the first patch of the layer
     			Path imagePath = Paths.get( layer.getPatches( false).get(0).getImageFilePath());
 
-//    			Path storageFolderPath = Paths.get( this.rhizoMain.getStorageFolder());
+    			if ( roi != null ) {
+    				// add cropping geometry to imagePath
+					int xOffset = (int) roi.getPerimeter().getBounds().getX();
+					int yOffset = (int) roi.getPerimeter().getBounds().getY();
+					int width = (int)roi.getPerimeter().getBounds().getWidth();
+					int height = (int)roi.getPerimeter().getBounds().getHeight();
+
+					String basename = FilePathManipulator.removeExtension( imagePath.toString());
+					String extension = FilePathManipulator.getExtension(  imagePath.toString());
+					String cropFilename = basename+"-"+width+"x"+height+"+"+xOffset+"+"+yOffset+"."+extension;
+					imagePath = new File( cropFilename).toPath();
+
+					// crop the image of this layer and write to disk
+					ImagePlus ip = roi.getFirstLayer().getPatches(true).get(0).getImagePlus();
+					MTBImage image = MTBImage.createMTBImage(ip);
+					MTBImage croppedImage = image.getImagePart( xOffset, yOffset, 0, 0, 0,
+							width, height, image.getSizeZ(), image.getSizeT(), image.getSizeC());
+					try {
+						ImageWriterMTB writer = new ImageWriterMTB(croppedImage, imagePath.toString());
+						writer.runOp( true);
+					} catch (final Exception ex) {
+						Utils.showMessage( "cannot write cropped image to  " + imagePath.toString());
+						ex.printStackTrace();
+					}
+					imageMetaData.setSha256( RhizoUtils.calculateSHA256( imagePath.toString()));
+				}
+
+				//    			Path storageFolderPath = Paths.get( this.rhizoMain.getStorageFolder());
 				Path saveFileDirectoryPath = saveFileDirectory.toPath();
-    			Path imageDirectory = imagePath.getParent();
+				Path imageDirectory = imagePath.getParent();
 
-    			if ( imageDirectory.equals( saveFileDirectoryPath) ) {
-    				imageMetaData.setName( imagePath.getFileName().toString());
-    			} else if ( imagePath.toString().startsWith(saveFileDirectoryPath.toString()) ) {
-    				Path relativPath = saveFileDirectoryPath.relativize( imagePath);
-    				imageMetaData.setName( relativPath.toString());
-    			} else {
-    				imageMetaData.setName( imagePath.toString());
-    			}
+				if ( imageDirectory.equals( saveFileDirectoryPath) ) {
+					imageMetaData.setName( imagePath.getFileName().toString());
+				} else if ( imagePath.toString().startsWith(saveFileDirectoryPath.toString()) ) {
+					Path relativPath = saveFileDirectoryPath.relativize( imagePath);
+					imageMetaData.setName( relativPath.toString());
+				} else {
+					imageMetaData.setName(imagePath.toString());
+				}
 
-    			// set sha256 code
-    			// TODO why is rhizoLayerInfo not always defined, where to get shacode from
-    			if ( rhizoLayerInfo != null )
-    				imageMetaData.setSha256( rhizoLayerInfo.getImageHash());
+				// set sha256 code
+				if ( roi == null  && rhizoLayerInfo != null) {
+					// TODO why is rhizoLayerInfo not always defined, where to get shacode from
+						imageMetaData.setSha256(rhizoLayerInfo.getImageHash());
+				}
 
-    			// TOOD is there a chance to get hold of capture time and set it??
+				// TOOD is there a chance to get hold of capture time and set it??
 
     			// set unit from calibration information, if available
     			if ( layer.getPatches( false).get(0) != null && layer.getPatches( false).get(0).getImagePlus() != null ) {
@@ -536,17 +622,18 @@ public class RhizoRSML
 	/** create one rsml plant with one root for one treeline.
 	 * 
 	 * @param tl
-	 * @param rhizoLayerInfo 
+	 * @param rhizoLayerInfo
 	 * @param connector the tl is member of, null if treeline is not member of any treeline
-	 * @param unified 
+	 * @param unified
+	 * @param roi
 	 * @return the rsml plant or null, if the treeline has no root node
 	 *
 	 */
-	private Plant createPlantForTreeline(Treeline tl, RhizoLayerInfo rhizoLayerInfo, Connector connector, boolean unified) {
+	private Plant createPlantForTreeline(Treeline tl, RhizoLayerInfo rhizoLayerInfo, Connector connector, boolean unified, de.unihalle.informatik.rhizoTrak.display.Polyline roi) {
 		if ( tl.getRoot() != null ) {
 			// create the JAXB root for the treeline
 			Node<Float> rootNode = tl.getRoot();
-			RootType root = createRSMLRootFromNode( tl, connector, rootNode, null, -1, -1, unified);
+			RootType root = createRSMLRootFromNode( tl, connector, rootNode, null, -1, -1, unified, roi);
 
 			// check if this treeline was created from a RSML toplevel root
 			if ( rhizoLayerInfo != null && rhizoLayerInfo.getRootForTreeline(tl) != null) {
@@ -701,16 +788,17 @@ public class RhizoRSML
 	 * @param tl
 	 * @param connector connector the tl is member of, null if treeline is not member of any treeline
 	 * @param node
-	 * @param parentRSMLRoot the parent root of the rsml root to be created, null if the top level root 
+	 * @param parentRSMLRoot the parent root of the rsml root to be created, null if the top level root
 	 * @param siblingIndex gives the position of the rsml root to be created amongst its sibling polyline, starting with 1,
 	 *                    ignored for the top level rsml root for a treeline
-	 * @param parentNodeIndex index of the parent node in the rsml root above this subtree to be created, 
+	 * @param parentNodeIndex index of the parent node in the rsml root above this subtree to be created,
 	 *                    ignored for the top level rsml root for a treeline
-	 * @param unified 
+	 * @param unified
+	 * @param roi
 	 * @return
 	 */
-	private RootType createRSMLRootFromNode( Treeline tl, Connector connector, Node<Float> node, RootType parentRSMLRoot, 
-			int siblingIndex, int parentNodeIndex, boolean unified) {
+	private RootType createRSMLRootFromNode(Treeline tl, Connector connector, Node<Float> node, RootType parentRSMLRoot,
+											int siblingIndex, int parentNodeIndex, boolean unified, de.unihalle.informatik.rhizoTrak.display.Polyline roi) {
 		Node<Float> parentNode = node.getParent();
 		
 		RootType root = new RootType();
@@ -742,7 +830,7 @@ public class RhizoRSML
 			
 			if ( statuslabel != RhizoProjectConfig.STATUS_VIRTUAL && statuslabel != RhizoProjectConfig.STATUS_VIRTUAL_RSML) {
 				// the branch is not connected by a virtual segment, add the parent node
-				addNode( parentNode, RhizoProjectConfig.STATUS_UNDEFINED, tl, polyline, diameters, statusLabels);
+				addNode( parentNode, RhizoProjectConfig.STATUS_UNDEFINED, tl, polyline, diameters, statusLabels, roi);
 				nodeCount++;
 			}
 
@@ -760,7 +848,7 @@ public class RhizoRSML
 			}
 		}
 		
-		addNode( node, node.getConfidence(), tl, polyline, diameters, statusLabels);
+		addNode( node, node.getConfidence(), tl, polyline, diameters, statusLabels, roi);
 		nodeCount++;
 
 		root.setProperties( props);
@@ -774,7 +862,7 @@ public class RhizoRSML
 			// continue the polyline with the first child
 			Node<Float> child = itr.next();
 			
-			addNode( child, child.getConfidence(), tl, polyline, diameters, statusLabels);
+			addNode( child, child.getConfidence(), tl, polyline, diameters, statusLabels, roi);
 			nodeCount++;
 
 			while ( itr.hasNext()) {
@@ -782,9 +870,9 @@ public class RhizoRSML
 				// create branching root
 				// beware: we already added a node after the branching node
 				if ( this.rhizoMain.getProjectConfig().isParentNodeIndexStartsWithOne() )
-					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-1, unified));
+					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-1, unified, roi));
 				else 
-					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-2, unified));
+					root.getRoot().add( createRSMLRootFromNode( tl, connector, child, root, brachingSubtreeIndex, nodeCount-2, unified, roi));
 
 				brachingSubtreeIndex++;
 			}
@@ -865,18 +953,24 @@ public class RhizoRSML
 	/** Add a node to the RSML representation of the treeline, i.e., the corresponding polyline.
 	 * NOTE: the status label is given as argument and not taken from the node to facilitate special coding of the
 	 * base node of a rsml root
-	 * 
-	 * @param node
+	 *  @param node
 	 * @param statusLabelInteger
 	 * @param tl
 	 * @param polyline
 	 * @param diameters
 	 * @param statusLabels
+	 * @param roi
 	 */
 	private void addNode(Node<Float> node, int statusLabelInteger, Treeline tl, Polyline polyline, Function diameters,
-			Function statusLabels) {
-		
-		Point2D p = RhizoUtils.getAbsoluteTreelineCoordinates( new Point2D.Float( node.getX(), node.getY()), tl);
+						 Function statusLabels, de.unihalle.informatik.rhizoTrak.display.Polyline roi) {
+
+		Point2D p = null;
+		p = RhizoUtils.getAbsoluteTreelineCoordinates( new Point2D.Float( node.getX(), node.getY()), tl);
+
+		// translate if roi non null
+		if ( roi != null) {
+			p = new Point2D.Float( (float)(p.getX()-roi.getPerimeter().getBounds().x),(float)p.getY()-roi.getPerimeter().getBounds().y);
+		}
 
 		PointType pt = new PointType();
 		pt.setX( new BigDecimal( p.getX()));
@@ -1340,7 +1434,7 @@ public class RhizoRSML
 	}
 		
 	/** import the RSML file  <code>file</code> into rhizoTrak for <code>layer</code>.
-	 * @param file
+	 * @param rsml
 	 * @param layer
 	 * @param imageFilePath Is <code> null </code> if image has not been found for this rsml file
 	 * @param topLevelIdTreelineListMap 

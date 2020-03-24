@@ -51,6 +51,7 @@ import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.*;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
+import de.unihalle.informatik.rhizoTrak.tree.TemplateThing;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.ImagePlus;
 
@@ -110,6 +111,32 @@ public class RhizoUtils {
 		}
 
 		return rootstackProjectThings;
+	}
+
+	/** return a projectthing of type rootstack which can hold polyline, or <code>null</code> if non exists
+	 *
+	 * @param project
+	 * @return
+	 */
+	public static ProjectThing getOneRoiParentForROIs( Project project) {
+		HashSet<ProjectThing> rootstackProjectThings = RhizoUtils.getRootstacks( project);
+		if (rootstackProjectThings == null)
+			return null;
+
+		for ( ProjectThing pt : rootstackProjectThings) {
+			if ( pt.hasChildren()) {
+				ArrayList<ProjectThing> rois = pt.findChildrenOfType("roi");
+				if (rois.isEmpty())
+					return null;
+				return rois.get(0);
+			}
+		}
+		
+		// no roi child found so far, create one
+		ProjectThing pt = rootstackProjectThings.iterator().next();
+		ProjectThing roiChild = pt.createChild("roi");
+    roiChild.setTitle(pt.getUniqueIdentifier());
+		return roiChild;
 	}
 
 	/** get all Connectors below any of the  rootstacks hashed by its Id
