@@ -99,7 +99,9 @@ import java.util.Set;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 
+import de.unihalle.informatik.rhizoTrak.ControlWindow;
 import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
@@ -108,6 +110,8 @@ import de.unihalle.informatik.rhizoTrak.display.Polyline;
 import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
+import de.unihalle.informatik.rhizoTrak.tree.TemplateThing;
+import de.unihalle.informatik.rhizoTrak.tree.TemplateTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.gui.Roi;
 
@@ -135,10 +139,38 @@ public class RhizoROIManager {
     this.clearROI();
     
     Project project = display.getProject();
+    ProjectTree projectTree = project.getProjectTree();
     ProjectThing roiParentThing = RhizoUtils.getOneRoiParentForROIs(project);
     if (roiParentThing == null) {
-        Utils.showMessage("RhizoROI.getROI: Create treeline: WARNING  can not find a rootstack in project tree able to hold a polyline");
-        return;
+
+    	// search for a rootstack object
+    	ProjectThing rootstack = RhizoUtils.getRootstacks(project).iterator().next();
+    	if (rootstack == null) {
+    		Utils.showMessage("rhizoTrak.setROI(): WARNING - cannot find a rootstack in project tree!");
+    		return;
+    	}
+    	// add ROI things
+    	TemplateTree templateTree = project.getTemplateTree();
+    	TemplateThing template_root = project.getTemplateThing("rootstack");
+    	TemplateThing template_roi = templateTree.addNewChildType(template_root, "roi");
+    	templateTree.addNewChildType(template_roi, "polyline");
+
+    	// add ROI instance
+    	roiParentThing = rootstack.createChild("roi");
+    	//add it to the tree
+			if (roiParentThing != null) {
+				DefaultMutableTreeNode parentNode = DNDTree.findNode(rootstack, projectTree);
+				DefaultMutableTreeNode new_node = new DefaultMutableTreeNode(roiParentThing);
+				((DefaultTreeModel)projectTree.getModel()).insertNodeInto(
+						new_node, parentNode, parentNode.getChildCount());
+				TreePath treePath = new TreePath(new_node.getPath());
+				projectTree.scrollPathToVisible(treePath);
+				projectTree.setSelectionPath(treePath);
+			}
+			// bring the display to front
+			if (roiParentThing.getObject() instanceof Displayable) {
+				Display.getFront().getFrame().toFront();
+			}
     }
     
     // make new closed polyline
@@ -183,8 +215,7 @@ public class RhizoROIManager {
     // find roi child of rootstack
     ProjectThing roiProjectThing = RhizoUtils.getOneRoiParentForROIs(project);
     if (roiProjectThing == null) {
-        Utils.showMessage("RhizoROI.getROI: Create treeline: WARNING  can not find a rootstack in project tree able to hold a polyline");
-        return;
+    	return;
     }
 
     // delete current ROI for active layer if there is any
