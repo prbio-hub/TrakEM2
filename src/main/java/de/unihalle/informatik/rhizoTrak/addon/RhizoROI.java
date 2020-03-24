@@ -105,6 +105,11 @@ public class RhizoROI {
 	private RhizoMain rhizoMain;
 
 	/**
+	 * Original ImageJ Roi.
+	 */
+	private Roi roi;
+	
+	/**
 	 * The trakEM polyline representing the ROI (or null)
 	 */
 	private Polyline polyline = null;
@@ -123,12 +128,17 @@ public class RhizoROI {
 	 *
 	 * @param rhizoMain
 	 */
-	protected RhizoROI(RhizoMain rhizoMain, Polyline line, boolean rectangle) 	{
+	protected RhizoROI(RhizoMain rhizoMain, Roi ijRoi, Polyline line, boolean rectangle) 	{
 		this.rhizoMain = rhizoMain;
+		this.roi = ijRoi;
 		this.polyline = line;
 		this.isRectangle = rectangle;
 	}
 
+	public Roi getRoi() {
+		return this.roi;
+	}
+	
     /** get the current ROI polyline
      *
      * @return
