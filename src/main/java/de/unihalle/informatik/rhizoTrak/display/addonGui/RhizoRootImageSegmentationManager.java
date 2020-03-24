@@ -49,10 +49,12 @@ package de.unihalle.informatik.rhizoTrak.display.addonGui;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.Polygon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.geom.Point2D;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -61,6 +63,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
@@ -83,21 +86,28 @@ import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEventListener;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent.ALDOperatorCollectionEventType;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.datatypes.MTBRootTree;
+import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RhizoProjectLayerMetadataContainer;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootImageSegmentationOperator;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootImageSegmentationOperator.LayerSubset;
+import de.unihalle.informatik.MiToBo.core.datatypes.MTBPolygon2D;
 import de.unihalle.informatik.MiToBo.core.operator.MTBOperatorCollection;
+import de.unihalle.informatik.rhizoTrak.Project;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoLayerInfo;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoROI;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Node;
+import de.unihalle.informatik.rhizoTrak.display.Polyline;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Selection;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.ImagePlus;
+import ij.gui.Roi;
 
 /**
  * Class to manage all actions and events related to root segmentation in rhizoTrak.
@@ -398,9 +408,49 @@ public class RhizoRootImageSegmentationManager
 				}
 			}
 
+			// transfer layer metadata
+			Project project = this.rhizoDisplay.getProject();
+			Polygon poly;
+			MTBPolygon2D polygon;
+			Roi ijRoi;
+			RhizoROI roi;
+			RhizoMain rm = project.getRhizoMain();
+			RhizoLayerInfo lInfo;
+			Vector<Point2D.Double> points;
+			
+			HashMap<Integer, RhizoProjectLayerMetadataContainer> mData = 
+					new HashMap<Integer, RhizoProjectLayerMetadataContainer>();
+			
+			double x, y;
+			RhizoProjectLayerMetadataContainer container;
+			for (int i = 0; i < this.projectLayers.size(); ++i) {
+				lInfo = rm.getLayerInfo(this.projectLayers.get(i));
+				roi = lInfo.getROI();
+				if (roi == null) {
+					continue;
+				}
+				ijRoi = roi.getRoi(); 
+				if (ijRoi == null) {
+					continue;
+				}
+				poly = ijRoi.getPolygon();
+				points = new Vector<Point2D.Double>();
+				for (int n = 0; n < poly.npoints; n++) {
+					x = poly.xpoints[n];
+					y = poly.ypoints[n];
+					points.addElement(new Point2D.Double(x, y));
+				}
+				// create polygon
+				polygon = new MTBPolygon2D(points, true);
+				container = new RhizoProjectLayerMetadataContainer(i);
+				container.setROI(polygon);
+				mData.put(i, container);
+			}
+			
 			// configure operator
 			((RootImageSegmentationOperator)this.selectedSegOp).setInputImages(inputImages);
 			((RootImageSegmentationOperator)this.selectedSegOp).setInputTreelines(inputTreelines);
+			((RootImageSegmentationOperator)this.selectedSegOp).setLayerMetadata(mData);
 
 			// run the operator
 			LinkedList<String> operatorList = new LinkedList<String>();
