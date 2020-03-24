@@ -6798,7 +6798,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("propagateRoi")){
 			Display.getFront().getProject().getRhizoMain().getRhizoROIManager().propagateROI();
 		}
-		else if(command.equals("propagateRoi")){
+		else if(command.equals("clearRoiAll")){
 			Display.getFront().getProject().getRhizoMain().getRhizoROIManager().clearROIsAll();
 		}
 		else if(command.equals("stat")){
