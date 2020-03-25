@@ -54,7 +54,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <trakem2-transform.version>1.0.1</trakem2-transform.version>
     <!-- MiToBo dependencies -->
-    <mitobo.xml.version>2.9</mitobo.xml.version>
+    <mitobo.xml.version>2.10</mitobo.xml.version>
   </properties>
 
   <mailingLists>
@@ -523,20 +523,6 @@
       <version>${mitobo.dep.version}</version>
     </dependency>
 
-    <!-- API, java.xml.bind module -->
-    <dependency>
-      <groupId>jakarta.xml.bind</groupId>
-      <artifactId>jakarta.xml.bind-api</artifactId>
-      <version>2.3.2</version>
-    </dependency>
-
-    <!-- Runtime, com.sun.xml.bind module -->
-    <dependency>
-      <groupId>org.glassfish.jaxb</groupId>
-      <artifactId>jaxb-runtime</artifactId>
-      <version>2.3.2</version>
-    </dependency>
-
   </dependencies>
 
   <profiles>
@@ -557,7 +543,7 @@
       </activation>
       <properties>
         <mitobo.dep>mitobo</mitobo.dep>
-        <mitobo.dep.version>1.8.15</mitobo.dep.version>
+        <mitobo.dep.version>1.8.17</mitobo.dep.version>
       </properties>
     </profile>
   </profiles>

@@ -121,6 +121,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import de.unihalle.informatik.rhizoTrak.display.addonGui.RhizoShortcutManager;
 import org.scijava.vecmath.Point2f;
 import org.scijava.vecmath.Vector2f;
 import org.scijava.vecmath.Vector3d;
@@ -1849,7 +1850,9 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 	private boolean tagging = false;
 
 	@Override
-	public void keyPressed(final KeyEvent ke) {
+	public void keyPressed(KeyEvent ke) {
+		ke = RhizoShortcutManager.transformKeyEvent(ke);
+		if(null == ke) return;
 		
 		final Displayable active = display.getActive();
 		

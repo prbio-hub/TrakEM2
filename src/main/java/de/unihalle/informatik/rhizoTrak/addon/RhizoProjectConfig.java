@@ -822,7 +822,7 @@ public class RhizoProjectConfig {
 	 * Notify that  the state of the instance which is part of user settings has change since instantiation
 	 * or last reset
 	 */
-	void setUserSettingsChanged() {
+	public void setUserSettingsChanged() {
 		userSettingsChanged = true;
 	}
 
