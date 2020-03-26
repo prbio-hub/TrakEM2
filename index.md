@@ -14,6 +14,9 @@ description: A tool for manual annotation of minirhizotron images
 - realized as a Fiji plugin available for Windows, Linux, and MacOS.
 
 
+<span class="rhizoTrakClass">rhizoTrak</span>  News
+- current release is 1.1, see [Documentation](pages/docs) 
+	for more details
 
 <span class="rhizoTrakClass">rhizoTrak</span>  features 
 - import and processing of the complete set of images of a time series in one single project
