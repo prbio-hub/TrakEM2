@@ -73,6 +73,7 @@ package de.unihalle.informatik.rhizoTrak.addon;
 import de.unihalle.informatik.Alida.exceptions.ALDOperatorException;
 import de.unihalle.informatik.Alida.exceptions.ALDProcessingDAGException;
 import de.unihalle.informatik.MiToBo.apps.minirhizotron.utils.Drawing;
+import de.unihalle.informatik.MiToBo.apps.minirhizotron.utils.Drawing;
 import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage;
 import de.unihalle.informatik.MiToBo.io.images.ImageWriterMTB;
 import de.unihalle.informatik.MiToBo.io.tools.FilePathManipulator;
