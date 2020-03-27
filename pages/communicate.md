@@ -26,6 +26,12 @@ Please note that you require a Github account to file issues on Github.
 
 <hr>
 
+[![Twitter](../assets/images/MiToBo-Twitter.png)](https://twitter.com/MiToBo_Hal)
+
+All news about rhizoTrak are also published on Twitter, simply follow [**@MiToBo_Hal**](ttps://twitter.com/MiToBo_Hal).
+
+<hr>
+
 You can also write an email to us for specific questions or comments:
 
 * <rhizoTrak@informatik.uni-halle.de>
