@@ -15,8 +15,8 @@ The format of the file is based on a template from [Keep a Changelog](http://kee
 
 ### Fixed
 
-## [1.1] - 2020-????
-Stefan Posch - <stefan.posch@informatik.uni-halle.de>
+## [1.1] - 2020-03-27
+Birgit Moeller - <birgit.moeller@informatik.uni-halle.de>
 
 ### Added
 - change diameter in all nodes downstream and connected treelines in other layers
