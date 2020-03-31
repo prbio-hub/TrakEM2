@@ -6817,6 +6817,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("stat")){
 			Display.getFront().getProject().getRhizoMain().getRhizoStatistics().writeStatistics();
 		}
+		else if(command.equals("writeBinary")){
+				Display.getFront().getProject().getRhizoMain().getRhizoWriteBinary().writeBinary();
+		}
 		else if(command.equals("aboutRhizo")){
 			// initialize the icon
 			String iconDataName = "/share/logo/rhizoTrak_logo.png";
@@ -7802,7 +7805,14 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	statButton.addActionListener(this);
     	statButton.setEnabled(true);
     	group21.add(statButton);
-    		
+
+		JButton writeBinaryButton = new JButton("Write binary");
+		writeBinaryButton.setToolTipText("Write annotation as binary image");
+		writeBinaryButton.setActionCommand("writeBinary");
+		writeBinaryButton.addActionListener(this);
+		writeBinaryButton.setEnabled(true);
+		group21.add(writeBinaryButton);
+
     	JButton conflicManagerButton = new JButton("Inconsistencies");
     	conflicManagerButton.setToolTipText("Manage inconsistencies related to connectors.");
     	conflicManagerButton.setActionCommand("inconsistencyPanel");
@@ -8083,7 +8093,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		
 		return scroll;
 	}
-		
+
 	protected Image applyFilters(final Image img) {
 		if (!filter_enabled) return img;
 		return applyFilters(new ImagePlus("filtered", img)).getProcessor().createImage();

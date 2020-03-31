@@ -27,7 +27,7 @@
   
   <groupId>de.unihalle.informatik.rhizoTrak</groupId>
   <artifactId>rhizoTrak_</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>rhizoTrak</name>
@@ -47,7 +47,7 @@
   </licenses>
 
   <properties>
-    <YEAR>2019</YEAR>
+    <YEAR>2020</YEAR>
     <license.licenseName>gpl_v3</license.licenseName>
     <license.copyrightOwners>Stefan Posch, Birgit Moeller and others.</license.copyrightOwners>
     <jython-shaded.version>2.7.0</jython-shaded.version>
@@ -543,7 +543,7 @@
       </activation>
       <properties>
         <mitobo.dep>mitobo</mitobo.dep>
-        <mitobo.dep.version>1.8.17</mitobo.dep.version>
+        <mitobo.dep.version>1.8.18</mitobo.dep.version>
       </properties>
     </profile>
   </profiles>
