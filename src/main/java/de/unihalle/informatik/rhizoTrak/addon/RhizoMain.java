@@ -150,6 +150,7 @@ public class RhizoMain
 	
 	public RhizoWriteBinary getRhizoWriteBinary() {
 		return writeBinary;
+	}
 
 	public Project getProject()
 	{
