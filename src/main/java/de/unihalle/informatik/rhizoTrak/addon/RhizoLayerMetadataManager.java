@@ -121,7 +121,7 @@ import ij.gui.Roi;
  * 
  * @author Birgit Moeller
  */
-public class RhizoROIManager {
+public class RhizoLayerMetadataManager {
 
 	/**
 	 * Reference to the corresponding rhizoTrak project.
@@ -132,7 +132,7 @@ public class RhizoROIManager {
    * Default constructor.
    * @param rm	Reference to project handle.
    */
-  protected RhizoROIManager(RhizoMain rm) {
+  protected RhizoLayerMetadataManager(RhizoMain rm) {
   	this.rMain = rm;
   }
   
