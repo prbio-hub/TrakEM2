@@ -243,7 +243,7 @@ public class RhizoLayerInfo {
 		this.clearROI();
 		
 		// get the parent thing in project tree where to add the ROI as a child
-		ProjectThing roiParentThing = this.getRoiParentThing();
+		ProjectThing roiParentThing = this.getParentThing("roi");
 
     ProjectThing pt = roiParentThing.createChild("polyline");
     Polyline newPolyline = (Polyline) pt.getObject();
@@ -297,7 +297,7 @@ public class RhizoLayerInfo {
 	public void clearROI() {
 		
     // find roi child of rootstack
-    ProjectThing roiProjectThing = RhizoUtils.getParentThingForChild(this.project, "roi");
+    ProjectThing roiProjectThing = this.getParentThing("roi");
     if (roiProjectThing == null) {
     	return;
     }
@@ -323,24 +323,89 @@ public class RhizoLayerInfo {
 	 * Gravitational direction related stuff.
 	 */
 	
-	
-//	public void setGravitationalDirection(double direction) {
-//		this.gravDir = gd;
-//	}
+	/**
+	 * Set gravitational direction and add a proper segment to project.
+	 * @param direction	Direction of gravitation in layer.
+	 */
+	public void setGravitationalDirection(double direction) {
+		
+		// delete old ROI if there is one
+		this.clearGravitationalDirection();
+		
+		// get the parent thing in project tree where to add the ROI as a child
+		ProjectThing dirParentThing = this.getParentThing("gravitationaldirection");
+		
+		// add new polyline to project
+		Polyline newPolyline = null;
 
+		// make new polyline for gravitational direction in current layer
+		ProjectThing pt = dirParentThing.createChild("polyline");
+		newPolyline = (Polyline) pt.getObject();
+		newPolyline.insertPoint(0, 10, 10, this.layer.getId());
+		newPolyline.insertPoint(1, (int)(10 + Math.sin(Math.toRadians(direction))*100),
+				(int)(10 + Math.cos(Math.toRadians(direction))*100), this.layer.getId());
+
+		// add new polyline to the project tree
+		ProjectTree currentTree = this.project.getProjectTree();
+		DefaultMutableTreeNode parentNode = DNDTree.findNode(dirParentThing, currentTree);
+		DefaultMutableTreeNode node = new DefaultMutableTreeNode(pt);
+		((DefaultTreeModel) currentTree.getModel()).insertNodeInto(node, parentNode, 
+				parentNode.getChildCount());
+
+		newPolyline.setVisible(true, true);
+		pt.setVisible(true);
+		// BM: not sure why, but this seems to be essential here to ensure that the ROI is visible
+		newPolyline.repaint(true, this.layer);
+		Display.repaint();
+		
+		// store directional data
+		this.gravDir = new RhizoGravitationalDirection(newPolyline, direction);		
+	}
+
+	/**
+	 * Get gravitational direction as angle in degrees.
+	 * @return	Angle of gravitational direction, 0 degrees point to the right.
+	 */
 	public double getGravitationalDirection() {
 		return this.gravDir.getDirection();
 	}
 
+	/**
+	 * Clear gravitational direction and remove polyline from layer.
+	 */
+	public void clearGravitationalDirection() {
+		
+    // find roi child of rootstack
+    ProjectThing dirProjectThing = this.getParentThing("gravitationaldirection");
+    if (dirProjectThing == null) {
+    	return;
+    }
+
+		// delete old direction if present
+		Set<Displayable> deleteSet = new HashSet<Displayable>();
+
+		for (ProjectThing ptc : dirProjectThing.findChildrenOfTypeR(Polyline.class)) {
+			Polyline pl = (Polyline) ptc.getObject();
+			if (layer == null || pl.getFirstLayer().getId() == layer.getId()) {
+				deleteSet.add(pl);
+			}
+		}
+
+		if (!deleteSet.isEmpty()) {
+			project.removeAll(deleteSet);
+		}
+	}
+	
   /**
-   * Helper method to find parent thing in rhizoTrak project tree to keep ROI polylines.
+   * Helper method to find parent thing in rhizoTrak project tree to keep given child.
+   * @param 	child		Identifier for parent thing.
    * @return	Parent project thing.
    */
-  private ProjectThing getRoiParentThing() {
+  private ProjectThing getParentThing(String child) {
   	
     ProjectTree projectTree = this.project.getProjectTree();
-    ProjectThing roiParentThing = RhizoUtils.getParentThingForChild(this.project, "roi");
-    if (roiParentThing == null) {
+    ProjectThing parentThing = RhizoUtils.getParentThingForChild(this.project, child);
+    if (parentThing == null) {
 
     	// search for a rootstack object
     	ProjectThing rootstack = RhizoUtils.getRootstacks(this.project).iterator().next();
@@ -351,15 +416,15 @@ public class RhizoLayerInfo {
     	// add ROI things
     	TemplateTree templateTree = this.project.getTemplateTree();
     	TemplateThing template_root = this.project.getTemplateThing("rootstack");
-    	TemplateThing template_roi = templateTree.addNewChildType(template_root, "roi");
+    	TemplateThing template_roi = templateTree.addNewChildType(template_root, child);
     	templateTree.addNewChildType(template_roi, "polyline");
 
     	// add ROI instance
-    	roiParentThing = rootstack.createChild("roi");
+    	parentThing = rootstack.createChild(child);
     	//add it to the tree
-			if (roiParentThing != null) {
+			if (parentThing != null) {
 				DefaultMutableTreeNode parentNode = DNDTree.findNode(rootstack, projectTree);
-				DefaultMutableTreeNode new_node = new DefaultMutableTreeNode(roiParentThing);
+				DefaultMutableTreeNode new_node = new DefaultMutableTreeNode(parentThing);
 				((DefaultTreeModel)projectTree.getModel()).insertNodeInto(
 						new_node, parentNode, parentNode.getChildCount());
 				TreePath treePath = new TreePath(new_node.getPath());
@@ -367,10 +432,10 @@ public class RhizoLayerInfo {
 				projectTree.setSelectionPath(treePath);
 			}
 			// bring the display to front
-			if (roiParentThing.getObject() instanceof Displayable) {
+			if (parentThing.getObject() instanceof Displayable) {
 				Display.getFront().getFrame().toFront();
 			}
     }
-    return roiParentThing;
+    return parentThing;
   }
 }
