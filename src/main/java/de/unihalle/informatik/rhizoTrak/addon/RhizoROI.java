@@ -70,21 +70,8 @@
 
 package de.unihalle.informatik.rhizoTrak.addon;
 
-import de.unihalle.informatik.rhizoTrak.Project;
-import de.unihalle.informatik.rhizoTrak.display.Display;
-import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Polyline;
-import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
-import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
-import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
-import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.gui.Roi;
-
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Class defining polyline ROIs for individual layers.
@@ -92,17 +79,13 @@ import java.util.Set;
  * ROIs can be used to restrict processing of a layer to a specific region or 
  * to restrict export of RSML. Each layer may have one or none ROI.
  * <p>
- * The ROI can be specified using the rectangle section of ImageJ and stored using the "set ROI" tab.
+ * The ROI can be specified using the ImageJ drawing tools and stored using the "SetROI" button.
  * It is stored as a <code>polyline</code> into one rootstack object in the project tree.
- *
  * </p>
+ * 
+ * @author posch
  */
 public class RhizoROI {
-
-	/**
-	 * Reference to the rhizoTrak project.
-	 */
-	private RhizoMain rhizoMain;
 
 	/**
 	 * Original ImageJ Roi.
@@ -110,35 +93,31 @@ public class RhizoROI {
 	private Roi roi;
 	
 	/**
-	 * The trakEM polyline representing the ROI (or null)
+	 * The TrakEM polyline representing the ROI (or null).
 	 */
 	private Polyline polyline = null;
 
 	/**
-	 * Flag indicating if we have a rectangle or not.
+	 * Default constructor.
+	 * @param rhizoMain	Reference to RhizoMain object.
 	 */
-	private boolean isRectangle = false;
-	
-	/**
-	 * do we still have to check the project tree for polylines (after opening a project)?
-	 */
-	private boolean firstGetCurrentPolyline = true;
-
-	/**
-	 *
-	 * @param rhizoMain
-	 */
-	protected RhizoROI(RhizoMain rhizoMain, Roi ijRoi, Polyline line, boolean rectangle) 	{
-		this.rhizoMain = rhizoMain;
+	public RhizoROI(Roi ijRoi, Polyline line) 	{
 		this.roi = ijRoi;
 		this.polyline = line;
-		this.isRectangle = rectangle;
 	}
 
+	/**
+	 * Get a copy of the ImageJ Roi.
+	 * @return	Copy of ImageJ Roi.
+	 */
 	public Roi getRoi() {
-		return this.roi;
+		return (Roi)this.roi.clone();
 	}
 
+	/**
+	 * Get a reference to the TrakEM2/rhizoTrak polyline.
+	 * @return	Polyline.
+	 */
 	public Polyline getPolyline() {
 		return this.polyline;
 	}

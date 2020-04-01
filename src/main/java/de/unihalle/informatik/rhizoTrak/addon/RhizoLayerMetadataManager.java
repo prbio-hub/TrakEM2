@@ -94,30 +94,15 @@
 
 package de.unihalle.informatik.rhizoTrak.addon;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
-
-import de.unihalle.informatik.rhizoTrak.Project;
 import de.unihalle.informatik.rhizoTrak.display.Display;
-import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
-import de.unihalle.informatik.rhizoTrak.display.Polyline;
-import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
-import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
-import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
-import de.unihalle.informatik.rhizoTrak.tree.TemplateThing;
-import de.unihalle.informatik.rhizoTrak.tree.TemplateTree;
 import de.unihalle.informatik.rhizoTrak.utils.ProjectToolbar;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.gui.Roi;
 
 /**
- * Manager class to handle all actions related to ROIs.
+ * Manager class to handle all actions related to layer metadata in a rhizoTrak project.
  * 
  * @author Birgit Moeller
  */
@@ -149,53 +134,11 @@ public class RhizoLayerMetadataManager {
         return;
     }
 
-    // delete current ROI for active layer if there is any
-    this.clearROI();
-    
-    Project project = display.getProject();
-    ProjectTree projectTree = project.getProjectTree();
-    ProjectThing roiParentThing = RhizoUtils.getParentThingForChild(project, "roi");
-    if (roiParentThing == null) {
-
-    	// search for a rootstack object
-    	ProjectThing rootstack = RhizoUtils.getRootstacks(project).iterator().next();
-    	if (rootstack == null) {
-    		Utils.showMessage("rhizoTrak.setROI(): WARNING - cannot find a rootstack in project tree!");
-    		return;
-    	}
-    	// add ROI things
-    	TemplateTree templateTree = project.getTemplateTree();
-    	TemplateThing template_root = project.getTemplateThing("rootstack");
-    	TemplateThing template_roi = templateTree.addNewChildType(template_root, "roi");
-    	templateTree.addNewChildType(template_roi, "polyline");
-
-    	// add ROI instance
-    	roiParentThing = rootstack.createChild("roi");
-    	//add it to the tree
-			if (roiParentThing != null) {
-				DefaultMutableTreeNode parentNode = DNDTree.findNode(rootstack, projectTree);
-				DefaultMutableTreeNode new_node = new DefaultMutableTreeNode(roiParentThing);
-				((DefaultTreeModel)projectTree.getModel()).insertNodeInto(
-						new_node, parentNode, parentNode.getChildCount());
-				TreePath treePath = new TreePath(new_node.getPath());
-				projectTree.scrollPathToVisible(treePath);
-				projectTree.setSelectionPath(treePath);
-			}
-			// bring the display to front
-			if (roiParentThing.getObject() instanceof Displayable) {
-				Display.getFront().getFrame().toFront();
-			}
-    }
-    
     // make new closed polyline as ROI and add to current layer
-    try {
-    	this.addROI(project, roiParentThing, Display.getFrontLayer(), roi);
-    } catch (Exception e) {
-    		e.printStackTrace();
-        Utils.showMessage("Cannot create polyline");
-        return;
-    }
-		ProjectToolbar.setTool(ProjectToolbar.SELECT);
+    this.rMain.getLayerInfo(Display.getFrontLayer()).setROI(roi);
+
+    // clean-up GUI
+    ProjectToolbar.setTool(ProjectToolbar.SELECT);
 		// select nothing
 		Display.clearSelection();
 		Display.repaint();
@@ -205,35 +148,19 @@ public class RhizoLayerMetadataManager {
    * Delete ROI for currently active layer if there is any.
    */
   public void clearROI() {
-    Display display = Display.getFront();
-    Project project = display.getProject();
-    Layer activeLayer = Display.getFrontLayer(); 
-
-    // find roi child of rootstack
-    ProjectThing roiProjectThing = RhizoUtils.getParentThingForChild(project, "roi");
-    if (roiProjectThing == null) {
-    	return;
-    }
-
     // delete current ROI for active layer if there is any
-    this.clearROI(roiProjectThing, activeLayer);
+    this.rMain.getLayerInfo(Display.getFrontLayer()).clearROI();
   }
   
   /**
    * Delete ROIs of all layers in project.
    */
   public void clearROIsAll() {
-    Display display = Display.getFront();
-    Project project = display.getProject();
-
-    // find roi child of rootstack
-    ProjectThing roiProjectThing = RhizoUtils.getParentThingForChild(project, "roi");
-    if (roiProjectThing == null) {
-    	return;
-    }
-
-    // delete current ROI for all layers if there is any
-    this.clearROI(roiProjectThing, null);
+  	Display display = Display.getFront();
+  	LayerSet currentLayerSet = display.getLayerSet();
+  	for (int z=0; z<currentLayerSet.size(); ++z) {
+      this.rMain.getLayerInfo(currentLayerSet.getLayer(z)).clearROI();
+  	}
   }
 
   /**
@@ -243,19 +170,11 @@ public class RhizoLayerMetadataManager {
   	
   	// get ROI of active layer
   	Display display = Display.getFront();
-    Project project = display.getProject();
     Layer activeLayer = Display.getFrontLayer(); 
     RhizoROI activeROI = this.rMain.getLayerInfo(activeLayer).getROI();
     
     if (activeROI == null) {
   		Utils.showMessage("rhizoTrak - propagate ROI: active layer has no ROI!");
-    	return;
-    }
-
-    // find roi child of rootstack
-    ProjectThing roiProjectThing = RhizoUtils.getParentThingForChild(project, "roi");
-    if (roiProjectThing == null) {
-  		Utils.showMessage("rhizoTrak - propagate ROI: no ROI found!");
     	return;
     }
 
@@ -267,73 +186,12 @@ public class RhizoLayerMetadataManager {
   		if (z == activeLayer.getZ())
   			continue;
   		layer = currentLayerSet.getLayer(z);
-  		this.clearROI(roiProjectThing, layer);
-  		this.addROI(project, roiProjectThing, layer, (Roi)activeROI.getRoi().clone());
+      // make new closed polyline as ROI and add to current layer
+      this.rMain.getLayerInfo(layer).setROI((Roi)activeROI.getRoi().clone());
   	}
 		ProjectToolbar.setTool(ProjectToolbar.SELECT);
 		// select nothing
 		Display.clearSelection();
 		Display.repaint();
   }
-
-  /**
-   * Adds a ROI to the given project and layer.
-   * @param project				Target project.
-   * @param parentThing		Parent node under which to add the ROI in the project tree.
-   * @param layer					Target layer.
-   * @param roi						The ROI to add.
-   */
-  private void addROI(Project project, ProjectThing parentThing, Layer layer, Roi roi) {
-    ProjectThing pt = parentThing.createChild("polyline");
-    Polyline newPolyline = (Polyline) pt.getObject();
-
-    int n;
-    for (n = 0; n < roi.getPolygon().npoints; n++) {
-        newPolyline.insertPoint(n, roi.getPolygon().xpoints[n], roi.getPolygon().ypoints[n], 
-        		layer.getId());
-    }
-    newPolyline.insertPoint(n, roi.getPolygon().xpoints[0], roi.getPolygon().ypoints[0], 
-    		layer.getId());
-
-    // add new polyline to the project tree
-    ProjectTree currentTree = project.getProjectTree();
-    DefaultMutableTreeNode parentNode = DNDTree.findNode(parentThing, currentTree);
-    DefaultMutableTreeNode node = new DefaultMutableTreeNode(pt);
-    ((DefaultTreeModel) currentTree.getModel()).insertNodeInto(node, parentNode, 
-    		parentNode.getChildCount());
-    
-    newPolyline.setVisible(true, true);
-    pt.setVisible(true);
-    // BM: not sure why, but this seems to be essential here to ensure that the ROI is visible
-    newPolyline.repaint(true, layer);
-
-    // store ROI
-    this.rMain.getLayerInfo(layer).setROI(new RhizoROI(this.rMain, roi, newPolyline, 
-    		roi.getType() == Roi.RECTANGLE));
-  }
-  
-  /**
-   * Deletes the ROI of the given layer.
-   * @param pt			Project thing under which to delete the ROI(s).
-   * @param layer		Target layer where to delete the ROIs.
-   */
-  private void clearROI(ProjectThing pt, Layer layer) {
-  	Set<Displayable> deleteSet = new HashSet<Displayable>();
-
-  	for (ProjectThing ptc : pt.findChildrenOfTypeR(Polyline.class)) {
-  		Polyline pl = (Polyline) ptc.getObject();
-  		if (layer == null || pl.getFirstLayer().getId() == layer.getId()) {
-  			deleteSet.add(pl);
-  		}
-  	}
-
-  	if (!deleteSet.isEmpty()) {
-  		Project project = rMain.getProject();
-  		project.removeAll(deleteSet);
-  	}
-  	
-  	// delete from layer info object as well
-  	this.rMain.getLayerInfo(layer).setROI(null);
-  }
-
 }	
