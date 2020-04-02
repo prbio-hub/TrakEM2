@@ -322,12 +322,25 @@ public class RhizoLayerInfo {
 	/*
 	 * Gravitational direction related stuff.
 	 */
-	
+
 	/**
 	 * Set gravitational direction and add a proper segment to project.
+	 * <p>
+	 * The direction is visualized at location (10,10) with a polyline of length 100.
+	 * 
 	 * @param direction	Direction of gravitation in layer.
 	 */
 	public void setGravitationalDirection(double direction) {
+		this.setGravitationalDirection(direction, new Point2D.Double(10, 10), 100.0);
+	}
+
+	/**
+	 * Set gravitational direction and add a proper segment to project.
+	 * @param direction	Direction of gravitation in layer.
+	 * @param sPoint		Start point where to draw the direction in canvas.
+	 * @param length		Length of direction polyline.
+	 */
+	public void setGravitationalDirection(double direction, Point2D.Double sPoint, double length) {
 		
 		// delete old ROI if there is one
 		this.clearGravitationalDirection();
@@ -341,9 +354,9 @@ public class RhizoLayerInfo {
 		// make new polyline for gravitational direction in current layer
 		ProjectThing pt = dirParentThing.createChild("polyline");
 		newPolyline = (Polyline) pt.getObject();
-		newPolyline.insertPoint(0, 10, 10, this.layer.getId());
-		newPolyline.insertPoint(1, (int)(10 + Math.sin(Math.toRadians(direction))*100),
-				(int)(10 + Math.cos(Math.toRadians(direction))*100), this.layer.getId());
+		newPolyline.insertPoint(0, (int)sPoint.x, (int)sPoint.y, this.layer.getId());
+		newPolyline.insertPoint(1, (int)(sPoint.x + Math.sin(Math.toRadians(direction))*length),
+				(int)(sPoint.y + Math.cos(Math.toRadians(direction))*length), this.layer.getId());
 
 		// add new polyline to the project tree
 		ProjectTree currentTree = this.project.getProjectTree();
