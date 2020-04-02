@@ -15,6 +15,12 @@ The format of the file is based on a template from [Keep a Changelog](http://kee
 
 ### Fixed
 
+## [1.1.1] - 2020-04-02
+Birgit Moeller - <birgit.moeller@informatik.uni-halle.de>
+
+### Fixed
+- keys +/- for zooming now working again
+
 ## [1.1] - 2020-03-27
 Birgit Moeller - <birgit.moeller@informatik.uni-halle.de>
 

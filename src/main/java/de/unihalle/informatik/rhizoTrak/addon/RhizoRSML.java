@@ -1445,7 +1445,7 @@ public class RhizoRSML
 		try {
 			RhizoLayerInfo layerInfo = this.rhizoMain.getLayerInfo(layer);
 			if ( layerInfo == null ) {
-				layerInfo = new RhizoLayerInfo( layer, rsml);
+				layerInfo = new RhizoLayerInfo(this.rhizoMain.getProject(), layer, rsml);
 				this.rhizoMain.setLayerInfo( layer, layerInfo);
 			} else {
 				

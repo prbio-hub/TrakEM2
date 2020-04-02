@@ -6803,16 +6803,16 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			conflictManager.showConflicts();
 		}
 		else if(command.equals("setRoi")){
-			Display.getFront().getProject().getRhizoMain().getRhizoROIManager().setROI();
+			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().setROI();
 		}
 		else if(command.equals("clearRoi")){
-			Display.getFront().getProject().getRhizoMain().getRhizoROIManager().clearROI();
+			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().clearROI();
 		}
 		else if(command.equals("propagateRoi")){
-			Display.getFront().getProject().getRhizoMain().getRhizoROIManager().propagateROI();
+			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().propagateROI();
 		}
 		else if(command.equals("clearRoiAll")){
-			Display.getFront().getProject().getRhizoMain().getRhizoROIManager().clearROIsAll();
+			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().clearROIsAll();
 		}
 		else if(command.equals("stat")){
 			Display.getFront().getProject().getRhizoMain().getRhizoStatistics().writeStatistics();

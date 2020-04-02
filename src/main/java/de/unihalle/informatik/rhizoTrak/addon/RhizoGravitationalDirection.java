@@ -80,11 +80,6 @@ import de.unihalle.informatik.rhizoTrak.display.Polyline;
 public class RhizoGravitationalDirection {
 
 	/**
-	 * Reference to the rhizoTrak project.
-	 */
-	private RhizoMain rhizoMain;
-
-	/**
 	 * Gravitational direction in degrees.
 	 */
 	private double direction;
@@ -96,24 +91,14 @@ public class RhizoGravitationalDirection {
 
 	/**
 	 * Default constructor.
-	 * @param rhizoMain		Reference to rhizoTrak main project instance.
 	 * @param p						Polyline.
 	 * @param dir					Gravitational direction.
 	 */
-	public RhizoGravitationalDirection(RhizoMain rhizoMain, Polyline p, double dir) 	{
-		this.rhizoMain = rhizoMain;
+	public RhizoGravitationalDirection(Polyline p, double dir) 	{
 		this.polyline = p;
 		this.direction = dir;
 	}
 
-	/**
-	 * Get project reference.
-	 * @return	Reference to RhizoMain component.
-	 */
-	public RhizoMain getRhizoMain() {
-		return this.rhizoMain;
-	}
-	
 	/**
 	 * Get direction.
 	 * @return	Direction in degrees.

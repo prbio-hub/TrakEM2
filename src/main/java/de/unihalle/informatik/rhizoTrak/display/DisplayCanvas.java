@@ -1851,6 +1851,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 
 	@Override
 	public void keyPressed(KeyEvent ke) {
+		
 		ke = RhizoShortcutManager.transformKeyEvent(ke);
 		if(null == ke) return;
 		
@@ -1908,18 +1909,15 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 			return;
 		}
 
-		final int keyChar = ke.getKeyChar();
-
 		boolean used = false;
-
-		switch (keyChar) {
-		case '+':
-		case '=':
+		switch (keyCode) {
+		case KeyEvent.VK_PLUS:
+		case KeyEvent.VK_ADD:
 			zoomIn();
 			used = true;
 			break;
-		case '-':
-		case '_':
+		case KeyEvent.VK_MINUS:
+		case KeyEvent.VK_SUBTRACT:
 			zoomOut();
 			used = true;
 			break;
@@ -1956,14 +1954,14 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 		}
 
 		// if display is not read-only, check for other keys:
-		switch (keyChar) {
-		case '<':
-		case ',': // select next Layer up
+		switch (keyCode) {
+		case KeyEvent.VK_LESS:
+		case KeyEvent.VK_COMMA: // select next Layer up
 			display.previousLayer(ke.getModifiers()); // repaints as well
 			ke.consume();
 			return;
-		case '>':
-		case '.': // select next Layer down
+		case KeyEvent.VK_GREATER:
+		case KeyEvent.VK_PERIOD: // select next Layer down
 			display.nextLayer(ke.getModifiers());
 			ke.consume();
 			return;
@@ -2147,9 +2145,9 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				break;
 		}
 
-		switch (keyChar) {
-			case ':':
-			case ';':
+		switch (keyCode) {
+			case KeyEvent.VK_COLON:
+			case KeyEvent.VK_SEMICOLON:
 				if (null != active && active instanceof ZDisplayable) {
 					if (null != display.getProject().getProjectTree().tryAddNewConnector(active, true)) {
 						ProjectToolbar.setTool(ProjectToolbar.PEN);
@@ -2340,7 +2338,7 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				}
 		}
 
-		if ( !(keyCode == KeyEvent.VK_UNDEFINED || keyChar == KeyEvent.CHAR_UNDEFINED) && !ke.isConsumed() && null != active && active instanceof Patch) {
+		if ( keyCode != KeyEvent.VK_UNDEFINED && !ke.isConsumed() && null != active && active instanceof Patch) {
 			// TODO should allow forwarding for all, not just Patch
 			// forward to ImageJ for a final try
 			IJ.getInstance().keyPressed(ke);
