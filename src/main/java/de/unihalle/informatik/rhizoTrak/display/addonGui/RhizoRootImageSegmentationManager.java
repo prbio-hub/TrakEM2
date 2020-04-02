@@ -781,7 +781,7 @@ public class RhizoRootImageSegmentationManager
 					if ((int) pane.getValue() == JOptionPane.YES_OPTION) {
 
 						// transfer the modified treelines back into the corresponding layers
-						Thread transferTreelines = new Thread() {
+						Thread transferGravDir = new Thread() {
 							public void run() {
 								
 								// check if we have metadata to import
@@ -799,39 +799,6 @@ public class RhizoRootImageSegmentationManager
 								if (!metadataGiven)
 									return;
 								
-								// ensure consistent project structure
-								Project project = manager.rhizoDisplay.getProject();
-						    ProjectTree projectTree = project.getProjectTree();
-						    ProjectThing parentThing = 
-						    		RhizoUtils.getParentThingForChild(project, "gravitationaldirection");
-						    if (parentThing == null) {		    	
-						    	// search for a rootstack object
-						    	ProjectThing rootstack = RhizoUtils.getRootstacks(project).iterator().next();
-						    	if (rootstack == null) {
-						    		Utils.showMessage("rhizoTrak - cannot find a rootstack in project tree!");
-						    		return;
-						    	}
-						    	// add ROI things
-						    	TemplateTree templateTree = project.getTemplateTree();
-						    	TemplateThing template_root = project.getTemplateThing("rootstack");
-						    	TemplateThing template_roi = 
-						    			templateTree.addNewChildType(template_root, "gravitationaldirection");
-						    	templateTree.addNewChildType(template_roi, "polyline");
-
-						    	// add ROI instance
-						    	parentThing = rootstack.createChild("gravitationaldirection");
-						    	//add it to the tree
-									if (parentThing != null) {
-										DefaultMutableTreeNode parentNode = DNDTree.findNode(rootstack, projectTree);
-										DefaultMutableTreeNode new_node = new DefaultMutableTreeNode(parentThing);
-										((DefaultTreeModel)projectTree.getModel()).insertNodeInto(
-												new_node, parentNode, parentNode.getChildCount());
-										TreePath treePath = new TreePath(new_node.getPath());
-										projectTree.scrollPathToVisible(treePath);
-										projectTree.setSelectionPath(treePath);
-									}
-						    }
-
 						    // iterate over all layers and check for actual metadata
 								for (Integer key: keys) {
 									
@@ -845,56 +812,21 @@ public class RhizoRootImageSegmentationManager
 										}
 									}
 										
-									// add new polyline to project
-									Polyline newPolyline = null;
+									// add gravitational direction to project
 									if (layerMetadata.get(key).getGravitationalDirectionRefSegment() != null) {
 
-										// delete old direction if present
-									 	Set<Displayable> deleteSet = new HashSet<Displayable>();
-
-								  	for (ProjectThing ptc : parentThing.findChildrenOfTypeR(Polyline.class)) {
-								  		Polyline pl = (Polyline) ptc.getObject();
-								  		if (layer == null || pl.getFirstLayer().getId() == layer.getId()) {
-								  			deleteSet.add(pl);
-								  		}
-								  	}
-
-								  	if (!deleteSet.isEmpty()) {
-								  		project.removeAll(deleteSet);
-								  	}
-								  	
 								  	// add the new one
 										MTBLineSegment2D seg = 
 											layerMetadata.get(key).getGravitationalDirectionRefSegment();
+										double dir = layerMetadata.get(key).getGravitationalDirection();
 
-										// make new polyline for gravitational direction in current layer
-										ProjectThing pt = parentThing.createChild("polyline");
-										newPolyline = (Polyline) pt.getObject();
-
-										newPolyline.insertPoint(0, (int)seg.x1, (int)seg.y1, layer.getId());
-										newPolyline.insertPoint(1, (int)seg.x2, (int)seg.y2, layer.getId());
-
-										// add new polyline to the project tree
-										ProjectTree currentTree = project.getProjectTree();
-										DefaultMutableTreeNode parentNode = DNDTree.findNode(parentThing, currentTree);
-										DefaultMutableTreeNode node = new DefaultMutableTreeNode(pt);
-										((DefaultTreeModel) currentTree.getModel()).insertNodeInto(node, parentNode, 
-												parentNode.getChildCount());
-
-										newPolyline.setVisible(true, true);
-										pt.setVisible(true);
-										// BM: not sure why, but this seems to be essential here to ensure that the ROI is visible
-										newPolyline.repaint(true, layer);
-										Display.repaint();
+										rhizoMain.getLayerInfo(layer).setGravitationalDirection(dir, 
+												new Point2D.Double(seg.x1, seg.y1), seg.getNorm());
 									}
-									// store directional data
-									RhizoGravitationalDirection rgd = new RhizoGravitationalDirection(rhizoMain, 
-											newPolyline, layerMetadata.get(key).getGravitationalDirection());
-									rhizoMain.getLayerInfo(layer).setGravitationalDirection(rgd);
 								} // end of loop over all layers
 							} // end of run()
 						}; // end of thread definition
-						transferTreelines.start();
+						transferGravDir.start();
 					}
 				} // end of componentHidden() {...}
 			});
