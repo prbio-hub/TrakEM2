@@ -355,8 +355,8 @@ public class RhizoLayerInfo {
 		ProjectThing pt = dirParentThing.createChild("polyline");
 		newPolyline = (Polyline) pt.getObject();
 		newPolyline.insertPoint(0, (int)sPoint.x, (int)sPoint.y, this.layer.getId());
-		newPolyline.insertPoint(1, (int)(sPoint.x + Math.sin(Math.toRadians(direction))*length),
-				(int)(sPoint.y + Math.cos(Math.toRadians(direction))*length), this.layer.getId());
+		newPolyline.insertPoint(1, (int)(sPoint.x + Math.cos(Math.toRadians(direction))*length),
+				(int)(sPoint.y + Math.sin(Math.toRadians(direction))*length), this.layer.getId());
 
 		// add new polyline to the project tree
 		ProjectTree currentTree = this.project.getProjectTree();
