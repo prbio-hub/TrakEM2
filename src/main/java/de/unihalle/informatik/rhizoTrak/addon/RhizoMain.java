@@ -55,6 +55,7 @@ import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.persistence.FSLoader;
 import de.unihalle.informatik.rhizoTrak.persistence.Loader;
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml;
 
 public class RhizoMain
 {
@@ -66,6 +67,7 @@ public class RhizoMain
 	private RhizoMTBXML rMTBXML;
 	private RhizoRSML rRSML;
 	private RhizoLineMapToTreeline rLineMapToTreeline;
+	private RhizoWriteBinary writeBinary;
 	
 	/**
 	 * Manager for dealing with supplemental data for layers like ROIs, etc. 
@@ -85,7 +87,7 @@ public class RhizoMain
 	 * The (mainly) project specific configuration
 	 */
 	private RhizoProjectConfig projectConfig = new RhizoProjectConfig();
-
+	
 	public RhizoMain(Project p)
 	{
 		this.p = p;
@@ -100,8 +102,9 @@ public class RhizoMain
 		rRSML = new RhizoRSML( this);
 		rLineMapToTreeline = new RhizoLineMapToTreeline(this);
 		rMetadataManager = new RhizoLayerMetadataManager(this);
+		writeBinary = new RhizoWriteBinary( this);
 	}
-	
+
 	public RhizoAddons getRhizoAddons()
 	{
 		return rA;
@@ -149,11 +152,14 @@ public class RhizoMain
 		return this.rMetadataManager;
 	}
 	
+	public RhizoWriteBinary getRhizoWriteBinary() {
+		return writeBinary;
+	}
 	public Project getProject()
 	{
 		return p;
 	}
-
+	
 	/** 
 	 * @param layer
 	 * @return the LayerInfo associated with this layer or null if unset
