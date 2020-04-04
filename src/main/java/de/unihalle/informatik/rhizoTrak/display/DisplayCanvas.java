@@ -318,6 +318,9 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 
 			if (null != display.gridoverlay) display.gridoverlay.paint(g);
 
+			// repaint the scalebar
+			display.repaintScalebar(g);
+
 			/* // debug: paint the ZDisplayable's bucket in this layer
 			if (null != active_layer.getParent().lbucks) {
 				active_layer.getParent().lbucks.get(active_layer).root.paint(g, srcRect, magnification, Color.red);

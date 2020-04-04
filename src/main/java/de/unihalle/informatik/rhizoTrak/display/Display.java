@@ -80,6 +80,8 @@ import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Event;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -4264,7 +4266,83 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 
 	protected GridOverlay gridoverlay = null;
 
+	/**
+	 * Scalebar visualizing the image calibration.
+	 */
+	private class ScalebarOverlay {
 
+		private boolean isVisible = false;
+		
+		private int linewidth=3;
+		
+		private int scalebarWidth = 200;
+
+		private Color color = new Color(255,255,0,255); // yellow with full alpha
+
+		private Line2D.Double line;
+		
+		protected void setVisible(boolean flag) {
+			this.isVisible = flag;
+		}
+		
+		protected void paint(final Graphics2D g) {
+
+			if (!this.isVisible)
+				return;
+			
+			// get calibration information
+			Layer activeLayer = Display.getFrontLayer();
+			ImagePlus activeImg = activeLayer.getPatches(true).get(0).getImagePlus();
+			String unitString = activeImg.getCalibration().getUnit();
+			double physicalPixelWidth = activeImg.getCalibration().pixelWidth;
+			
+			// always place the scalebar in the lower left corner
+			Rectangle viewPane = canvas.getSrcRect();
+			double y1 = viewPane.getMaxY() - 50/canvas.getMagnification();
+			double y2 = y1;
+			double x1 = viewPane.getMinX() + 50/canvas.getMagnification();
+			double physicalScalebarWidth = scalebarWidth*physicalPixelWidth; 
+			double x2 = x1 + scalebarWidth;
+			String resolutionString = String.format("%.3f", physicalScalebarWidth);
+			
+			this.line = new Line2D.Double(x1, y1, x2, y2);
+			g.setStroke(new BasicStroke((float)(linewidth/canvas.getMagnification())));
+			g.setColor(this.color);
+			g.draw(this.line);
+			Font font = new Font("TimesRoman", Font.PLAIN, (int)(24/canvas.getMagnification())); 
+			this.drawCenteredString(g, resolutionString + " " + unitString, font);
+		}
+
+		/**
+		 * Draw a string centered on the given line.
+		 * @param g 		Graphics instance.
+		 * @param text 	String to draw.
+		 * @param line	Line on which to center the text.
+		 */
+		protected void drawCenteredString(Graphics g, String text, Font font) {
+			FontMetrics metrics = g.getFontMetrics(font);
+			double length = line.getX2() - line.getX1();
+			int x = (int)(line.getX1() + (length - metrics.stringWidth(text)) / 2);
+			int y = (int)(line.getY1() - 10/canvas.getMagnification());
+			g.setFont(font);
+			g.drawString(text, x, y);
+		}		
+	}
+
+	private ScalebarOverlay scalebarOverlay = new ScalebarOverlay();
+
+	/**
+	 * Hide or unhide the scalebar.
+	 * @param flag	If true, the scalebar becomes visible.
+	 */
+	public void setScalebarVisible(boolean flag) {
+		this.scalebarOverlay.setVisible(flag);
+	}
+
+	public void repaintScalebar(Graphics2D g) {
+		this.scalebarOverlay.paint(g);
+	}
+	
 	private class StartTransformMenuListener implements ActionListener {
 		@Override
         public void actionPerformed(final ActionEvent ae) {
