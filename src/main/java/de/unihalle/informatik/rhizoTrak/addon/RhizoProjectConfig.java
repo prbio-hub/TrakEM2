@@ -219,6 +219,11 @@ public class RhizoProjectConfig {
 	private boolean showCalibrationInfo = true;
 
 	/**
+	 * If true a scalebar is overlaid to the images.
+	 */
+	private boolean showScalebar = false;
+
+	/**
 	 * true if the parent indices start with 1, otherwise it is assume the they start with 0
 	 * 
 	 */
@@ -779,6 +784,23 @@ public class RhizoProjectConfig {
 	public void setShowCalibrationInfo(boolean showCalibrationInfo) {
 		setUserSettingsChanged();
 		this.showCalibrationInfo = showCalibrationInfo;
+	}
+
+	/**
+	 * Request if scalebar is to be shown.
+	 * @return True if scalebar should be displayer.
+	 */
+	public boolean isShowScalebar() {
+		return this.showScalebar;
+	}
+
+	/**
+	 * Configure if scalebar is to be shown.
+	 * @param showBar	If true, the scalebar is visible.
+	 */
+	public void setShowScalebar(boolean showBar) {
+		setUserSettingsChanged();
+		this.showScalebar = showBar;
 	}
 
 	/**

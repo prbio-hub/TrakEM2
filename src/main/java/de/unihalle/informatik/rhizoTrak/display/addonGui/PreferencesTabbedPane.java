@@ -130,6 +130,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 	private final String CONFIRM_SPLITREELINE = "Confirm split treeline";
 	private final String FULLGUI = "Full GUI (includes all TrakEM2 features)";
 	private final String SHOW_CALIBRATION_INFO = "Show calibration info";
+	private final String SHOW_SCALEBAR = "Show scalebar";
 	private final String NODES_AS_CIRCLE = "Diameter as circle";
 	private final String NODES_DIAMETERLINES = "Show diameter lines";
 	private final String SEGMENTS_AS_POLYGON = "Show borders of segments";
@@ -505,6 +506,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isAskSplitTreeline(), CONFIRM_SPLITREELINE));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isFullGUI(), FULLGUI));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isShowCalibrationInfo(), SHOW_CALIBRATION_INFO));
+		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isShowScalebar(), SHOW_SCALEBAR));
 		
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isNodesAsCircle(), NODES_AS_CIRCLE));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isNodesDiameterLines(), NODES_DIAMETERLINES));
@@ -775,6 +777,9 @@ public class PreferencesTabbedPane extends JTabbedPane
 				Utils.showMessage("Full GUI will be" + (source.isSelected() ? " enabled " : " disabled ") + "on rhizoTrak restart.");
 			} else if ( actionCommand.equals( SHOW_CALIBRATION_INFO)) {
 				rhizoMain.getProjectConfig().setShowCalibrationInfo( source.isSelected() );
+			} else if ( actionCommand.equals( SHOW_SCALEBAR)) {
+				Display.getFront().setScalebarVisible(source.isSelected());
+				rhizoMain.getProjectConfig().setShowScalebar( source.isSelected() );
 			} else if ( actionCommand.equals( NODES_AS_CIRCLE)) {
 				rhizoMain.getProjectConfig().setNodesAsCircle( source.isSelected() );
 				Display.repaint();
