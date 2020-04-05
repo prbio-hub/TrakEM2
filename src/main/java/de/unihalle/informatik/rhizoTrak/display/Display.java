@@ -4290,11 +4290,20 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			if (!this.isVisible)
 				return;
 			
-			// get calibration information
-			Layer activeLayer = Display.getFrontLayer();
-			ImagePlus activeImg = activeLayer.getPatches(true).get(0).getImagePlus();
-			String unitString = activeImg.getCalibration().getUnit();
-			double physicalPixelWidth = activeImg.getCalibration().pixelWidth;
+			Calibration calib = Display.this.getLayerSet().getCalibration();
+			if (calib == null) {
+				// get calibration information from active image if there is none in the layerset
+				Layer activeLayer = Display.getFrontLayer();
+				ImagePlus activeImg = activeLayer.getPatches(true).get(0).getImagePlus();
+				calib = activeImg.getCalibration();
+			}
+			
+			// no calibration information available
+			if (calib == null)
+				return;
+			
+			String unitString = calib.getUnit();
+			double physicalPixelWidth = calib.pixelWidth;
 			
 			// always place the scalebar in the lower left corner
 			Rectangle viewPane = canvas.getSrcRect();
