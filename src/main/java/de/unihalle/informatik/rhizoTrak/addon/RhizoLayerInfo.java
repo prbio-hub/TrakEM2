@@ -48,6 +48,7 @@
 package de.unihalle.informatik.rhizoTrak.addon;
 
 import java.awt.Point;
+import java.awt.Polygon;
 import java.awt.geom.Point2D;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -286,8 +287,11 @@ public class RhizoLayerInfo {
 	 */
 	public List<Point2D.Double> getROIPoints() {
 		Vector<Point2D.Double> points = new Vector<Point2D.Double>();
-		for (Point p : this.roi.getRoi())
-			points.add(new Point2D.Double(p.x, p.y));
+		Polygon poly = this.roi.getRoi().getPolygon();
+		for (int i = 0; i < poly.npoints; i++) {
+			System.out.println(poly.xpoints[i] + " " + poly.ypoints[i]);
+			points.add(new Point2D.Double(poly.xpoints[i], poly.ypoints[i]));
+		}
 		return points;
 	}
 
@@ -380,7 +384,9 @@ public class RhizoLayerInfo {
 	 * @return	Angle of gravitational direction, 0 degrees point to the right.
 	 */
 	public double getGravitationalDirection() {
-		return this.gravDir.getDirection();
+		if (this.gravDir != null)
+			return this.gravDir.getDirection();
+		return Double.NaN;
 	}
 
 	/**
