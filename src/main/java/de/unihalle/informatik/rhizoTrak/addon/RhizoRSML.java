@@ -88,6 +88,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.dom.DOMResult;
 
+import de.unihalle.informatik.rhizoTrak.xsd.rsml.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -107,15 +108,10 @@ import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
-import de.unihalle.informatik.rhizoTrak.xsd.rsml.StatusLabelMapping;
-import de.unihalle.informatik.rhizoTrak.xsd.rsml.PointType;
-import de.unihalle.informatik.rhizoTrak.xsd.rsml.PropertyListType;
-import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Functions;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Functions.Function;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Geometry;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.RootType.Geometry.Polyline;
-import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata.Image;
 import de.unihalle.informatik.rhizoTrak.xsd.rsml.Rsml.Metadata.PropertyDefinitions;
@@ -149,6 +145,9 @@ public class RhizoRSML
 	
 	private static final String PROPERTY_NAME_PARENTNODE = "parent-node";
 	private static final String PROPERTY_NAME_STATUSLABELMAPPING = "StatusLabelMapping";
+	private static final String PROPERTY_NAME_GRAVITATIONALDIRECTION = "GraviatationalDirection";
+
+	private static final String ANNOTATION_NAME_ROI = "ROI";
 
 	/**
 	 * maximal distance allowed for parent nodes to deviate from precise location w
@@ -297,8 +296,8 @@ public class RhizoRSML
 			}
 			
 			// write the layer
-			writeLayer( selectedFile, layer, this.rhizoMain.getLayerInfo( layer), unified);
-		}	
+			writeLayer(selectedFile, layer, this.rhizoMain.getLayerInfo(layer), unified);
+		}
 	}
 
 	/** Write the <code>layer</code> as an RSML to <code>saveFile</code>.
@@ -308,31 +307,37 @@ public class RhizoRSML
 	 * @param unified
 	 */
 	private void writeLayer(File saveFile, Layer layer, RhizoLayerInfo rhizoLayerInfo, boolean unified) {
+		try {
 		Rsml rsml = null;
-		try {
-			File saveFileDirectory = saveFile.getParentFile();
-			rsml = createRSML( layer, rhizoLayerInfo, unified, saveFileDirectory);
-		} catch (InternalError ex) {
-			Utils.showMessage( "cannot create RSML structure for layer " + String.valueOf( RhizoUtils.getTimepointForLayer( layer)));
-		}
-		
-		if ( rsml == null ) {
-			return;
-		}
+			try {
+				File saveFileDirectory = saveFile.getParentFile();
+				rsml = createRSML( layer, rhizoLayerInfo, unified, saveFileDirectory);
+			} catch (InternalError ex) {
+				Utils.showMessage( "cannot create RSML structure for layer " + String.valueOf( RhizoUtils.getTimepointForLayer( layer)));
+			}
 
-		JAXBContext context;
-		try {
-			context = JAXBContext.newInstance(Rsml.class);
-			Marshaller m = context.createMarshaller();
-			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-			m.marshal( rsml, saveFile);
+			if ( rsml == null ) {
+				return;
+			}
 
-		} catch (JAXBException e) {
-			Utils.showMessage( "cannot write RSML to  " + saveFile.getPath());
-			e.printStackTrace();
-		}
+			JAXBContext context;
+			try {
+				context = JAXBContext.newInstance(Rsml.class);
+				Marshaller m = context.createMarshaller();
+				m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+				m.marshal( rsml, saveFile);
+
+			} catch (JAXBException e) {
+				Utils.showMessage( "cannot write RSML to  " + saveFile.getPath());
+				e.printStackTrace();
+			}
 
 		Utils.log("Saved layer " + String.valueOf( RhizoUtils.getTimepointForLayer( layer)) + " to RSML file  - " + saveFile.getAbsolutePath());
+		} catch (Exception ex) {
+			System.err.println("RhizoRSML.writeLayer: fatal error");
+			ex.printStackTrace();
+		}
+
 	}
 
 	/** Create a RSML data structure for the current layer.
@@ -393,15 +398,48 @@ public class RhizoRSML
     		pList.getAny().add( createElementForXJAXBObject(
     				createStatusLabelMapping( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName())));
     	}
-    	// add internal status labels
+    	// ... add internal status labels
     	for ( int i : this.rhizoMain.getProjectConfig().getFixedStatusLabelInt()) {
     		pList.getAny().add( createElementForXJAXBObject(
     				createStatusLabelMapping( i, this.rhizoMain.getProjectConfig().getStatusLabel( i).getName())));
     	}
 
-    	scene.setProperties( pList);
+		// properties: gravitational direction
+		if (rhizoLayerInfo != null ) {
+			try {
+				GravitationalDirection gravDir = new GravitationalDirection();
+				gravDir.setValue(rhizoLayerInfo.getGravitationalDirection());
+				pList.getAny().add(createElementForXJAXBObject(createElementForXJAXBObject(gravDir)));
+			} catch (Exception ex) {
 
-    	// TODO reintroduce check for overlap with ROI
+			}
+		}
+
+		scene.setProperties( pList);
+
+		// annotations
+		AnnotationListType aList = new AnnotationListType();
+
+		// roi
+		if ( rhizoLayerInfo != null && rhizoLayerInfo.getROI() != null) {
+			AnnotationListType.Annotation rsmlROI = new AnnotationListType.Annotation();
+
+			rsmlROI.setName( ANNOTATION_NAME_ROI);
+			for ( Point2D.Double pt : rhizoLayerInfo.getROIPoints() ) {
+				System.out.println( "    " + pt.getX() + " " + pt.getY());
+				PointType rsmlPt = new PointType();
+				rsmlPt.setX( new BigDecimal( pt.getX()));
+				rsmlPt.setY( new BigDecimal( pt.getY()));
+
+				rsmlROI.getPoint().add( rsmlPt);
+			}
+
+			aList.getAnnotation().add( rsmlROI);
+		}
+
+		scene.setAnnotations( aList);
+
+		// TODO reintroduce check for overlap with ROI
     	// now create the roots
     	for ( Treeline tl : allTreelinesInLayer ) {
 //			if ((roi == null) || overlaps(tl, roi)) {
@@ -589,9 +627,16 @@ public class RhizoRSML
     	pDef = new PropertyDefinition();
     	pDef.setLabel( PROPERTY_NAME_STATUSLABELMAPPING);
     	pDef.setType( "Integer-String-Pair");
-    	pDefs.getPropertyDefinition().add( pDef); 
+    	pDefs.getPropertyDefinition().add( pDef);
 
-    	// ParentNode
+		// Gravitational Direction
+		pDef = new PropertyDefinition();
+		pDef.setLabel( PROPERTY_NAME_GRAVITATIONALDIRECTION);
+		pDef.setType( "Double");
+		pDefs.getPropertyDefinition().add( pDef);
+
+
+		// ParentNode
     	pDef = new PropertyDefinition();
     	pDef.setLabel( PROPERTY_NAME_PARENTNODE);
     	pDef.setType( "integer");
