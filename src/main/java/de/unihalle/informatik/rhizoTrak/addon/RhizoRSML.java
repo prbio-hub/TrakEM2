@@ -405,14 +405,11 @@ public class RhizoRSML
     	}
 
 		// properties: gravitational direction
-		if (rhizoLayerInfo != null ) {
-			try {
-				GravitationalDirection gravDir = new GravitationalDirection();
-				gravDir.setValue(rhizoLayerInfo.getGravitationalDirection());
-				pList.getAny().add(createElementForXJAXBObject(createElementForXJAXBObject(gravDir)));
-			} catch (Exception ex) {
+		if (rhizoLayerInfo != null &&  ! Double.isNaN( rhizoLayerInfo.getGravitationalDirection()) ) {
+			GravitationalDirection rsmlGravDir = new GravitationalDirection();
+			rsmlGravDir.setValue(rhizoLayerInfo.getGravitationalDirection());
 
-			}
+			pList.getAny().add( createElementForXJAXBObject( rsmlGravDir));
 		}
 
 		scene.setProperties( pList);
@@ -426,7 +423,7 @@ public class RhizoRSML
 
 			rsmlROI.setName( ANNOTATION_NAME_ROI);
 			for ( Point2D.Double pt : rhizoLayerInfo.getROIPoints() ) {
-				System.out.println( "    " + pt.getX() + " " + pt.getY());
+//				System.out.println( "    " + pt.getX() + " " + pt.getY());
 				PointType rsmlPt = new PointType();
 				rsmlPt.setX( new BigDecimal( pt.getX()));
 				rsmlPt.setY( new BigDecimal( pt.getY()));
