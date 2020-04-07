@@ -349,6 +349,9 @@ public class RhizoLayerInfo {
   		this.project.removeAll(deleteSet);
   	}
   	
+  	// notify the loader of the changes
+    this.project.getLoader().setChanged(true);
+
   	// delete ROI object itself
 		this.roi = null;
 	}
