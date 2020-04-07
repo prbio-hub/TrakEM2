@@ -210,6 +210,31 @@ public class RhizoLayerInfo {
 	}
 			
 	/**
+	 * Set the ROI for this layer.
+	 * <p>
+	 * Attention: we assume here that the given polyline is already properly integrated
+	 * in rhizoTrak's project structure, no GUI or project update is performed!
+	 *
+	 * @param polyline	Polyine representing the ROI.
+	 */
+	public void setROI(Polyline polyline) {
+		Polygon polygon = polyline.getPerimeter();
+		if (polygon.npoints < 3) {
+			System.err.println("Found a ROI with less than 3 points, skipping...");
+			return;
+		}
+		// create ImageJ Roi
+    float[] xPoints = new float[polygon.npoints];
+		float[] yPoints = new float[polygon.npoints];
+		for (int i=0; i<polygon.npoints; ++i) {
+			xPoints[i] = polygon.xpoints[i];
+			yPoints[i] = polygon.ypoints[i];
+		}
+		PolygonRoi pRoi = new PolygonRoi(xPoints, yPoints, Roi.POLYGON);
+		this.roi = new RhizoROI(pRoi, polyline);
+	}
+	
+	/**
 	 * Set ROI for this layer from point list, e.g., read from RSML files.
 	 * @param points	List of points of ROI polygon.
 	 */
@@ -278,6 +303,11 @@ public class RhizoLayerInfo {
 	 * @return	ROI object.
 	 */
 	public RhizoROI getROI() {
+    System.out.println("Getting roi from layer " + this.layer.getZ());
+    if (this.roi != null)
+    	System.out.println(this.roi.toString());
+    else 
+    	System.out.println("null");
 		return this.roi;
 	}
 	
@@ -379,6 +409,28 @@ public class RhizoLayerInfo {
 		this.gravDir = new RhizoGravitationalDirection(newPolyline, direction);		
 	}
 
+	/**
+	 * Set the gravitational direction for this layer.
+	 * <p>
+	 * Attention: we assume here that the given polyline is already properly integrated
+	 * in rhizoTrak's project structure, no GUI or project update is performed!
+	 *
+	 * @param polyline	Polyine representing the gravitational direction.
+	 */
+	public void setGravitationalDirection(Polyline polyline) {
+		Polygon polygon = polyline.getPerimeter();
+		if (polygon.npoints != 2) {
+			System.err.println("Found a gravitational direction with more than 2 points, skipping...");
+			return;
+		}
+		double dx = polygon.xpoints[1] - polygon.xpoints[0];
+		double dy = polygon.ypoints[1] - polygon.ypoints[0];
+		double dir = Math.toDegrees(Math.atan2(dy, dx));
+		if (dir < 0)
+			dir += 360;
+		this.gravDir = new RhizoGravitationalDirection(polyline, dir);
+	}
+	
 	/**
 	 * Get gravitational direction as angle in degrees.
 	 * @return	Angle of gravitational direction, 0 degrees point to the right.
