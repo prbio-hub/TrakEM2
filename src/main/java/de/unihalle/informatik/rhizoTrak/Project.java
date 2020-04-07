@@ -74,8 +74,11 @@ package de.unihalle.informatik.rhizoTrak;
 
 import ij.IJ;
 import ij.gui.GenericDialog;
+import ij.gui.PolygonRoi;
+import ij.gui.Roi;
 import ij.io.OpenDialog;
 
+import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.io.BufferedReader;
 import java.io.File;
@@ -99,7 +102,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
 import javax.swing.JTree;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -109,6 +111,7 @@ import javax.swing.tree.TreePath;
 
 import de.unihalle.informatik.rhizoTrak.addon.RhizoIO;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
+import de.unihalle.informatik.rhizoTrak.addon.RhizoUtils;
 import de.unihalle.informatik.rhizoTrak.display.AreaList;
 import de.unihalle.informatik.rhizoTrak.display.AreaTree;
 import de.unihalle.informatik.rhizoTrak.display.Ball;
@@ -767,10 +770,41 @@ public class Project extends DBObject {
 			IJError.print(e);
 		}
 		
-		// ready to load rhizotrak additiona project data
+		/*
+		 * rhizoTrak specific stuff ...
+		 */
+		
+		// ensure that layer infos are properly initialized, i.e., check for ROIs ...
+    ProjectThing roiParentThing = RhizoUtils.getParentThingForChild(project, "roi");
+    if (roiParentThing != null) {
+    	Layer layer;
+    	for (ProjectThing ptc : roiParentThing.findChildrenOfTypeR(Polyline.class)) {
+  			Polyline pl = (Polyline) ptc.getObject();
+  			layer = pl.getFirstLayer();
+  			project.getRhizoMain().getLayerInfo(layer).setROI(pl);
+  		}
+    }
+
+    // ... and gravitational directions
+    ProjectThing gravDirParentThing = 
+    	RhizoUtils.getParentThingForChild(project, "gravitationaldirection");
+    if (gravDirParentThing != null) {
+    	Layer layer;
+    	for (ProjectThing ptc : gravDirParentThing.findChildrenOfTypeR(Polyline.class)) {
+  			Polyline pl = (Polyline) ptc.getObject();
+  			layer = pl.getFirstLayer();
+  			project.getRhizoMain().getLayerInfo(layer).setGravitationalDirection(pl);
+  		}
+    }
+		
+		// ready to load rhizotrak additional project data
 		Utils.log2("start addon loader ...");
 		project.getRhizoMain().getRhizoIO().addonLoader(new File(loader.getProjectXMLPath()), project);
 
+		/*
+		 * ... until here
+		 */
+		
 		// open any stored displays
 		if (open_displays) {
 			final Bureaucrat burro = Display.openLater();
