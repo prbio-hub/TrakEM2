@@ -4295,46 +4295,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		this.scalebarOverlay.repaint(g, this.canvas);
 	}
 
-	/**
-	 * Set position where to draw the scalebar.
-	 * @param dp	Scalebar position.
-	 */
-	public void setScalebarPosition(DisplayPosition dp) {
-		this.scalebarOverlay.setPosition(dp);
-	}
-
-	/**
-	 * Set color of the scalebar.
-	 * @param c	Color of scalebar.
-	 */
-	public void setScalebarColor(Color c) {
-		this.scalebarOverlay.setColor(c);
-	}
-
-	/**
-	 * Set length of scalebar in pixels.
-	 * @param pixelwidth	Width in pixels.
-	 */
-	public void setScalebarWidth(int pixelwidth) {
-		this.scalebarOverlay.setPixelWidth(pixelwidth);
-	}
-
-	/**
-	 * Set linewidth of scalebar.
-	 * @param linewidth	Line width of scalebar.
-	 */
-	public void setScalebarLinewidth(int linewidth) {
-		this.scalebarOverlay.setLinewidth(linewidth);
-	}
-
-	/**
-	 * Set size of font of scalebar label.
-	 * @param size	Font size.
-	 */
-	public void setScalebarLabelFontsize(int size) {
-		this.scalebarOverlay.setLabelFontsize(size);
-	}
-
 	private class StartTransformMenuListener implements ActionListener {
 		@Override
         public void actionPerformed(final ActionEvent ae) {
