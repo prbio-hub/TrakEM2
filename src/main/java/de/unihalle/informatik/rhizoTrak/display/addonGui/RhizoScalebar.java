@@ -95,8 +95,8 @@
 package de.unihalle.informatik.rhizoTrak.display.addonGui;
 
 import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -112,7 +112,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Line2D;
 import java.util.HashMap;
-import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -131,9 +130,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
-import org.scijava.plugin.HasPluginInfo;
-
-import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.DisplayCanvas;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
@@ -141,7 +137,7 @@ import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.measure.Calibration;
 
 /**
- * Scalebar visualizing the image calibration.
+ * Scalebar visualizing the image calibration as image overlay.
  * 
  * @author moeller
  */
@@ -307,9 +303,17 @@ public class RhizoScalebar implements ActionListener {
 		this.fontSize = size;
 	}
 
+	/**
+	 * Calculate start and end position of scalebar.
+	 * @param canvas	Canvas where to draw the scalebar.
+	 * @return	Array with coordinates {x1,y1,x2,y2}.
+	 */
 	private double[] getLineCoordinates(DisplayCanvas canvas) {
 		double x1 = 0, y1 = 0, x2 = 0, y2 = 0;
 		Rectangle viewPane = canvas.getSrcRect();
+		
+		// absolute center position in x of the viewing pane
+		double centerX = (viewPane.getMaxX() - viewPane.getMinX())/2.0 + viewPane.getMinX();
 
 		switch(this.position)
 		{
@@ -319,6 +323,9 @@ public class RhizoScalebar implements ActionListener {
 			x2 = x1 + this.pixelwidth;
 			break;
 		case TOP_CENTER:
+			y1 = viewPane.getMinY() + 50/canvas.getMagnification();
+			x1 = centerX - 0.5*this.pixelwidth;
+			x2 = x1 + this.pixelwidth;
 			break;
 		case TOP_RIGHT:
 			y1 = viewPane.getMinY() + 50/canvas.getMagnification();
@@ -331,6 +338,9 @@ public class RhizoScalebar implements ActionListener {
 			x2 = x1 + this.pixelwidth;
 			break;
 		case BOTTOM_CENTER:
+			y1 = viewPane.getMaxY() - 50/canvas.getMagnification();
+			x1 = centerX - 0.5*this.pixelwidth;
+			x2 = x1 + this.pixelwidth;
 			break;
 		case BOTTOM_RIGHT:		
 			y1 = viewPane.getMaxY() - 50/canvas.getMagnification();
@@ -375,26 +385,52 @@ public class RhizoScalebar implements ActionListener {
 		
 	}		
 	
+	/**
+	 * Configuration frame for scalebar object.
+	 */
+	@SuppressWarnings("serial")
 	private class ScalebarConfigFrame extends JFrame 
 			implements ActionListener, ChangeListener, DocumentListener, ItemListener {
 		
+		/**
+		 * Scalebar configured by this frame.
+		 */
 		private RhizoScalebar scalebar;
 		
+		/**
+		 * Set of text fields in frame.
+		 */
 		private HashMap<Document, JTextField> textFields = new HashMap<>();
 		
+		/**
+		 * Text field to configure scalebar width.
+		 */
 		private JTextField tfLength;
 		
+		/**
+		 * Text field to configure line width.
+		 */
 		private JTextField tfWidth;
 
+		/**
+		 * Text field to configure font size.
+		 */
 		private JTextField tfSize;
 
+		/**
+		 * Default color for selections.
+		 */
 		private final Color selectColor = Color.LIGHT_GRAY;
 		
+		/**
+		 * Default constructor.
+		 * @param rs	Scalebar to configure.
+		 */
 		public ScalebarConfigFrame(RhizoScalebar rs) {
 			
 			this.scalebar = rs;
 			
-			this.setSize(400, 400);
+			this.setSize(400, 300);
 			this.setTitle("Scalebar Configuration");
 
 			JPanel mainPanel = new JPanel();
@@ -459,13 +495,14 @@ public class RhizoScalebar implements ActionListener {
 			mainPanel.add(configPanel);
 
 			configPanel = new JPanel();
-			configPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+			configPanel.setLayout(new BorderLayout());
 			configPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
-			configPanel.setAlignmentX(RIGHT_ALIGNMENT);
+			JPanel buttonPanel = new JPanel();
 			JButton closeButton = new JButton("Close");
 			closeButton.addActionListener(RhizoScalebar.this);
 			closeButton.setActionCommand("close");
-			configPanel.add(closeButton);
+			buttonPanel.add(closeButton);
+			configPanel.add(buttonPanel, BorderLayout.CENTER);
 			mainPanel.add(configPanel);
 			this.add(mainPanel);
 			this.repaint();
@@ -511,6 +548,10 @@ public class RhizoScalebar implements ActionListener {
 			updateTF(e.getDocument());
 		}
 
+		/**
+		 * Updates configuration settings linked to text fields.
+		 * @param d	Document which has been updated.
+		 */
 		private void updateTF(Document d) {
 			JTextField tf = this.textFields.get(d);
 			String value = tf.getText();
@@ -527,6 +568,10 @@ public class RhizoScalebar implements ActionListener {
 			}
 		}
 
+		/**
+		 * Generates a button to open a color selection panel.
+		 * @return	Color configuration button.
+		 */
 		private JPanel getColorChooser() {
 			
 			JPanel panel = new JPanel();
