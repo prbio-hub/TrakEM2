@@ -4323,6 +4323,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			double x2 = x1 + scalebarWidth;
 			String resolutionString = String.format("%.3f", physicalScalebarWidth);
 			
+			// if there is a comma in the string, convert to digital dot
+			resolutionString = resolutionString.replace(",", ".");
+			
 			this.line = new Line2D.Double(x1, y1, x2, y2);
 			g.setStroke(new BasicStroke((float)(linewidth/canvas.getMagnification())));
 			g.setColor(this.color);
@@ -4348,7 +4351,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	}
 
 	private ScalebarOverlay scalebarOverlay = new ScalebarOverlay();
-
+	
 	/**
 	 * Hide or unhide the scalebar.
 	 * @param flag	If true, the scalebar becomes visible.
@@ -4357,8 +4360,32 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		this.scalebarOverlay.setVisible(flag);
 	}
 
+	/**
+	 * Repaint the scalebar.
+	 * @param g	Graphics objects where to paint the bar.
+	 */
 	public void repaintScalebar(Graphics2D g) {
 		this.scalebarOverlay.paint(g);
+	}
+	
+	public void setScalebarPosition() {
+		
+	}
+
+	public void setScalebarColor(Color c) {
+		
+	}
+	
+	public void setScalebarLength(int pixellength) {
+		
+	}
+	
+	public void setScalebarLinewidth(int linewidth) {
+		
+	}
+	
+	public void setScalebarLabelFontsize() {
+		
 	}
 	
 	private class StartTransformMenuListener implements ActionListener {
