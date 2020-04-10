@@ -130,6 +130,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
+import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.DisplayCanvas;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
@@ -174,6 +175,11 @@ public class RhizoScalebar implements ActionListener {
 	}
 	
 	/**
+	 * RhizoTrak project configuration.
+	 */
+	protected RhizoProjectConfig projectConfig = null;
+	
+	/**
 	 * Flag if scalebar is visible or not.
 	 */
 	private boolean isVisible = false;
@@ -203,6 +209,9 @@ public class RhizoScalebar implements ActionListener {
 	 */
 	protected int fontSize = 24;
 
+	/**
+	 * Configuration window for scalebar.
+	 */
 	private ScalebarConfigFrame configWindow = new ScalebarConfigFrame(this);
 	
 	/**
@@ -211,8 +220,18 @@ public class RhizoScalebar implements ActionListener {
 	 */
 	public void setVisible(boolean flag) {
 		this.isVisible = flag;
+		if (this.projectConfig != null)
+			this.projectConfig.setShowScalebar(flag);
 	}
 
+	/**
+	 * Set project configuration.
+	 * @param pc	Configuration of associated project.
+	 */
+	public void setProjectConfig(RhizoProjectConfig pc) {
+		this.projectConfig = pc;
+	}
+	
 	/**
 	 * Repaint the scalebar.
 	 * @param g				Graphics object.
@@ -269,6 +288,8 @@ public class RhizoScalebar implements ActionListener {
 	 */
 	public void setPosition(DisplayPosition dp) {
 		this.position = dp;
+		if (this.projectConfig != null)
+			this.projectConfig.setScalebarPosition(dp);
 	}
 
 	/**
@@ -277,6 +298,8 @@ public class RhizoScalebar implements ActionListener {
 	 */
 	public void setColor(Color c) {
 		this.color = c;
+		if (this.projectConfig != null)
+			this.projectConfig.setScalebarColor(c);
 	}
 
 	/**
@@ -285,6 +308,8 @@ public class RhizoScalebar implements ActionListener {
 	 */
 	public void setPixelWidth(int pw) {
 		this.pixelwidth = pw;
+		if (this.projectConfig != null)
+			this.projectConfig.setScalebarPixelwidth(pw);
 	}
 
 	/**
@@ -293,6 +318,8 @@ public class RhizoScalebar implements ActionListener {
 	 */
 	public void setLinewidth(int lw) {
 		this.linewidth = lw;
+		if (this.projectConfig != null)
+			this.projectConfig.setScalebarLinewidth(lw);
 	}
 
 	/**
@@ -301,6 +328,8 @@ public class RhizoScalebar implements ActionListener {
 	 */
 	public void setLabelFontsize(int size) {
 		this.fontSize = size;
+		if (this.projectConfig != null)
+			this.projectConfig.setScalebarFontsize(size);
 	}
 
 	/**

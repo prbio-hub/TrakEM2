@@ -57,6 +57,7 @@ import java.util.List;
 
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.Node;
+import de.unihalle.informatik.rhizoTrak.display.addonGui.RhizoScalebar.DisplayPosition;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 
 /** Hold all project specific settings, including some general and fixed ones.
@@ -222,6 +223,31 @@ public class RhizoProjectConfig {
 	 * If true a scalebar is overlaid to the images.
 	 */
 	private boolean showScalebar = false;
+
+	/**
+	 * Position where the scalebar is to be drawn.
+	 */
+	private DisplayPosition scalebarPosition = DisplayPosition.BOTTOM_LEFT;
+	
+	/**
+	 * Width of the scalebar line.
+	 */
+	private int scalebarLinewidth=3;
+
+	/**
+	 * Width of the scalebar in pixels.
+	 */
+	private int scalebarPixelwidth = 200;
+
+	/**
+	 * Color of scalebar.
+	 */
+	private Color scalebarColor = new Color(255,255,0,255); // yellow with full alpha
+	
+	/**
+	 * Font size to be used.
+	 */
+	private int scalebarFontSize = 24;
 
 	/**
 	 * true if the parent indices start with 1, otherwise it is assume the they start with 0
@@ -799,8 +825,93 @@ public class RhizoProjectConfig {
 	 * @param showBar	If true, the scalebar is visible.
 	 */
 	public void setShowScalebar(boolean showBar) {
-		setUserSettingsChanged();
 		this.showScalebar = showBar;
+		setUserSettingsChanged();
+	}
+
+	/**
+	 * Set scalebar position.
+	 * @param pos	Position of scalebar in display.
+	 */
+	public void setScalebarPosition(DisplayPosition pos) {
+		this.scalebarPosition = pos;
+		setUserSettingsChanged();
+	}
+	
+	/**
+	 * Set scalebar line width.
+	 * @param pos	Line width of scalebar.
+	 */
+	public void setScalebarLinewidth(int width) {
+		this.scalebarLinewidth = width;
+		setUserSettingsChanged();
+	}
+
+	/**
+	 * Set scalebar length in pixels.
+	 * @param pos	Length of scalebar in pixels.
+	 */
+	public void setScalebarPixelwidth(int width) {
+		this.scalebarPixelwidth = width;
+		setUserSettingsChanged();
+	}
+
+	/**
+	 * Set scalebar color.
+	 * @param pos	Color of scalebar.
+	 */
+	public void setScalebarColor(Color color) {
+		this.scalebarColor = color;
+		setUserSettingsChanged();
+	}
+
+	/**
+	 * Set font size of scalebar label.
+	 * @param pos	Label font size.
+	 */
+	public void setScalebarFontsize(int size) {
+		this.scalebarFontSize = size;
+		setUserSettingsChanged();
+	}
+
+	/**
+	 * Get scalebar position.
+	 * @return	Position of scalebar.
+	 */
+	public DisplayPosition getScalebarPosition() {
+		return this.scalebarPosition;
+	}
+	
+	/**
+	 * Get scalebar line width.
+	 * @return	Line width of scalebar.
+	 */
+	public int getScalebarLinewidth() {
+		return this.scalebarLinewidth;
+	}
+
+	/**
+	 * Get scalebar pixel length.
+	 * @return	Length of scalebar in pixels.
+	 */
+	public int getScalebarPixelwidth() {
+		return this.scalebarPixelwidth;
+	}
+
+	/**
+	 * Get scalebar color.
+	 * @return	Color of scalebar.
+	 */
+	public Color getScalebarColor() {
+		return this.scalebarColor;
+	}
+
+	/**
+	 * Get font size of scalebar label.
+	 * @return	Font size of label.
+	 */
+	public int getScalebarFontsize() {
+		return this.scalebarFontSize;
 	}
 
 	/**

@@ -143,6 +143,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 	// general members
 	private RhizoMain rhizoMain = null;
 	private RhizoProjectConfig config = null;
+	private RhizoScalebar scalebar = null;
 	
 	static private final String HIGHLIGHTCOLOR1ACTIONSTRING1 ="Highlightcolor 1";
 	static private final String HIGHLIGHTCOLOR1ACTIONSTRING2 ="Highlightcolor 2";
@@ -514,13 +515,17 @@ public class PreferencesTabbedPane extends JTabbedPane
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isSegmentsFill(), SEGMENTS_FILL));
 		configChoicesPanel.add( addChoice( Utils.rhizoTrakDebug, DEBUG_OUPUT));
 		
+		this.scalebar = Display.getFront().getScalebar();
+		// give the scalebar access to the project config to store user settings
+		this.scalebar.setProjectConfig(this.config);
 		JPanel scalebarPanel = new JPanel();
 		scalebarPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 		scalebarPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
 		scalebarPanel.setAlignmentX(LEFT_ALIGNMENT);
 		scalebarPanel.add( addChoice( this.rhizoMain.getProjectConfig().isShowScalebar(), SHOW_SCALEBAR ));
 		JButton scalebarConfigButton = new JButton("Configure...");
-		scalebarConfigButton.addActionListener(Display.getFront().getScalebarHandler());
+		// scalebar itself listens if it should be configured
+		scalebarConfigButton.addActionListener(this.scalebar);
 		scalebarConfigButton.setActionCommand("configure");
 		scalebarPanel.add(scalebarConfigButton);
 		configChoicesPanel.add(scalebarPanel);
