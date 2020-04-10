@@ -2119,6 +2119,16 @@ public final class DisplayCanvas extends ImageCanvas implements KeyListener/*, F
 				handleHide(ke);
 				ke.consume();
 				break;
+			case KeyEvent.VK_B:
+				// toggle visibility of scalebar
+				if (ke.isControlDown()) {
+					if (this.display != null) {
+						this.display.setScalebarVisible(!this.display.isScalebarVisible());
+						this.display.repaintAll();
+						ke.consume();
+					}
+				}
+				break;
 			case KeyEvent.VK_J:
 				if (!display.getSelection().isEmpty()) {
 					display.adjustMinAndMaxGUI();

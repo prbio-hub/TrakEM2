@@ -72,6 +72,8 @@ public class RhizoColVis
 
 	private JFrame preferencesFrame;
 	
+	private PreferencesTabbedPane tabbedPane;
+	
 	private RhizoMain rhizoMain;
 	
 	// ######
@@ -104,9 +106,9 @@ public class RhizoColVis
 					preferencesFrame = new JFrame("Preferences");
 					
 					preferencesFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-					JTabbedPane temp = new PreferencesTabbedPane(rhizoMain);
+					tabbedPane = new PreferencesTabbedPane(rhizoMain);
 
-					preferencesFrame.add(temp);
+					preferencesFrame.add(tabbedPane);
 					preferencesFrame.setSize(420, 480);
 					preferencesFrame.setVisible(true);
 				}
@@ -116,8 +118,10 @@ public class RhizoColVis
 
 	}
 	
-
-	
+	public void setScalebarVisibility(boolean flag) {
+		if (this.tabbedPane != null)
+			this.tabbedPane.setScalebarVisibility(flag);
+	}
 
 	/**
 	 * Updates the color for all treelines and repaints them.

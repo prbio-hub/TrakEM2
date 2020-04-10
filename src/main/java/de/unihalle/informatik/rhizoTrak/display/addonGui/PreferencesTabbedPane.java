@@ -145,6 +145,8 @@ public class PreferencesTabbedPane extends JTabbedPane
 	private RhizoProjectConfig config = null;
 	private RhizoScalebar scalebar = null;
 	
+	private JCheckBox scalebarCB = null;
+	
 	static private final String HIGHLIGHTCOLOR1ACTIONSTRING1 ="Highlightcolor 1";
 	static private final String HIGHLIGHTCOLOR1ACTIONSTRING2 ="Highlightcolor 2";
 
@@ -160,6 +162,9 @@ public class PreferencesTabbedPane extends JTabbedPane
 		addConfigureTab();
 	}
 	
+	public void setScalebarVisibility(boolean flag) {
+		this.scalebarCB.setSelected(flag);
+	}
        
 	private void addComboBoxTab()
 	{
@@ -516,13 +521,15 @@ public class PreferencesTabbedPane extends JTabbedPane
 		configChoicesPanel.add( addChoice( Utils.rhizoTrakDebug, DEBUG_OUPUT));
 		
 		this.scalebar = Display.getFront().getScalebar();
-		// give the scalebar access to the project config to store user settings
-		this.scalebar.setProjectConfig(this.config);
 		JPanel scalebarPanel = new JPanel();
 		scalebarPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 		scalebarPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
 		scalebarPanel.setAlignmentX(LEFT_ALIGNMENT);
-		scalebarPanel.add( addChoice( this.rhizoMain.getProjectConfig().isShowScalebar(), SHOW_SCALEBAR ));
+		this.scalebarCB = new JCheckBox(SHOW_SCALEBAR, 
+				this.rhizoMain.getProjectConfig().isShowScalebar());
+		this.scalebarCB.setActionCommand(SHOW_SCALEBAR);
+		this.scalebarCB.addActionListener(configCheckAction);
+		scalebarPanel.add(scalebarCB);
 		JButton scalebarConfigButton = new JButton("Configure...");
 		// scalebar itself listens if it should be configured
 		scalebarConfigButton.addActionListener(this.scalebar);
@@ -800,7 +807,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 				rhizoMain.getProjectConfig().setShowCalibrationInfo( source.isSelected() );
 			} else if ( actionCommand.equals( SHOW_SCALEBAR)) {
 				Display.getFront().setScalebarVisible(source.isSelected());
-				rhizoMain.getProjectConfig().setShowScalebar( source.isSelected() );
+				Display.repaint();
 			} else if ( actionCommand.equals( NODES_AS_CIRCLE)) {
 				rhizoMain.getProjectConfig().setNodesAsCircle( source.isSelected() );
 				Display.repaint();

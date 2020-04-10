@@ -965,6 +965,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 
 		RhizoMain rm = this.project.getRhizoMain();
 
+		// now we have display and rhizo main object to hand it over to the scalebar
+		this.scalebarOverlay.setRhizoMain(rm);
+
 		// transparency slider
 		this.transp_slider = new JSlider(javax.swing.SwingConstants.HORIZONTAL, 0, 100, 100);
 		this.transp_slider.setBackground(Color.white);
@@ -4284,7 +4287,18 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	 * @param flag	If true, the scalebar becomes visible.
 	 */
 	public void setScalebarVisible(boolean flag) {
-		this.scalebarOverlay.setVisible(flag);
+		if (this.scalebarOverlay != null)
+			this.scalebarOverlay.setVisible(flag);
+	}
+
+	/**
+	 * Request if scalebar is visible.
+	 * @param True if visible.
+	 */
+	public boolean isScalebarVisible() {
+		if (this.scalebarOverlay != null)
+			return this.scalebarOverlay.isVisible();
+		return false;
 	}
 
 	/**
@@ -4292,7 +4306,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	 * @param g	Graphics objects where to paint the bar.
 	 */
 	public void repaintScalebar(Graphics2D g) {
-		this.scalebarOverlay.repaint(g, this.canvas);
+		if (this.scalebarOverlay != null)
+			this.scalebarOverlay.repaint(g, this.canvas);
 	}
 
 	private class StartTransformMenuListener implements ActionListener {

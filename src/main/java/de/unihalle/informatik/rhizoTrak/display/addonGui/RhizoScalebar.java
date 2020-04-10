@@ -108,12 +108,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.geom.Line2D;
 import java.util.HashMap;
 
-import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
@@ -130,6 +127,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 
+import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoProjectConfig;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.DisplayCanvas;
@@ -175,6 +173,11 @@ public class RhizoScalebar implements ActionListener {
 	}
 	
 	/**
+	 * RhizoTrak main object.
+	 */
+	protected RhizoMain rhizoMain = null;
+
+	/**
 	 * RhizoTrak project configuration.
 	 */
 	protected RhizoProjectConfig projectConfig = null;
@@ -215,21 +218,40 @@ public class RhizoScalebar implements ActionListener {
 	private ScalebarConfigFrame configWindow = new ScalebarConfigFrame(this);
 	
 	/**
+	 * Default constructor without arguments.
+	 */
+	public RhizoScalebar() {
+	}
+
+	/**
+	 * Set rhizoTrak main object.
+	 * @param rm	Rhizo main object.
+	 */
+	public void setRhizoMain(RhizoMain rm) {
+		this.rhizoMain = rm;
+		this.projectConfig = rm.getProjectConfig();
+	}
+	
+	/**
 	 * Hide or unhide the scalebar.
 	 * @param flag	If true, the scalebar becomes visible.
 	 */
 	public void setVisible(boolean flag) {
 		this.isVisible = flag;
-		if (this.projectConfig != null)
-			this.projectConfig.setShowScalebar(flag);
+		if (this.rhizoMain != null) {
+			this.rhizoMain.getRhizoColVis().setScalebarVisibility(flag);
+			if (this.projectConfig != null) {
+				this.projectConfig.setShowScalebar(flag);
+			}
+		}
 	}
 
 	/**
-	 * Set project configuration.
-	 * @param pc	Configuration of associated project.
+	 * Request if scalebar is visible.
+	 * @param True if visible.
 	 */
-	public void setProjectConfig(RhizoProjectConfig pc) {
-		this.projectConfig = pc;
+	public boolean isVisible() {
+		return this.isVisible;
 	}
 	
 	/**
@@ -239,7 +261,7 @@ public class RhizoScalebar implements ActionListener {
 	 */
 	public void repaint(final Graphics2D g, DisplayCanvas canvas) {
 
-		if (!this.isVisible)
+		if (!this.isVisible || canvas == null || g == null)
 			return;
 
 		Calibration calib = null;
@@ -302,6 +324,7 @@ public class RhizoScalebar implements ActionListener {
 		this.position = dp;
 		if (this.projectConfig != null)
 			this.projectConfig.setScalebarPosition(dp);
+		Display.repaint();
 	}
 
 	/**
@@ -312,6 +335,7 @@ public class RhizoScalebar implements ActionListener {
 		this.color = c;
 		if (this.projectConfig != null)
 			this.projectConfig.setScalebarColor(c);
+		Display.repaint();
 	}
 
 	/**
@@ -322,6 +346,7 @@ public class RhizoScalebar implements ActionListener {
 		this.pixelwidth = pw;
 		if (this.projectConfig != null)
 			this.projectConfig.setScalebarPixelwidth(pw);
+		Display.repaint();
 	}
 
 	/**
@@ -332,6 +357,7 @@ public class RhizoScalebar implements ActionListener {
 		this.linewidth = lw;
 		if (this.projectConfig != null)
 			this.projectConfig.setScalebarLinewidth(lw);
+		Display.repaint();
 	}
 
 	/**
@@ -342,6 +368,7 @@ public class RhizoScalebar implements ActionListener {
 		this.fontSize = size;
 		if (this.projectConfig != null)
 			this.projectConfig.setScalebarFontsize(size);
+		Display.repaint();
 	}
 
 	/**
@@ -459,10 +486,15 @@ public class RhizoScalebar implements ActionListener {
 		private JTextField tfSize;
 
 		/**
-		 * Default color for selections.
+		 * Button for opening color chooser.
 		 */
-		private final Color selectColor = Color.LIGHT_GRAY;
+		private JButton colorButton;
 		
+		/**
+		 * Slider for transparency.
+		 */
+		private JSlider transparencySlider;
+
 		/**
 		 * Default constructor.
 		 * @param rs	Scalebar to configure.
@@ -552,10 +584,12 @@ public class RhizoScalebar implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			JButton source = (JButton) e.getSource();
-			Color selectedColor = JColorChooser.showDialog(source, "Choose color", Color.WHITE);
+			Color selectedColor = JColorChooser.showDialog(source, "Choose color", this.scalebar.color);
 			if (selectedColor != null)  {
 				this.scalebar.setColor(selectedColor);
 				source.setBackground(selectedColor);
+				this.transparencySlider.setValue(selectedColor.getAlpha());
+				this.transparencySlider.repaint();
 			}
 		}
 
@@ -572,6 +606,9 @@ public class RhizoScalebar implements ActionListener {
 			this.scalebar.color = new Color(this.scalebar.color.getRed(),
 				this.scalebar.color.getGreen(), this.scalebar.color.getBlue(), 
 					currentSlider.getValue());
+			this.colorButton.setBackground(this.scalebar.color);
+			this.colorButton.updateUI();
+			Display.repaint();
 		}
 
 		@Override
@@ -619,38 +656,24 @@ public class RhizoScalebar implements ActionListener {
 			panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 			panel.setBorder(new EmptyBorder(0, 15, 5, 15));
 
-			JSlider slider = new JSlider();
-			slider.setMinimum(0);
-			slider.setMaximum(255);
-			slider.setValue(this.scalebar.color.getAlpha());
+			this.transparencySlider = new JSlider();
+			this.transparencySlider.setMinimum(0);
+			this.transparencySlider.setMaximum(255);
+			this.transparencySlider.setValue(this.scalebar.color.getAlpha());
 
-			slider.addChangeListener(this);
-			panel.add(slider);
+			this.transparencySlider.addChangeListener(this);
+			panel.add(this.transparencySlider);
 
-			JButton button = new JButton();
-			button.setActionCommand("change_color");
-			button.addActionListener(this);
-			button.setMaximumSize(new Dimension(33, 15));
-			button.setMinimumSize(new Dimension(33, 15));
-			button.setPreferredSize(new Dimension(33, 12));
-			button.setContentAreaFilled(false);
-			button.setOpaque(true);
-			button.setBackground(this.scalebar.color);
-			panel.add(button);
-			
-			panel.addMouseListener(new MouseAdapter() {
-				public void mouseClicked(MouseEvent e) {
-					panel.setBackground(selectColor);
-				}
-
-				public void mouseEntered(MouseEvent e) {
-					panel.setBorder(BorderFactory.createLineBorder(selectColor));
-				}
-
-				public void mouseExited(MouseEvent e) {
-					panel.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
-				}
-			});
+			this.colorButton = new JButton();
+			this.colorButton.setActionCommand("change_color");
+			this.colorButton.addActionListener(this);
+			this.colorButton.setMaximumSize(new Dimension(33, 15));
+			this.colorButton.setMinimumSize(new Dimension(33, 15));
+			this.colorButton.setPreferredSize(new Dimension(33, 12));
+			this.colorButton.setContentAreaFilled(false);
+			this.colorButton.setOpaque(true);
+			this.colorButton.setBackground(this.scalebar.color);
+			panel.add(this.colorButton);
 			return panel;
 		}
 	}
