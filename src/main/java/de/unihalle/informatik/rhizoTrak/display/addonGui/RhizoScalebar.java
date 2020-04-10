@@ -275,9 +275,21 @@ public class RhizoScalebar implements ActionListener {
 		resolutionString = resolutionString.replace(",", ".");
 
 		Line2D.Double line = new Line2D.Double(pos[0], pos[1], pos[2], pos[3]);
-		g.setStroke(new BasicStroke((float)(linewidth/canvas.getMagnification())));
+		g.setStroke(new BasicStroke((float)(this.linewidth/canvas.getMagnification())));
 		g.setColor(this.color);
 		g.draw(line);
+		// draw vertical lines at the ends
+		double barLengthHalf = 6;
+		Line2D.Double leftLine = new Line2D.Double(pos[0], 
+				pos[1] - barLengthHalf/canvas.getMagnification(), 
+				pos[0], 
+				pos[1] + barLengthHalf/canvas.getMagnification());
+		g.draw(leftLine);
+		Line2D.Double rightLine = new Line2D.Double(pos[2], 
+				pos[3] - barLengthHalf/canvas.getMagnification(), 
+				pos[2], 
+				pos[3] + barLengthHalf/canvas.getMagnification());
+		g.draw(rightLine);
 		Font font = new Font("TimesRoman", Font.PLAIN, (int)(this.fontSize/canvas.getMagnification())); 
 		this.drawCenteredString(g, canvas, line, resolutionString + " " + unitString, font);
 	}
@@ -394,7 +406,7 @@ public class RhizoScalebar implements ActionListener {
 		FontMetrics metrics = g.getFontMetrics(font);
 		double length = line.getX2() - line.getX1();
 		int x = (int)(line.getX1() + (length - metrics.stringWidth(text)) / 2);
-		int y = (int)(line.getY1() - 10/canvas.getMagnification());
+		int y = (int)(line.getY1() - 15/canvas.getMagnification());
 		g.setFont(font);
 		g.drawString(text, x, y);
 	}
