@@ -4272,6 +4272,14 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	protected GridOverlay gridoverlay = null;
 	
 	/**
+	 * Get action listener to manage scalebar configuration.
+	 * @return	Listener for scalebar-related commands.
+	 */
+	public ActionListener getScalebarHandler() {
+		return this.scalebarOverlay;
+	}
+	
+	/**
 	 * Hide or unhide the scalebar.
 	 * @param flag	If true, the scalebar becomes visible.
 	 */

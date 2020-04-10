@@ -52,6 +52,7 @@ package de.unihalle.informatik.rhizoTrak.display.addonGui;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -501,26 +502,41 @@ public class PreferencesTabbedPane extends JTabbedPane
 		configChoicesPanel = new JPanel();
 		configChoicesPanel.setLayout(new BoxLayout(configChoicesPanel, BoxLayout.Y_AXIS));
 		configChoicesPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
-		
+		configChoicesPanel.setAlignmentX( Component.LEFT_ALIGNMENT );
+
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isAskMergeTreelines(), CONFIRM_MERGETREELINES));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isAskSplitTreeline(), CONFIRM_SPLITREELINE));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isFullGUI(), FULLGUI));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isShowCalibrationInfo(), SHOW_CALIBRATION_INFO));
-		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isShowScalebar(), SHOW_SCALEBAR));
-		
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isNodesAsCircle(), NODES_AS_CIRCLE));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isNodesDiameterLines(), NODES_DIAMETERLINES));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isSegmentsAsPolygon(), SEGMENTS_AS_POLYGON));
 		configChoicesPanel.add( addChoice( this.rhizoMain.getProjectConfig().isSegmentsFill(), SEGMENTS_FILL));
 		configChoicesPanel.add( addChoice( Utils.rhizoTrakDebug, DEBUG_OUPUT));
 		
-		//TODO just for testing
-		JButton shortcut_manager_button = new JButton("shortcut manager");
+		JPanel scalebarPanel = new JPanel();
+		scalebarPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		scalebarPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
+		scalebarPanel.setAlignmentX(LEFT_ALIGNMENT);
+		scalebarPanel.add( addChoice( this.rhizoMain.getProjectConfig().isShowScalebar(), SHOW_SCALEBAR ));
+		JButton scalebarConfigButton = new JButton("Configure...");
+		scalebarConfigButton.addActionListener(Display.getFront().getScalebarHandler());
+		scalebarConfigButton.setActionCommand("configure");
+		scalebarPanel.add(scalebarConfigButton);
+		configChoicesPanel.add(scalebarPanel);
+		
+		JPanel shortcutPanel = new JPanel();
+		shortcutPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		shortcutPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
+		shortcutPanel.setAlignmentX(LEFT_ALIGNMENT);
+		JButton shortcut_manager_button = new JButton("Shortcut manager");
 		shortcut_manager_button.addActionListener(buttonAction);
 		shortcut_manager_button.setActionCommand(OPEN_SHORTCUT_MANAGER);
-		configChoicesPanel.add( shortcut_manager_button );
-		//
-
+		shortcutPanel.add(shortcut_manager_button);
+		configChoicesPanel.add( shortcutPanel );
+		
+		configChoicesPanel.add(Box.createVerticalGlue());
+		
 		configurePanel.add( configChoicesPanel);
 		this.addTab("Configuration", null, configurePanel, "Edit user-specific settings.");
 	}

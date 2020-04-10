@@ -96,13 +96,44 @@ package de.unihalle.informatik.rhizoTrak.display.addonGui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Line2D;
+import java.util.HashMap;
+import java.util.Vector;
 
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JColorChooser;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.Document;
+
+import org.scijava.plugin.HasPluginInfo;
+
+import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.display.Display;
 import de.unihalle.informatik.rhizoTrak.display.DisplayCanvas;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
@@ -114,7 +145,7 @@ import ij.measure.Calibration;
  * 
  * @author moeller
  */
-public class RhizoScalebar {
+public class RhizoScalebar implements ActionListener {
 	
 	/**
 	 * Position where the scalebar is to be shown.
@@ -154,28 +185,30 @@ public class RhizoScalebar {
 	/**
 	 * Position where the scalebar is to be drawn.
 	 */
-	private DisplayPosition position = DisplayPosition.BOTTOM_LEFT;
+	protected DisplayPosition position = DisplayPosition.BOTTOM_LEFT;
 	
 	/**
 	 * Width of the scalebar line.
 	 */
-	private int linewidth=3;
+	protected int linewidth=3;
 
 	/**
 	 * Width of the scalebar in pixels.
 	 */
-	private int pixelwidth = 200;
+	protected int pixelwidth = 200;
 
 	/**
 	 * Color of scalebar.
 	 */
-	private Color color = new Color(255,255,0,255); // yellow with full alpha
+	protected Color color = new Color(255,255,0,255); // yellow with full alpha
 	
 	/**
 	 * Font size to be used.
 	 */
-	private int fontSize = 24;
+	protected int fontSize = 24;
 
+	private ScalebarConfigFrame configWindow = new ScalebarConfigFrame(this);
+	
 	/**
 	 * Hide or unhide the scalebar.
 	 * @param flag	If true, the scalebar becomes visible.
@@ -219,18 +252,14 @@ public class RhizoScalebar {
 		double physicalPixelWidth = calib.pixelWidth;
 
 		// always place the scalebar in the lower left corner
-		Rectangle viewPane = canvas.getSrcRect();
-		double y1 = viewPane.getMaxY() - 50/canvas.getMagnification();
-		double y2 = y1;
-		double x1 = viewPane.getMinX() + 50/canvas.getMagnification();
+		double[] pos = this.getLineCoordinates(canvas);
 		double physicalScalebarWidth = pixelwidth*physicalPixelWidth; 
-		double x2 = x1 + pixelwidth;
 		String resolutionString = String.format("%.3f", physicalScalebarWidth);
 
 		// if there is a comma in the string, convert to digital dot
 		resolutionString = resolutionString.replace(",", ".");
 
-		Line2D.Double line = new Line2D.Double(x1, y1, x2, y2);
+		Line2D.Double line = new Line2D.Double(pos[0], pos[1], pos[2], pos[3]);
 		g.setStroke(new BasicStroke((float)(linewidth/canvas.getMagnification())));
 		g.setColor(this.color);
 		g.draw(line);
@@ -278,6 +307,42 @@ public class RhizoScalebar {
 		this.fontSize = size;
 	}
 
+	private double[] getLineCoordinates(DisplayCanvas canvas) {
+		double x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+		Rectangle viewPane = canvas.getSrcRect();
+
+		switch(this.position)
+		{
+		case TOP_LEFT:
+			y1 = viewPane.getMinY() + 50/canvas.getMagnification();
+			x1 = viewPane.getMinX() + 50/canvas.getMagnification();
+			x2 = x1 + this.pixelwidth;
+			break;
+		case TOP_CENTER:
+			break;
+		case TOP_RIGHT:
+			y1 = viewPane.getMinY() + 50/canvas.getMagnification();
+			x1 = viewPane.getMaxX() - 50/canvas.getMagnification();
+			x2 = x1 - this.pixelwidth;
+			break;
+		case BOTTOM_LEFT:
+			y1 = viewPane.getMaxY() - 50/canvas.getMagnification();
+			x1 = viewPane.getMinX() + 50/canvas.getMagnification();
+			x2 = x1 + this.pixelwidth;
+			break;
+		case BOTTOM_CENTER:
+			break;
+		case BOTTOM_RIGHT:		
+			y1 = viewPane.getMaxY() - 50/canvas.getMagnification();
+			x1 = viewPane.getMaxX() - 50/canvas.getMagnification();
+			x2 = x1 - this.pixelwidth;
+			break;
+		}
+		// line is always horizontal
+		y2 = y1;
+		return new double[] {x1, y1, x2, y2};
+	}
+	
 	/**
 	 * Draw a string centered on the given line.
 	 * @param g 			Graphics instance.
@@ -293,5 +358,214 @@ public class RhizoScalebar {
 		int y = (int)(line.getY1() - 10/canvas.getMagnification());
 		g.setFont(font);
 		g.drawString(text, x, y);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent ae) {
+
+		switch(ae.getActionCommand())
+		{
+		case "close":
+			this.configWindow.setVisible(false);
+			break;
+		case "configure":
+			this.configWindow.setVisible(true);
+			break;
+		}
+		
 	}		
+	
+	private class ScalebarConfigFrame extends JFrame 
+			implements ActionListener, ChangeListener, DocumentListener, ItemListener {
+		
+		private RhizoScalebar scalebar;
+		
+		private HashMap<Document, JTextField> textFields = new HashMap<>();
+		
+		private JTextField tfLength;
+		
+		private JTextField tfWidth;
+
+		private JTextField tfSize;
+
+		private final Color selectColor = Color.LIGHT_GRAY;
+		
+		public ScalebarConfigFrame(RhizoScalebar rs) {
+			
+			this.scalebar = rs;
+			
+			this.setSize(400, 400);
+			this.setTitle("Scalebar Configuration");
+
+			JPanel mainPanel = new JPanel();
+			mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+			mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+			
+			JPanel configPanel = new JPanel();
+			configPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+			configPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
+			configPanel.setAlignmentX(LEFT_ALIGNMENT);
+			configPanel.add(new JLabel("Position"));
+			JComboBox<DisplayPosition> posSelect = new JComboBox<RhizoScalebar.DisplayPosition>();
+			posSelect.addItemListener(this);
+			DisplayPosition defPos = this.scalebar.position;
+			for (DisplayPosition dp : DisplayPosition.values()) {
+				posSelect.addItem(dp);
+			}
+			posSelect.setSelectedItem(defPos);
+			posSelect.updateUI();
+			configPanel.add(posSelect);
+			mainPanel.add(configPanel);
+
+			configPanel = new JPanel();
+			configPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+			configPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
+			configPanel.setAlignmentX(LEFT_ALIGNMENT);
+			configPanel.add(new JLabel("Width (pixels)"));
+			this.tfLength = new JTextField(Integer.toString(this.scalebar.pixelwidth), 10);
+			this.tfLength.getDocument().addDocumentListener(this);
+			this.textFields.put(this.tfLength.getDocument(), this.tfLength);
+			configPanel.add(this.tfLength);
+			mainPanel.add(configPanel);
+
+			configPanel = new JPanel();
+			configPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+			configPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
+			configPanel.setAlignmentX(LEFT_ALIGNMENT);
+			configPanel.add(new JLabel("Line width"));
+			this.tfWidth = new JTextField(Integer.toString(this.scalebar.linewidth), 10);
+			this.tfWidth.getDocument().addDocumentListener(this);
+			this.textFields.put(tfWidth.getDocument(), this.tfWidth);
+			configPanel.add(this.tfWidth);
+			mainPanel.add(configPanel);
+
+			configPanel = new JPanel();
+			configPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+			configPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
+			configPanel.setAlignmentX(LEFT_ALIGNMENT);
+			configPanel.add(new JLabel("Color"));
+			configPanel.add(this.getColorChooser());
+			mainPanel.add(configPanel);
+
+			configPanel = new JPanel();
+			configPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+			configPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
+			configPanel.setAlignmentX(LEFT_ALIGNMENT);
+			configPanel.add(new JLabel("Label font size"));
+			this.tfSize = new JTextField(Integer.toString(this.scalebar.fontSize), 10);
+			this.tfSize.getDocument().addDocumentListener(this);
+			this.textFields.put(this.tfSize.getDocument(), this.tfSize);
+			configPanel.add(this.tfSize);
+			mainPanel.add(configPanel);
+
+			configPanel = new JPanel();
+			configPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+			configPanel.setBorder(new EmptyBorder(0, 0, 5, 0));
+			configPanel.setAlignmentX(RIGHT_ALIGNMENT);
+			JButton closeButton = new JButton("Close");
+			closeButton.addActionListener(RhizoScalebar.this);
+			closeButton.setActionCommand("close");
+			configPanel.add(closeButton);
+			mainPanel.add(configPanel);
+			this.add(mainPanel);
+			this.repaint();
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			JButton source = (JButton) e.getSource();
+			Color selectedColor = JColorChooser.showDialog(source, "Choose color", Color.WHITE);
+			if (selectedColor != null)  {
+				this.scalebar.setColor(selectedColor);
+				source.setBackground(selectedColor);
+			}
+		}
+
+		@Override
+		public void itemStateChanged(ItemEvent ie) {
+			DisplayPosition dp = (DisplayPosition)ie.getItem();
+			this.scalebar.setPosition(dp);			
+		}
+		
+		// alpha change slider action
+		@Override
+		public void stateChanged(ChangeEvent e) {
+			JSlider currentSlider = (JSlider) e.getSource();
+			this.scalebar.color = new Color(this.scalebar.color.getRed(),
+				this.scalebar.color.getGreen(), this.scalebar.color.getBlue(), 
+					currentSlider.getValue());
+		}
+
+		@Override
+		public void removeUpdate(DocumentEvent e)	{
+			updateTF(e.getDocument());
+		}
+
+		@Override 
+		public void insertUpdate(DocumentEvent e){
+			updateTF(e.getDocument());
+		}
+
+		@Override
+		public void changedUpdate(DocumentEvent e) {
+			updateTF(e.getDocument());
+		}
+
+		private void updateTF(Document d) {
+			JTextField tf = this.textFields.get(d);
+			String value = tf.getText();
+			if (value != null && !value.isEmpty()) {
+				if (tf.equals(this.tfLength)) {
+					this.scalebar.setPixelWidth(Integer.valueOf(value));
+				}
+				else if (tf.equals(this.tfWidth)) {
+					this.scalebar.setLinewidth(Integer.valueOf(value));
+				} 
+				else if (tf.equals(this.tfSize)) {
+					this.scalebar.setLabelFontsize(Integer.valueOf(value));
+				}
+			}
+		}
+
+		private JPanel getColorChooser() {
+			
+			JPanel panel = new JPanel();
+			panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+			panel.setBorder(new EmptyBorder(0, 15, 5, 15));
+
+			JSlider slider = new JSlider();
+			slider.setMinimum(0);
+			slider.setMaximum(255);
+			slider.setValue(this.scalebar.color.getAlpha());
+
+			slider.addChangeListener(this);
+			panel.add(slider);
+
+			JButton button = new JButton();
+			button.setActionCommand("change_color");
+			button.addActionListener(this);
+			button.setMaximumSize(new Dimension(33, 15));
+			button.setMinimumSize(new Dimension(33, 15));
+			button.setPreferredSize(new Dimension(33, 12));
+			button.setContentAreaFilled(false);
+			button.setOpaque(true);
+			button.setBackground(this.scalebar.color);
+			panel.add(button);
+			
+			panel.addMouseListener(new MouseAdapter() {
+				public void mouseClicked(MouseEvent e) {
+					panel.setBackground(selectColor);
+				}
+
+				public void mouseEntered(MouseEvent e) {
+					panel.setBorder(BorderFactory.createLineBorder(selectColor));
+				}
+
+				public void mouseExited(MouseEvent e) {
+					panel.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 1));
+				}
+			});
+			return panel;
+		}
+	}
 }	
