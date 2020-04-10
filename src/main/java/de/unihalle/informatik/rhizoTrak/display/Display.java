@@ -80,8 +80,6 @@ import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Event;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -208,6 +206,8 @@ import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.analysis.Graph;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
+import de.unihalle.informatik.rhizoTrak.display.addonGui.RhizoScalebar;
+import de.unihalle.informatik.rhizoTrak.display.addonGui.RhizoScalebar.DisplayPosition;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.SplitDialog;
 import de.unihalle.informatik.rhizoTrak.display.inspect.InspectPatchTrianglesMode;
 import de.unihalle.informatik.rhizoTrak.imaging.Blending;
@@ -319,6 +319,11 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	
 	public RhizoTrakToolbar rhizoTrakToolbar = null;
 
+	/**
+	 * Scalebar to overlay image calibration over image.
+	 */
+	private RhizoScalebar scalebarOverlay = new RhizoScalebar();
+	
 	/** Contains the packed alphas of every channel. */
 	private int c_alphas = 0xffffffff; // all 100 % visible
 	private Channel[] channels;
@@ -4265,92 +4270,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	}
 
 	protected GridOverlay gridoverlay = null;
-
-	/**
-	 * Scalebar visualizing the image calibration.
-	 */
-	private class ScalebarOverlay {
-
-		private boolean isVisible = false;
-		
-		private int linewidth=3;
-		
-		private int scalebarWidth = 200;
-
-		private Color color = new Color(255,255,0,255); // yellow with full alpha
-
-		private Line2D.Double line;
-		
-		protected void setVisible(boolean flag) {
-			this.isVisible = flag;
-		}
-		
-		protected void paint(final Graphics2D g) {
-
-			if (!this.isVisible)
-				return;
-			
-			Calibration calib = null;
-//			calib = Display.this.getLayerSet().getCalibration();
-//			if (calib == null) {
-//				// get calibration information from active image if there is none in the layerset
-//				Layer activeLayer = Display.getFrontLayer();
-//				ImagePlus activeImg = activeLayer.getPatches(true).get(0).getImagePlus();
-//				calib = activeImg.getCalibration();
-//			}
-//			
-			
-			// get calibration information
-			Layer activeLayer = Display.getFrontLayer();
-			calib = activeLayer.getPatches(true).get(0).getImagePlus().getCalibration();
-
-			// no calibration information available
-			if (calib == null) {
-				Utils.showMessage("Scalebar - no calibration data found!", 
-						"Could not find calibration data, please check your image metadata.");
-				return;				
-			}
-
-			String unitString = calib.getUnit();
-			double physicalPixelWidth = calib.pixelWidth;
-			
-			// always place the scalebar in the lower left corner
-			Rectangle viewPane = canvas.getSrcRect();
-			double y1 = viewPane.getMaxY() - 50/canvas.getMagnification();
-			double y2 = y1;
-			double x1 = viewPane.getMinX() + 50/canvas.getMagnification();
-			double physicalScalebarWidth = scalebarWidth*physicalPixelWidth; 
-			double x2 = x1 + scalebarWidth;
-			String resolutionString = String.format("%.3f", physicalScalebarWidth);
-			
-			// if there is a comma in the string, convert to digital dot
-			resolutionString = resolutionString.replace(",", ".");
-			
-			this.line = new Line2D.Double(x1, y1, x2, y2);
-			g.setStroke(new BasicStroke((float)(linewidth/canvas.getMagnification())));
-			g.setColor(this.color);
-			g.draw(this.line);
-			Font font = new Font("TimesRoman", Font.PLAIN, (int)(24/canvas.getMagnification())); 
-			this.drawCenteredString(g, resolutionString + " " + unitString, font);
-		}
-
-		/**
-		 * Draw a string centered on the given line.
-		 * @param g 		Graphics instance.
-		 * @param text 	String to draw.
-		 * @param line	Line on which to center the text.
-		 */
-		protected void drawCenteredString(Graphics g, String text, Font font) {
-			FontMetrics metrics = g.getFontMetrics(font);
-			double length = line.getX2() - line.getX1();
-			int x = (int)(line.getX1() + (length - metrics.stringWidth(text)) / 2);
-			int y = (int)(line.getY1() - 10/canvas.getMagnification());
-			g.setFont(font);
-			g.drawString(text, x, y);
-		}		
-	}
-
-	private ScalebarOverlay scalebarOverlay = new ScalebarOverlay();
 	
 	/**
 	 * Hide or unhide the scalebar.
@@ -4365,29 +4284,49 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	 * @param g	Graphics objects where to paint the bar.
 	 */
 	public void repaintScalebar(Graphics2D g) {
-		this.scalebarOverlay.paint(g);
-	}
-	
-	public void setScalebarPosition() {
-		
+		this.scalebarOverlay.repaint(g, this.canvas);
 	}
 
+	/**
+	 * Set position where to draw the scalebar.
+	 * @param dp	Scalebar position.
+	 */
+	public void setScalebarPosition(DisplayPosition dp) {
+		this.scalebarOverlay.setPosition(dp);
+	}
+
+	/**
+	 * Set color of the scalebar.
+	 * @param c	Color of scalebar.
+	 */
 	public void setScalebarColor(Color c) {
-		
+		this.scalebarOverlay.setColor(c);
 	}
-	
-	public void setScalebarLength(int pixellength) {
-		
+
+	/**
+	 * Set length of scalebar in pixels.
+	 * @param pixelwidth	Width in pixels.
+	 */
+	public void setScalebarWidth(int pixelwidth) {
+		this.scalebarOverlay.setPixelWidth(pixelwidth);
 	}
-	
+
+	/**
+	 * Set linewidth of scalebar.
+	 * @param linewidth	Line width of scalebar.
+	 */
 	public void setScalebarLinewidth(int linewidth) {
-		
+		this.scalebarOverlay.setLinewidth(linewidth);
 	}
-	
-	public void setScalebarLabelFontsize() {
-		
+
+	/**
+	 * Set size of font of scalebar label.
+	 * @param size	Font size.
+	 */
+	public void setScalebarLabelFontsize(int size) {
+		this.scalebarOverlay.setLabelFontsize(size);
 	}
-	
+
 	private class StartTransformMenuListener implements ActionListener {
 		@Override
         public void actionPerformed(final ActionEvent ae) {
