@@ -130,7 +130,7 @@ public class PreferencesTabbedPane extends JTabbedPane
 	private final String CONFIRM_MERGETREELINES = "Confirm merge treelines";
 	private final String CONFIRM_SPLITREELINE = "Confirm split treeline";
 	private final String FULLGUI = "Full GUI (includes all TrakEM2 features)";
-	private final String SHOW_CALIBRATION_INFO = "Show calibration info";
+	private final String SHOW_CALIBRATION_INFO = "Show calibration info on export";
 	private final String SHOW_SCALEBAR = "Show scalebar";
 	private final String NODES_AS_CIRCLE = "Diameter as circle";
 	private final String NODES_DIAMETERLINES = "Show diameter lines";
