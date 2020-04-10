@@ -114,6 +114,7 @@ public class RhizoShortcutManager {
     GENERIC_SELECT_ALL_VISIBLE,
     GENERIC_SELECT_NODE,
     GENERIC_TOGGLE_NODE_TAGS_HIDE,
+    GENERIC_TOGGLE_SCALEBAR,
     GENERIC_TOGGLE_TREELINES_ARROWHEAD,
     GENERIC_TOGGLE_TREELINES_CURRENT_LAYER_HIDE,
     GENERIC_TOOL_CONNECTOR,
@@ -199,6 +200,9 @@ public class RhizoShortcutManager {
     this.commandMap.put(RhizoCommand.GENERIC_TOGGLE_NODE_TAGS_HIDE,
       new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK, true),
         "Hide/unhide node tags"));
+    this.commandMap.put(RhizoCommand.GENERIC_TOGGLE_SCALEBAR,
+    	new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_B, KeyEvent.CTRL_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_B, KeyEvent.CTRL_DOWN_MASK, true),
+    		"Hide/unhide scalebar"));
     this.commandMap.put(RhizoCommand.GENERIC_TOGGLE_TREELINES_ARROWHEAD,
       new RhizoCommandConfig(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.ALT_DOWN_MASK, true), KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.ALT_DOWN_MASK, true),
         "Hide/unhide treeline arrowheads"));
