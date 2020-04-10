@@ -4290,18 +4290,27 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 			if (!this.isVisible)
 				return;
 			
-			Calibration calib = Display.this.getLayerSet().getCalibration();
-			if (calib == null) {
-				// get calibration information from active image if there is none in the layerset
-				Layer activeLayer = Display.getFrontLayer();
-				ImagePlus activeImg = activeLayer.getPatches(true).get(0).getImagePlus();
-				calib = activeImg.getCalibration();
-			}
+			Calibration calib = null;
+//			calib = Display.this.getLayerSet().getCalibration();
+//			if (calib == null) {
+//				// get calibration information from active image if there is none in the layerset
+//				Layer activeLayer = Display.getFrontLayer();
+//				ImagePlus activeImg = activeLayer.getPatches(true).get(0).getImagePlus();
+//				calib = activeImg.getCalibration();
+//			}
+//			
 			
+			// get calibration information
+			Layer activeLayer = Display.getFrontLayer();
+			calib = activeLayer.getPatches(true).get(0).getImagePlus().getCalibration();
+
 			// no calibration information available
-			if (calib == null)
-				return;
-			
+			if (calib == null) {
+				Utils.showMessage("Scalebar - no calibration data found!", 
+						"Could not find calibration data, please check your image metadata.");
+				return;				
+			}
+
 			String unitString = calib.getUnit();
 			double physicalPixelWidth = calib.pixelWidth;
 			
