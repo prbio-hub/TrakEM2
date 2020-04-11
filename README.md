@@ -11,7 +11,7 @@ Copyright 2019 by Birgit Möller, Stefan Posch, Tino Schmidt, Axel Zieschank and
 The code of this project is substantially based on the [TrakEM2]( https://imagej.net/TrakEM2) plugin for ImageJ/Fiji. 
 Please find further information about the original TrakEM2 plugin at the end of this page. 
 
-***rhizoTrak*** extends TrakEM2 towards root-specific functionality, e.g., adds support for importing and exporting annotation data in [RSML format]( https://rootsystemml.github.io/data), extends the connector concept from purely geometric to object-based links, and adds several additional configuration options.
+***rhizoTrak*** extends TrakEM2 towards root-specific functionality, e.g., adds support for importing and exporting annotation data in [RSML format](https://rootsystemml.github.io/format), extends the connector concept from purely geometric to object-based links, and adds several additional configuration options.
 
 ***rhizoTrak*** is released under the [General Public License](https://www.gnu.org/licenses/gpl-3.0.en.html) in its latest version, please find the License file included.
 
