@@ -6789,6 +6789,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
                         ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
 			conflictManager.showConflicts();
 		}
+		// commands to interact with rhizoTrak ROIs
 		else if(command.equals("setRoi")){
 			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().setROI();
 		}
@@ -6800,6 +6801,16 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		}
 		else if(command.equals("clearRoiAll")){
 			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().clearROIsAll();
+		}
+		// commands to interact with gravitational directions in rhizoTrak
+		else if(command.equals("clearGravDirection")){
+			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().clearGravitationalDirection();
+		}
+		else if(command.equals("propagateGravDirection")){
+			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().propagateGravitationalDirection();
+		}
+		else if(command.equals("clearGravDirectionAll")){
+			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().clearGravitationalDirectionsAll();
 		}
 		else if(command.equals("stat")){
 			Display.getFront().getProject().getRhizoMain().getRhizoStatistics().writeStatistics();
@@ -7728,6 +7739,8 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	JPanel group4  = new JPanel(new GridLayout(0, 2, 5, 1)); // Image related operations
     	JPanel groupROILabel  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for treelines
     	JPanel groupROI = new JPanel(new GridLayout(2, 2, 5, 1)); // ROI related operations
+    	JPanel groupGravDirLabel  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for treelines
+    	JPanel groupGravDir = new JPanel(new GridLayout(2, 2, 5, 1)); // ROI related operations
     	JPanel group5  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for operators
     	JPanel group51 = new JPanel(new GridLayout(0, 1, 5, 1)); // Choose operator from list
     	JPanel group52 = new JPanel(new GridLayout(0, 2, 5, 1)); // Configure and run chosen operator
@@ -7737,6 +7750,7 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	group3.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group4.setBorder(new EmptyBorder(5, 5, 5, 5));
     	groupROI.setBorder(new EmptyBorder(5, 5, 5, 5));
+    	groupGravDir.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group52.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group6.setBorder(new EmptyBorder(5, 5, 5, 5));
     	
@@ -7845,7 +7859,32 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
       clearAllButton.setEnabled(true);
       groupROI.add(clearAllButton);
 
-		// Get available operators
+    	// gravitational direction related stuff
+    	JLabel labelGravDirs = new JLabel("Gravitational Direction:", JLabel.LEFT);
+    	groupGravDirLabel.add(labelGravDirs);
+
+    	JButton clearGravDirButton = new JButton("Clear");
+      clearGravDirButton.setToolTipText("Clear gravitational direction for active layer.");
+      clearGravDirButton.setActionCommand("clearGravDirection");
+      clearGravDirButton.addActionListener(this);
+      clearGravDirButton.setEnabled(true);
+      groupGravDir.add(clearGravDirButton);
+      
+      JButton propagateGravDirButton = new JButton("Propagate");
+      propagateGravDirButton.setToolTipText("Propagate gravitational direction to all layers.");
+      propagateGravDirButton.setActionCommand("propagateGravDirection");
+      propagateGravDirButton.addActionListener(this);
+      propagateGravDirButton.setEnabled(true);
+      groupGravDir.add(propagateGravDirButton);
+
+      JButton clearGravDirAllButton = new JButton("Clear All");
+      clearGravDirAllButton.setToolTipText("Clear all gravitational directions.");
+      clearGravDirAllButton.setActionCommand("clearGravDirectionAll");
+      clearGravDirAllButton.addActionListener(this);
+      clearGravDirAllButton.setEnabled(true);
+      groupGravDir.add(clearGravDirAllButton);
+
+      // Get available operators
     	JScrollPane scrollPane = getScrollableOperatorList();
     	boolean isOperatorAvailable = false;
     	if ( list.getModel().getSize() > 0 )
@@ -7915,6 +7954,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     	panel.add(groupROILabel);
     	panel.add(groupROI);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(groupGravDirLabel);
+    	panel.add(groupGravDir);
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     	panel.add(new JSeparator(JSeparator.HORIZONTAL));
     	// Only display panel if there is at least one available operator
