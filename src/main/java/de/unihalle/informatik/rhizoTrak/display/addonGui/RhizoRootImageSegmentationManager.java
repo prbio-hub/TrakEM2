@@ -572,21 +572,23 @@ public class RhizoRootImageSegmentationManager
 										for (Displayable t : treelines)
 											formerTreelines.add((Treeline) t.clone());
 
+										// update treelines and delete the ones no longer present;
+										// the list of treelines under processing will contain null entries
+										// afterwards if treelines were deleted
 										RhizoTreelineImportExport converter = new RhizoTreelineImportExport();
-										converter.importMTBRootTreesReplace(id.intValue(), manager.projectLayers.get(id),
+										converter.importMTBRootTreesReplace(manager.rhizoDisplay.getProject(),
+											id.intValue(), manager.projectLayers.get(id),
 												resultTreelines.get(id), manager.treelinesUnderProcessing.get(id));
 
 										// transfer status, radius and connector information from old to new treelines
-										manager.transferTreelineProperties(formerTreelines, manager.treelinesUnderProcessing.get(id),
-												manager.projectLayers.get(id));
+										manager.transferTreelineProperties(manager.projectLayers.get(id), 
+											formerTreelines, manager.treelinesUnderProcessing.get(id));
 
 										RhizoUtils.repaintTreelineList(manager.treelinesUnderProcessing.get(id));
 									}
 									showDialog.killMe();
 
 									manager.rhizoDisplay.getCanvas().setReceivesInput(true);
-
-									System.out.println("End of run reached.");
 								}
 							}; // end-of-thread
 							transferTreelines.start();
@@ -658,12 +660,13 @@ public class RhizoRootImageSegmentationManager
 											for (int i=0; i<formerTreelineNumber; ++i)
 												treesForReplace.add(resultTreelines.get(id).get(i));
 										
-											converter.importMTBRootTreesReplace(id.intValue(), manager.projectLayers.get(id),
-												treesForReplace, manager.treelinesUnderProcessing.get(id));
+											converter.importMTBRootTreesReplace(manager.rhizoDisplay.getProject(),
+												id.intValue(), manager.projectLayers.get(id),
+													treesForReplace, manager.treelinesUnderProcessing.get(id));
 
 											// transfer status, radius and connector information from old to new treelines
-											manager.transferTreelineProperties(formerTreelines, 
-												manager.treelinesUnderProcessing.get(id), manager.projectLayers.get(id));
+											manager.transferTreelineProperties(manager.projectLayers.get(id), 
+												formerTreelines, manager.treelinesUnderProcessing.get(id));
 											RhizoUtils.repaintTreelineList(manager.treelinesUnderProcessing.get(id));
 										}
 
@@ -676,8 +679,6 @@ public class RhizoRootImageSegmentationManager
 									showDialog.killMe();
 
 									manager.rhizoDisplay.getCanvas().setReceivesInput(true);
-
-									System.out.println("End of run reached.");
 								}
 							}; // end-of-thread
 							transferTreelines.start();
@@ -746,16 +747,22 @@ public class RhizoRootImageSegmentationManager
 	 * <p>
 	 * For connector information it is assumed that connector IDs did not change.
 	 * 
+	 * @param	layer						Layer in which to perform the transfer.
 	 * @param sourceTreelines Source treelines from where to transfer information.
 	 * @param targetTreelines Target treelines onto which to transfer information.
 	 */
-	private void transferTreelineProperties(ArrayList<Displayable> sourceTreelines,
-			ArrayList<Displayable> targetTreelines, Layer layer) {
+	private void transferTreelineProperties(Layer layer, ArrayList<Displayable> sourceTreelines,
+			ArrayList<Displayable> targetTreelines) {
 
 		Node<Float> minNode;
 		float dist, minDist, sx = 0, sy = 0, tx = 0, ty = 0;
 		for (int counter = 0; counter < sourceTreelines.size(); ++counter) {
 
+			// check if potential target treeline still exists, if not skip 
+			if (targetTreelines.get(counter) == null) {
+				continue;
+			}
+			
 			Treeline sourceTreeline = (Treeline)sourceTreelines.get(counter);
 			Treeline targetTreeline = (Treeline)targetTreelines.get(counter);
 
