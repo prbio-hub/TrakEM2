@@ -230,16 +230,19 @@ public class RhizoLayerMetadataManager {
     RhizoGravitationalDirection activeDirection = 
     		this.rMain.getLayerInfo(activeLayer).getGravitationalDirectionObject();
     
-    // check if there is a gravitational direction polyline in project
-    // (may happen if the user added a polyline as gravitational direction manually in GUI)
-    Polyline polyline = this.getGravDirForLayer(activeLayer);
+    if (activeDirection == null) {
+    	// check if there is a gravitational direction polyline in project
+    	// (may happen if the user added a polyline as gravitational direction manually in GUI)
+    	Polyline polyline = this.getGravDirForLayer(activeLayer);
     
-    // if not null, update internal data structures
-    if (polyline != null) {
-    	this.rMain.getLayerInfo(activeLayer).setGravitationalDirection(polyline);
-    	activeDirection = this.rMain.getLayerInfo(activeLayer).getGravitationalDirectionObject();
+    	// if not null, update internal data structures
+    	if (polyline != null) {
+    		this.rMain.getLayerInfo(activeLayer).setGravitationalDirection(polyline);
+    		activeDirection = this.rMain.getLayerInfo(activeLayer).getGravitationalDirectionObject();
+    	}
     }
     
+    // if object is still null, there is really no gravitational direction
     if (activeDirection == null) {
   		Utils.showMessage("rhizoTrak - propagate gravitational direction: active layer has no direction!");
     	return;

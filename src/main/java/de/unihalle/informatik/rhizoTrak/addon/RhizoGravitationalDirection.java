@@ -70,6 +70,8 @@
 
 package de.unihalle.informatik.rhizoTrak.addon;
 
+import java.awt.Polygon;
+
 import de.unihalle.informatik.rhizoTrak.display.Polyline;
 
 /**
@@ -82,7 +84,7 @@ public class RhizoGravitationalDirection {
 	/**
 	 * Gravitational direction in degrees.
 	 */
-	private double direction;
+	private double direction = Double.NaN;
 	
 	/**
 	 * The TrakEM polyline representing the direction.
@@ -91,12 +93,25 @@ public class RhizoGravitationalDirection {
 
 	/**
 	 * Default constructor.
-	 * @param p						Polyline.
-	 * @param dir					Gravitational direction.
+	 * @param p		Polyline.
 	 */
-	public RhizoGravitationalDirection(Polyline p, double dir) 	{
+	public RhizoGravitationalDirection(Polyline p) 	{
 		this.polyline = p;
-		this.direction = dir;
+		this.updateDirectionValue();
+	}
+
+	/**
+	 * Constructor with direction argument.
+	 * <p>
+	 * Note that in this case no checks are performed and we assumen that the polyline 
+	 * and the given direction are consistent.
+	 * 
+	 * @param p		Polyline.
+	 * @param d		Direction in degrees between 0 and 360.
+	 */
+	public RhizoGravitationalDirection(Polyline p, double d) 	{
+		this.polyline = p;
+		this.direction = d;
 	}
 
 	/**
@@ -104,6 +119,7 @@ public class RhizoGravitationalDirection {
 	 * @return	Direction in degrees.
 	 */
 	public double getDirection() {
+		this.updateDirectionValue();
 		return this.direction;
 	}
 
@@ -113,5 +129,20 @@ public class RhizoGravitationalDirection {
 	 */
 	public Polyline getPolyline() {
 		return this.polyline;
+	}
+	
+	/**
+	 * Check if direction and given polyline are consistent and if not update direction.
+	 * <p>
+	 * The direction cannot be changed without any notice, however, the polyline can
+	 * manually be edited by the user. Thus, consistency checks are needed.
+	 */
+	private void updateDirectionValue() {
+		Polygon polygon = polyline.getPerimeter();
+		double dx = polygon.xpoints[1] - polygon.xpoints[0];
+		double dy = polygon.ypoints[1] - polygon.ypoints[0];
+		this.direction = Math.toDegrees(Math.atan2(dy, dx));
+		if (this.direction < 0)
+			this.direction += 360;
 	}
 }
