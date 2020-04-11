@@ -49,7 +49,9 @@ package de.unihalle.informatik.rhizoTrak.display.addonGui;
 
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.Vector;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -103,9 +105,11 @@ public class RhizoTreelineImportExport {
 
 		RadiusNode treelineRoot = (RadiusNode)treeline.getRoot();
 
-		if (treeline.getAffineTransform().getType() != AffineTransform.TYPE_TRANSLATION)
-			System.out.println("Affine transformation does more than a pure translation, " 
-				+ "cannot deal with that.... ignoring!");
+		// we cannot deal with transformations other than pure translations and identities
+		if (		treeline.getAffineTransform().getType() != AffineTransform.TYPE_TRANSLATION
+				&& !treeline.getAffineTransform().isIdentity())
+			System.out.println("Affine transformation is neither identity nor does only"
+					+ " a pure translation, cannot deal with that.... ignoring!");
 
 		// transform coordinates relative to absolute coordinates
 		double sx, sy;
@@ -164,14 +168,15 @@ public class RhizoTreelineImportExport {
 	 * Imports an root trees into the given layer replacing the old treelines
 	 * associated with these trees.
 	 * 
+	 * @param project				Project where to replace treelines.
 	 * @param layerZ				Target layer ID where to insert the treeline.
 	 * @param layer					Target layer itself.
 	 * @param rootTrees			Set of {@link MTBRootTree} to import.
 	 * @param treelineList	List of treelines to be replaced with given root trees.
 	 */
-	public void importMTBRootTreesReplace(int layerZ, Layer layer, Vector<MTBRootTree> rootTrees, 
-			ArrayList<Displayable> treelineList) {
-		this.convertRootTreesToTreelines(rootTrees, treelineList, layer, null);
+	public void importMTBRootTreesReplace(Project project, int layerZ, Layer layer, 
+			Vector<MTBRootTree> rootTrees, ArrayList<Displayable> treelineList) {
+		this.convertRootTreesToTreelines(project, rootTrees, treelineList, layer, null);
 	}
 
 	/**
@@ -250,7 +255,7 @@ public class RhizoTreelineImportExport {
 		//create new list of empty treelines
 		List<Displayable> treelineList = RhizoUtils.addDisplayableToProject(project, "treeline", rootTrees.size());
 
-		this.convertRootTreesToTreelines(rootTrees, treelineList, targetLayer, targetStatus);
+		this.convertRootTreesToTreelines(project, rootTrees, treelineList, targetLayer, targetStatus);
 
 		RhizoUtils.repaintTreelineList(treelineList);
 	}
@@ -260,12 +265,13 @@ public class RhizoTreelineImportExport {
 	 * <p>
 	 * Old data potentially existing in treeline objects will be deleted.
 	 * 
+	 * @param project				Project where to import/delete treelines.
 	 * @param rootTrees			List of root trees to be converted.
 	 * @param treelineList	Target list of treelines to be replaced.
 	 * @param targetLayer		Target layer to which the treelines should be added.
 	 * @param targetStatus	Target status for the treelines.
 	 */
-	protected void convertRootTreesToTreelines(Vector<MTBRootTree> rootTrees, 
+	protected void convertRootTreesToTreelines(Project project, Vector<MTBRootTree> rootTrees, 
 			List<Displayable> treelineList, Layer targetLayer, String targetStatus) {
 
 		AffineTransform at;
@@ -273,13 +279,32 @@ public class RhizoTreelineImportExport {
 		MTBRootTree rootTree;
 		RadiusNode nn;
 		Treeline treeline;
-		int treelineIndex = 0;
+		
+		// set of treelines to remove at the end
+		HashSet<Displayable> treelinesToRemove = new HashSet<>();
 
 		for (int j=0; j<rootTrees.size(); ++j) {
 
+			// get source MTBRootTree
 			rootTree = rootTrees.elementAt(j);
+			
+			// get (old) treeline
+			treeline = (Treeline) treelineList.get(j);
+
+			// check if null, and if so delete old treeline
+			if (rootTree == null) {
+				// null entry in treeline list
+				treelineList.set(j, null);
+				// remember treeline for later removal
+				treelinesToRemove.add(treeline);
+				continue;
+			}
+			
+			// get root node
 			root = rootTree.getRoot();
 
+			// determine affine transformation which covers the translation
+			// relative to upper left corner of the tree bounding box
 			float xmin = Float.MAX_VALUE, ymin = Float.MAX_VALUE;
 			Vector<MTBTreeNode> nodes = rootTree.getAllNodesDepthFirst();
 			for (MTBTreeNode tn: nodes) {
@@ -291,8 +316,6 @@ public class RhizoTreelineImportExport {
 			at = new AffineTransform();
 			at.setToTranslation(xmin, ymin);
 
-			// get treeline (now existing)
-			treeline = (Treeline) treelineList.get(treelineIndex);
 			// clear treeline by removing all nodes, if there are any
 			if (treeline.getRoot() != null)
 				treeline.removeNode(treeline.getRoot());
@@ -326,7 +349,11 @@ public class RhizoTreelineImportExport {
 
 			// display treeline
 			treeline.updateCache();
-			treelineIndex++;
+		}
+		
+		// remove obsolete ones
+		if (!treelinesToRemove.isEmpty()) {
+			project.removeAll(treelinesToRemove);
 		}
 	}
 
