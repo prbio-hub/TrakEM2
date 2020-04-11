@@ -473,6 +473,9 @@ public class RhizoLayerInfo {
 			project.removeAll(deleteSet);
 		}
 		
+  	// notify the loader of the changes
+    this.project.getLoader().setChanged(true);
+
   	// delete gravitational direction object itself
 		this.gravDir = null;
 	}
