@@ -435,6 +435,14 @@ public class RhizoLayerInfo {
 	}
 	
 	/**
+	 * Get gravitational direction object for layer.
+	 * @return	ROI object.
+	 */
+	public RhizoGravitationalDirection getGravitationalDirectionObject() {
+		return this.gravDir;
+	}
+
+	/**
 	 * Get gravitational direction as angle in degrees.
 	 * @return	Angle of gravitational direction, 0 degrees point to the right.
 	 */
@@ -468,6 +476,9 @@ public class RhizoLayerInfo {
 		if (!deleteSet.isEmpty()) {
 			project.removeAll(deleteSet);
 		}
+		
+  	// delete gravitational direction object itself
+		this.gravDir = null;
 	}
 	
   /**
