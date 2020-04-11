@@ -135,7 +135,6 @@ public class RhizoUtils {
 		// no roi child found so far, create one
 		ProjectThing pt = rootstackProjectThings.iterator().next();
 		ProjectThing newChild = pt.createChild(childType);
-    newChild.setTitle(pt.getUniqueIdentifier());
 		return newChild;
 	}
 

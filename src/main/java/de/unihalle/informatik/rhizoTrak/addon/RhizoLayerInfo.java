@@ -349,6 +349,9 @@ public class RhizoLayerInfo {
   		this.project.removeAll(deleteSet);
   	}
   	
+  	// notify the loader of the changes
+    this.project.getLoader().setChanged(true);
+
   	// delete ROI object itself
 		this.roi = null;
 	}
@@ -423,21 +426,25 @@ public class RhizoLayerInfo {
 			System.err.println("Found a gravitational direction with more than 2 points, skipping...");
 			return;
 		}
-		double dx = polygon.xpoints[1] - polygon.xpoints[0];
-		double dy = polygon.ypoints[1] - polygon.ypoints[0];
-		double dir = Math.toDegrees(Math.atan2(dy, dx));
-		if (dir < 0)
-			dir += 360;
-		this.gravDir = new RhizoGravitationalDirection(polyline, dir);
+		this.gravDir = new RhizoGravitationalDirection(polyline);
 	}
 	
+	/**
+	 * Get gravitational direction object for layer.
+	 * @return	ROI object.
+	 */
+	public RhizoGravitationalDirection getGravitationalDirectionObject() {
+		return this.gravDir;
+	}
+
 	/**
 	 * Get gravitational direction as angle in degrees.
 	 * @return	Angle of gravitational direction, 0 degrees point to the right.
 	 */
 	public double getGravitationalDirection() {
-		if (this.gravDir != null)
+		if (this.gravDir != null) {
 			return this.gravDir.getDirection();
+		}
 		return Double.NaN;
 	}
 
@@ -465,6 +472,12 @@ public class RhizoLayerInfo {
 		if (!deleteSet.isEmpty()) {
 			project.removeAll(deleteSet);
 		}
+		
+  	// notify the loader of the changes
+    this.project.getLoader().setChanged(true);
+
+  	// delete gravitational direction object itself
+		this.gravDir = null;
 	}
 	
   /**
