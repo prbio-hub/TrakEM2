@@ -105,9 +105,11 @@ public class RhizoTreelineImportExport {
 
 		RadiusNode treelineRoot = (RadiusNode)treeline.getRoot();
 
-		if (treeline.getAffineTransform().getType() != AffineTransform.TYPE_TRANSLATION)
-			System.out.println("Affine transformation does more than a pure translation, " 
-				+ "cannot deal with that.... ignoring!");
+		// we cannot deal with transformations other than pure translations and identities
+		if (		treeline.getAffineTransform().getType() != AffineTransform.TYPE_TRANSLATION
+				&& !treeline.getAffineTransform().isIdentity())
+			System.out.println("Affine transformation is neither identity nor does only"
+					+ " a pure translation, cannot deal with that.... ignoring!");
 
 		// transform coordinates relative to absolute coordinates
 		double sx, sy;
