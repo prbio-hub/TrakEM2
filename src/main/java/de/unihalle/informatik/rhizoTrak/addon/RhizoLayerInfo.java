@@ -303,11 +303,6 @@ public class RhizoLayerInfo {
 	 * @return	ROI object.
 	 */
 	public RhizoROI getROI() {
-    System.out.println("Getting roi from layer " + this.layer.getZ());
-    if (this.roi != null)
-    	System.out.println(this.roi.toString());
-    else 
-    	System.out.println("null");
 		return this.roi;
 	}
 	
