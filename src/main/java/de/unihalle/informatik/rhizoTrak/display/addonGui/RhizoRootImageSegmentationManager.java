@@ -646,7 +646,7 @@ public class RhizoRootImageSegmentationManager
 
 										// transfer status, radius and connector information from old to new treelines
 										manager.transferTreelineProperties(manager.projectLayers.get(id), 
-											formerTreelines, manager.treelinesUnderProcessing.get(id));
+											formerTreelines, manager.treelinesUnderProcessing.get(id), false);
 
 										RhizoUtils.repaintTreelineList(manager.treelinesUnderProcessing.get(id));
 									}
@@ -730,7 +730,7 @@ public class RhizoRootImageSegmentationManager
 
 											// transfer status, radius and connector information from old to new treelines
 											manager.transferTreelineProperties(manager.projectLayers.get(id), 
-												formerTreelines, manager.treelinesUnderProcessing.get(id));
+												formerTreelines, manager.treelinesUnderProcessing.get(id), false);
 											RhizoUtils.repaintTreelineList(manager.treelinesUnderProcessing.get(id));
 										}
 
@@ -894,7 +894,7 @@ public class RhizoRootImageSegmentationManager
 	 * @param targetTreelines Target treelines onto which to transfer information.
 	 */
 	private void transferTreelineProperties(Layer layer, ArrayList<Displayable> sourceTreelines,
-			ArrayList<Displayable> targetTreelines) {
+			ArrayList<Displayable> targetTreelines, boolean copyStatus) {
 
 		Node<Float> minNode;
 		float dist, minDist, sx = 0, sy = 0, tx = 0, ty = 0;
@@ -950,7 +950,9 @@ public class RhizoRootImageSegmentationManager
 					// radius
 					tn.setData(minNode.getData());
 					// status
-					tn.setConfidence(minNode.getConfidence());
+					if ( copyStatus ) {
+						tn.setConfidence(minNode.getConfidence());
+					}
 				}
 			}
 		}

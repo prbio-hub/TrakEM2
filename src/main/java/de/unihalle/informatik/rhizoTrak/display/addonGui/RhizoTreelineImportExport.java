@@ -375,6 +375,8 @@ public class RhizoTreelineImportExport {
 				(float)((MTBRootTreeNodeData)tnn.getData()).getXPos() - xmin, 
 				(float)((MTBRootTreeNodeData)tnn.getData()).getYPos() - ymin, layer, 
 				(float)((MTBRootTreeNodeData) tnn.getData()).getRadius());
+			byte nodeStatus = ((MTBRootTreeNodeData) tnn.getData()).getStatus();
+			if( Byte.compare(nodeStatus, status) != 0 ) status = nodeStatus;
 			targetTreeLine.addNode(n, nn, (byte)status, true);
 			this.convertRootTreeToTreeline(tnn, targetTreeLine, nn, layer, xmin, ymin, status);
 		}
