@@ -337,6 +337,10 @@ public class RhizoTreelineImportExport {
 					s = (byte) 2;
 				else if ( targetStatus.equals("GAP") )		
 					s = (byte) 3;
+				else if ( targetStatus.equals("VIRTUAL") )		
+					s = (byte) -2;
+				else if ( targetStatus.equals("VIRTUAL_RSML") )		
+					s = (byte) -4;
 			}
 
 			nn = new RadiusNode((float)((MTBRootTreeNodeData)root.getData()).getXPos() - xmin, 
@@ -376,9 +380,9 @@ public class RhizoTreelineImportExport {
 				(float)((MTBRootTreeNodeData)tnn.getData()).getYPos() - ymin, layer, 
 				(float)((MTBRootTreeNodeData) tnn.getData()).getRadius());
 			byte nodeStatus = ((MTBRootTreeNodeData) tnn.getData()).getStatus();
-			if( Byte.compare(nodeStatus, status) != 0 ) status = nodeStatus;
-			targetTreeLine.addNode(n, nn, (byte)status, true);
-			this.convertRootTreeToTreeline(tnn, targetTreeLine, nn, layer, xmin, ymin, status);
+			if( nodeStatus == (byte) RhizoProjectConfig.STATUS_UNDEFINED ) nodeStatus = status;
+			targetTreeLine.addNode(n, nn, (byte)nodeStatus, true);
+			this.convertRootTreeToTreeline(tnn, targetTreeLine, nn, layer, xmin, ymin, nodeStatus);
 		}
 	}
 
