@@ -646,8 +646,9 @@ public class RhizoRootImageSegmentationManager
 
 										// transfer status, radius and connector information from old to new treelines
 										manager.transferTreelineProperties(manager.projectLayers.get(id), 
-											formerTreelines, manager.treelinesUnderProcessing.get(id), false);
-
+											formerTreelines, manager.treelinesUnderProcessing.get(id), 
+											segOp.isToTransferDiameterOnUpdate(), segOp.isToTransferStatusOnUpdate());
+										
 										RhizoUtils.repaintTreelineList(manager.treelinesUnderProcessing.get(id));
 									}
 									showDialog.killMe();
@@ -730,7 +731,8 @@ public class RhizoRootImageSegmentationManager
 
 											// transfer status, radius and connector information from old to new treelines
 											manager.transferTreelineProperties(manager.projectLayers.get(id), 
-												formerTreelines, manager.treelinesUnderProcessing.get(id), false);
+												formerTreelines, manager.treelinesUnderProcessing.get(id), 
+												segOp.isToTransferDiameterOnUpdate(), segOp.isToTransferStatusOnUpdate());
 											RhizoUtils.repaintTreelineList(manager.treelinesUnderProcessing.get(id));
 										}
 
@@ -892,9 +894,12 @@ public class RhizoRootImageSegmentationManager
 	 * @param	layer						Layer in which to perform the transfer.
 	 * @param sourceTreelines Source treelines from where to transfer information.
 	 * @param targetTreelines Target treelines onto which to transfer information.
+	 * @param copyDiameter		Transfer diameter information, if true.
+	 * @param copyStatus		Transfer status labels, if true.
 	 */
 	private void transferTreelineProperties(Layer layer, ArrayList<Displayable> sourceTreelines,
-			ArrayList<Displayable> targetTreelines, boolean copyStatus) {
+			ArrayList<Displayable> targetTreelines, boolean copyDiameter, 
+			boolean copyStatus) {
 
 		Node<Float> minNode;
 		float dist, minDist, sx = 0, sy = 0, tx = 0, ty = 0;
@@ -948,7 +953,9 @@ public class RhizoRootImageSegmentationManager
 				// copy data
 				if (minNode != null) {
 					// radius
-					tn.setData(minNode.getData());
+					if ( copyDiameter ) {
+						tn.setData(minNode.getData());
+					}					
 					// status
 					if ( copyStatus ) {
 						tn.setConfidence(minNode.getConfidence());
