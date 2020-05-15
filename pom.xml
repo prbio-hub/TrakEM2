@@ -51,6 +51,7 @@
     <license.licenseName>gpl_v3</license.licenseName>
     <license.copyrightOwners>Stefan Posch, Birgit Moeller and others.</license.copyrightOwners>
     <jython-shaded.version>2.7.0</jython-shaded.version>
+    <jython-slim.version>2.7.2</jython-slim.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <trakem2-transform.version>1.0.1</trakem2-transform.version>
     <!-- MiToBo dependencies -->
@@ -453,6 +454,13 @@
     <dependency>
       <groupId>sc.fiji</groupId>
       <artifactId>Simple_Neurite_Tracer</artifactId>
+      <exclusions>
+	<exclusion>
+	  <!-- TEMP: Until tferr/ASA#32 is merged and propagated. -->
+	  <groupId>net.imagej</groupId>
+	  <artifactId>imagej</artifactId>
+	</exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>sc.fiji</groupId>
@@ -496,8 +504,9 @@
       <version>1.0.2-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>org.scijava</groupId>
-      <artifactId>jython-shaded</artifactId>
+      <groupId>org.python</groupId>
+      <artifactId>jython-slim</artifactId>
+      <version>${jython-slim.version}</version>
     </dependency>
     <dependency>
       <groupId>ome</groupId>
