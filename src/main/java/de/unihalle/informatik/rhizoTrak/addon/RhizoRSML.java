@@ -145,7 +145,7 @@ public class RhizoRSML
 	
 	private static final String PROPERTY_NAME_PARENTNODE = "parent-node";
 	private static final String PROPERTY_NAME_STATUSLABELMAPPING = "StatusLabelMapping";
-	private static final String PROPERTY_NAME_GRAVITATIONALDIRECTION = "GraviatationalDirection";
+	private static final String PROPERTY_NAME_GRAVITATIONALDIRECTION = "GravitationalDirection";
 
 	private static final String ANNOTATION_NAME_ROI = "ROI";
 
