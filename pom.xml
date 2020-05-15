@@ -27,7 +27,7 @@
   
   <groupId>de.unihalle.informatik.rhizoTrak</groupId>
   <artifactId>rhizoTrak_</artifactId>
-  <version>1.2-SNAPSHOT</version>
+  <version>1.2</version>
   <packaging>jar</packaging>
 
   <name>rhizoTrak</name>
@@ -554,7 +554,7 @@
       </activation>
       <properties>
         <mitobo.dep>mitobo</mitobo.dep>
-        <mitobo.dep.version>1.8.18</mitobo.dep.version>
+        <mitobo.dep.version>2.0</mitobo.dep.version>
       </properties>
     </profile>
   </profiles>
