@@ -27,7 +27,7 @@
   
   <groupId>de.unihalle.informatik.rhizoTrak</groupId>
   <artifactId>rhizoTrak_</artifactId>
-  <version>1.2</version>
+  <version>1.3-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>rhizoTrak</name>
@@ -56,7 +56,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <trakem2-transform.version>1.0.1</trakem2-transform.version>
     <!-- MiToBo dependencies -->
-    <mitobo.xml.version>2.10</mitobo.xml.version>
+    <mitobo.xml.version>3.0</mitobo.xml.version>
   </properties>
 
   <mailingLists>
@@ -541,7 +541,7 @@
       <id>develop</id>
       <properties>
         <mitobo.dep>mitobo-internal</mitobo.dep>
-        <mitobo.dep.version>2.2-SNAPSHOT</mitobo.dep.version>
+        <mitobo.dep.version>3.0-SNAPSHOT</mitobo.dep.version>
       </properties>
       <activation>
 	<activeByDefault>true</activeByDefault>
