@@ -15,7 +15,7 @@ description: A tool for manual annotation of minirhizotron images
 
 
 <span class="rhizoTrakClass">rhizoTrak</span>  News
-- current release is 1.1.1, see [Documentation](pages/docs) 
+- current release is 1.2, see [Documentation](pages/docs) 
 	for more details
 
 <span class="rhizoTrakClass">rhizoTrak</span>  features 
