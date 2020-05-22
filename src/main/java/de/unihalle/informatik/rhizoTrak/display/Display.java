@@ -193,6 +193,10 @@ import de.unihalle.informatik.Alida.operator.ALDOperatorCollectionElement;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent.ALDOperatorCollectionEventType;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEventListener;
+import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootImageSegmentationOperator;
+import de.unihalle.informatik.MiToBo.apps.minirhizotron.datatypes.MTBRootTree;
+import de.unihalle.informatik.MiToBo.apps.minirhizotron.datatypes.MTBRootTreeNodeData;
+import de.unihalle.informatik.MiToBo.core.datatypes.MTBTreeNode;
 import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage;
 import de.unihalle.informatik.MiToBo.core.operator.MTBOperatorCollection;
 import de.unihalle.informatik.rhizoTrak.ControlWindow;
@@ -205,6 +209,7 @@ import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.analysis.Graph;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
+import de.unihalle.informatik.rhizoTrak.display.addonGui.RhizoRootImageSegmentationManager;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.SplitDialog;
 import de.unihalle.informatik.rhizoTrak.display.inspect.InspectPatchTrianglesMode;
 import de.unihalle.informatik.rhizoTrak.imaging.Blending;
@@ -330,13 +335,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	static private final Object DISPLAY_LOCK = new Object();
 	
 	/**
-	 * Variables for choosing, configuring and running operators
+	 * Manager to handle collection of available image segmentation operators.
 	 */
-	private JList<String> list;
-	
-	private ALDOperatorCollectionElement operator;
-	
-	private JButton runButton;
+	private RhizoRootImageSegmentationManager imageSegmentationManager;
 
 	/** Keep track of all existing Display objects. */
 	static private Set<Display> al_displays = new HashSet<Display>();
@@ -6779,7 +6780,30 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
                         ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
 			conflictManager.showConflicts();
 		}
-		else if(command.equals("stat")) {
+		// commands to interact with rhizoTrak ROIs
+//		else if(command.equals("setRoi")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().setROI();
+//		}
+//		else if(command.equals("clearRoi")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().clearROI();
+//		}
+//		else if(command.equals("propagateRoi")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().propagateROI();
+//		}
+//		else if(command.equals("clearRoiAll")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().clearROIsAll();
+//		}
+//		// commands to interact with gravitational directions in rhizoTrak
+//		else if(command.equals("clearGravDirection")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().clearGravitationalDirection();
+//		}
+//		else if(command.equals("propagateGravDirection")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().propagateGravitationalDirection();
+//		}
+//		else if(command.equals("clearGravDirectionAll")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().clearGravitationalDirectionsAll();
+//		}
+		else if(command.equals("stat")){
 			Display.getFront().getProject().getRhizoMain().getRhizoStatistics().writeStatistics();
 		}
 		else if(command.equals("writeBinary")){
@@ -7648,11 +7672,17 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	JPanel group21 = new JPanel(new GridLayout(0, 2, 5, 1)); // Read and write operations
     	JPanel group3  = new JPanel(new GridLayout(0, 2, 5, 1)); // Connector related operations
     	JPanel group4  = new JPanel(new GridLayout(0, 2, 5, 1)); // Image related operations
+//    	JPanel groupROILabel  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for treelines
+//    	JPanel groupROI = new JPanel(new GridLayout(2, 2, 5, 1)); // ROI related operations
+//    	JPanel groupGravDirLabel  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for treelines
+//    	JPanel groupGravDir = new JPanel(new GridLayout(2, 2, 5, 1)); // ROI related operations
     	JPanel group6  = new JPanel(new GridLayout(0, 2, 5, 1)); // RhizoTrak miscellaneous
     	group11.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group21.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group3.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group4.setBorder(new EmptyBorder(5, 5, 5, 5));
+//    	groupROI.setBorder(new EmptyBorder(5, 5, 5, 5));
+//    	groupGravDir.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group6.setBorder(new EmptyBorder(5, 5, 5, 5));
     	
     	JLabel labelTreeline = new JLabel("Treelines:", JLabel.LEFT);
@@ -7727,7 +7757,67 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	loadImagesButton.setActionCommand("Load images");
     	loadImagesButton.addActionListener(this);
     	group4.add(loadImagesButton);
-    	
+
+    	// ROI related stuff
+//    	JLabel labelROIs = new JLabel("ROIs:", JLabel.LEFT);
+//    	groupROILabel.add(labelROIs);
+//
+//      JButton setRoiButton = new JButton("Set");
+//      setRoiButton.setToolTipText("Set ROI for active layer.");
+//      setRoiButton.setActionCommand("setRoi");
+//      setRoiButton.addActionListener(this);
+//      setRoiButton.setEnabled(true);
+//      groupROI.add(setRoiButton);
+//
+//      JButton clearRoiButton = new JButton("Clear");
+//      clearRoiButton.setToolTipText("Clear ROI for active layer.");
+//      clearRoiButton.setActionCommand("clearRoi");
+//      clearRoiButton.addActionListener(this);
+//      clearRoiButton.setEnabled(true);
+//      groupROI.add(clearRoiButton);
+//      
+//      JButton propagateRoiButton = new JButton("Propagate");
+//      propagateRoiButton.setToolTipText("Propagate ROI to all layers.");
+//      propagateRoiButton.setActionCommand("propagateRoi");
+//      propagateRoiButton.addActionListener(this);
+//      propagateRoiButton.setEnabled(true);
+//      groupROI.add(propagateRoiButton);
+//
+//      JButton clearAllButton = new JButton("Clear All");
+//      clearAllButton.setToolTipText("Clear all ROIs.");
+//      clearAllButton.setActionCommand("clearRoiAll");
+//      clearAllButton.addActionListener(this);
+//      clearAllButton.setEnabled(true);
+//      groupROI.add(clearAllButton);
+//
+//    	// gravitational direction related stuff
+//    	JLabel labelGravDirs = new JLabel("Gravitational Direction:", JLabel.LEFT);
+//    	groupGravDirLabel.add(labelGravDirs);
+//
+//    	JButton clearGravDirButton = new JButton("Clear");
+//      clearGravDirButton.setToolTipText("Clear gravitational direction for active layer.");
+//      clearGravDirButton.setActionCommand("clearGravDirection");
+//      clearGravDirButton.addActionListener(this);
+//      clearGravDirButton.setEnabled(true);
+//      groupGravDir.add(clearGravDirButton);
+//      
+//      JButton propagateGravDirButton = new JButton("Propagate");
+//      propagateGravDirButton.setToolTipText("Propagate gravitational direction to all layers.");
+//      propagateGravDirButton.setActionCommand("propagateGravDirection");
+//      propagateGravDirButton.addActionListener(this);
+//      propagateGravDirButton.setEnabled(true);
+//      groupGravDir.add(propagateGravDirButton);
+//
+//      JButton clearGravDirAllButton = new JButton("Clear All");
+//      clearGravDirAllButton.setToolTipText("Clear all gravitational directions.");
+//      clearGravDirAllButton.setActionCommand("clearGravDirectionAll");
+//      clearGravDirAllButton.addActionListener(this);
+//      clearGravDirAllButton.setEnabled(true);
+//      groupGravDir.add(clearGravDirAllButton);
+
+			// init the manager for handling available operators for image segmentation
+			this.imageSegmentationManager = new RhizoRootImageSegmentationManager(this);
+		
     	JButton preferencesButton = new JButton("Preferences");
     	preferencesButton.setToolTipText("Edit treelines display options and other user settings.");
     	preferencesButton.setActionCommand("preferences");
@@ -7770,6 +7860,20 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	panel.add(group4);
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     	panel.add(new JSeparator(JSeparator.HORIZONTAL));
+//    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+//    	panel.add(groupROILabel);
+//    	panel.add(groupROI);
+//    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+//    	panel.add(groupGravDirLabel);
+//    	panel.add(groupGravDir);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	// optionally add panel for image segmentation operators
+    	if (this.imageSegmentationManager.getNumberOfAvailableOperators() > 0) {
+    		panel.add(this.imageSegmentationManager.getSegmentationOpsPanel());
+    		panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    		panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	}
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     	panel.add(group6);
     	

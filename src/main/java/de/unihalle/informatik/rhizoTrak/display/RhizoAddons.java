@@ -66,6 +66,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import javax.swing.AbstractAction;
@@ -138,6 +139,10 @@ public class RhizoAddons
 	
 
 	/* displayable stuff */
+
+	public static Set<Node<Float>> getTreeLineNodeInstancesInLayer(Treeline tl, Layer layer) {
+		return tl.node_layer_map.get(layer);
+	}
 
 	/**
 	 * Copies treelines from the current layer to the next one
