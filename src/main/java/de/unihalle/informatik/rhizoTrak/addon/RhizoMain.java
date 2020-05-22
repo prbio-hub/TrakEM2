@@ -69,7 +69,12 @@ public class RhizoMain
 	private RhizoLineMapToTreeline rLineMapToTreeline;
 	private RhizoWriteBinary writeBinary;
 	
-	private HashMap<Layer,RhizoLayerInfo> layerInfoMap = new HashMap<Layer,RhizoLayerInfo>();
+	/**
+	 * Manager for dealing with supplemental data for layers like ROIs, etc. 
+	 */
+	private RhizoLayerMetadataManager rMetadataManager;
+	
+	private HashMap<Layer, RhizoLayerInfo> layerInfoMap = new HashMap<Layer,RhizoLayerInfo>();
 	
 	private Project p;
 
@@ -96,8 +101,8 @@ public class RhizoMain
 		rMTBXML = new RhizoMTBXML(this);
 		rRSML = new RhizoRSML( this);
 		rLineMapToTreeline = new RhizoLineMapToTreeline(this);
+		rMetadataManager = new RhizoLayerMetadataManager(this);
 		writeBinary = new RhizoWriteBinary( this);
-
 	}
 	
 	public RhizoAddons getRhizoAddons()
@@ -141,7 +146,12 @@ public class RhizoMain
 	{
 		return rLineMapToTreeline;
 	}
-
+	
+	public RhizoLayerMetadataManager getRhizoMetadataManager() 
+	{
+		return this.rMetadataManager;
+	}
+	
 	public RhizoWriteBinary getRhizoWriteBinary() {
 		return writeBinary;
 	}
@@ -150,14 +160,14 @@ public class RhizoMain
 	{
 		return p;
 	}
-	
+
 	/** 
 	 * @param layer
 	 * @return the LayerInfo associated with this layer or null if unset
 	 */
 	public RhizoLayerInfo getLayerInfo( Layer layer) {
 		if ( layerInfoMap.get( layer) == null)
-			layerInfoMap.put( layer, new RhizoLayerInfo(layer, null));
+			layerInfoMap.put( layer, new RhizoLayerInfo(this.p, layer, null));
 		
 		return layerInfoMap.get( layer);
 	}

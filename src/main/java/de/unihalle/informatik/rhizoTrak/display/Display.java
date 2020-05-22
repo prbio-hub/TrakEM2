@@ -193,7 +193,10 @@ import de.unihalle.informatik.Alida.operator.ALDOperatorCollectionElement;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEvent.ALDOperatorCollectionEventType;
 import de.unihalle.informatik.Alida.operator.events.ALDOperatorCollectionEventListener;
-import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootSegmentationOperator;
+import de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.RootImageSegmentationOperator;
+import de.unihalle.informatik.MiToBo.apps.minirhizotron.datatypes.MTBRootTree;
+import de.unihalle.informatik.MiToBo.apps.minirhizotron.datatypes.MTBRootTreeNodeData;
+import de.unihalle.informatik.MiToBo.core.datatypes.MTBTreeNode;
 import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage;
 import de.unihalle.informatik.MiToBo.core.operator.MTBOperatorCollection;
 import de.unihalle.informatik.rhizoTrak.ControlWindow;
@@ -206,6 +209,7 @@ import de.unihalle.informatik.rhizoTrak.addon.RhizoStatusLabel;
 import de.unihalle.informatik.rhizoTrak.analysis.Graph;
 import de.unihalle.informatik.rhizoTrak.conflictManagement.ConflictManager;
 import de.unihalle.informatik.rhizoTrak.display.Treeline.RadiusNode;
+import de.unihalle.informatik.rhizoTrak.display.addonGui.RhizoRootImageSegmentationManager;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.RhizoScalebar;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.RhizoScalebar.DisplayPosition;
 import de.unihalle.informatik.rhizoTrak.display.addonGui.SplitDialog;
@@ -338,15 +342,9 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 	static private final Object DISPLAY_LOCK = new Object();
 	
 	/**
-	 * Variables for choosing, configuring and running operators
+	 * Manager to handle collection of available image segmentation operators.
 	 */
-	private JList<String> list;
-	
-	private MTBOperatorCollection<RootSegmentationOperator> operatorCollection;
-	
-	private ALDOperatorCollectionElement operator;
-	
-	private JButton runButton;
+	private RhizoRootImageSegmentationManager imageSegmentationManager;
 
 	/** Keep track of all existing Display objects. */
 	static private Set<Display> al_displays = new HashSet<Display>();
@@ -6804,13 +6802,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		else if(command.equals("Load images")){
 			Display.getFront().getProject().getRhizoMain().getRhizoImages().createImageLoaderFrame();
 		}
-		else if(command.equals("configureOperator")){
-			configureOperator();
-		}
-		else if(command.equals("runOperator")) {
-			runButton.setEnabled(false);
-			runOperator();
-		}
 		else if(command.equals("preferences")){
 			Display.getFront().getProject().getRhizoMain().getRhizoColVis().createPreferencesFrame();;
 		}
@@ -6834,7 +6825,30 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
                         ConflictManager conflictManager = rhizoMain.getRhizoAddons().getConflictManager();
 			conflictManager.showConflicts();
 		}
-		else if(command.equals("stat")) {
+		// commands to interact with rhizoTrak ROIs
+//		else if(command.equals("setRoi")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().setROI();
+//		}
+//		else if(command.equals("clearRoi")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().clearROI();
+//		}
+//		else if(command.equals("propagateRoi")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().propagateROI();
+//		}
+//		else if(command.equals("clearRoiAll")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().clearROIsAll();
+//		}
+//		// commands to interact with gravitational directions in rhizoTrak
+//		else if(command.equals("clearGravDirection")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().clearGravitationalDirection();
+//		}
+//		else if(command.equals("propagateGravDirection")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().propagateGravitationalDirection();
+//		}
+//		else if(command.equals("clearGravDirectionAll")){
+//			Display.getFront().getProject().getRhizoMain().getRhizoMetadataManager().clearGravitationalDirectionsAll();
+//		}
+		else if(command.equals("stat")){
 			Display.getFront().getProject().getRhizoMain().getRhizoStatistics().writeStatistics();
 		}
 		else if(command.equals("writeBinary")){
@@ -6905,62 +6919,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
 		}});
 	}
 
-	// Opens the configuration window of the selected operator 
-	private void configureOperator() {
-		String selectedOperatorName = list.getSelectedValue();
-		if ( selectedOperatorName != null )
-		{
-			// Checks if the window is already open
-			boolean isConfigFrameOpen = false;
-			for ( Display display : Display.getDisplays() )
-			{
-				JFrame frame = display.getFrame();
-				if ( frame.getTitle().contains("ALDOperatorConfigurationFrame:") && frame.isShowing() )
-				{
-					isConfigFrameOpen = true;
-				}
-			}
-			if ( !isConfigFrameOpen )
-			{
-				operatorCollection.openOperatorConfigWindow(selectedOperatorName);
-			} 
-		}
-		else
-		{
-			JOptionPane.showMessageDialog(null, "Please choose an operator to configure.", 
-						"Choose operator", JOptionPane.ERROR_MESSAGE);
-		}
-	}
-	
-	// Runs the selected operator
-	private void runOperator()
-	{
-		// Gets the current image
-		Layer l = Display.getFrontLayer();
-		ImagePlus img = l.getPatches(true).get(0).getImagePlus();
-		
-		operator = operatorCollection.getOperator(list.getSelectedValue());	
-		if( operator != null )
-		{
-			runButton.setEnabled(false);
-			// Add method of RootSegmentationOperator to set image 
-			if ( operator instanceof RootSegmentationOperator)
-			{
-				((RootSegmentationOperator) operator).setImage(img);
-			}
-		
-			LinkedList<String> operatorList = new LinkedList<String>();
-			// only one operator can be selected
-			operatorList.add(list.getSelectedValue());
-			operatorCollection.runOperators(operatorList);
-		}
-		else
-		{
-			JOptionPane.showMessageDialog(null, "Please choose an operator to run.", 
-						"Choose operator", JOptionPane.ERROR_MESSAGE);
-		}
-	}
-	
 	private static String[] getReleaseInfosFromJar() {
 
 		InputStream is= null;
@@ -7759,15 +7717,17 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	JPanel group21 = new JPanel(new GridLayout(0, 2, 5, 1)); // Read and write operations
     	JPanel group3  = new JPanel(new GridLayout(0, 2, 5, 1)); // Connector related operations
     	JPanel group4  = new JPanel(new GridLayout(0, 2, 5, 1)); // Image related operations
-    	JPanel group5  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for operators
-    	JPanel group51 = new JPanel(new GridLayout(0, 1, 5, 1)); // Choose operator from list
-    	JPanel group52 = new JPanel(new GridLayout(0, 2, 5, 1)); // Configure and run chosen operator
+//    	JPanel groupROILabel  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for treelines
+//    	JPanel groupROI = new JPanel(new GridLayout(2, 2, 5, 1)); // ROI related operations
+//    	JPanel groupGravDirLabel  = new JPanel(new GridLayout(0, 1, 5, 1)); // Label for treelines
+//    	JPanel groupGravDir = new JPanel(new GridLayout(2, 2, 5, 1)); // ROI related operations
     	JPanel group6  = new JPanel(new GridLayout(0, 2, 5, 1)); // RhizoTrak miscellaneous
     	group11.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group21.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group3.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group4.setBorder(new EmptyBorder(5, 5, 5, 5));
-    	group52.setBorder(new EmptyBorder(5, 5, 5, 5));
+//    	groupROI.setBorder(new EmptyBorder(5, 5, 5, 5));
+//    	groupGravDir.setBorder(new EmptyBorder(5, 5, 5, 5));
     	group6.setBorder(new EmptyBorder(5, 5, 5, 5));
     	
     	JLabel labelTreeline = new JLabel("Treelines:", JLabel.LEFT);
@@ -7842,32 +7802,67 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	loadImagesButton.setActionCommand("Load images");
     	loadImagesButton.addActionListener(this);
     	group4.add(loadImagesButton);
-    	
-    	// Get available operators
-    	JScrollPane scrollPane = getScrollableOperatorList();
-    	boolean isOperatorAvailable = false;
-    	if ( list.getModel().getSize() > 0 )
-    	{
-    		isOperatorAvailable = true;
-    	}
-    	
-    	JLabel labelOperators = new JLabel("Available Operators:", JLabel.LEFT);
-    	group5.add(labelOperators);
-    	
-    	group51.add(scrollPane);
-    	
-    	runButton = new JButton("Run");
-    	runButton.setToolTipText("Runs the selected operator.");
-    	runButton.setActionCommand("runOperator");
-    	runButton.addActionListener(this);
-    	group52.add(runButton);
+
+    	// ROI related stuff
+//    	JLabel labelROIs = new JLabel("ROIs:", JLabel.LEFT);
+//    	groupROILabel.add(labelROIs);
+//
+//      JButton setRoiButton = new JButton("Set");
+//      setRoiButton.setToolTipText("Set ROI for active layer.");
+//      setRoiButton.setActionCommand("setRoi");
+//      setRoiButton.addActionListener(this);
+//      setRoiButton.setEnabled(true);
+//      groupROI.add(setRoiButton);
+//
+//      JButton clearRoiButton = new JButton("Clear");
+//      clearRoiButton.setToolTipText("Clear ROI for active layer.");
+//      clearRoiButton.setActionCommand("clearRoi");
+//      clearRoiButton.addActionListener(this);
+//      clearRoiButton.setEnabled(true);
+//      groupROI.add(clearRoiButton);
+//      
+//      JButton propagateRoiButton = new JButton("Propagate");
+//      propagateRoiButton.setToolTipText("Propagate ROI to all layers.");
+//      propagateRoiButton.setActionCommand("propagateRoi");
+//      propagateRoiButton.addActionListener(this);
+//      propagateRoiButton.setEnabled(true);
+//      groupROI.add(propagateRoiButton);
+//
+//      JButton clearAllButton = new JButton("Clear All");
+//      clearAllButton.setToolTipText("Clear all ROIs.");
+//      clearAllButton.setActionCommand("clearRoiAll");
+//      clearAllButton.addActionListener(this);
+//      clearAllButton.setEnabled(true);
+//      groupROI.add(clearAllButton);
+//
+//    	// gravitational direction related stuff
+//    	JLabel labelGravDirs = new JLabel("Gravitational Direction:", JLabel.LEFT);
+//    	groupGravDirLabel.add(labelGravDirs);
+//
+//    	JButton clearGravDirButton = new JButton("Clear");
+//      clearGravDirButton.setToolTipText("Clear gravitational direction for active layer.");
+//      clearGravDirButton.setActionCommand("clearGravDirection");
+//      clearGravDirButton.addActionListener(this);
+//      clearGravDirButton.setEnabled(true);
+//      groupGravDir.add(clearGravDirButton);
+//      
+//      JButton propagateGravDirButton = new JButton("Propagate");
+//      propagateGravDirButton.setToolTipText("Propagate gravitational direction to all layers.");
+//      propagateGravDirButton.setActionCommand("propagateGravDirection");
+//      propagateGravDirButton.addActionListener(this);
+//      propagateGravDirButton.setEnabled(true);
+//      groupGravDir.add(propagateGravDirButton);
+//
+//      JButton clearGravDirAllButton = new JButton("Clear All");
+//      clearGravDirAllButton.setToolTipText("Clear all gravitational directions.");
+//      clearGravDirAllButton.setActionCommand("clearGravDirectionAll");
+//      clearGravDirAllButton.addActionListener(this);
+//      clearGravDirAllButton.setEnabled(true);
+//      groupGravDir.add(clearGravDirAllButton);
+
+			// init the manager for handling available operators for image segmentation
+			this.imageSegmentationManager = new RhizoRootImageSegmentationManager(this);
 		
-    	JButton configureButton = new JButton("Configure");
-    	configureButton.setToolTipText("Opens a new window to configure the selected operator.");
-    	configureButton.setActionCommand("configureOperator");
-    	configureButton.addActionListener(this);
-    	group52.add(configureButton);
-    	
     	JButton preferencesButton = new JButton("Preferences");
     	preferencesButton.setToolTipText("Edit treelines display options and other user settings.");
     	preferencesButton.setActionCommand("preferences");
@@ -7910,13 +7905,17 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	panel.add(group4);
     	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     	panel.add(new JSeparator(JSeparator.HORIZONTAL));
-    	// Only display panel if there is at least one available operator
-    	if ( isOperatorAvailable )
-    	{
-    		panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
-    		panel.add(group5);
-    		panel.add(group51);
-    		panel.add(group52);
+//    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+//    	panel.add(groupROILabel);
+//    	panel.add(groupROI);
+//    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+//    	panel.add(groupGravDirLabel);
+//    	panel.add(groupGravDir);
+    	panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
+    	panel.add(new JSeparator(JSeparator.HORIZONTAL));
+    	// optionally add panel for image segmentation operators
+    	if (this.imageSegmentationManager.getNumberOfAvailableOperators() > 0) {
+    		panel.add(this.imageSegmentationManager.getSegmentationOpsPanel());
     		panel.add(Box.createRigidArea(new Dimension(0, VGAP)));
     		panel.add(new JSeparator(JSeparator.HORIZONTAL));
     	}
@@ -7926,145 +7925,6 @@ public final class Display extends DBObject implements ActionListener, IJEventLi
     	return panel;
     }
     
-    // Gets all available operators in a scrollable list
-	protected JScrollPane getScrollableOperatorList()
-	{	
-		Vector<String> detectorList = new Vector<String>();
-			
-		try 
-		{
-			operatorCollection = new MTBOperatorCollection<RootSegmentationOperator>(RootSegmentationOperator.class);		
-			// allows to restart the operator with the same parameter values
-			operatorCollection.setRerunFlags(true);
-			operatorCollection.addALDOperatorCollectionEventListener(new ALDOperatorCollectionEventListener() 
-			{	
-				// Event Listener for operator
-				@Override
-				public void handleALDOperatorCollectionEvent(ALDOperatorCollectionEvent event) 
-				{
-					if ( event.getEventType() == ALDOperatorCollectionEventType.RESULTS_AVAILABLE )
-					{
-						runButton.setEnabled(true);
-						
-						// Get results from operator
-						try 
-						{
-							MTBImage image = (MTBImage) operator.getParameter("resultImage");
-							image.show();
-						} 
-						catch (ALDOperatorException e) 
-						{
-							IJError.print(e);
-						}
-						
-						Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>> resultLineMap = null;
-						
-						int sizeStatusLabel = getProject().getRhizoMain().getProjectConfig().sizeStatusLabelMapping();
-						String[] fullNames = new String[sizeStatusLabel+1];
-						for ( int i = 0; i < sizeStatusLabel; i++) 
-						{
-							fullNames[i] = getProject().getRhizoMain().getProjectConfig().getStatusLabel(i).getName();
-						}
-						fullNames[sizeStatusLabel] = "STATUS_UNDEFINED";
-
-						final String status = (String) JOptionPane.showInputDialog(null,
-								"Which status should the treeline nodes have?\n"
-								+ "If you then press \'OK\', "
-								+ "the treelines will be imported in the image.",
-								"Choose status", JOptionPane.PLAIN_MESSAGE,
-								null, fullNames, fullNames[0]);
-						if( status != null )
-						{
-							if(operator instanceof RootSegmentationOperator)
-							{
-								resultLineMap = ((RootSegmentationOperator) operator).getMap();
-							}
-							
-							/*
-							 *  starts two threads: first one to transfer the polylines to treelines, second on to freeze the GUI through
-							 *  	a modal window. The window is then closed by the first thread if the transfer has been finished.
-							 */
-							final Map<Integer, Map<Integer, de.unihalle.informatik.MiToBo.apps.minirhizotron.segmentation.Node>> rLM = resultLineMap;
-							JDialog d = new JDialog();
-							
-							// transfer the result polylines to treelines
-							Thread transferTreeline = new Thread()
-							{
-								public void run()
-								{
-									RhizoLineMapToTreeline lineMapToTree = new RhizoLineMapToTreeline(new RhizoMain(Display.getFront().getProject()));
-									lineMapToTree.convertLineMapToTreeLine(rLM, status);
-									d.setVisible(false);
-								}
-							};
-							
-							// modal window to freeze the GUI
-							Thread showDialog = new Thread()
-							{
-								public void run()
-								{
-									JLabel l = new JLabel("Transfer of polylines to treelines in progress ... please wait!", JLabel.CENTER); 
-									l.setVerticalAlignment(JLabel.CENTER);
-									d.add(l);
-									d.setTitle("Transfer to treelines");
-									d.setSize(600,200);
-									d.setModal(true);
-									d.setVisible(true);
-								}
-							};
-							
-							// start both threads
-							showDialog.start();
-							transferTreeline.start();						
-						}
-					}
-					else if ( event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED )
-					{
-						JOptionPane.showMessageDialog(null, 
-								"Operator not completely configured.", 
-								"Configure operator", JOptionPane.ERROR_MESSAGE);
-					}
-					else if ( event.getEventType() == ALDOperatorCollectionEventType.RUN_FAILURE )
-					{
-						JOptionPane.showMessageDialog(null, 
-							"Something went wrong during execution of the operator.", 
-							"Run failure", JOptionPane.ERROR_MESSAGE);
-					}
-					else if ( event.getEventType() == ALDOperatorCollectionEventType.INIT_FAILURE )
-					{
-						JOptionPane.showMessageDialog(null, 
-								"Operator is not well initialized.", 
-								"Initialization failure", JOptionPane.ERROR_MESSAGE);
-					}
-					else // ALDOperatorCollectionEventType.UNKNOWN
-					{
-						// do nothing
-					}
-				}
-			});
-			Collection<String> uniqueClassIDs = operatorCollection.getUniqueClassIDs();
-			detectorList.addAll(uniqueClassIDs);
-		} 
-		catch (Exception e) 
-		{
-			IJError.print(e);
-		}
-		
-		Collections.sort(detectorList);
-		list = new JList<String>(detectorList);
-		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		// first operator selected as default
-		list.setSelectedIndex(0);
-		// only as high as needed for all found operators
-		list.setVisibleRowCount(detectorList.size());
-		
-		JScrollPane scroll = new JScrollPane(list);
-        scroll.setVerticalScrollBarPolicy(
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		
-		return scroll;
-	}
-
 	protected Image applyFilters(final Image img) {
 		if (!filter_enabled) return img;
 		return applyFilters(new ImagePlus("filtered", img)).getProcessor().createImage();

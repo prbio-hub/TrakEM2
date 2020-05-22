@@ -89,7 +89,6 @@ import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
-import org.python.modules._systemrestart;
 
 public class RhizoIO {
 	public static final String RHIZOTRAK_PROJECTFILE_EXTENSION = "rtk";

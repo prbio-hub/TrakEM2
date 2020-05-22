@@ -3092,7 +3092,7 @@ while (it.hasNext()) {
 							//actyc: lock all new imported images
 							p.setLocked(true);
 							//actyc: calculate and set image hash
-							RhizoLayerInfo layerInfo = new RhizoLayerInfo(layer, null);
+							RhizoLayerInfo layerInfo = new RhizoLayerInfo(layer.getProject(), layer, null);
 							layer.getProject().getRhizoMain().setLayerInfo(layer, layerInfo);
 						}
 						layer.getParent().enlargeToFit(p, LayerSet.NORTHWEST);
