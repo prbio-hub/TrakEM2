@@ -49,6 +49,7 @@ package de.unihalle.informatik.rhizoTrak.display.addonGui;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -62,7 +63,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.Vector;
@@ -79,9 +79,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.ListSelectionModel;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
 
 import de.unihalle.informatik.Alida.exceptions.ALDOperatorException;
 import de.unihalle.informatik.Alida.operator.ALDOperatorCollectionElement;
@@ -96,7 +93,6 @@ import de.unihalle.informatik.MiToBo.core.datatypes.MTBLineSegment2D;
 import de.unihalle.informatik.MiToBo.core.datatypes.MTBPolygon2D;
 import de.unihalle.informatik.MiToBo.core.operator.MTBOperatorCollection;
 import de.unihalle.informatik.rhizoTrak.Project;
-import de.unihalle.informatik.rhizoTrak.addon.RhizoGravitationalDirection;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoLayerInfo;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoMain;
 import de.unihalle.informatik.rhizoTrak.addon.RhizoROI;
@@ -106,15 +102,9 @@ import de.unihalle.informatik.rhizoTrak.display.Displayable;
 import de.unihalle.informatik.rhizoTrak.display.Layer;
 import de.unihalle.informatik.rhizoTrak.display.LayerSet;
 import de.unihalle.informatik.rhizoTrak.display.Node;
-import de.unihalle.informatik.rhizoTrak.display.Polyline;
 import de.unihalle.informatik.rhizoTrak.display.RhizoAddons;
 import de.unihalle.informatik.rhizoTrak.display.Selection;
 import de.unihalle.informatik.rhizoTrak.display.Treeline;
-import de.unihalle.informatik.rhizoTrak.tree.DNDTree;
-import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
-import de.unihalle.informatik.rhizoTrak.tree.ProjectTree;
-import de.unihalle.informatik.rhizoTrak.tree.TemplateThing;
-import de.unihalle.informatik.rhizoTrak.tree.TemplateTree;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.ImagePlus;
 import ij.gui.Roi;
@@ -148,6 +138,11 @@ public class RhizoRootImageSegmentationManager
 	 */
 	private JButton operatorConfigButton;
 
+	/**
+	 * Dialog popping-up during operators are running.
+	 */
+	private JDialog operatorRunningDialog;
+	
 	/**
 	 * Set of available operators managed by this class.
 	 */
@@ -317,6 +312,29 @@ public class RhizoRootImageSegmentationManager
 			this.operatorRunButton.setEnabled(false);
 			this.operatorRunButton.repaint();
 			
+			// dialog to inform user about running operator
+			this.operatorRunningDialog = new JDialog();
+			Thread showDialog = new Thread() {
+				public void run() {
+					JLabel l = new JLabel("Operator is running, please wait...", JLabel.CENTER);
+					l.setVerticalAlignment(JLabel.CENTER);
+					RhizoRootImageSegmentationManager manager = RhizoRootImageSegmentationManager.this;
+					manager.operatorRunningDialog.add(l);
+					manager.operatorRunningDialog.setTitle("Image analysis in progress...");
+					manager.operatorRunningDialog.setSize(600, 200);
+					manager.operatorRunningDialog.setModal(true);
+					// place dialog in center of project window
+					Point parentLocationOnScreen = manager.rhizoDisplay.getFrame().getLocationOnScreen();
+					Dimension parentSize = manager.rhizoDisplay.getFrame().getSize();
+					int x = parentLocationOnScreen.x + parentSize.width/2 - 300;
+					int y = parentLocationOnScreen.y + parentSize.height/2 - 100;
+		      manager.operatorRunningDialog.setLocation(x, y);
+		      // set visible
+					manager.operatorRunningDialog.setVisible(true);
+				}
+			};
+			showDialog.start();
+
 			RootImageSegmentationOperator imSegOp = (RootImageSegmentationOperator) this.selectedSegOp;
 
 			// ask the operator which data to process
@@ -516,6 +534,9 @@ public class RhizoRootImageSegmentationManager
 
 		if (event.getEventType() == ALDOperatorCollectionEventType.RESULTS_AVAILABLE) {
 
+			RhizoRootImageSegmentationManager.this.operatorRunningDialog.setVisible(false);
+			RhizoRootImageSegmentationManager.this.operatorRunningDialog.dispose();
+			
 			RootImageSegmentationOperator segOp = (RootImageSegmentationOperator)this.selectedSegOp;
 
 			// get results from operator
@@ -839,6 +860,10 @@ public class RhizoRootImageSegmentationManager
 			this.operatorRunButton.setEnabled(true);
 
 		} else if (event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED) {
+			
+			RhizoRootImageSegmentationManager.this.operatorRunningDialog.setVisible(false);
+			RhizoRootImageSegmentationManager.this.operatorRunningDialog.dispose();
+
 			// print error message
 			Utils.log("Error! Operator not properly configured!");
 			Utils.log(event.getEventMessage());
@@ -848,6 +873,10 @@ public class RhizoRootImageSegmentationManager
 			// enable the run button again
 			this.operatorRunButton.setEnabled(true);
 		} else if (event.getEventType() == ALDOperatorCollectionEventType.RUN_FAILURE) {
+			
+			RhizoRootImageSegmentationManager.this.operatorRunningDialog.setVisible(false);
+			RhizoRootImageSegmentationManager.this.operatorRunningDialog.dispose();
+
 			// print stack trace
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
@@ -870,6 +899,10 @@ public class RhizoRootImageSegmentationManager
 			this.operatorRunButton.setEnabled(true);
 			
 		} else if (event.getEventType() == ALDOperatorCollectionEventType.INIT_FAILURE) {
+
+			RhizoRootImageSegmentationManager.this.operatorRunningDialog.setVisible(false);
+			RhizoRootImageSegmentationManager.this.operatorRunningDialog.dispose();
+
 			// print stack trace
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
