@@ -315,7 +315,8 @@ public class RhizoRootImageSegmentationManager
 
 		if (this.selectedSegOp != null) {
 			this.operatorRunButton.setEnabled(false);
-
+			this.operatorRunButton.repaint();
+			
 			RootImageSegmentationOperator imSegOp = (RootImageSegmentationOperator) this.selectedSegOp;
 
 			// ask the operator which data to process
@@ -833,6 +834,10 @@ public class RhizoRootImageSegmentationManager
 					}
 				} // end of componentHidden() {...}
 			});
+
+			// enable the run button again
+			this.operatorRunButton.setEnabled(true);
+
 		} else if (event.getEventType() == ALDOperatorCollectionEventType.OP_NOT_CONFIGURED) {
 			// print error message
 			Utils.log("Error! Operator not properly configured!");
@@ -840,6 +845,8 @@ public class RhizoRootImageSegmentationManager
 			// show error message
 			JOptionPane.showMessageDialog(null, "Operator not completely configured. " 
 				+ event.getEventMessage(), "Configure operator", JOptionPane.ERROR_MESSAGE);
+			// enable the run button again
+			this.operatorRunButton.setEnabled(true);
 		} else if (event.getEventType() == ALDOperatorCollectionEventType.RUN_FAILURE) {
 			// print stack trace
 			StringWriter sw = new StringWriter();
@@ -858,6 +865,10 @@ public class RhizoRootImageSegmentationManager
 			// show error message
 			JOptionPane.showMessageDialog(null, "Something went wrong during execution of the operator.\n"
 					+ sw.toString(), "Run failure", JOptionPane.ERROR_MESSAGE);
+			
+			// enable the run button again
+			this.operatorRunButton.setEnabled(true);
+			
 		} else if (event.getEventType() == ALDOperatorCollectionEventType.INIT_FAILURE) {
 			// print stack trace
 			StringWriter sw = new StringWriter();
@@ -870,6 +881,10 @@ public class RhizoRootImageSegmentationManager
 			// show error message
 			JOptionPane.showMessageDialog(null, "Operator is not well initialized. \n" 
 					+ sw.toString(), "Initialization failure", JOptionPane.ERROR_MESSAGE);
+			
+			// enable the run button again
+			this.operatorRunButton.setEnabled(true);
+			
 		} else { // ALDOperatorCollectionEventType.UNKNOWN
 			// print error message
 			Utils.log("Unknown error during operator execution!");
@@ -881,9 +896,6 @@ public class RhizoRootImageSegmentationManager
 //			dialog.setModal(false); // this says not to block background components
 //			dialog.setVisible(true);
 		}
-
-		// enable the run button again
-		this.operatorRunButton.setEnabled(true);
 	}
 
 	/**
