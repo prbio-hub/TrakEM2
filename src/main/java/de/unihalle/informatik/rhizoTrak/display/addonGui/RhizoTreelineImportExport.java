@@ -158,6 +158,9 @@ public class RhizoTreelineImportExport {
 				sy = n.getY();
 			}
 			MTBRootTreeNodeData dat = new MTBRootTreeNodeData(sx, sy);
+			dat.setRadius(n.getData());
+			dat.setLayer(this.getLayerIndex(n.getLayer()));
+			dat.setStatus(n.getConfidence());
 			MTBTreeNode nn = new MTBTreeNode(dat);
 			rootTreeRootNode.addChild(nn);
 			this.convertSubtreelineToMTBRootTree(at, n, nn);
