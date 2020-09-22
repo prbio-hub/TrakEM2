@@ -72,8 +72,8 @@ package de.unihalle.informatik.rhizoTrak.addon;
 
 import de.unihalle.informatik.Alida.exceptions.ALDOperatorException;
 import de.unihalle.informatik.Alida.exceptions.ALDProcessingDAGException;
-import de.unihalle.informatik.MiToBo.apps.minirhizotron.utils.Drawing;
-import de.unihalle.informatik.MiToBo.apps.minirhizotron.utils.Drawing;
+//import de.unihalle.informatik.MiToBo.apps.minirhizotron.utils.Drawing;
+import de.unihalle.informatik.rhizoTrak.addon.Drawing;
 import de.unihalle.informatik.MiToBo.core.datatypes.images.MTBImage;
 import de.unihalle.informatik.MiToBo.io.images.ImageWriterMTB;
 import de.unihalle.informatik.MiToBo.io.tools.FilePathManipulator;
@@ -82,6 +82,7 @@ import de.unihalle.informatik.rhizoTrak.display.*;
 import de.unihalle.informatik.rhizoTrak.tree.ProjectThing;
 import de.unihalle.informatik.rhizoTrak.utils.Utils;
 import ij.ImagePlus;
+import org.python.core.imp;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -230,8 +231,11 @@ public class RhizoWriteBinary {
 
 		MTBImage binaryImage = image.convertType( MTBImage.MTBImageType.MTB_BYTE, false);
 		binaryImage.fillBlack();
-
-		drawSegments( rhizoMain.getProject(), layer, binaryImage.getImagePlus(), rootstackThings, statusLabelIntToWrite);
+		try {
+			drawSegments(rhizoMain.getProject(), layer, binaryImage.getImagePlus(), rootstackThings, statusLabelIntToWrite);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		try {
 			String filename = imagePath.toString();
@@ -310,20 +314,18 @@ public class RhizoWriteBinary {
 						Point2D p2 = at.transform(new Point2D.Float(node.getX(), node.getY()), null);
 
 
-						int cx1 = (int) p1.getX();
-						int cy1 = (int) p1.getY();
+						float cx1 = (float)p1.getX();
+						float cy1 = (float)p1.getY();
 
-						int cx2 = (int) p2.getX();
-						int cy2 = (int) p2.getY();
+						float cx2 = (float)p2.getX();
+						float cy2 = (float)p2.getY();
 
 						float startRadius = node.getParent().getData();
-						if ( startRadius < 1 )  startRadius = 1;
 						float endRadius = node.getData();
-						if ( endRadius < 1 ) endRadius = 1;
 
-						Drawing.drawSegment(imp, cx1, cy1, cx2, cy2, (int)startRadius, (int)endRadius, fgColor);
-						Drawing.drawFilledCircle(imp, cx1, cy1, startRadius, fgColor);
-						Drawing.drawFilledCircle(imp, cx2, cy2, endRadius, fgColor);
+						Drawing.drawIsosceles(imp, cx1, cy1, cx2, cy2, 2.0f*startRadius, 2.0f*endRadius, fgColor);
+						if ( startRadius > 0.5f) Drawing.drawFilledCircle(imp, cx1, cy1, Math.max( 0, startRadius-0.5f), fgColor);
+						if ( endRadius > 0.5f) Drawing.drawFilledCircle(imp, cx2, cy2, Math.max( 0, endRadius-0.5f), fgColor);
 
 						imp.updateAndDraw();
 					}
